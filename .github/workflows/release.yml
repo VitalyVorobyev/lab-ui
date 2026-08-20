@@ -1,0 +1,69 @@
+name: Release
+
+# Publishing is driven by a git tag: `git tag v0.2.0 && git push --tags`.
+# Nothing publishes from a branch, so `main` can move without releasing, and a
+# release is always a named, immutable point in history.
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # Required for npm provenance: the registry records, verifiably, which
+      # workflow run and which commit produced the tarball.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # `npm publish` itself needs node — bun is used for install/build only.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # A tag that disagrees with package.json is the one failure mode of
+      # tag-driven publishing: npm would take the version from the manifest and
+      # silently publish something other than what the tag says. Fail instead.
+      - name: Check the tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$manifest" ]; then
+            echo "tag v$tag does not match package.json version $manifest" >&2
+            echo "bump the manifest and re-tag, or tag v$manifest" >&2
+            exit 1
+          fi
+          echo "publishing $manifest"
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun run test
+
+      - name: Build
+        run: bun run build
+
+      # `--provenance` attaches a signed statement linking this tarball to this
+      # commit and workflow. `--access public` because the package is scoped,
+      # and scoped packages default to restricted.
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create the GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}

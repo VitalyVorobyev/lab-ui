@@ -173,3 +173,34 @@ bun run build        # tsup -> dist/index.{js,d.ts} + dist/styles.css
 - **A component-library CSS build step** — `styles.css` ships as raw Tailwind v4 source on
   purpose (see "Consumer wiring" above); pre-compiling it here would fix its utility
   classes against *this* package's own Tailwind config rather than the consumer's.
+
+## Releasing
+
+Publishing is driven by a git tag, not by a branch, so `main` can move without
+releasing and every release is a named, immutable point in history:
+
+```bash
+# bump "version" in package.json first — the workflow refuses a tag that
+# disagrees with the manifest rather than publishing something else
+git tag v0.2.0
+git push --tags
+```
+
+`.github/workflows/release.yml` then typechecks, tests, builds, publishes to npm
+with [provenance](https://docs.npmjs.com/generating-provenance-statements) (the
+registry records which commit and workflow run produced the tarball), and opens a
+GitHub release. It needs one repository secret, `NPM_TOKEN` — an npm automation
+token with publish rights on the `@vitavision` scope.
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
+- MIT license ([LICENSE-MIT](LICENSE-MIT))
+
+at your option.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this package by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
