@@ -18,6 +18,7 @@ export {
 } from "./theme";
 
 export { toneColor, type MeasureTone } from "./tone";
+export { ThemeToggle } from "./components/ThemeToggle";
 
 // The primitive set.
 export * from "./components/ui";

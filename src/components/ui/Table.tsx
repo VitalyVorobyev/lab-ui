@@ -26,6 +26,9 @@ export function Table<Row>({
   empty = "Nothing here.",
   caption,
   className,
+  onRowClick,
+  isRowActive,
+  onRowHover,
 }: {
   columns: Column<Row>[];
   rows: Row[];
@@ -33,6 +36,14 @@ export function Table<Row>({
   empty?: ReactNode;
   caption?: string;
   className?: string;
+  /** Makes rows activatable. Keyboard-reachable, so a table used as a list of
+   * destinations is not a mouse-only control. */
+  onRowClick?: (row: Row, index: number) => void;
+  /** Marks the row that is current — the selected match, the open frame. */
+  isRowActive?: (row: Row, index: number) => boolean;
+  /** Pointer enter/leave, for tables kept in step with a canvas overlay.
+   * `null` on leave. */
+  onRowHover?: (row: Row | null, index: number | null) => void;
 }) {
   if (rows.length === 0) {
     return <p className="py-6 text-center text-sm text-fg-muted">{empty}</p>;
@@ -61,7 +72,29 @@ export function Table<Row>({
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={rowKey(row, index)} className="border-b border-line/60 last:border-0">
+            <tr
+              key={rowKey(row, index)}
+              className={cn(
+                "border-b border-line/60 last:border-0",
+                onRowClick && "cursor-pointer hover:bg-raised",
+                isRowActive?.(row, index) && "bg-signal/10",
+              )}
+              tabIndex={onRowClick ? 0 : undefined}
+              role={onRowClick ? "button" : undefined}
+              onClick={onRowClick ? () => onRowClick(row, index) : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onRowClick(row, index);
+                      }
+                    }
+                  : undefined
+              }
+              onPointerEnter={onRowHover ? () => onRowHover(row, index) : undefined}
+              onPointerLeave={onRowHover ? () => onRowHover(null, null) : undefined}
+            >
               {columns.map((column) => (
                 <td
                   key={column.key}
