@@ -4,12 +4,14 @@
   "description": "Shared visual language and component primitives for the vitavision lab apps (instrument design system).",
   "private": false,
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT OR Apache-2.0",
   "sideEffects": [
     "*.css"
   ],
   "files": [
-    "dist"
+    "dist",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",

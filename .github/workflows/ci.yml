@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun run test
+
+      # `dist/` is gitignored, so this is also the check that the published
+      # artefact can actually be produced from a clean checkout — the thing a
+      # consumer resolving `@vitavision/lab-ui` from npm depends on.
+      - name: Build
+        run: bun run build
+
+      # The package declares `files: ["dist"]` and points `main`/`types` inside
+      # it. A build that succeeds but leaves an entry point missing would only
+      # be discovered by a consumer, after publishing.
+      - name: Verify the package's own entry points exist
+        run: |
+          test -f dist/index.js
+          test -f dist/index.d.ts
+          test -f dist/styles.css
