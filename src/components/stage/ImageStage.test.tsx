@@ -9,7 +9,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { ImageStage, useStage } from "./ImageStage";
-import { fitView, type StageView } from "./view";
+import { PIXEL_CENTRE, fitView, type StageView } from "./view";
 
 const IMAGE = { width: 1280, height: 1024 };
 const BOX = { width: 800, height: 600 };
@@ -67,8 +67,13 @@ function Harness({
 /** Reads the context back out, which is how every real layer sees the transform. */
 function Probe() {
   const stage = useStage();
-  const corner = stage.toViewport({ x: 0, y: 0 });
-  const far = stage.toViewport({ x: IMAGE.width, y: IMAGE.height });
+  // The image's own edges: in the pixel-centre convention those are half a pixel outside
+  // the first and last pixel centres (see `view.ts`).
+  const corner = stage.toViewport({ x: -PIXEL_CENTRE, y: -PIXEL_CENTRE });
+  const far = stage.toViewport({
+    x: IMAGE.width - PIXEL_CENTRE,
+    y: IMAGE.height - PIXEL_CENTRE,
+  });
   return (
     <span data-testid="probe">
       {`${stage.view.scale.toFixed(9)} ${corner.x.toFixed(6)},${corner.y.toFixed(6)} ` +

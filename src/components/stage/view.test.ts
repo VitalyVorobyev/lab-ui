@@ -3,11 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_SCALE,
   MIN_SCALE_VS_FIT,
+  PIXEL_CENTRE,
   clampView,
   fitScale,
   fitView,
   formatScale,
   frameRect,
+  imageViewBox,
+  insideImage,
   isFit,
   preserveCenter,
   scaleRange,
@@ -63,14 +66,66 @@ describe("toScreen / toImage", () => {
 
   it("puts the whole image inside the box at fit, touching on the constrained axis", () => {
     const view = fitView(WIDE, IMAGE);
-    const topLeft = toScreen(view, { x: 0, y: 0 });
-    const bottomRight = toScreen(view, { x: IMAGE.width, y: IMAGE.height });
+    // The image's *edges*, which in the pixel-centre convention are half a pixel outside
+    // the first and last pixel centres.
+    const topLeft = toScreen(view, { x: -PIXEL_CENTRE, y: -PIXEL_CENTRE });
+    const bottomRight = toScreen(view, {
+      x: IMAGE.width - PIXEL_CENTRE,
+      y: IMAGE.height - PIXEL_CENTRE,
+    });
     expect(topLeft.y).toBeCloseTo(0, 9);
     expect(bottomRight.y).toBeCloseTo(WIDE.height, 9);
     expect(topLeft.x).toBeGreaterThan(0);
     expect(bottomRight.x).toBeLessThan(WIDE.width);
     // Centred: equal margins.
     expect(topLeft.x).toBeCloseTo(WIDE.width - bottomRight.x, 9);
+  });
+});
+
+/*
+ * The half-pixel that is invisible at fit and four screen pixels of error at 8x. Image
+ * results name pixel *centres*; CSS and SVG name the pixel's leading edge.
+ */
+describe("the pixel-centre convention", () => {
+  it("puts pixel 0's centre half a pixel in from the image's left edge", () => {
+    const view = { scale: 1, tx: 0, ty: 0 };
+    expect(toScreen(view, { x: 0, y: 0 })).toEqual({ x: 0.5, y: 0.5 });
+    expect(toScreen(view, { x: 7, y: 3 })).toEqual({ x: 7.5, y: 3.5 });
+  });
+
+  it("scales that offset with the zoom, which is why it is not cosmetic", () => {
+    const view = { scale: 8, tx: 0, ty: 0 };
+    // Four screen pixels between "the centre of pixel 0" and "the image's left edge".
+    expect(toScreen(view, { x: 0, y: 0 }).x).toBeCloseTo(4, 9);
+    expect(toScreen(view, { x: -PIXEL_CENTRE, y: 0 }).x).toBeCloseTo(0, 9);
+  });
+
+  it("reads a pointer at a pixel's exact centre as that pixel", () => {
+    const view = { scale: 4, tx: -100, ty: 20 };
+    const centre = toScreen(view, { x: 42, y: 17 });
+    const back = toImage(view, centre);
+    expect(back.x).toBeCloseTo(42, 9);
+    expect(back.y).toBeCloseTo(17, 9);
+  });
+
+  it("hands an SVG layer a viewBox that agrees with all of the above", () => {
+    expect(imageViewBox(IMAGE)).toBe("-0.5 -0.5 1280 1024");
+  });
+
+  it("bounds the image by its edges, not by its first and last centres", () => {
+    expect(insideImage({ x: -PIXEL_CENTRE, y: -PIXEL_CENTRE }, IMAGE)).toBe(true);
+    expect(insideImage({ x: -0.51, y: 0 }, IMAGE)).toBe(false);
+    expect(insideImage({ x: IMAGE.width - 0.51, y: 0 }, IMAGE)).toBe(true);
+    expect(insideImage({ x: IMAGE.width - PIXEL_CENTRE, y: 0 }, IMAGE)).toBe(false);
+  });
+
+  it("frames a rect on its centre in the same convention", () => {
+    const box = { width: 900, height: 700 };
+    const rect = { x: 100, y: 200, width: 40, height: 30 };
+    const view = frameRect(box, IMAGE, rect);
+    const centre = toScreen(view, { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
+    expect(centre.x).toBeCloseTo(box.width / 2, 6);
+    expect(centre.y).toBeCloseTo(box.height / 2, 6);
   });
 });
 

@@ -17,6 +17,7 @@
  * has silently become 8px wide.
  */
 
+import { imageViewBox } from "./stage/view";
 import { arcPath, arrowHeadPoints, caliperArrow, caliperCorners, crossSegments, dimensionGeometry, polygonPath, strokeWidthFor } from "./measureGeometry";
 import { toneColor, type MeasureTone } from "../tone";
 import { cn } from "./ui/cn";
@@ -140,7 +141,7 @@ export function MeasureOverlay({
     <svg
       role="presentation"
       aria-hidden
-      viewBox={`0 0 ${nativeWidth} ${nativeHeight}`}
+      viewBox={imageViewBox({ width: nativeWidth, height: nativeHeight })}
       preserveAspectRatio="none"
       className={cn("pointer-events-none absolute inset-0 h-full w-full overflow-visible", className)}
     >

@@ -9,7 +9,11 @@ describe("MeasureOverlay", () => {
       <MeasureOverlay nativeWidth={640} nativeHeight={480} primitives={[]} strokeScale={1} />,
     );
 
-    expect(container.querySelector("svg")?.getAttribute("viewBox")).toBe("0 0 640 480");
+    // Shifted by half a pixel, not `0 0 640 480`: image results name pixel *centres* while
+    // SVG names a pixel's leading edge, and drawing a measured point at the raw coordinate
+    // put it on the boundary of the pixel it was measured in. Same extent, so nothing about
+    // sizing changes with it. See `stage/view.ts`'s `imageViewBox`.
+    expect(container.querySelector("svg")?.getAttribute("viewBox")).toBe("-0.5 -0.5 640 480");
   });
 
   it("draws one shape per primitive, in the tone's colour", () => {

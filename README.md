@@ -181,6 +181,14 @@ photograph at every viewport size, with no aspect ratio for a caller to remember
 no letterbox to correct for. Layers are absolutely positioned and sized by the stage; they
 do no scaling of their own.
 
+**Image coordinates name pixel centres.** `i` means the centre of pixel `i`, which is what
+every image-processing result means by it; CSS and SVG mean the pixel's *leading edge*. The
+half pixel between the two conventions lives in `PIXEL_CENTRE`, and it is carried by
+`toImage` / `toScreen` and by `imageViewBox(image)` — which is what an SVG layer drawn in
+image coordinates must use for its `viewBox` instead of `0 0 W H`. `MeasureOverlay` already
+does. It is invisible at fit and four screen pixels of error at 8×, which is exactly the zoom
+at which someone is checking whether an overlay lands on the edge it claims to mark.
+
 **`scale` is CSS pixels per image pixel.** `1` is 100%; fit is `fitScale(box, image)`, a
 value rather than a magic constant, so zooming *out* past fit is expressible (down to
 `MIN_SCALE_VS_FIT` × fit). A `ResizeObserver` keeps a fit view fit and re-centres any other
