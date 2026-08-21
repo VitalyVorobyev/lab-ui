@@ -5,6 +5,14 @@
   "private": false,
   "type": "module",
   "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VitalyVorobyev/lab-ui.git"
+  },
+  "homepage": "https://github.com/VitalyVorobyev/lab-ui#readme",
+  "bugs": {
+    "url": "https://github.com/VitalyVorobyev/lab-ui/issues"
+  },
   "sideEffects": [
     "*.css"
   ],
