@@ -46,7 +46,8 @@ export function Table<Row>({
     index: number,
     event: MouseEvent<HTMLTableRowElement> | KeyboardEvent<HTMLTableRowElement>,
   ) => void;
-  /** Marks the row that is current — the selected match, the open frame. */
+  /** Marks the row that is current — the selected match, the open frame. Rendered as
+   * `aria-current`, so it is announced rather than only tinted. */
   isRowActive?: (row: Row, index: number) => boolean;
   /** Pointer enter/leave, for tables kept in step with a canvas overlay.
    * `null` on leave. */
@@ -99,7 +100,13 @@ export function Table<Row>({
                 isRowActive?.(row, index) && "bg-signal/10",
               )}
               tabIndex={onRowClick ? 0 : undefined}
-              role={onRowClick ? "button" : undefined}
+              // Deliberately *not* `role="button"`. Overriding a `<tr>`'s implicit `row`
+              // makes its `<td>`s' implicit `cell` invalid too — the cells have no row to
+              // belong to — so a screen reader stops announcing the table as a table and a
+              // reader loses the column each value came from, which on a table of
+              // quantities is the whole content. `tabIndex` plus the Enter/Space handler
+              // below is what makes the row reachable; the role stays what the element is.
+              aria-current={isRowActive?.(row, index) ? true : undefined}
               onClick={onRowClick ? (event) => onRowClick(row, index, event) : undefined}
               onKeyDown={
                 onRowClick
