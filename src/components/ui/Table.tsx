@@ -6,7 +6,7 @@
  * by eye down its decimal point rather than read one row at a time.
  */
 
-import type { ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 
 import { byDensity, useDensity } from "./Density";
 import { cn } from "./cn";
@@ -38,8 +38,14 @@ export function Table<Row>({
   caption?: string;
   className?: string;
   /** Makes rows activatable. Keyboard-reachable, so a table used as a list of
-   * destinations is not a mouse-only control. */
-  onRowClick?: (row: Row, index: number) => void;
+   * destinations is not a mouse-only control. The event is passed so a caller can read
+   * modifiers — a list kept in step with a canvas needs shift-range and meta-toggle to mean
+   * the same thing in both places. */
+  onRowClick?: (
+    row: Row,
+    index: number,
+    event: MouseEvent<HTMLTableRowElement> | KeyboardEvent<HTMLTableRowElement>,
+  ) => void;
   /** Marks the row that is current — the selected match, the open frame. */
   isRowActive?: (row: Row, index: number) => boolean;
   /** Pointer enter/leave, for tables kept in step with a canvas overlay.
@@ -94,13 +100,13 @@ export function Table<Row>({
               )}
               tabIndex={onRowClick ? 0 : undefined}
               role={onRowClick ? "button" : undefined}
-              onClick={onRowClick ? () => onRowClick(row, index) : undefined}
+              onClick={onRowClick ? (event) => onRowClick(row, index, event) : undefined}
               onKeyDown={
                 onRowClick
                   ? (event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-                        onRowClick(row, index);
+                        onRowClick(row, index, event);
                       }
                     }
                   : undefined

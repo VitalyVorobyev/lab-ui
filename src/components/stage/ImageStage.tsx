@@ -132,6 +132,12 @@ export interface ImageStageProps {
   clamp?: ClampOptions;
   /** Keyboard zoom/pan shortcuts. On by default; the stage takes focus to receive them. */
   shortcuts?: boolean;
+  /**
+   * Whether the arrow keys pan. On by default, and worth turning off in an app where the
+   * arrows have a better job — stepping through a list of findings, say. The zoom keys
+   * (`+`, `-`, `0`, `1`) are unaffected, and dragging still pans either way.
+   */
+  panKeys?: boolean;
   label?: string;
 }
 
@@ -150,10 +156,14 @@ export function ImageStage({
   onBackgroundClick,
   clamp,
   shortcuts = true,
+  panKeys = true,
   label = "Image canvas",
 }: ImageStageProps) {
   const viewport = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState<Box>({ width: 0, height: 0 });
+  // The measured size, readable synchronously — `setBox`'s updater must stay pure, and the
+  // resize handler needs the *previous* box to re-anchor the view against.
+  const measured = useRef<Box>({ width: 0, height: 0 });
   const [panning, setPanning] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
   const panMode = panTool || spaceHeld;
@@ -185,13 +195,13 @@ export function ImageStage({
 
     const measure = (width: number, height: number) => {
       if (!(width > 0) || !(height > 0)) return;
-      setBox((current) => {
-        if (current.width === width && current.height === height) return current;
-        const { view: v, image: i, clamp: c } = latest.current;
-        const next = { width, height };
-        onView(v === null ? initialView(next, i) : preserveCenter(v, current, next, i, c));
-        return next;
-      });
+      const current = measured.current;
+      if (current.width === width && current.height === height) return;
+      const next = { width, height };
+      measured.current = next;
+      setBox(next);
+      const { view: v, image: i, clamp: c } = latest.current;
+      onView(v === null ? initialView(next, i) : preserveCenter(v, current, next, i, c));
     };
 
     const rect = element.getBoundingClientRect();
@@ -418,15 +428,19 @@ export function ImageStage({
         zoomTo(1);
         break;
       case "ArrowLeft":
+        if (!panKeys) return;
         commit({ ...effective, tx: effective.tx + nudge });
         break;
       case "ArrowRight":
+        if (!panKeys) return;
         commit({ ...effective, tx: effective.tx - nudge });
         break;
       case "ArrowUp":
+        if (!panKeys) return;
         commit({ ...effective, ty: effective.ty + nudge });
         break;
       case "ArrowDown":
+        if (!panKeys) return;
         commit({ ...effective, ty: effective.ty - nudge });
         break;
       default:
