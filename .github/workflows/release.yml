@@ -3,6 +3,14 @@ name: Release
 # Publishing is driven by a git tag: `git tag v0.2.0 && git push --tags`.
 # Nothing publishes from a branch, so `main` can move without releasing, and a
 # release is always a named, immutable point in history.
+#
+# Authorisation is npm **trusted publishing** (OIDC), not a stored token — see the
+# `id-token` note below. The trusted publisher registered for @vitavision/lab-ui on
+# npmjs.com names three things, and all three have to keep matching what is here:
+# repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`.
+# Renaming this file, moving the job into another workflow, or dropping the
+# `environment:` line below stops publishing until that entry is updated to match —
+# which is exactly the point: the workflow's own identity is the credential.
 on:
   push:
     tags: ["v*"]
@@ -11,10 +19,21 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
+    # Part of the OIDC identity npm checks, not decoration: the environment name is a
+    # claim in the token GitHub mints, and the trusted publisher is configured with
+    # `npm` in it. It is also the place to add a required reviewer or a branch/tag
+    # restriction later — a gate on publishing, without a credential to guard.
+    environment: npm
     permissions:
       contents: write
-      # Required for npm provenance: the registry records, verifiably, which
-      # workflow run and which commit produced the tarball.
+      # npm trusted publishing. The registry authenticates *this workflow* by the
+      # short-lived OIDC token GitHub mints for it — repository, workflow file and
+      # environment, checked against the trusted publisher configured for the package
+      # on npmjs.com.
+      # That token is the entire credential: there is no npm token in this repo's
+      # secrets to leak, over-scope, forget to rotate, or hand to a third-party action.
+      # It is also what provenance is signed with, so the tarball still records,
+      # verifiably, which commit and which run produced it.
       id-token: write
     steps:
       - uses: actions/checkout@v7
@@ -24,10 +43,19 @@ jobs:
           bun-version: latest
 
       # `npm publish` itself needs node — bun is used for install/build only.
+      # `registry-url` is still what points the publish at npmjs.org; it simply has no
+      # token to go with it any more.
       - uses: actions/setup-node@v5
         with:
-          node-version: "22"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
+
+      # Exchanging the OIDC token for a publish credential is npm CLI >= 11.5.1.
+      # Upgraded explicitly rather than trusting whatever the runner's Node image
+      # happens to bundle: a regression there would surface as an authentication
+      # failure on a tag push, which is the worst possible place to discover it.
+      - name: Use an npm that can publish with OIDC
+        run: npm install -g npm@latest
 
       - name: Install
         run: bun install --frozen-lockfile
@@ -55,13 +83,12 @@ jobs:
       - name: Build
         run: bun run build
 
-      # `--provenance` attaches a signed statement linking this tarball to this
-      # commit and workflow. `--access public` because the package is scoped,
-      # and scoped packages default to restricted.
+      # No `env:` block — the OIDC token above *is* the credential. `--provenance` is
+      # implied by trusted publishing, but stated anyway so the signed link from tarball
+      # to commit cannot quietly disappear with a change in that default. `--access
+      # public` because the package is scoped, and scoped packages default to restricted.
       - name: Publish
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create the GitHub release
         run: gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME"
