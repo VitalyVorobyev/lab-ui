@@ -1,52 +1,50 @@
 # @vitavision/lab-ui
 
-The shared visual language and component primitives for the vitavision lab apps — extracted
-from `visual-anomaly-lab` so it and a new visual-metrology lab draw from one design system
-("instrument": true-neutral greys, one accent, verdict colours reserved for verdicts)
+The shared visual language and component primitives behind the vitavision lab apps — an
+*instrument* design system: true-neutral greys, one accent, and verdict colours reserved
+for verdicts. React 19 + Tailwind v4, no CSS-in-JS, no runtime theme engine.
+
+It exists so `visual-anomaly-lab` and the vision-metrology lab draw from one design system
 instead of two copies drifting apart.
 
-Package manager: **bun**. Do not use npm, yarn or pnpm in this repo or against this package.
-
-## Install (as a `file:` dependency)
-
-From a consuming app's `frontend/` directory:
+## Install
 
 ```bash
-bun add "@vitavision/lab-ui@file:../../lab-ui"
+bun add @vitavision/lab-ui
 ```
 
-(adjust the relative path to wherever `lab-ui` is checked out beside the consumer). Bun
-resolves a `file:` dependency by symlink, so `bun run build` in this package while the
-consumer's dev server is running picks up changes on the next reload — there is no publish
-step for local development.
+`react`, `react-dom` and `react-router` are peer dependencies — the app supplies its own,
+and a router context is a hard requirement at render time (step 3 below). Everything else
+the components need (Radix primitives, `lucide-react`, `clsx`, `tailwind-merge`) comes with
+the package.
 
-## Consumer wiring
+## Getting started
 
-Three things, all at the consumer's own entry point:
+Three steps, all in your app's own entry points. Every component is exported from the
+package root: `import { Button, PageHeader, ThemeToggle } from "@vitavision/lab-ui"`.
 
-**1. Pull in the tokens and base layer**, once, from your app's own CSS entry (the file that
-already has `@import "tailwindcss";` in it):
+### 1. Import the tokens
+
+From the CSS entry that already has `@import "tailwindcss";` in it:
 
 ```css
-/* frontend/src/styles.css */
+/* src/styles.css */
 @import "tailwindcss";
 @import "@vitavision/lab-ui/styles.css";
 
-/* Tell Tailwind v4 to scan the package's *built* output for the utility classes its
-   components use — @source only looks at literal source text, and dist/index.js is where
-   those class names actually live once this package is built. */
+/* Tailwind v4 only finds class names in literal source text, and this package's live
+   in its built bundle — without this line they are dropped from your generated CSS. */
 @source "../node_modules/@vitavision/lab-ui/dist";
 ```
 
-`@vitavision/lab-ui/styles.css` is shipped **unprocessed** — it is Tailwind v4 *source*
-(`@import "tailwindcss"`, `@theme inline { … }`), not compiled CSS. Your own Vite +
-`@tailwindcss/vite` build is what resolves it, which is exactly why the `@source` line
-above matters: without it, Tailwind never sees the class names inside this package's
-bundled components and drops them from your build's generated CSS.
+`@vitavision/lab-ui/styles.css` ships **unprocessed**: it is Tailwind v4 *source*
+(`@import "tailwindcss"`, `@theme inline { … }`), not compiled CSS, and your own Vite +
+`@tailwindcss/vite` build is what resolves it. That is why the `@source` line matters.
 
-**2. The no-flash theme script**, in your `index.html`, kept in agreement with
-`initTheme`/`theme.ts` — the class has to be on `<html>` before your first paint, which is
-before any JS module has loaded:
+### 2. Set the theme before the first paint
+
+The class has to be on `<html>` before any JS module loads, so this goes in `index.html`,
+kept in agreement with `theme.ts`:
 
 ```html
 <script>
@@ -65,7 +63,7 @@ before any JS module has loaded:
 </script>
 ```
 
-Then, once your app mounts:
+Then, once your app mounts, subscribe so a choice of `"system"` keeps following the OS:
 
 ```ts
 import { initTheme } from "@vitavision/lab-ui";
@@ -73,11 +71,26 @@ import { initTheme } from "@vitavision/lab-ui";
 initTheme(); // or initTheme("my-app-theme") for a non-default storage key
 ```
 
-**3. `peerDependencies`.** This package expects the consumer to supply `react`,
-`react-dom` and `react-router` (Panel's `PageHeader`/`ReadoutStrip` render `<Link>`, so a
-router context is required at render time). Radix primitives, `clsx`, `tailwind-merge` and
-`lucide-react` are ordinary `dependencies` of this package and install normally — nothing
-extra to add for those.
+### 3. Mount the two contexts the components need
+
+```tsx
+import { TooltipProvider } from "@vitavision/lab-ui";
+import { HashRouter } from "react-router";
+
+createRoot(container).render(
+  <TooltipProvider>
+    <HashRouter>
+      <App />
+    </HashRouter>
+  </TooltipProvider>,
+);
+```
+
+Neither degrades gracefully. `ThemeToggle`, `Tooltip` and `InfoHint` render Radix
+tooltips, which **throw** without a provider; `PageHeader` with a `back` prop and
+`ReadoutStrip` with a linked item render a react-router `<Link>`, which needs a router
+context to exist at all. Under React 19 a throw during render unmounts the entire root —
+so the symptom of a missing provider is not a broken button, it is a blank window.
 
 ## What's in it
 
@@ -93,91 +106,67 @@ extra to add for those.
 | `normal` / `defect` / `warn` | The verdict palette. Reserved for verdicts; never decoration. |
 | `--radius-control` / `--radius-panel` | The two corner radii the whole system uses. |
 
-Both themes are defined in this one file; light is `:root`, dark is `.dark`. `theme.ts`
-exports `ThemeChoice` (`"light" | "dark" | "system"`), `readThemeChoice`, `resolveTheme`,
-`setThemeChoice` and `initTheme`, each taking an optional `storageKey` (default
-`DEFAULT_THEME_STORAGE_KEY = "vitavision-theme"`) so two apps sharing a browser profile can
-use independent keys.
+Both themes live in that one file — light on `:root`, dark on `.dark`. `theme.ts` exports
+`ThemeChoice` (`"light" | "dark" | "system"`), `readThemeChoice`, `resolveTheme`,
+`setThemeChoice` and `initTheme`, each taking an optional storage key (default
+`DEFAULT_THEME_STORAGE_KEY = "vitavision-theme"`) so two apps sharing a browser profile
+keep independent preferences.
 
-### Component inventory
+### Components
 
-**Primitives** (`components/ui`, all re-exported from the package root):
-`Badge`, `CountRun`, `StatusDot` · `Button` · `Dialog`, `ConfirmDialog`, `DialogClose` ·
-`Disclosure` · `Callout`, `Empty`, `ErrorBox`, `ProgressBar`, `Skeleton`, `SkeletonRows` ·
-`Field` · `Input`, `NumberInput`, `Textarea` · `PageHeader`, `Panel`, `ReadoutStrip`,
-`Section` · `SegmentedControl` · `Select` · `Slider` · `Table` · `Checkbox`, `Switch` ·
-`ToggleChip` · `InfoHint`, `Tooltip`, `TooltipProvider` · plus `cn`, `focusRing`,
-`focusRingInset`.
+**Primitives** — `Badge`, `CountRun`, `StatusDot` · `Button` · `Dialog`, `ConfirmDialog`,
+`DialogClose` · `Disclosure` · `Callout`, `Empty`, `ErrorBox`, `ProgressBar`, `Skeleton`,
+`SkeletonRows` · `Field` · `Input`, `NumberInput`, `Textarea` · `PageHeader`, `Panel`,
+`ReadoutStrip`, `Section` · `SegmentedControl` · `Select` · `Slider` · `Table` ·
+`Checkbox`, `Switch` · `ToggleChip` · `InfoHint`, `Tooltip`, `TooltipProvider` ·
+`ThemeToggle` · plus `cn`, `focusRing`, `focusRingInset`.
 
-**Layout & forms**: `Tabs` · `SchemaForm` (renders a `JSON Schema → form`, paired with the
-pure `api/schemaForm.ts` logic: `describeFields`, `initialValues`, `toOptions`,
-`missingRequired`, `outOfRange`, `jsonErrors`, `overrideCount`).
+**Layout & forms** — `Tabs`; `SchemaForm`, which renders a JSON Schema as a form and is
+paired with the pure logic in `api/schemaForm.ts` (`describeFields`, `initialValues`,
+`toOptions`, `missingRequired`, `outOfRange`, `jsonErrors`, `overrideCount`).
 
-**Image viewing**: `ZoomPanCanvas` — a pannable/zoomable frame that transforms every
+**Image viewing** — `ZoomPanCanvas`, a pannable/zoomable frame that transforms every
 stacked child layer together (image, mask, measurement overlay) so they never drift apart;
-exports the pure `zoomAt`/`contentUnder`/`nativeZoomFor` it's built on. `api/mapValues.ts`
-decodes the `VAM1` float32-plane wire format into indexable values (`decodePlane`,
-`valueAt`, `valuesAt`, `fractionOf`, `fetchPlane`) — it never draws; colour range and
-colormap stay the caller's decision.
+it exports the pure `zoomAt` / `contentUnder` / `nativeZoomFor` it is built on.
+`api/mapValues.ts` decodes the `VAM1` float32-plane wire format into indexable values
+(`decodePlane`, `valueAt`, `valuesAt`, `fractionOf`, `fetchPlane`) — it never draws;
+colour range and colormap stay the caller's decision.
 
-**Charts** (`components/charts`, hand-rolled SVG over `scale.ts`'s pure domain/tick/project
-math): `Frame` + `Legend` (the axes/grid/label shell every chart composes), `LineChart`
+**Charts** — hand-rolled SVG over the pure domain/tick/project math in `scale.ts`:
+`Frame` + `Legend` (the axes/grid/label shell every chart composes), `LineChart`
 (multi-series, optional log y), `StackedBars`, `ScoreHistogram` (two-class distribution
-with a threshold rule), and:
+with a threshold rule), and `LineProfile` (one or more series against arc length in pixels
+along a scan line or caliper axis, with detected edges drawn as labelled vertical rules).
 
-- **`LineProfile`** — a 1-D profile chart: one or more series plotted against arc length
-  (in pixels) along a scan line or caliper axis, with detected-edge positions drawn as
-  labelled vertical rules over the series.
+**Measurement overlay** — `MeasureOverlay` is a pure-props SVG layer meant to sit inside
+`ZoomPanCanvas`'s transformed stack, drawing `point`, `segment`, `circle`, `arc`, `caliper`
+and `dimension` primitives given in **source-image pixel coordinates**, each with an
+optional `tone`. No app state and no DOM measurement: a `strokeScale` prop (the current
+image-px→screen-px scale) is all it needs to keep strokes and labels a constant size on
+screen at any zoom. Its geometry lives in `measureGeometry.ts` and is tested without React.
 
-**Measurement overlay** (`components/MeasureOverlay.tsx` + `measureGeometry.ts`):
-
-- **`MeasureOverlay`** — a pure-props SVG layer meant to sit inside `ZoomPanCanvas`'s
-  transformed stack, drawing measurement primitives (`point`, `segment`, `circle`, `arc`,
-  `caliper`, `dimension`) given in **source-image pixel coordinates**, each with an
-  optional `tone` (`signal` / `normal` / `defect` / `warn` / `muted`). No app state, no
-  DOM measurement — a `strokeScale` prop (the current image-px→screen-px scale) is all it
-  needs to keep every stroke and label a constant size on screen at any zoom. The geometry
-  (`arcPath`, `caliperCorners`, `caliperArrow`, `arrowHeadPoints`, `dimensionGeometry`,
-  `crossSegments`, `polygonPath`, `strokeWidthFor`, `rotatePoint`) is factored out and unit
-  tested independently of React.
-
-Tones for the overlay and `LineProfile`'s edge marks share one vocabulary,
-`MeasureTone`/`toneColor` (`src/tone.ts`) — distinct from `components/ui/Badge`'s own
-`Tone`, which is the verdict-badge vocabulary (`normal`/`defect`/`warning`/…) and keeps its
-established name since it is copied verbatim from the source app.
+Overlay and `LineProfile` edge marks share one tone vocabulary, `MeasureTone`/`toneColor`
+(`signal` / `normal` / `defect` / `warn` / `muted`). `Badge`'s `Tone` is a separate,
+verdict-badge vocabulary and keeps its own name.
 
 ## Development
+
+This repo uses **bun**.
 
 ```bash
 bun install
 bun run typecheck   # tsc --noEmit
-bun run test         # vitest run
-bun run build        # tsup -> dist/index.{js,d.ts} + dist/styles.css
+bun run test        # vitest run
+bun run build       # tsup -> dist/index.{js,d.ts} + dist/styles.css
 ```
 
-## What was deliberately not extracted
-
-- **The app-shell layout rules** from `visual-anomaly-lab/frontend/src/styles.css` (the
-  `html, body, #root { height: 100%; overflow: hidden }` fixed-frame block) — that is a
-  decision about how *that* app's shell is laid out, not part of the shared visual
-  language. A design-system package should not force every consumer into a fixed-viewport
-  shell.
-- **`CurveChart`/`ThresholdCurve`** (ROC/PR curves) — explicitly out of scope per the
-  extraction plan; anomaly-lab specific and not part of the metrology gap.
-- **The generated-types coupling** in the source app's `SchemaForm`/`schemaForm.ts` — the
-  copy here types the schema input structurally (`SchemaNode`/`OptionsSchema`), so it has
-  no dependency on any app's generated OpenAPI types.
-- **URL builders** in `mapValues.ts` (`anomalyMapValuesUrl`, `sourceValuesUrl`,
-  `diagnosticValuesUrl`) — those encode one app's API routes; `fetchPlane` takes a URL, so
-  each consumer supplies its own.
-- **A component-library CSS build step** — `styles.css` ships as raw Tailwind v4 source on
-  purpose (see "Consumer wiring" above); pre-compiling it here would fix its utility
-  classes against *this* package's own Tailwind config rather than the consumer's.
+To try a change against a consuming app before publishing, `bun link` this package there;
+`bun run dev` (tsup watch) rebuilds `dist/` and the app's dev server picks it up on reload.
 
 ## Releasing
 
-Publishing is driven by a git tag, not by a branch, so `main` can move without
-releasing and every release is a named, immutable point in history:
+A release is a git tag, never a branch, so `main` can move without publishing and every
+release is a named, immutable point in history:
 
 ```bash
 # bump "version" in package.json first — the workflow refuses a tag that
@@ -186,11 +175,27 @@ git tag v0.2.0
 git push --tags
 ```
 
-`.github/workflows/release.yml` then typechecks, tests, builds, publishes to npm
-with [provenance](https://docs.npmjs.com/generating-provenance-statements) (the
-registry records which commit and workflow run produced the tarball), and opens a
-GitHub release. It needs one repository secret, `NPM_TOKEN` — an npm automation
-token with publish rights on the `@vitavision` scope.
+`.github/workflows/release.yml` then typechecks, tests, builds, publishes to npm, and opens
+a GitHub release. It holds **no npm token**: publishing is authorised by
+[trusted publishing](https://docs.npmjs.com/trusted-publishers), where npm verifies the
+short-lived OIDC token GitHub mints for the run against the publisher registered for the
+package — repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`.
+Change any of those three and publishing stops until npm is told about it. The same
+identity signs the
+[provenance](https://docs.npmjs.com/generating-provenance-statements) attestation, so the
+tarball still records verifiably which commit and run produced it.
+
+## Scope
+
+Deliberately not here:
+
+- **App-shell layout rules.** How an app fills the viewport is that app's decision; a
+  design system should not force every consumer into a fixed-viewport shell.
+- **Compiled CSS.** `styles.css` is Tailwind source on purpose — pre-compiling it would
+  fix its utilities against *this* package's Tailwind config instead of yours.
+- **API routes and generated types.** `fetchPlane` takes a URL and `SchemaForm` types its
+  input structurally, so neither is coupled to any one app's backend.
+- **ROC/PR curves** (`CurveChart`/`ThresholdCurve`) — anomaly-lab specific.
 
 ## License
 
