@@ -8,6 +8,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
+import { byDensity, useDensity } from "./Density";
 import { cn } from "./cn";
 
 export function Panel({
@@ -23,15 +24,33 @@ export function Panel({
   bodyClassName?: string;
   children: ReactNode;
 }) {
+  const density = useDensity();
+
   return (
     <section className={cn("rounded-panel border border-line bg-surface", className)}>
       {(title || actions) && (
-        <header className="flex min-h-11 items-center justify-between gap-4 border-b border-line px-4 py-2.5">
-          <h2 className="text-sm font-semibold tracking-tight text-fg">{title}</h2>
-          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+        <header
+          className={cn(
+            "flex items-center justify-between gap-4 border-b border-line",
+            byDensity(density, "min-h-11 px-4 py-2.5", "min-h-8 px-2.5 py-1"),
+          )}
+        >
+          <h2
+            className={cn(
+              "truncate font-semibold text-fg",
+              byDensity(
+                density,
+                "text-sm tracking-tight",
+                "text-[11px] tracking-wider uppercase text-fg-muted",
+              ),
+            )}
+          >
+            {title}
+          </h2>
+          {actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
         </header>
       )}
-      <div className={cn("p-4", bodyClassName)}>{children}</div>
+      <div className={cn(byDensity(density, "p-4", "p-2.5"), bodyClassName)}>{children}</div>
     </section>
   );
 }
@@ -55,9 +74,11 @@ export function Section({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  const density = useDensity();
+
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-baseline gap-2.5">
+    <section className={cn("flex flex-col", byDensity(density, "gap-3", "gap-1.5"))}>
+      <div className={cn("flex items-baseline", byDensity(density, "gap-2.5", "gap-2"))}>
         {step !== undefined && (
           <span
             className="font-mono text-xs text-fg-subtle tabular-nums"

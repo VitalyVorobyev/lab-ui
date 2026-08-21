@@ -1,6 +1,24 @@
 /**
  * A pannable, zoomable frame that transforms **everything stacked inside it together**.
  *
+ * @deprecated Use `ImageStage` (`components/stage`). Two limits of this component turned out
+ * to be load-bearing rather than incidental, and neither can be lifted without changing what
+ * its props mean:
+ *
+ *   - it scales its layers by the *frame's* size, so every consumer must lay the frame out
+ *     at the source aspect ratio and the one that forgot drew its overlays stretched against
+ *     a letterboxed photograph — layers drifting apart on window resize, invisibly, at
+ *     every window size but one;
+ *   - it calls `setPointerCapture` on every `pointerdown` to pan, so an interactive child —
+ *     a draggable ROI handle, a clickable contour — cannot exist inside it, and consumers
+ *     mounted those layers *outside* the transform, where they stopped moving with the image.
+ *
+ * `ImageStage` lays the stage out at the image's own pixel size (so registration is
+ * structural, not a caller's responsibility), treats `scale` as CSS pixels per image pixel
+ * (so "100%" is a value and zooming out past fit is expressible), and pans only when a
+ * gesture is unclaimed. This component stays exported and unchanged for consumers that have
+ * not migrated.
+ *
  * A result viewer over a stack -- a photograph, an anomaly map, a model's segmentation, a
  * measurement overlay drawn in source-image pixel coordinates (see `MeasureOverlay`) -- and
  * the layers only stay registered with each other if one transform moves all of them.

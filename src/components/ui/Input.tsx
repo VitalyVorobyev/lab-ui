@@ -7,6 +7,7 @@
 
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 
+import { byDensity, useDensity } from "./Density";
 import { cn, focusRingInset } from "./cn";
 
 export const controlClasses = cn(
@@ -20,8 +21,13 @@ export const controlClasses = cn(
 /** @deprecated Use `Input`, `NumberInput`, `Textarea` or `Select`. */
 export const inputClasses = controlClasses;
 
+/** The control height in force — exported so an app's own native control can match. */
+export function useControlHeight(): string {
+  return byDensity(useDensity(), "h-8", "h-7");
+}
+
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...rest} className={cn(controlClasses, "h-8", className)} />;
+  return <input {...rest} className={cn(controlClasses, useControlHeight(), className)} />;
 }
 
 /**
@@ -38,7 +44,7 @@ export function NumberInput({
       {...rest}
       type="number"
       inputMode="decimal"
-      className={cn(controlClasses, "h-8 font-mono tabular-nums", className)}
+      className={cn(controlClasses, useControlHeight(), "font-mono tabular-nums", className)}
     />
   );
 }

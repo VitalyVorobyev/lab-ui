@@ -9,11 +9,19 @@ export { cn, focusRing, focusRingInset } from "./cn";
 
 export { Badge, CountRun, StatusDot, type Tone } from "./Badge";
 export { Button } from "./Button";
+export { DensityProvider, byDensity, useDensity, type Density } from "./Density";
 export { ConfirmDialog, Dialog, DialogClose } from "./Dialog";
 export { Disclosure } from "./Disclosure";
 export { Callout, Empty, ErrorBox, ProgressBar, Skeleton, SkeletonRows } from "./Feedback";
 export { Field } from "./Field";
-export { Input, NumberInput, Textarea, controlClasses, inputClasses } from "./Input";
+export {
+  Input,
+  NumberInput,
+  Textarea,
+  controlClasses,
+  inputClasses,
+  useControlHeight,
+} from "./Input";
 export {
   PageHeader,
   Panel,

@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
+import { byDensity, useDensity } from "./Density";
 import { cn, focusRing } from "./cn";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -23,7 +24,7 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
 
 export function Button({
   variant = "secondary",
-  size = "md",
+  size,
   type = "button",
   loading = false,
   icon,
@@ -33,11 +34,15 @@ export function Button({
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
+  /** Defaults to the density in force — `md` comfortable, `sm` compact. */
   size?: ButtonSize;
   /** Swaps the icon for a spinner and blocks the click, without the label changing. */
   loading?: boolean;
   icon?: ReactNode;
 }) {
+  const density = useDensity();
+  const resolved = size ?? byDensity(density, "md", "sm");
+
   return (
     <button
       type={type}
@@ -47,7 +52,7 @@ export function Button({
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-control font-medium transition-colors",
         "disabled:cursor-not-allowed disabled:opacity-45",
-        SIZE_CLASSES[size],
+        SIZE_CLASSES[resolved],
         VARIANT_CLASSES[variant],
         focusRing,
         className,
