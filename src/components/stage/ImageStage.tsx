@@ -50,6 +50,7 @@ import {
   frameRect,
   imageLengthFor,
   initialView,
+  insideImage,
   isFit,
   preserveCenter,
   scaleRange,
@@ -514,8 +515,7 @@ function hoverPoint(
   if (!element) return null;
   const rect = element.getBoundingClientRect();
   const p = toImage(view, { x: event.clientX - rect.left, y: event.clientY - rect.top });
-  if (p.x < 0 || p.y < 0 || p.x >= image.width || p.y >= image.height) return null;
-  return p;
+  return insideImage(p, image) ? p : null;
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {

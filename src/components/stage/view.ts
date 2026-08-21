@@ -22,6 +22,16 @@
  * Points are in **viewport-local** CSS pixels — client coordinates with the viewport's
  * `getBoundingClientRect()` origin already subtracted. Keeping the rect out of these
  * signatures is what makes them testable without a DOM.
+ *
+ * **Image coordinates name pixel centres**, which is the convention every image-processing
+ * result uses: `i` means the centre of pixel `i`, so an edge detected exactly between two
+ * columns comes back as `i + 0.5`. CSS is the other convention: an `<img>` laid out at its
+ * natural size puts pixel `i` across `[i, i + 1)`, so *its* `i` is the pixel's left edge.
+ * The half-pixel between them is what `PIXEL_CENTRE` carries, and it is not cosmetic on a
+ * metrology bench — at 8x it is four screen pixels of disagreement between an overlay and
+ * the edge it claims to mark, and it is invisible at fit, which is where it gets missed.
+ *
+ * A layer drawn in image coordinates therefore uses `imageViewBox`, not `0 0 W H`.
  */
 
 import type { Point } from "../measureGeometry";
@@ -44,6 +54,23 @@ export interface Rect {
   y: number;
   width: number;
   height: number;
+}
+
+/**
+ * The offset between the two conventions above: an image coordinate `i` sits at CSS `i +
+ * 0.5` inside a stage laid out at the image's natural size.
+ */
+export const PIXEL_CENTRE = 0.5;
+
+/**
+ * The `viewBox` for an SVG layer drawn in image coordinates, over a stage of that image.
+ *
+ * Shifted by half a pixel so a primitive at image coordinate `i` lands on the *centre* of
+ * pixel `i` rather than on its left edge. Its extent is unchanged — the box still covers
+ * exactly the image — so nothing about sizing or `preserveAspectRatio` changes with it.
+ */
+export function imageViewBox(image: Box): string {
+  return `${-PIXEL_CENTRE} ${-PIXEL_CENTRE} ${image.width} ${image.height}`;
 }
 
 /** The most a viewer may magnify: past this the resampler is the subject, not the sensor. */
@@ -103,14 +130,35 @@ export function isFit(view: StageView, box: Box, image: Box): boolean {
   );
 }
 
-/** Where an image point lands in the viewport. */
+/** Where the **centre of** image pixel `p` lands in the viewport. */
 export function toScreen(view: StageView, p: Point): Point {
-  return { x: p.x * view.scale + view.tx, y: p.y * view.scale + view.ty };
+  return {
+    x: (p.x + PIXEL_CENTRE) * view.scale + view.tx,
+    y: (p.y + PIXEL_CENTRE) * view.scale + view.ty,
+  };
 }
 
-/** Which image point a viewport position is over. Unbounded — callers clamp if they care. */
+/**
+ * Which image coordinate a viewport position is over, in the same pixel-centre convention:
+ * the exact centre of the top-left pixel reads `0, 0`, and its top-left corner `-0.5, -0.5`.
+ *
+ * Unbounded — callers clamp if they care.
+ */
 export function toImage(view: StageView, p: Point): Point {
-  return { x: (p.x - view.tx) / view.scale, y: (p.y - view.ty) / view.scale };
+  return {
+    x: (p.x - view.tx) / view.scale - PIXEL_CENTRE,
+    y: (p.y - view.ty) / view.scale - PIXEL_CENTRE,
+  };
+}
+
+/** Whether an image coordinate is inside the image, in the pixel-centre convention. */
+export function insideImage(p: Point, image: Box): boolean {
+  return (
+    p.x >= -PIXEL_CENTRE &&
+    p.y >= -PIXEL_CENTRE &&
+    p.x < image.width - PIXEL_CENTRE &&
+    p.y < image.height - PIXEL_CENTRE
+  );
 }
 
 /** A length in image pixels that covers `css` screen pixels at this view. */
@@ -191,8 +239,8 @@ export function frameRect(box: Box, image: Box, rect: Rect, pad = 0.15): StageVi
   return clampView(
     {
       scale,
-      tx: box.width / 2 - centre.x * scale,
-      ty: box.height / 2 - centre.y * scale,
+      tx: box.width / 2 - (centre.x + PIXEL_CENTRE) * scale,
+      ty: box.height / 2 - (centre.y + PIXEL_CENTRE) * scale,
     },
     box,
     image,
@@ -222,8 +270,8 @@ export function preserveCenter(
   return clampView(
     {
       scale: view.scale,
-      tx: to.width / 2 - centre.x * view.scale,
-      ty: to.height / 2 - centre.y * view.scale,
+      tx: to.width / 2 - (centre.x + PIXEL_CENTRE) * view.scale,
+      ty: to.height / 2 - (centre.y + PIXEL_CENTRE) * view.scale,
     },
     to,
     image,
