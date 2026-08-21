@@ -13,6 +13,7 @@
 
 import { useId, type ReactNode } from "react";
 
+import { byDensity, useDensity } from "./Density";
 import { cn } from "./cn";
 
 export function Field({
@@ -36,15 +37,16 @@ export function Field({
   children: ReactNode;
 }) {
   const describedBy = useId();
+  const density = useDensity();
   const Wrapper = as === "label" ? "label" : "div";
 
   return (
     <Wrapper
-      className={cn("flex min-w-0 flex-col gap-1.5", className)}
+      className={cn("flex min-w-0 flex-col", byDensity(density, "gap-1.5", "gap-1"), className)}
       {...(as === "group" ? { role: "group", "aria-label": label } : {})}
     >
       <span className="flex items-baseline gap-2">
-        <span className="text-xs font-medium text-fg">
+        <span className={cn("font-medium text-fg", byDensity(density, "text-xs", "text-[11px]"))}>
           {label}
           {required && (
             <span className="ml-0.5 text-defect" title="Required">

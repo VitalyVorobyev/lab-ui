@@ -6,8 +6,9 @@
  * by eye down its decimal point rather than read one row at a time.
  */
 
-import type { ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 
+import { byDensity, useDensity } from "./Density";
 import { cn } from "./cn";
 
 export type Column<Row> = {
@@ -37,21 +38,38 @@ export function Table<Row>({
   caption?: string;
   className?: string;
   /** Makes rows activatable. Keyboard-reachable, so a table used as a list of
-   * destinations is not a mouse-only control. */
-  onRowClick?: (row: Row, index: number) => void;
+   * destinations is not a mouse-only control. The event is passed so a caller can read
+   * modifiers — a list kept in step with a canvas needs shift-range and meta-toggle to mean
+   * the same thing in both places. */
+  onRowClick?: (
+    row: Row,
+    index: number,
+    event: MouseEvent<HTMLTableRowElement> | KeyboardEvent<HTMLTableRowElement>,
+  ) => void;
   /** Marks the row that is current — the selected match, the open frame. */
   isRowActive?: (row: Row, index: number) => boolean;
   /** Pointer enter/leave, for tables kept in step with a canvas overlay.
    * `null` on leave. */
   onRowHover?: (row: Row | null, index: number | null) => void;
 }) {
+  const density = useDensity();
+
   if (rows.length === 0) {
-    return <p className="py-6 text-center text-sm text-fg-muted">{empty}</p>;
+    return (
+      <p
+        className={cn(
+          "text-center text-fg-muted",
+          byDensity(density, "py-6 text-sm", "py-3 text-xs"),
+        )}
+      >
+        {empty}
+      </p>
+    );
   }
 
   return (
     <div className={cn("w-full overflow-x-auto", className)}>
-      <table className="w-full text-left text-sm">
+      <table className={cn("w-full text-left", byDensity(density, "text-sm", "text-[11px]"))}>
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
           <tr className="border-b border-line">
@@ -61,7 +79,8 @@ export function Table<Row>({
                 scope="col"
                 style={column.width ? { width: column.width } : undefined}
                 className={cn(
-                  "pb-2 text-xs font-medium text-fg-muted",
+                  "font-medium text-fg-muted",
+                  byDensity(density, "pb-2 pr-3 text-xs", "pb-1 pr-2 text-[10px]"),
                   column.numeric && "text-right",
                 )}
               >
@@ -81,13 +100,13 @@ export function Table<Row>({
               )}
               tabIndex={onRowClick ? 0 : undefined}
               role={onRowClick ? "button" : undefined}
-              onClick={onRowClick ? () => onRowClick(row, index) : undefined}
+              onClick={onRowClick ? (event) => onRowClick(row, index, event) : undefined}
               onKeyDown={
                 onRowClick
                   ? (event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-                        onRowClick(row, index);
+                        onRowClick(row, index, event);
                       }
                     }
                   : undefined
@@ -99,7 +118,8 @@ export function Table<Row>({
                 <td
                   key={column.key}
                   className={cn(
-                    "py-2 pr-3 align-middle text-fg last:pr-0",
+                    "align-middle text-fg last:pr-0",
+                    byDensity(density, "py-2 pr-3", "py-0.5 pr-2"),
                     column.numeric && "text-right font-mono tabular-nums",
                   )}
                 >

@@ -44,7 +44,43 @@ export {
   type SchemaNode,
 } from "./api/schemaForm";
 
-// The pannable/zoomable image stack.
+// The image viewer: one transform over a stack of layers, laid out at the image's own size.
+export {
+  ImageStage,
+  useStage,
+  type ImageStageProps,
+  type StageContext,
+} from "./components/stage/ImageStage";
+export {
+  StageButton,
+  StageReadout,
+  StageToolbar,
+  StageToolbarDivider,
+} from "./components/stage/StageToolbar";
+export {
+  MAX_SCALE,
+  MIN_SCALE_VS_FIT,
+  clampView,
+  fitScale,
+  fitView,
+  formatScale,
+  frameRect,
+  imageLengthFor,
+  initialView,
+  isFit,
+  preserveCenter,
+  scaleRange,
+  steppedScale,
+  toImage,
+  toScreen,
+  zoomAbout,
+  type Box,
+  type ClampOptions,
+  type Rect,
+  type StageView,
+} from "./components/stage/view";
+
+// The previous image viewer. Deprecated in favour of `ImageStage`; see its own doc comment.
 export {
   FULL_TIER_ZOOM,
   MAX_ZOOM,
