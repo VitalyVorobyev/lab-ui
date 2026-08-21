@@ -489,8 +489,17 @@ export function ImageStage({
         </div>
 
         {banner && <div className="pointer-events-none absolute top-2 left-2 z-10">{banner}</div>}
-        {toolbar && <div className="absolute bottom-2 left-2 z-10">{toolbar}</div>}
-        {readout && <div className="pointer-events-none absolute right-2 bottom-2 z-10">{readout}</div>}
+
+        {/* One row, not two corners: as separate absolute boxes the toolbar and the readout
+            overlapped as soon as the canvas was narrower than their combined width, which is
+            an ordinary window on a two-column workbench. `justify-between` keeps them apart
+            and lets the readout be the one that gives up room. */}
+        {(toolbar || readout) && (
+          <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10 flex items-end justify-between gap-2">
+            <div className="pointer-events-auto shrink-0">{toolbar}</div>
+            <div className="min-w-0 truncate">{readout}</div>
+          </div>
+        )}
       </div>
     </Ctx.Provider>
   );
