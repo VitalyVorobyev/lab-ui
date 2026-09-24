@@ -8,7 +8,7 @@
 export { cn, focusRing, focusRingInset } from "./cn";
 
 export { Badge, CountRun, StatusDot, type Tone } from "./Badge";
-export { Button } from "./Button";
+export { Button, ButtonLink, buttonClasses } from "./Button";
 export { DensityProvider, byDensity, useDensity, type Density } from "./Density";
 export { ConfirmDialog, Dialog, DialogClose } from "./Dialog";
 export { Disclosure } from "./Disclosure";

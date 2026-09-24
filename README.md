@@ -114,7 +114,7 @@ keep independent preferences.
 
 ### Components
 
-**Primitives** — `Badge`, `CountRun`, `StatusDot` · `Button` · `Dialog`, `ConfirmDialog`,
+**Primitives** — `Badge`, `CountRun`, `StatusDot` · `Button`, `ButtonLink` (a router link styled as a button — never nest a `Button` in a `Link`), `buttonClasses` · `Dialog`, `ConfirmDialog`,
 `DialogClose` · `Disclosure` · `Callout`, `Empty`, `ErrorBox`, `ProgressBar`, `Skeleton`,
 `SkeletonRows` · `Field` · `Input`, `NumberInput`, `Textarea` · `PageHeader`, `Panel`,
 `ReadoutStrip`, `Section` · `SegmentedControl` · `Select` · `Slider` · `Table` ·
