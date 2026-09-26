@@ -15,12 +15,18 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "setup.js"
+    "setup.js",
+    "stories.js",
+    "stories.d.ts"
   ],
   "exports": {
     ".": {
       "types": "./index.d.ts",
       "default": "./index.js"
+    },
+    "./stories": {
+      "types": "./stories.d.ts",
+      "default": "./stories.js"
     },
     "./setup": "./setup.js",
     "./package.json": "./package.json"
@@ -33,10 +39,15 @@
     "@vitejs/plugin-react": "^6.1.1",
     "vite": "^8.3.1",
     "vitest": "^5.0.2",
-    "@vitest/coverage-v8": "^5.0.2"
+    "@vitest/coverage-v8": "^5.0.2",
+    "@vitest/browser-playwright": "^5.0.2",
+    "@storybook/react-vite": "^10.6.0"
   },
   "peerDependenciesMeta": {
     "@vitest/coverage-v8": {
+      "optional": true
+    },
+    "@storybook/react-vite": {
       "optional": true
     }
   }
