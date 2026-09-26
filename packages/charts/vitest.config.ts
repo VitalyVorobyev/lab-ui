@@ -1,3 +1,3 @@
-import { dom } from "@vitavision/config-vitest";
+import { library } from "@vitavision/config-vitest";
 
-export default dom();
+export default library();
