@@ -57,10 +57,10 @@ jobs:
 
       - uses: changesets/action@v2
         with:
-          version: bun run version-packages
-          publish: bun run release
-          commit: "chore(release): version packages"
-          title: "chore(release): version packages"
+          version-script: bun run version-packages
+          publish-script: bun run release
+          commit-message: "chore(release): version packages"
+          pr-title: "chore(release): version packages"
         env:
           GITHUB_TOKEN: ${{ github.token }}
           NPM_CONFIG_PROVENANCE: "true"
