@@ -50,13 +50,11 @@ jobs:
           done
 
   # ── PLAN §4 Definition-of-Done gates ─────────────────────────────────────────────────
-  # L1-4 adds these jobs and lists their failures (docs/measurements/dod-baseline.md);
-  # `continue-on-error` comes off per package as L1-5 brings it to green.
+  # Required since L1-5 (docs/measurements/dod-l1-5.md): a regression in any gate fails CI.
 
   dod:
     name: "DoD: ${{ matrix.gate }}"
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -79,7 +77,6 @@ jobs:
   stories:
     name: "DoD: stories (interaction, axe, SSR)"
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
@@ -93,7 +90,6 @@ jobs:
   visual:
     name: "DoD: visual regression (macOS)"
     runs-on: macos-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
@@ -104,7 +100,21 @@ jobs:
         working-directory: apps/storybook
       - run: bun run build
         working-directory: apps/storybook
-      - run: bun run test:visual
+      # Baselines are made where they are enforced: label a PR `update-visual-baselines`
+      # and this job rewrites them on the macOS runner and uploads them as the
+      # `visual-baselines` artifact, to be committed (apps/storybook/visual/__screenshots__).
+      - name: Compare with the baselines
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'update-visual-baselines') }}
+        run: bun run test:visual
+      - name: Rewrite the baselines
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'update-visual-baselines') }}
+        run: bunx playwright test --update-snapshots=all
+        working-directory: apps/storybook
+      - uses: actions/upload-artifact@v7
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'update-visual-baselines') }}
+        with:
+          name: visual-baselines
+          path: apps/storybook/visual/__screenshots__
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

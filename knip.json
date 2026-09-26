@@ -1,23 +1,70 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "compilers": { "css": true, "mdx": true },
+  "compilers": {
+    "css": true
+  },
   "workspaces": {
     ".": {
-      "entry": ["tools/inventory/*.ts", "tools/dod/*.ts"],
-      "project": ["tools/inventory/**/*.ts", "tools/dod/**/*.ts"]
+      "entry": [
+        "tools/inventory/*.ts",
+        "tools/dod/*.ts"
+      ],
+      "project": [
+        "tools/inventory/**/*.ts",
+        "tools/dod/**/*.ts"
+      ],
+      "ignoreDependencies": [
+        "@arethetypeswrong/cli"
+      ]
     },
     "packages/*": {
-      "entry": ["src/**/*.stories.tsx"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "entry": [
+        "src/**/*.stories.tsx"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}"
+      ]
     },
-    "packages/config/eslint": { "entry": ["rules/*.js"] },
+    "packages/lab-ui": {
+      "project": [
+        "src/**/*.{ts,tsx}"
+      ]
+    },
+    "packages/config/eslint": {
+      "entry": [
+        "rules/*.js"
+      ]
+    },
+    "packages/config/ts": {
+      "ignoreDependencies": [
+        "tsdown"
+      ]
+    },
+    "packages/config/vitest": {
+      "ignoreDependencies": [
+        "@storybook/react-vite"
+      ]
+    },
     "apps/storybook": {
-      "entry": [".storybook/*.{ts,tsx}", "test/**/*.{ts,tsx}", "visual/**/*.ts"],
-      "project": ["**/*.{ts,tsx}"]
+      "entry": [
+        ".storybook/*.{ts,tsx}",
+        "test/**/*.{ts,tsx}",
+        "visual/**/*.ts"
+      ],
+      "project": [
+        "**/*.{ts,tsx,css}"
+      ]
     },
     "tools/bench/*": {
-      "project": ["**/*.{ts,tsx}"]
+      "project": [
+        "**/*.{ts,tsx,css}"
+      ]
     }
+  },
+  "ignoreIssues": {
+    "packages/ui/src/components/ui/Input.tsx": [
+      "duplicates"
+    ]
   },
   "ignoreExportsUsedInFile": true
 }
