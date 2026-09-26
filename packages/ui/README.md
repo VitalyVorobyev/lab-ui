@@ -10,9 +10,8 @@ every lab app shares. React 19, no CSS-in-JS, no runtime theme engine.
 bun add @vitavision/ui
 ```
 
-`react` and `react-dom` are peers. Until the router decoupling (PLAN L1-3) lands, so is
-`react-router`: `PageHeader`'s back link, `ReadoutStrip`'s linked items and `ButtonLink` render
-its `<Link>`.
+`react` and `react-dom` are peers. There is no router dependency: anything that navigates
+takes the app's own link element (see "Links" below).
 
 ## Getting started
 
@@ -61,26 +60,38 @@ import { initTheme } from "@vitavision/ui";
 initTheme(); // or initTheme("my-app-theme") for a non-default storage key
 ```
 
-### 3. Mount the two contexts the components need
+### 3. Mount the tooltip provider
 
 ```tsx
 import { TooltipProvider } from "@vitavision/ui";
-import { HashRouter } from "react-router";
 
 createRoot(container).render(
   <TooltipProvider>
-    <HashRouter>
-      <App />
-    </HashRouter>
+    <App />
   </TooltipProvider>,
 );
 ```
 
-Neither degrades gracefully. `ThemeToggle`, `Tooltip` and `InfoHint` render Radix
-tooltips, which **throw** without a provider; `PageHeader` with a `back` prop and
-`ReadoutStrip` with a linked item render a react-router `<Link>`, which needs a router
-context to exist at all. Under React 19 a throw during render unmounts the entire root —
-so the symptom of a missing provider is not a broken button, it is a blank window.
+It does not degrade gracefully: `ThemeToggle`, `Tooltip` and `InfoHint` render Radix tooltips,
+which **throw** without a provider, and under React 19 a throw during render unmounts the
+entire root — the symptom of a missing provider is a blank window, not a broken button.
+
+### Links
+
+The package never imports a router. Every component that navigates renders a plain `<a href>`
+by default and takes **your** link element for client-side navigation:
+
+```tsx
+import { Link } from "react-router"; // or any router
+
+<ButtonLink asChild variant="primary"><Link to="/runs/new">New run</Link></ButtonLink>
+<Button asChild variant="ghost"><Link to="/settings">Settings</Link></Button>
+<PageHeader title="Run 12" back={<Link to="/runs">Runs</Link>} />
+<ReadoutStrip items={[{ label: "model", value: "patchcore", link: <Link to="/models/patchcore" /> }]} />
+```
+
+`asChild` (Radix `Slot`) renders the component's look onto its one child, so a link stays a
+link: one element, one tab stop, announced as what it is.
 
 ## What's in it
 
@@ -104,7 +115,7 @@ keep independent preferences.
 
 ### Components
 
-**Primitives** — `Badge`, `CountRun`, `StatusDot` · `Button`, `ButtonLink` (a router link styled as a button — never nest a `Button` in a `Link`), `buttonClasses` · `Dialog`, `ConfirmDialog`,
+**Primitives** — `Badge`, `CountRun`, `StatusDot` · `Button`, `ButtonLink` (a navigation styled as a button — never nest a `Button` in a link), `buttonClasses` · `Dialog`, `ConfirmDialog`,
 `DialogClose` · `Disclosure` · `Callout`, `Empty`, `ErrorBox`, `ProgressBar`, `Skeleton`,
 `SkeletonRows` · `Field` · `Input`, `NumberInput`, `Textarea` · `PageHeader`, `Panel`,
 `ReadoutStrip`, `Section` · `SegmentedControl` · `Select` · `Slider` · `Table` ·

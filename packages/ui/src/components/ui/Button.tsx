@@ -1,6 +1,6 @@
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { Loader2 } from "lucide-react";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
-import { Link, type LinkProps } from "react-router";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 
 import { byDensity, useDensity } from "./Density";
 import { cn, focusRing } from "./cn";
@@ -55,26 +55,48 @@ function ButtonIcon({ icon }: { icon: ReactNode }) {
   );
 }
 
+/**
+ * An action. `asChild` renders the button's look onto the single child element instead of a
+ * `<button>` — how a router's link becomes a button-shaped navigation without this package
+ * knowing about routers: `<Button asChild><Link to="/runs">Runs</Link></Button>`.
+ * For a plain URL, `ButtonLink` is the shorter spelling.
+ */
 export function Button({
   variant = "secondary",
   size,
   type = "button",
   loading = false,
   icon,
+  asChild = false,
   className,
   children,
   disabled,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant;
+  variant?: ButtonVariant | undefined;
   /** Defaults to the density in force — `md` comfortable, `sm` compact. */
-  size?: ButtonSize;
+  size?: ButtonSize | undefined;
   /** Swaps the icon for a spinner and blocks the click, without the label changing. */
-  loading?: boolean;
+  loading?: boolean | undefined;
   icon?: ReactNode;
+  /**
+   * Render onto the one child element (Radix `Slot`) rather than a `<button>`. The child
+   * keeps its own semantics — a link stays a link — so `type`, `disabled` and `loading` do
+   * not apply.
+   */
+  asChild?: boolean | undefined;
 }) {
   const density = useDensity();
   const resolved = size ?? byDensity(density, "md", "sm");
+
+  if (asChild) {
+    return (
+      <Slot {...rest} className={buttonClasses({ variant, size: resolved, className })}>
+        {icon && <ButtonIcon icon={icon} />}
+        <Slottable>{children}</Slottable>
+      </Slot>
+    );
+  }
 
   return (
     <button
@@ -102,27 +124,35 @@ export function Button({
  * a screen reader announce a button that navigates. There is no `disabled` or `loading`:
  * a link that cannot be followed should not be rendered as one, and a navigation has no
  * pending state of its own.
+ *
+ * It renders a plain `<a href>`. For a router's link, pass it as the only child with
+ * `asChild` — `<ButtonLink asChild><Link to="/runs">Runs</Link></ButtonLink>` — so client-side
+ * navigation keeps working and this package still never imports a router.
  */
 export function ButtonLink({
   variant = "secondary",
   size,
   icon,
+  asChild = false,
   className,
   children,
   ...rest
-}: LinkProps & {
-  variant?: ButtonVariant;
+}: AnchorHTMLAttributes<HTMLAnchorElement> & {
+  variant?: ButtonVariant | undefined;
   /** Defaults to the density in force — `md` comfortable, `sm` compact. */
-  size?: ButtonSize;
+  size?: ButtonSize | undefined;
   icon?: ReactNode;
+  /** Render onto the one child element — a router's `<Link>` — instead of an `<a>`. */
+  asChild?: boolean | undefined;
 }) {
   const density = useDensity();
   const resolved = size ?? byDensity(density, "md", "sm");
+  const Comp = asChild ? Slot : "a";
 
   return (
-    <Link {...rest} className={buttonClasses({ variant, size: resolved, className })}>
+    <Comp {...rest} className={buttonClasses({ variant, size: resolved, className })}>
       {icon && <ButtonIcon icon={icon} />}
-      {children}
-    </Link>
+      <Slottable>{children}</Slottable>
+    </Comp>
   );
 }
