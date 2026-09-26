@@ -10,8 +10,11 @@
  * that reads as constant on screen.
  */
 
+/** A 2D point — in image pixels unless a signature says otherwise. */
 export interface Point {
+  /** Horizontal coordinate, increasing rightward. */
   x: number;
+  /** Vertical coordinate, increasing downward. */
   y: number;
 }
 
@@ -179,6 +182,7 @@ export function arrowHeadPoints(tip: Point, angle: number, size: number): [Point
   ];
 }
 
+/** What `dimensionGeometry` computes: the lines and label placement of a dimension annotation. */
 export interface DimensionGeometry {
   /** From the first measured point out to the dimension line. */
   extensionLine1: [Point, Point];

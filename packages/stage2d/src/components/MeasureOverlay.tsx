@@ -23,54 +23,83 @@ import { cn, toneColor, type MeasureTone } from "@vitavision/ui";
 
 export type { MeasureTone };
 
+/** A marked location: a dot, or a cross for a subpixel edge. */
 export interface PointPrimitive {
+  /** Discriminant. */
   kind: "point";
+  /** Image x of the point. */
   x: number;
+  /** Image y of the point. */
   y: number;
+  /** Verdict colour. Defaults to the neutral tone. */
   tone?: MeasureTone;
   /** Native-pixel radius of the dot. Ignored when `cross` is set. */
   radius?: number;
   /** Drawn as a cross instead of a dot — the usual mark for a subpixel edge location. */
   cross?: boolean;
+  /** Text drawn just above the mark. */
   label?: string;
 }
 
+/** A straight line between two image points. */
 export interface SegmentPrimitive {
+  /** Discriminant. */
   kind: "segment";
+  /** Image x of the first end. */
   x1: number;
+  /** Image y of the first end. */
   y1: number;
+  /** Image x of the second end. */
   x2: number;
+  /** Image y of the second end. */
   y2: number;
+  /** Verdict colour. Defaults to the neutral tone. */
   tone?: MeasureTone;
   /** A short dash pattern, e.g. for a fitted line shown against its inlier points. */
   dashed?: boolean;
 }
 
+/** A circle — a fitted bore, a tolerance ring. */
 export interface CirclePrimitive {
+  /** Discriminant. */
   kind: "circle";
+  /** Image x of the centre. */
   cx: number;
+  /** Image y of the centre. */
   cy: number;
+  /** Radius, in image pixels. */
   r: number;
+  /** Verdict colour. Defaults to the neutral tone. */
   tone?: MeasureTone;
   /** Filled rather than stroked — rare, but a small confidence disc wants it. */
   filled?: boolean;
 }
 
+/** A circular arc, swept forward (clockwise on screen) from `startAngle` to `endAngle`. */
 export interface ArcPrimitive {
+  /** Discriminant. */
   kind: "arc";
+  /** Image x of the centre. */
   cx: number;
+  /** Image y of the centre. */
   cy: number;
+  /** Radius, in image pixels. */
   r: number;
   /** Radians. `x = cx + r·cos(a)`, `y = cy + r·sin(a)` — clockwise on screen. */
   startAngle: number;
+  /** Radians, same convention as `startAngle`. A full turn past it draws a whole circle. */
   endAngle: number;
+  /** Verdict colour. Defaults to the neutral tone. */
   tone?: MeasureTone;
 }
 
+/** A caliper search box: a rotated rectangle with an arrow along its scan direction. */
 export interface CaliperPrimitive {
+  /** Discriminant. */
   kind: "caliper";
-  /** Box centre. */
+  /** Image x of the box centre. */
   cx: number;
+  /** Image y of the box centre. */
   cy: number;
   /** Along the box's own measurement axis. */
   width: number;
@@ -78,24 +107,35 @@ export interface CaliperPrimitive {
   height: number;
   /** Radians, the box's own rotation (and its measurement direction). */
   angle: number;
+  /** Verdict colour. Defaults to the neutral tone. */
   tone?: MeasureTone;
   /** Draws the direction arrow along the box's +x axis. Defaults to on. */
   showDirection?: boolean;
+  /** Text drawn at the box centre. */
   label?: string;
 }
 
+/** A dimension annotation: extension lines, an offset dimension line, and its value as text. */
 export interface DimensionPrimitive {
+  /** Discriminant. */
   kind: "dimension";
+  /** Image x of the first measured point. */
   x1: number;
+  /** Image y of the first measured point. */
   y1: number;
+  /** Image x of the second measured point. */
   x2: number;
+  /** Image y of the second measured point. */
   y2: number;
+  /** The measured value as text, drawn along the dimension line. */
   label: string;
+  /** Verdict colour. Defaults to the neutral tone. */
   tone?: MeasureTone;
   /** Native pixels the dimension line sits off the measured span. Defaults to 16. */
   offset?: number;
 }
 
+/** Anything `MeasureOverlay` can draw, discriminated by `kind`. */
 export type MeasurePrimitive =
   | PointPrimitive
   | SegmentPrimitive
@@ -109,22 +149,33 @@ const DEFAULT_POINT_RADIUS = 3;
 const DEFAULT_CROSS_SIZE = 5;
 const DEFAULT_DIMENSION_OFFSET = 16;
 
+/** Props of `MeasureOverlay`. */
 export interface MeasureOverlayProps {
   /** The source image's pixel width — the overlay's `viewBox`, and every primitive's frame. */
   nativeWidth: number;
+  /** The source image's pixel height. */
   nativeHeight: number;
+  /** What to draw, in image pixel coordinates, bottom to top. */
   primitives: MeasurePrimitive[];
   /**
    * The combined image-pixel → screen-pixel scale currently in effect, so a stroke or a
-   * label declared at "1 screen pixel" stays that size regardless of zoom. When the
-   * overlay is sized to exactly `nativeWidth` × `nativeHeight` CSS pixels before any
-   * `ZoomPanCanvas` transform (the common case — see that component's `View.zoom`), this
-   * is simply the current `zoom`. See `measureGeometry.ts`'s `strokeWidthFor`.
+   * label declared at "1 screen pixel" stays that size regardless of zoom. Inside an
+   * `ImageStage` (which lays the overlay out at exactly `nativeWidth` × `nativeHeight` CSS
+   * pixels) this is simply `useStage().view.scale`. See `strokeWidthFor`.
    */
   strokeScale: number;
+  /** Merged onto the `<svg>` with `cn`. */
   className?: string;
 }
 
+/**
+ * A vector overlay of measurement primitives — points, segments, circles, arcs, caliper
+ * boxes, dimensions — drawn in source-image pixel coordinates.
+ *
+ * Place it as a layer inside `ImageStage` so it moves with the image. It is a pure function
+ * of its props and decorative to assistive technology (`aria-hidden`), so a result drawn
+ * only here must also be stated in text.
+ */
 export function MeasureOverlay({
   nativeWidth,
   nativeHeight,
@@ -146,6 +197,8 @@ export function MeasureOverlay({
     >
       {primitives.map((primitive, index) => (
         <Primitive
+          // Primitives carry no identity and hold no state; a position is the only key.
+          // eslint-disable-next-line @eslint-react/no-array-index-key
           key={index}
           primitive={primitive}
           hairline={hairline}
