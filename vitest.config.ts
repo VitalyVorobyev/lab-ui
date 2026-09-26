@@ -8,6 +8,8 @@ export default defineConfig({
     // for what these components need, considerably faster to start.
     environment: "happy-dom",
     globals: false,
+    // tools/ carries its own `bun test` suites.
+    include: ["src/**/*.test.{ts,tsx}"],
     setupFiles: ["./src/test-setup.ts"],
   },
 });

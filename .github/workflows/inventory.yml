@@ -1,0 +1,46 @@
+name: Inventory
+
+# The L0-2 dependency matrix: every mapped frontend's declared versions against the §3
+# baseline, read from each repo's default branch on GitHub. It reports; it never fails on
+# a deviation — the per-repo "0 deviations" gate is `deps.ts --strict --repo <id>`, run by
+# the upgrade PR for that repo (PLAN L2).
+
+on:
+  pull_request:
+    paths: ["tools/inventory/**", ".github/workflows/inventory.yml"]
+  push:
+    branches: [main]
+    paths: ["tools/inventory/**"]
+  schedule:
+    - cron: "17 6 1 * *" # monthly, 06:17 UTC on the 1st
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deps:
+    name: Dependency matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Unit tests
+        run: bun test tools/inventory
+
+      - name: Render the matrix from GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bun tools/inventory/deps.ts --remote --out deps.md
+
+      - name: Publish to the job summary
+        run: cat deps.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: deps
+          path: deps.md

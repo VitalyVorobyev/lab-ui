@@ -13,6 +13,8 @@ export interface Repo {
   frontend: string;
   github: string;
   in_plan: boolean;
+  /** `package.json` files to read, relative to `frontend`. Defaults to `["package.json"]`. */
+  manifests?: string[];
 }
 
 export interface Concept {

@@ -1,0 +1,64 @@
+# The toolchain baseline (PLAN.md §3) as data, read by deps.ts.
+#
+# Rule: latest, unless a peer range blocks it; then the newest compatible version, with the
+# blocker and its re-check trigger recorded in docs/adrs/0002-toolchain-baseline.md.
+# Read from the npm registry 2026-09-26.
+#
+#   version = "x.y.z"   the baseline
+#   exact   = true      the declared range must be exactly this version (no ^/~)
+#   note    = "…"       shown next to a deviation
+
+[packages]
+react = { version = "19.3.0", note = "R3F 9.8.1 peers <19.4" }
+react-dom = { version = "19.3.0" }
+"@types/react" = { version = "19.3.0" }
+"@types/react-dom" = { version = "19.3.0" }
+react-router = { version = "8.4.0" }
+typescript = { version = "6.0.3", note = "typescript-eslint 8.70.1 peers <6.1.0" }
+vite = { version = "8.3.1" }
+"@vitejs/plugin-react" = { version = "6.1.1" }
+vitest = { version = "5.0.2" }
+"@vitest/browser-playwright" = { version = "5.0.2" }
+tailwindcss = { version = "4.3.3" }
+"@tailwindcss/vite" = { version = "4.3.3" }
+"@tailwindcss/postcss" = { version = "4.3.3" }
+eslint = { version = "10.11.0" }
+typescript-eslint = { version = "8.70.1" }
+"@eslint-react/eslint-plugin" = { version = "5.20.8" }
+eslint-plugin-react-hooks = { version = "7.1.1" }
+eslint-plugin-storybook = { version = "10.6.0" }
+storybook = { version = "10.6.0" }
+"@storybook/addon-docs" = { version = "10.6.0" }
+"@storybook/addon-a11y" = { version = "10.6.0" }
+"@storybook/react-vite" = { version = "10.6.0" }
+tsdown = { version = "0.23.0", exact = true, note = "0.x: pinned exactly" }
+three = { version = "0.186.1", exact = true, note = "three breaks on minor releases" }
+"@types/three" = { version = "0.186.0", exact = true }
+"@react-three/fiber" = { version = "9.8.1" }
+"@react-three/drei" = { version = "10.7.9" }
+konva = { version = "10.7.0", note = "only until the L6 stage decision" }
+react-konva = { version = "19.3.0", note = "only until the L6 stage decision" }
+motion = { version = "13.4.4" }
+lucide-react = { version = "1.48.0" }
+"@playwright/test" = { version = "1.63.0" }
+"@axe-core/playwright" = { version = "4.13.0" }
+"@changesets/cli" = { version = "3.0.3" }
+size-limit = { version = "14.0.1" }
+"@microsoft/api-extractor" = { version = "7.59.2" }
+publint = { version = "0.3.24" }
+"@arethetypeswrong/cli" = { version = "0.18.5" }
+knip = { version = "6.38.0" }
+"@tauri-apps/api" = { version = "2.11.1" }
+"@tauri-apps/cli" = { version = "2.11.5" }
+
+# Packages that must not appear at all; the value says what replaces them.
+[replaced]
+react-router-dom = "react-router 8 (there is no 8.x react-router-dom)"
+framer-motion = "motion"
+tsup = "tsdown (tsup is unmaintained)"
+eslint-plugin-jsx-a11y = "axe in story tests (peers eslint <=9)"
+"@storybook/addon-vitest" = "composeStories in Vitest browser mode (peers vitest ^3||^4)"
+
+# Documented exceptions: "<repo>.<package>" = "reason, with ADR link". A deviation listed
+# here is reported as an exception, not a deviation.
+[exceptions]

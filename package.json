@@ -38,7 +38,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "inventory:concepts": "bun tools/inventory/matrix.ts"
+    "inventory:concepts": "bun tools/inventory/matrix.ts",
+    "inventory:deps": "bun tools/inventory/deps.ts",
+    "test:tools": "bun test tools"
   },
   "peerDependencies": {
     "react": "^19.2.8",
