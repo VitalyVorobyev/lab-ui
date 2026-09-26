@@ -1,7 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
-import { defaultClientConditions } from "vite";
+import { defaultClientConditions, defaultServerConditions } from "vite";
 import { defineConfig } from "vitest/config";
 
 /**
@@ -33,10 +33,14 @@ export default defineConfig({
       },
       {
         extends: true,
+        // Node-side resolution ignores `resolve.conditions`: without these, a workspace package
+        // resolves to its `dist/` (absent on a clean checkout) instead of its sources.
+        ssr: { resolve: { conditions: ["@vitavision/source", ...defaultServerConditions] } },
         test: {
           name: "ssr",
           environment: "node",
           include: ["test/**/*.ssr.test.tsx"],
+          server: { deps: { inline: [/@vitavision\//] } },
         },
       },
     ],
