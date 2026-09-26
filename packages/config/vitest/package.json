@@ -3,20 +3,41 @@
   "version": "0.1.0",
   "description": "Shared Vitest presets for vitavision frontends.",
   "license": "MIT OR Apache-2.0",
-  "repository": { "type": "git", "url": "git+https://github.com/VitalyVorobyev/lab-ui.git", "directory": "packages/config/vitest" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VitalyVorobyev/lab-ui.git",
+    "directory": "packages/config/vitest"
+  },
   "type": "module",
-  "sideEffects": ["./setup.js"],
-  "files": ["index.js", "index.d.ts", "setup.js"],
+  "sideEffects": [
+    "./setup.js"
+  ],
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "setup.js"
+  ],
   "exports": {
-    ".": { "types": "./index.d.ts", "default": "./index.js" },
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
     "./setup": "./setup.js",
     "./package.json": "./package.json"
   },
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "@testing-library/react": "^16.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "vite": "^8.3.1",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.2",
+    "@vitest/coverage-v8": "^5.0.2"
+  },
+  "peerDependenciesMeta": {
+    "@vitest/coverage-v8": {
+      "optional": true
+    }
   }
 }

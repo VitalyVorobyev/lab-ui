@@ -1,0 +1,70 @@
+[
+  {
+    "name": "@vitavision/ui",
+    "path": "packages/ui/dist/index.js",
+    "import": "*",
+    "ignore": [
+      "@radix-ui/react-checkbox",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-select",
+      "@radix-ui/react-slider",
+      "@radix-ui/react-slot",
+      "@radix-ui/react-switch",
+      "@radix-ui/react-tooltip",
+      "clsx",
+      "lucide-react",
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "tailwind-merge"
+    ]
+  },
+  {
+    "name": "@vitavision/forms",
+    "path": "packages/forms/dist/index.js",
+    "import": "*",
+    "ignore": [
+      "@vitavision/ui",
+      "react",
+      "react-dom",
+      "react/jsx-runtime"
+    ]
+  },
+  {
+    "name": "@vitavision/charts",
+    "path": "packages/charts/dist/index.js",
+    "import": "*",
+    "ignore": [
+      "@vitavision/ui",
+      "react",
+      "react-dom",
+      "react/jsx-runtime"
+    ]
+  },
+  {
+    "name": "@vitavision/stage2d",
+    "path": "packages/stage2d/dist/index.js",
+    "import": "*",
+    "ignore": [
+      "@vitavision/ui",
+      "lucide-react",
+      "react",
+      "react-dom",
+      "react/jsx-runtime"
+    ]
+  },
+  {
+    "name": "@vitavision/lab-ui",
+    "path": "packages/lab-ui/dist/index.js",
+    "import": "*",
+    "ignore": [
+      "@vitavision/charts",
+      "@vitavision/forms",
+      "@vitavision/stage2d",
+      "@vitavision/ui",
+      "react",
+      "react-dom",
+      "react/jsx-runtime"
+    ]
+  }
+]

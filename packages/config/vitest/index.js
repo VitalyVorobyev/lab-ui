@@ -23,6 +23,12 @@ export function dom(overrides = {}) {
         globals: false,
         setupFiles: [setup],
         include: ["src/**/*.test.{ts,tsx}"],
+        coverage: {
+          provider: "v8",
+          include: ["src/**/*.{ts,tsx}"],
+          exclude: ["src/**/*.{test,stories}.{ts,tsx}", "src/index.ts"],
+          reporter: ["text-summary", "json-summary"],
+        },
       },
     }),
     overrides,

@@ -35,7 +35,9 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "api": "api-extractor run --local",
+    "api:check": "api-extractor run"
   },
   "peerDependencies": {
     "react": "^19.2.0",

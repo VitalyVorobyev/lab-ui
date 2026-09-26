@@ -44,3 +44,65 @@ jobs:
             test -f "packages/$p/dist/index.d.ts"
             test -f "packages/$p/dist/styles.css"
           done
+
+  # ── PLAN §4 Definition-of-Done gates ─────────────────────────────────────────────────
+  # L1-4 adds these jobs and lists their failures (docs/measurements/dod-baseline.md);
+  # `continue-on-error` comes off per package as L1-5 brings it to green.
+
+  dod:
+    name: "DoD: ${{ matrix.gate }}"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        gate: [lint, api, publint, attw, knip, size, coverage]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - name: api-extractor (report must match the committed etc/*.api.md)
+        if: matrix.gate == 'api'
+        run: bun run --filter './packages/*' api:check
+      - if: matrix.gate != 'api'
+        run: bun run ${{ matrix.gate }}
+
+  stories:
+    name: "DoD: stories (interaction, axe, SSR)"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+        working-directory: apps/storybook
+      - run: bun run test:stories
+
+  visual:
+    name: "DoD: visual regression (macOS)"
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install chromium
+        working-directory: apps/storybook
+      - run: bun run build
+        working-directory: apps/storybook
+      - run: bun run test:visual
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: visual-report
+          path: |
+            apps/storybook/visual-report
+            apps/storybook/test-results
