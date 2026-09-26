@@ -2,6 +2,7 @@
   {
     "name": "@vitavision/ui",
     "path": "packages/ui/dist/index.js",
+    "limit": "7.77 kB",
     "import": "*",
     "ignore": [
       "@radix-ui/react-checkbox",
