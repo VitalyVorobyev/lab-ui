@@ -37,7 +37,8 @@
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "inventory:concepts": "bun tools/inventory/matrix.ts"
   },
   "peerDependencies": {
     "react": "^19.2.8",
