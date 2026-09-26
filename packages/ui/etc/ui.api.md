@@ -4,11 +4,9 @@
 
 ```ts
 
-import { AnchorHTMLAttributes } from 'react';
-import { ButtonHTMLAttributes } from 'react';
 import { ClassValue } from 'clsx';
+import { ComponentProps } from 'react';
 import { ForwardRefExoticComponent } from 'react';
-import { InputHTMLAttributes } from 'react';
 import { JSX } from 'react';
 import { KeyboardEvent as KeyboardEvent_2 } from 'react';
 import { LucideIcon } from 'lucide-react';
@@ -17,7 +15,6 @@ import * as RadixDialog from '@radix-ui/react-dialog';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
-import { TextareaHTMLAttributes } from 'react';
 
 // @public
 export type BackLink = {
@@ -27,15 +24,15 @@ export type BackLink = {
 /** A link element — typically a router's `<Link to="…">Label</Link>` — styled and prefixed with an arrow. */
 ReactElement;
 
-// @public (undocumented)
+// @public
 export function Badge(input: {
-    tone?: Tone;
-    className?: string;
+    tone?: Tone | undefined;
+    className?: string | undefined;
     children: ReactNode;
 }): JSX.Element;
 
 // @public
-export function Button(input: ButtonHTMLAttributes<HTMLButtonElement> & {
+export function Button(input: ComponentProps<"button"> & {
     variant?: ButtonVariant | undefined;
     size?: ButtonSize | undefined;
     loading?: boolean | undefined;
@@ -51,7 +48,7 @@ export function buttonClasses(input?: {
 }): string;
 
 // @public
-export function ButtonLink(input: AnchorHTMLAttributes<HTMLAnchorElement> & {
+export function ButtonLink(input: ComponentProps<"a"> & {
     variant?: ButtonVariant | undefined;
     size?: ButtonSize | undefined;
     icon?: ReactNode;
@@ -59,32 +56,42 @@ export function ButtonLink(input: AnchorHTMLAttributes<HTMLAnchorElement> & {
 }): JSX.Element;
 
 // @public
+export type ButtonSize = "sm" | "md";
+
+// @public
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+
+// @public
 export function byDensity<T>(density: Density, comfortable: T, compact: T): T;
 
-// @public (undocumented)
+// @public
 export function Callout(input: {
-    tone?: CalloutTone;
+    tone?: CalloutTone | undefined;
     title?: ReactNode;
     actions?: ReactNode;
-    className?: string;
+    className?: string | undefined;
     children: ReactNode;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
+export type CalloutTone = "info" | "warning" | "error" | "success";
+
+// @public
 export function Checkbox(input: {
     checked: boolean | "indeterminate";
     onCheckedChange: (checked: boolean) => void;
-    onClick?: (event: MouseEvent_2<HTMLButtonElement>) => void;
+    onClick?: ((event: MouseEvent_2<HTMLButtonElement>) => void) | undefined;
     label?: ReactNode;
     description?: ReactNode;
-    disabled?: boolean;
-    "aria-label"?: string;
+    disabled?: boolean | undefined;
+    "aria-label"?: string | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function cn(...inputs: ClassValue[]): string;
 
-// @public (undocumented)
+// @public
 export type Column<Row> = {
     key: string;
     header: ReactNode;
@@ -93,7 +100,7 @@ export type Column<Row> = {
     cell: (row: Row) => ReactNode;
 };
 
-// @public (undocumented)
+// @public
 export function ConfirmDialog(input: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -104,67 +111,72 @@ export function ConfirmDialog(input: {
     loading?: boolean;
     disabled?: boolean;
     destructive?: boolean;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export const controlClasses: string;
 
 // @public
 export function CountRun(input: {
     counts: [string, number, Tone][];
+    className?: string | undefined;
 }): JSX.Element;
 
 // @public
 export const DEFAULT_THEME_STORAGE_KEY = "vitavision-theme";
 
-// @public (undocumented)
+// @public
 export type Density = "comfortable" | "compact";
 
-// @public (undocumented)
+// @public
 export function DensityProvider(input: {
     value: Density;
     children: ReactNode;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function Dialog(input: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     title: string;
     description?: ReactNode;
     footer?: ReactNode;
+    className?: string | undefined;
     children?: ReactNode;
 }): JSX.Element;
 
 // @public
 export const DialogClose: ForwardRefExoticComponent<RadixDialog.DialogCloseProps & RefAttributes<HTMLButtonElement>>;
 
-// @public (undocumented)
+// @public
 export function Disclosure(input: {
     summary: ReactNode;
     count?: number;
     defaultOpen?: boolean;
-    className?: string;
+    className?: string | undefined;
     children: ReactNode;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function Empty(input: {
     action?: ReactNode;
+    className?: string | undefined;
     children: ReactNode;
 }): JSX.Element;
 
 // @public
 export function ErrorBox(input: {
+    className?: string | undefined;
     children: ReactNode;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function Field(input: {
     label: string;
     description?: ReactNode;
     error?: ReactNode;
-    required?: boolean;
+    required?: boolean | undefined;
     annotation?: ReactNode;
     as?: "label" | "group";
     className?: string | undefined;
@@ -180,52 +192,55 @@ export const focusRingInset = "focus-visible:outline-2 focus-visible:outline-off
 // @public
 export function InfoHint(input: {
     children: ReactNode;
-    label?: string;
-    icon?: LucideIcon;
+    label?: string | undefined;
+    icon?: LucideIcon | undefined;
 }): JSX.Element;
 
 // @public
 export function initTheme(storageKey?: string): () => void;
 
-// @public (undocumented)
-export function Input(input: InputHTMLAttributes<HTMLInputElement>): JSX.Element;
+// @public
+export function Input(input: ComponentProps<"input">): JSX.Element;
 
-// @public @deprecated (undocumented)
+// @public @deprecated
 export const inputClasses: string;
 
 // @public
 export type MeasureTone = "signal" | "normal" | "defect" | "warn" | "muted";
 
 // @public
-export function NumberInput(input: InputHTMLAttributes<HTMLInputElement> & {
+export function NumberInput(input: Omit<ComponentProps<"input">, "min" | "max"> & {
     min?: number | undefined;
     max?: number | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function PageHeader(input: {
     title: ReactNode;
     meta?: ReactNode;
     actions?: ReactNode;
     back?: BackLink | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function Panel(input: {
     title?: ReactNode;
     actions?: ReactNode;
-    className?: string;
-    bodyClassName?: string;
+    className?: string | undefined;
+    bodyClassName?: string | undefined;
     children: ReactNode;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function ProgressBar(input: {
     fraction: number;
-    label?: string;
+    label?: string | undefined;
+    "aria-label"?: string | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export type ReadoutItem = {
     label?: string | undefined;
     value: ReactNode;
@@ -236,10 +251,10 @@ export type ReadoutItem = {
 // @public
 export function ReadoutStrip(input: {
     items: ReadoutItem[];
-    className?: string;
+    className?: string | undefined;
 }): JSX.Element | null;
 
-// @public (undocumented)
+// @public
 export function readThemeChoice(storageKey?: string): ThemeChoice;
 
 // @public
@@ -247,10 +262,11 @@ export function resolveTheme(choice: ThemeChoice): "light" | "dark";
 
 // @public
 export function Section(input: {
-    step?: number;
+    step?: number | undefined;
     title: string;
     hint?: ReactNode;
     actions?: ReactNode;
+    className?: string | undefined;
     children: ReactNode;
 }): JSX.Element;
 
@@ -263,21 +279,22 @@ export function SegmentedControl(input: {
         label: string;
     }[];
     onValueChange: (value: string) => void;
-    disabled?: boolean;
-    "aria-label"?: string;
-    className?: string;
+    disabled?: boolean | undefined;
+    "aria-label"?: string | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function Select(input: {
     value: string;
     onValueChange: (value: string) => void;
     options: SelectOption[];
-    placeholder?: string;
+    placeholder?: string | undefined;
     unsetLabel?: string | undefined;
-    disabled?: boolean;
-    "aria-label"?: string;
-    className?: string;
+    disabled?: boolean | undefined;
+    "aria-label"?: string | undefined;
+    "aria-describedby"?: string | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
 // @public
@@ -288,118 +305,120 @@ export type SelectOption = {
     disabled?: boolean;
 };
 
-// @public (undocumented)
+// @public
 export function setThemeChoice(choice: ThemeChoice, storageKey?: string): void;
 
-// @public (undocumented)
+// @public
 export function Skeleton(input: {
-    className?: string;
+    className?: string | undefined;
 }): JSX.Element;
 
 // @public
 export function SkeletonRows(input: {
-    rows?: number;
-    className?: string;
+    rows?: number | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function Slider(input: {
     value: number;
     onValueChange: (value: number) => void;
-    onValueCommit?: (value: number) => void;
-    min?: number;
-    max?: number;
-    step?: number;
+    onValueCommit?: ((value: number) => void) | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
+    step?: number | undefined;
     readout?: ReactNode;
-    disabled?: boolean;
-    "aria-label"?: string;
-    className?: string;
+    disabled?: boolean | undefined;
+    "aria-label"?: string | undefined;
+    "aria-describedby"?: string | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
 // @public
 export function StatusDot(input: {
     tone: Tone;
+    className?: string | undefined;
     children?: ReactNode;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function Switch(input: {
     checked: boolean;
     onCheckedChange: (checked: boolean) => void;
     label: ReactNode;
     description?: ReactNode;
-    disabled?: boolean;
+    disabled?: boolean | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
 // @public
 export interface TabItem<Id extends string> {
     count?: number;
-    // (undocumented)
     disabled?: boolean;
-    // (undocumented)
     id: Id;
-    // (undocumented)
     label: string;
     title?: string;
 }
 
-// @public (undocumented)
+// @public
 export function Table<Row>(input: {
     columns: Column<Row>[];
     rows: Row[];
     rowKey: (row: Row, index: number) => string | number;
     empty?: ReactNode;
-    caption?: string;
-    className?: string;
+    caption?: string | undefined;
+    className?: string | undefined;
     onRowClick?: (row: Row, index: number, event: MouseEvent_2<HTMLTableRowElement> | KeyboardEvent_2<HTMLTableRowElement>) => void;
     isRowActive?: (row: Row, index: number) => boolean;
     onRowHover?: (row: Row | null, index: number | null) => void;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function Tabs<Id extends string>(input: {
     items: TabItem<Id>[];
     active: Id;
     onSelect: (id: Id) => void;
     label: string;
-    className?: string;
+    idPrefix?: string | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
-export function Textarea(input: TextareaHTMLAttributes<HTMLTextAreaElement>): JSX.Element;
+// @public
+export function Textarea(input: ComponentProps<"textarea">): JSX.Element;
 
 // @public
 export type ThemeChoice = "light" | "dark" | "system";
 
 // @public
 export function ThemeToggle(input: {
-    storageKey?: string;
-    className?: string;
+    storageKey?: string | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function ToggleChip(input: {
     checked: boolean;
     onCheckedChange: (checked: boolean) => void;
     children: ReactNode;
     swatch?: string;
-    disabled?: boolean;
-    title?: string;
+    disabled?: boolean | undefined;
+    title?: string | undefined;
+    className?: string | undefined;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export type Tone = "neutral" | "normal" | "defect" | "unlabeled" | "warning" | "info";
 
 // @public
 export function toneColor(tone: MeasureTone | undefined, fallback?: MeasureTone): string;
 
-// @public (undocumented)
+// @public
 export function Tooltip(input: {
     content: ReactNode;
     children: ReactNode;
 }): JSX.Element;
 
-// @public (undocumented)
+// @public
 export function TooltipProvider(input: {
     children: ReactNode;
 }): JSX.Element;
@@ -409,47 +428,6 @@ export function useControlHeight(): string;
 
 // @public
 export function useDensity(): Density;
-
-// Warnings were encountered during analysis:
-//
-// dist/index.d.ts:34:1 - (ae-undocumented) Missing documentation for "readThemeChoice".
-// dist/index.d.ts:37:1 - (ae-undocumented) Missing documentation for "setThemeChoice".
-// dist/index.d.ts:95:1 - (ae-undocumented) Missing documentation for "cn".
-// dist/index.d.ts:110:1 - (ae-undocumented) Missing documentation for "Tone".
-// dist/index.d.ts:111:1 - (ae-undocumented) Missing documentation for "Badge".
-// dist/index.d.ts:151:3 - (ae-forgotten-export) The symbol "ButtonVariant" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:153:3 - (ae-forgotten-export) The symbol "ButtonSize" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:187:1 - (ae-undocumented) Missing documentation for "Density".
-// dist/index.d.ts:192:1 - (ae-undocumented) Missing documentation for "DensityProvider".
-// dist/index.d.ts:198:1 - (ae-undocumented) Missing documentation for "Dialog".
-// dist/index.d.ts:207:1 - (ae-undocumented) Missing documentation for "ConfirmDialog".
-// dist/index.d.ts:223:1 - (ae-undocumented) Missing documentation for "Disclosure".
-// dist/index.d.ts:234:1 - (ae-undocumented) Missing documentation for "Callout".
-// dist/index.d.ts:235:3 - (ae-forgotten-export) The symbol "CalloutTone" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:245:1 - (ae-undocumented) Missing documentation for "Empty".
-// dist/index.d.ts:249:1 - (ae-undocumented) Missing documentation for "Skeleton".
-// dist/index.d.ts:257:1 - (ae-undocumented) Missing documentation for "ProgressBar".
-// dist/index.d.ts:263:1 - (ae-undocumented) Missing documentation for "Field".
-// dist/index.d.ts:275:22 - (ae-undocumented) Missing documentation for "controlClasses".
-// dist/index.d.ts:277:22 - (ae-undocumented) Missing documentation for "inputClasses".
-// dist/index.d.ts:280:1 - (ae-undocumented) Missing documentation for "Input".
-// dist/index.d.ts:290:1 - (ae-undocumented) Missing documentation for "Textarea".
-// dist/index.d.ts:293:1 - (ae-undocumented) Missing documentation for "Panel".
-// dist/index.d.ts:320:1 - (ae-undocumented) Missing documentation for "PageHeader".
-// dist/index.d.ts:331:1 - (ae-undocumented) Missing documentation for "ReadoutItem".
-// dist/index.d.ts:407:1 - (ae-undocumented) Missing documentation for "Select".
-// dist/index.d.ts:419:1 - (ae-undocumented) Missing documentation for "Slider".
-// dist/index.d.ts:433:1 - (ae-undocumented) Missing documentation for "Column".
-// dist/index.d.ts:441:1 - (ae-undocumented) Missing documentation for "Table".
-// dist/index.d.ts:462:1 - (ae-undocumented) Missing documentation for "Switch".
-// dist/index.d.ts:469:1 - (ae-undocumented) Missing documentation for "Checkbox".
-// dist/index.d.ts:488:1 - (ae-undocumented) Missing documentation for "ToggleChip".
-// dist/index.d.ts:500:1 - (ae-undocumented) Missing documentation for "TooltipProvider".
-// dist/index.d.ts:503:1 - (ae-undocumented) Missing documentation for "Tooltip".
-// dist/index.d.ts:531:3 - (ae-undocumented) Missing documentation for "id".
-// dist/index.d.ts:532:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:535:3 - (ae-undocumented) Missing documentation for "disabled".
-// dist/index.d.ts:539:1 - (ae-undocumented) Missing documentation for "Tabs".
 
 // (No @packageDocumentation comment for this package)
 

@@ -1,4 +1,4 @@
-/**
+/*
  * A picker with a list you can actually see.
  *
  * A native `<select>` cannot style its option list on macOS, so the popup arrives in the OS
@@ -13,48 +13,83 @@
 
 import * as RadixSelect from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
+import { useFieldDescription } from "./Field";
 import { cn, focusRingInset } from "./cn";
 
 const UNSET_SENTINEL = "__unset__";
 
+/** One entry of a `Select`'s list. */
 export type SelectOption = {
+  /** What `onValueChange` reports. Must not be `""`, which means unset. */
   value: string;
+  /** What the list and the trigger show. */
   label: string;
   /** Shown quietly after the label -- a strategy, a count, a reason it is unavailable. */
   note?: string;
+  /** Shown but not choosable; say why in `note`. */
   disabled?: boolean;
 };
 
+/**
+ * A picker whose option list is styled with the app, with room for a quiet note per option.
+ *
+ * Controlled, and **`""` means unset**: the trigger then shows `placeholder`, and the
+ * `unsetLabel` entry (when given) reports `""`. The trigger carries Radix's `data-state`
+ * (`open`/`closed`), `data-placeholder` while unset and `data-disabled`; inside a `Field` it
+ * is described by the field's description and error.
+ */
 export function Select({
   value,
   onValueChange,
   options,
   placeholder = "Choose…",
-  /** When given, adds a leading entry that returns the field to unset. */
   unsetLabel,
   disabled = false,
   "aria-label": ariaLabel,
+  "aria-describedby": ownDescribedBy,
   className,
 }: {
+  /** The chosen option's value, or `""` for unset. */
   value: string;
+  /** Called with the chosen value, or `""` for the unset entry. */
   onValueChange: (value: string) => void;
+  /** The list, in order. */
   options: SelectOption[];
-  placeholder?: string;
+  /** Shown on the trigger while the value is unset. Defaults to "Choose…". */
+  placeholder?: string | undefined;
+  /** When given, adds a leading entry that returns the field to unset. */
   unsetLabel?: string | undefined;
-  disabled?: boolean;
-  "aria-label"?: string;
-  className?: string;
+  /** Blocks the trigger. */
+  disabled?: boolean | undefined;
+  /** Names the trigger, where no `<label>` does. */
+  "aria-label"?: string | undefined;
+  /** Ids of elements describing the trigger, merged with a surrounding `Field`'s. */
+  "aria-describedby"?: string | undefined;
+  /** Merged with the trigger's own classes through `cn`. */
+  className?: string | undefined;
 }) {
+  const [open, setOpen] = useState(false);
+  const described = useFieldDescription(ownDescribedBy);
+
   return (
     <RadixSelect.Root
-      // "" is the unset value, which Radix spells as no `value` at all (it shows the placeholder).
-      {...(value === "" ? {} : { value })}
+      // Controlled for its whole lifetime: Radix treats `value=""` as "no selection" and shows
+      // the placeholder, which is exactly this component's unset.
+      value={value}
       onValueChange={(next) => onValueChange(next === UNSET_SENTINEL ? "" : next)}
+      open={open}
+      onOpenChange={setOpen}
       disabled={disabled}
     >
       <RadixSelect.Trigger
         aria-label={ariaLabel}
+        {...described}
+        // While the list is open Radix hides everything outside it from assistive technology
+        // (`aria-hidden`), this trigger included; a hidden element must not stay in the tab
+        // order. Focus returns to it on close all the same.
+        tabIndex={open ? -1 : undefined}
         className={cn(
           "flex h-8 w-full items-center justify-between gap-2 rounded-control border border-line-strong bg-raised px-2.5 text-sm text-fg",
           "transition-colors hover:border-fg-subtle",

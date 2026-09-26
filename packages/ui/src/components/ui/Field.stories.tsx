@@ -23,8 +23,10 @@ Don't use the default \`label\` wrapper around more than one control.
 
 **Accessibility**: the default wraps the control in a \`<label>\`, so it is named by the label
 text. \`as="group"\` renders \`role="group"\` with \`aria-label\`. The error is \`role="alert"\`. The
-description gets an id, but the caller's control must reference it itself via
-\`aria-describedby\` — the field does not pass it down. The required marker is a \`*\` with a
+description and the error are wired into the control's \`aria-describedby\` (the error also sets
+\`aria-invalid\`) for this package's controls — \`Input\`, \`NumberInput\`, \`Textarea\`, \`Select\`,
+\`Slider\`, \`SegmentedControl\`, \`Checkbox\` — and, with \`as="group"\`, onto the group itself. A
+control of your own must reference them itself. The required marker is a \`*\` with a
 \`title\`, not \`aria-required\` on the control.`,
       },
     },
@@ -46,6 +48,11 @@ export const Default: Story = {
 
 export const WithDescription: Story = {
   args: { description: "Scores above this are reported as defects." },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("textbox", { name: "Threshold" })).toHaveAccessibleDescription(
+      "Scores above this are reported as defects.",
+    );
+  },
 };
 
 export const Required: Story = {
@@ -69,6 +76,9 @@ export const WithError: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("alert")).toHaveTextContent("Must be an odd number.");
+    const input = canvas.getByRole("spinbutton", { name: /Kernel size/ });
+    await expect(input).toHaveAccessibleDescription("Must be an odd number.");
+    await expect(input).toHaveAttribute("aria-invalid", "true");
   },
 };
 
@@ -76,6 +86,7 @@ export const Group: Story = {
   args: {
     label: "Image size",
     as: "group",
+    description: "In pixels, before any crop.",
     children: (
       <div className="flex gap-2">
         <Input aria-label="Width" defaultValue="1920" />
@@ -85,7 +96,9 @@ export const Group: Story = {
   },
   play: async ({ canvas }) => {
     const group = canvas.getByRole("group", { name: "Image size" });
-    await expect(group).toBeInTheDocument();
+    // A group carries the description itself; the inputs inside do not repeat it.
+    await expect(group).toHaveAccessibleDescription("In pixels, before any crop.");
+    await expect(canvas.getByRole("textbox", { name: "Width" })).not.toHaveAttribute("aria-describedby");
   },
 };
 

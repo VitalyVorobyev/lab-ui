@@ -3,6 +3,8 @@
  *
  * Import `@vitavision/ui/styles.css` once, from the CSS entry that already has
  * `@import "tailwindcss";` — see the README for the wiring.
+ *
+ * @packageDocumentation
  */
 
 export {

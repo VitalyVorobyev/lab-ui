@@ -1,4 +1,4 @@
-/**
+/*
  * Content folded away, with a caret we draw ourselves.
  *
  * The base layer (`styles.css`) removes the native `<details>` marker; this supplies one
@@ -14,6 +14,12 @@ import type { ReactNode } from "react";
 
 import { cn } from "./cn";
 
+/**
+ * Content folded away behind a summary line, on a native `<details>`, with a caret that
+ * rotates with the element's own `open` state (no JavaScript involved).
+ *
+ * Uncontrolled: `defaultOpen` sets the initial state and the element owns it after that.
+ */
 export function Disclosure({
   summary,
   count,
@@ -21,11 +27,15 @@ export function Disclosure({
   className,
   children,
 }: {
+  /** The always-visible line that toggles the content. */
   summary: ReactNode;
   /** How many things are inside, where the number is the reason to open it. */
   count?: number;
+  /** Whether it starts open. */
   defaultOpen?: boolean;
-  className?: string;
+  /** Merged with the `<details>` element's own classes through `cn`. */
+  className?: string | undefined;
+  /** The folded content. */
   children: ReactNode;
 }) {
   return (

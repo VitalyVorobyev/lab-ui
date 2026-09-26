@@ -1,4 +1,4 @@
-/**
+/*
  * Which of the two palettes is on screen.
  *
  * Judging an anomaly map, or a measurement overlay drawn over a low-contrast part, against
@@ -17,6 +17,10 @@
  * changes.
  */
 
+/**
+ * A stored theme preference: a palette, or `system` to follow the OS
+ * (`prefers-color-scheme`) and keep following it.
+ */
 export type ThemeChoice = "light" | "dark" | "system";
 
 /**
@@ -29,9 +33,20 @@ export type ThemeChoice = "light" | "dark" | "system";
  */
 export const DEFAULT_THEME_STORAGE_KEY = "vitavision-theme";
 
+// Every DOM access here is inside a function, and guarded: this module is imported on the
+// server too.
 const query = () =>
-  typeof window.matchMedia === "function" ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-color-scheme: dark)")
+    : null;
 
+/**
+ * The stored preference.
+ *
+ * @param storageKey - The `localStorage` key. Defaults to `DEFAULT_THEME_STORAGE_KEY`.
+ * @returns The stored choice, or `system` when nothing valid is stored or storage cannot be
+ *   read (private browsing, the server).
+ */
 export function readThemeChoice(storageKey: string = DEFAULT_THEME_STORAGE_KEY): ThemeChoice {
   try {
     const stored = window.localStorage.getItem(storageKey);
@@ -43,16 +58,29 @@ export function readThemeChoice(storageKey: string = DEFAULT_THEME_STORAGE_KEY):
   return "system";
 }
 
-/** What `choice` actually resolves to right now. */
+/**
+ * What `choice` actually resolves to right now.
+ *
+ * @param choice - The preference.
+ * @returns `choice` itself for `light`/`dark`; for `system`, the OS palette (`light` where
+ *   it cannot be queried).
+ */
 export function resolveTheme(choice: ThemeChoice): "light" | "dark" {
   if (choice !== "system") return choice;
   return query()?.matches ? "dark" : "light";
 }
 
 function paint(choice: ThemeChoice): void {
+  if (typeof document === "undefined") return;
   document.documentElement.classList.toggle("dark", resolveTheme(choice) === "dark");
 }
 
+/**
+ * Store a preference and paint it (the `dark` class on `<html>`).
+ *
+ * @param choice - The new preference.
+ * @param storageKey - The `localStorage` key. Defaults to `DEFAULT_THEME_STORAGE_KEY`.
+ */
 export function setThemeChoice(
   choice: ThemeChoice,
   storageKey: string = DEFAULT_THEME_STORAGE_KEY,
@@ -68,7 +96,8 @@ export function setThemeChoice(
 /**
  * Paint the stored choice and keep following the OS while the choice is "system".
  *
- * Returns an unsubscribe so a test can tear the listener down; a long-lived app never does.
+ * @param storageKey - The `localStorage` key. Defaults to `DEFAULT_THEME_STORAGE_KEY`.
+ * @returns An unsubscribe, so a test can tear the listener down; a long-lived app never does.
  */
 export function initTheme(storageKey: string = DEFAULT_THEME_STORAGE_KEY): () => void {
   paint(readThemeChoice(storageKey));

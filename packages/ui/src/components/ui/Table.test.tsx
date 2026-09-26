@@ -40,9 +40,7 @@ describe("Table", () => {
     const rows = screen.getAllByRole("row");
     fireEvent.click(rows[1]!, { shiftKey: true });
     expect(onRowClick).toHaveBeenCalledTimes(1);
-    expect(onRowClick.mock.calls[0]![0]).toEqual(ROWS[0]);
-    expect(onRowClick.mock.calls[0]![1]).toBe(0);
-    expect(onRowClick.mock.calls[0]![2].shiftKey).toBe(true);
+    expect(onRowClick).toHaveBeenNthCalledWith(1, ROWS[0], 0, expect.objectContaining({ shiftKey: true }));
 
     fireEvent.keyDown(rows[2]!, { key: "Enter" });
     expect(onRowClick).toHaveBeenCalledTimes(2);

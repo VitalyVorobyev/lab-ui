@@ -22,8 +22,9 @@ act, so it carries the action rather than describing it. Loading is a shape, not
 
 **Accessibility**: an \`error\` callout is \`role="alert"\` (announced at once), every other tone
 is \`role="status"\`; the icon is \`aria-hidden\`. \`SkeletonRows\` is a \`status\` labelled "Loading"
-and its bars are \`aria-hidden\`. \`ProgressBar\` is a \`progressbar\` with \`aria-valuenow\` in percent;
-it has no accessible name of its own, and the visible \`label\` is not wired to it.`,
+and its bars are \`aria-hidden\`. \`ProgressBar\` is a \`progressbar\` with \`aria-valuenow\` in percent,
+named by \`aria-label\`, else by its \`label\`, else "Progress" — name the job when a screen shows
+more than one bar.`,
       },
     },
   },
@@ -101,13 +102,13 @@ export const Loading: Story = {
 export const Progress: Story = {
   render: () => <ProgressBar fraction={0.42} label="42 of 100 images" />,
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "42");
+    await expect(canvas.getByRole("progressbar", { name: "42 of 100 images" })).toHaveAttribute("aria-valuenow", "42");
   },
 };
 
 export const ProgressClamped: Story = {
   render: () => <ProgressBar fraction={1.7} />,
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
+    await expect(canvas.getByRole("progressbar", { name: "Progress" })).toHaveAttribute("aria-valuenow", "100");
   },
 };

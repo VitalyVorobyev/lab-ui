@@ -30,8 +30,8 @@ a reload as itself.
 a second app sharing the browser profile passes its own \`storageKey\`.
 
 **Accessibility**: a real button whose \`aria-label\` names the *current* state ("Theme: light"),
-repeated in a tooltip on hover and focus; the icon is decorative. The stored choice is read
-after mount, so the server and first client render agree (always "system").`,
+repeated in a tooltip on hover and focus; the icon is decorative. The stored choice is read (as an external store)
+after hydration, so the server and the hydrating client render agree (always "system").`,
       },
     },
   },
