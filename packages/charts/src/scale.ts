@@ -12,15 +12,31 @@
 
 /** A tick's position in domain units, with the label to draw beside it. */
 export interface Tick {
+  /** Where the tick sits, in domain units — pass it to {@link Scale.project}. */
   value: number;
+  /** The text to draw beside it, formatted by {@link formatTick}. */
   label: string;
 }
 
+/**
+ * A map from a numeric domain onto a pixel range, with the ticks to label it.
+ *
+ * @remarks
+ * Built by {@link linearScale} or {@link logScale}. `project` is not clamped: a value
+ * outside the domain lands outside the range.
+ */
 export interface Scale {
   /** Domain, after padding and after any log transform's guard. */
   domain: [number, number];
   /** Map one domain value onto the pixel range this scale was built for. */
   project: (value: number) => number;
+  /**
+   * Ticks inside the domain, in ascending order.
+   *
+   * @param count - Roughly how many ticks to aim for (default 5). The result may have a
+   *   few more or fewer: steps are "nice" (see {@link niceStep}), or whole decades on a log
+   *   scale.
+   */
   ticks: (count?: number) => Tick[];
 }
 
@@ -62,6 +78,14 @@ function decimalsFor(step: number): number {
   return MAX_DECIMALS;
 }
 
+/**
+ * The label for one tick: as many decimals as the step needs, or an exponent for a
+ * magnitude below 1e-3 or from 1e6 upwards.
+ *
+ * @param value - The tick's value.
+ * @param step - The spacing between neighbouring ticks; it decides the decimals.
+ * @returns The label, or `""` for a non-finite value.
+ */
 export function formatTick(value: number, step: number): string {
   if (!Number.isFinite(value)) return "";
   const magnitude = Math.abs(value);
@@ -90,6 +114,11 @@ export function padDomain(min: number, max: number): [number, number] {
   return [min, max];
 }
 
+/**
+ * The `[min, max]` of the finite values, ignoring `NaN` and infinities.
+ *
+ * @returns `[0, 1]` when there is no finite value, so an empty series still has an axis.
+ */
 export function extent(values: readonly number[]): [number, number] {
   const finite = values.filter((value) => Number.isFinite(value));
   if (finite.length === 0) return [0, 1];

@@ -9,39 +9,67 @@
  * vertical rule with its own label, independent of the series being plotted.
  */
 
+import type { ReactNode } from "react";
+
 import { Frame, Legend, areaFor, seriesColour } from "./Frame";
 import type { Variant } from "./Frame";
 import { extent, linePath, linearScale } from "./scale";
 import { toneColor, type MeasureTone } from "@vitavision/ui";
 
+/** One sampled profile of a {@link LineProfile}. */
 export interface ProfileSeries {
+  /** Legend text, and the React key — unique within one chart. */
   name: string;
   /** `x` is arc length along the scan line or caliper axis, in pixels. */
   points: { x: number; y: number }[];
+  /** Any CSS colour. Omitted: {@link seriesColour} of the series' index. */
   colour?: string;
 }
 
+/** A detected edge or chosen crossing, drawn as a dashed vertical rule. */
 export interface EdgeMark {
   /** Position along the same arc-length axis as `ProfileSeries.points[].x`. */
   position: number;
+  /** Text drawn above the rule, in the rule's colour. Omitted: no text. */
   label?: string;
+  /** The rule's colour, as a `@vitavision/ui` measurement tone. Default `"signal"`. */
   tone?: MeasureTone;
 }
 
+/** Props for {@link LineProfile}. */
 export interface LineProfileProps {
+  /** The profiles, drawn in order. */
   series: ProfileSeries[];
   /** Detected edge positions, drawn as vertical rules over the series. */
   edges?: EdgeMark[];
+  /** Accessible name of the chart (the SVG's `aria-label`). Required. */
   label: string;
+  /** x-axis title. Default `"arc length (px)"`. */
   xLabel?: string;
+  /** y-axis title. Default `"value"`. */
   yLabel?: string;
+  /** Fixed x domain. Omitted: the extent of every point's `x` and every edge's position. */
   xDomain?: [number, number];
+  /** Fixed y domain. Omitted: the extent of every point's `y`. */
   yDomain?: [number, number];
-  footer?: React.ReactNode;
+  /** Rendered under the legend, inside the `<figcaption>`. */
+  footer?: ReactNode;
+  /** Show the legend row when there is more than one series. Default `true`. */
   showLegend?: boolean;
+  /** Where the chart is going (see {@link Variant}). Default `"wide"`. */
   variant?: Variant;
+  /** Extra classes for the outer `<figure>`, merged with `cn`. */
+  className?: string | undefined;
 }
 
+/**
+ * One or more series against arc length along a scan line or caliper axis, with detected
+ * edges as labelled vertical rules.
+ *
+ * @remarks
+ * An SVG `role="img"` named by `label`. The legend appears only for two or more series — a
+ * single profile is named by the chart's label.
+ */
 export function LineProfile({
   series,
   edges = [],
@@ -53,6 +81,7 @@ export function LineProfile({
   footer,
   showLegend = true,
   variant = "wide",
+  className,
 }: LineProfileProps) {
   const allX = [...series.flatMap((entry) => entry.points.map((point) => point.x)), ...edges.map((edge) => edge.position)];
   const allY = series.flatMap((entry) => entry.points.map((point) => point.y));
@@ -74,6 +103,7 @@ export function LineProfile({
       yLabel={yLabel}
       label={label}
       variant={variant}
+      className={className}
       footer={
         <div className="flex flex-col gap-1">
           {showLegend && series.length > 1 && (
@@ -107,11 +137,11 @@ export function LineProfile({
         ),
       )}
 
-      {edges.map((edge, index) => {
+      {edges.map((edge) => {
         const x = xScale.project(edge.position);
         const colour = toneColor(edge.tone, "signal");
         return (
-          <g key={index}>
+          <g key={`${edge.position}-${edge.label ?? ""}-${edge.tone ?? ""}`}>
             <line
               x1={x}
               x2={x}

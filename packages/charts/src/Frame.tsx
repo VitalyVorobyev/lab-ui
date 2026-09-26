@@ -15,8 +15,18 @@
 
 import type { ReactNode } from "react";
 
+import { cn } from "@vitavision/ui";
+
 import type { Scale } from "./scale";
 
+/**
+ * Where a chart is going: `panel` (a 480×280 viewBox) for one column of a two-column grid,
+ * `wide` (960×320) for a chart that spans a panel on its own.
+ *
+ * @remarks
+ * Pick it by placement, not by pixel width — it keeps the chart's text at the same rendered
+ * size as its neighbours'.
+ */
 export type Variant = "panel" | "wide";
 
 const GEOMETRY = {
@@ -26,7 +36,14 @@ const GEOMETRY = {
 
 const MARGIN = { left: 56, right: 12, top: 12, bottom: 34 } as const;
 
-/** The drawable rectangle for one variant, in that variant's viewBox units. */
+/**
+ * The drawable rectangle for one variant, in that variant's viewBox units.
+ *
+ * @param variant - Which viewBox the chart is drawn in.
+ * @returns The plot area's edges — `x0`/`x1` left to right, `y0` the bottom and `y1` the top
+ *   (SVG y grows downwards) — and the whole viewBox's `width`/`height`. Build scales over
+ *   `[x0, x1]` and `[y0, y1]`.
+ */
 export function areaFor(variant: Variant) {
   const { width, height } = GEOMETRY[variant];
   return {
@@ -45,12 +62,19 @@ export const plotArea = areaFor("panel");
 /** Held at the two ends of the neutral ramp, matching the design system's chrome colours. */
 const AXIS = "currentColor";
 
+/** Props for {@link Frame}. */
 export interface FrameProps {
+  /** The horizontal scale, built over this variant's `x0`…`x1` (see {@link areaFor}). */
   xScale: Scale;
+  /** The vertical scale, built over this variant's `y0`…`y1` (see {@link areaFor}). */
   yScale: Scale;
+  /** Axis title under the x axis. Omitted: no title. */
   xLabel?: string | undefined;
+  /** Axis title beside the y axis, rotated. Omitted: no title. */
   yLabel?: string | undefined;
+  /** Rough number of x ticks to ask the scale for. Default 5. */
   xTicks?: number;
+  /** Rough number of y ticks to ask the scale for. Default 4. */
   yTicks?: number;
   /** Drawn inside the plot area, above the grid and below nothing. */
   children?: ReactNode;
@@ -60,8 +84,17 @@ export interface FrameProps {
   footer?: ReactNode;
   /** Where this chart is going, so its text renders at the same size as its neighbours. */
   variant?: Variant;
+  /** Extra classes for the outer `<figure>`, merged with `cn`. */
+  className?: string | undefined;
 }
 
+/**
+ * The plot shell every chart here composes: grid, ticks, axes, axis titles, a footer.
+ *
+ * @remarks
+ * Renders a `<figure>` holding an SVG with `role="img"` named by `label`, and the `footer`
+ * as its `<figcaption>`. `children` are drawn in viewBox units over the grid.
+ */
 export function Frame({
   xScale,
   yScale,
@@ -73,6 +106,7 @@ export function Frame({
   label,
   footer,
   variant = "panel",
+  className,
 }: FrameProps) {
   const horizontal = xScale.ticks(xTicks);
   const vertical = yScale.ticks(yTicks);
@@ -80,7 +114,7 @@ export function Frame({
   const PLOT = GEOMETRY[variant];
 
   return (
-    <figure className="flex flex-col gap-1 text-fg-muted">
+    <figure className={cn("flex flex-col gap-1 text-fg-muted", className)}>
       <svg
         role="img"
         aria-label={label}
@@ -175,13 +209,34 @@ export function Frame({
   );
 }
 
+
+/** One entry of a {@link Legend}. */
+export interface LegendItem {
+  /** The series name, rendered as text — it is what a screen reader announces. */
+  label: string;
+  /** Any CSS colour: a `var(--series-n)` from {@link seriesColour}, or a verdict token. */
+  colour: string;
+}
+
+/** Props for {@link Legend}. */
+export interface LegendProps {
+  /** Entries, in the order the series were drawn. */
+  items: LegendItem[];
+  /** Extra classes for the `<ul>`, merged with `cn`. */
+  className?: string | undefined;
+}
+
 /**
- * A legend row. Kept beside the frame rather than inside the SVG so the swatches use the
- * same Tailwind colours as the rest of the UI instead of a second palette in viewBox units.
+ * A legend row. Kept beside the frame rather than inside the SVG so the swatches are real
+ * text and CSS rather than a second typography in viewBox units.
+ *
+ * @remarks
+ * The swatches are `aria-hidden`; each series is identified by its name, never by colour
+ * alone.
  */
-export function Legend({ items }: { items: { label: string; colour: string }[] }) {
+export function Legend({ items, className }: LegendProps) {
   return (
-    <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
+    <ul className={cn("flex flex-wrap items-center gap-x-4 gap-y-1", className)}>
       {items.map((item) => (
         <li key={item.label} className="flex items-center gap-1.5">
           <span
@@ -197,36 +252,57 @@ export function Legend({ items }: { items: { label: string; colour: string }[] }
 }
 
 /**
- * The shared series palette.
+ * The shared categorical series palette, as CSS paint values: `var(--series-1)` …
+ * `var(--series-6)`.
  *
- * Ordered so the first three are distinguishable to a colourblind reader. The chrome
- * carries no saturation at all, which makes this the *only* place in the design system
- * allowed to be loud: a chart, an anomaly map, a measurement overlay is the data, and
- * nothing around it should compete.
+ * @remarks
+ * The colours themselves are tokens in `@vitavision/charts/styles.css`, defined for both
+ * themes, so that stylesheet must be imported after `@vitavision/ui/styles.css`. The chrome
+ * carries no saturation, which makes this the one place a chart is allowed to be loud.
  *
- * Fixed hexes rather than the theme's custom properties because these are read through
- * `fill`/`stroke` on an SVG and, more importantly, they must stay identical between the
- * light and dark palettes — a series that changed colour with the theme would make two
- * screenshots of one run disagree about which curve is which.
+ * Each slot keeps its hue family across the themes — cyan, orange, violet, blue, pink, then
+ * a neutral grey as the sixth — and only its lightness changes, so every colour holds 3:1
+ * against the panel in both. The six stay distinguishable under simulated protanopia,
+ * deuteranopia and tritanopia, and none of them is a verdict colour (`--normal`,
+ * `--defect`, `--warn`): a series is never read as a verdict (PLAN §5).
+ *
+ * Before 0.6 these were fixed hex strings; the names are unchanged.
  */
 export const SERIES_COLOURS = [
-  "#3bc9db", // cyan, the accent's own hue
-  "#f0883e", // orange
-  "#a78bfa", // violet
-  "#34d399", // green
-  "#f87171", // red
-  "#8b949b", // grey, the fallback
+  "var(--series-1)",
+  "var(--series-2)",
+  "var(--series-3)",
+  "var(--series-4)",
+  "var(--series-5)",
+  "var(--series-6)",
 ] as const;
 
 /**
- * The verdict pair, for the charts that plot outcomes rather than series.
+ * The paint for outcomes judged normal — `var(--normal)`, the design system's verdict token.
  *
- * Exported so a histogram and any caught/missed bars share the same two hexes rather than
- * three files each restating them: a green that means "normal" has to be one green.
+ * @remarks
+ * Exported so a histogram and any caught/missed bars share one green rather than each
+ * restating it: a green that means "normal" has to be one green. Before 0.6 this was a
+ * fixed hex string.
  */
-export const NORMAL_COLOUR = "#34d399";
-export const DEFECT_COLOUR = "#f87171";
+export const NORMAL_COLOUR = "var(--normal)";
 
+/**
+ * The paint for outcomes judged defective — `var(--defect)`, the design system's verdict
+ * token.
+ *
+ * @remarks
+ * The partner of {@link NORMAL_COLOUR}. Before 0.6 this was a fixed hex string.
+ */
+export const DEFECT_COLOUR = "var(--defect)";
+
+/**
+ * The series colour for the `index`-th series, cycling through {@link SERIES_COLOURS}.
+ *
+ * @param index - Zero-based series index. Negative or non-integer indices fall back to the
+ *   neutral `var(--fg-muted)`.
+ * @returns A CSS paint value, usable as an SVG `fill`/`stroke` or a CSS `color`.
+ */
 export function seriesColour(index: number): string {
-  return SERIES_COLOURS[index % SERIES_COLOURS.length] ?? "#8b949b";
+  return SERIES_COLOURS[index % SERIES_COLOURS.length] ?? "var(--fg-muted)";
 }

@@ -11,6 +11,13 @@ bun add @vitavision/charts @vitavision/ui
 @import "@vitavision/charts/styles.css";
 ```
 
+Both imports are required: `ui/styles.css` defines the chrome and verdict tokens
+(`--normal`, `--defect`), and `charts/styles.css` defines the categorical series palette
+(`--series-1` … `--series-6`, light and dark). `SERIES_COLOURS`, `seriesColour()`,
+`NORMAL_COLOUR` and `DEFECT_COLOUR` are `var(--…)` paint values that resolve through those
+tokens, so they follow the theme; use them anywhere a CSS colour or an SVG `fill`/`stroke`
+is accepted.
+
 **Charts** — hand-rolled SVG over the pure domain/tick/project math in `scale.ts`:
 `Frame` + `Legend` (the axes/grid/label shell every chart composes), `LineChart`
 (multi-series, optional log y), `StackedBars`, `ScoreHistogram` (two-class distribution
