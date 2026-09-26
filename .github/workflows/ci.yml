@@ -42,7 +42,7 @@ jobs:
           for p in ui forms charts stage2d lab-ui; do
             test -f "packages/$p/dist/index.js"
             test -f "packages/$p/dist/index.d.ts"
-            test -f "packages/$p/dist/styles.css"
+            test -f "packages/$p/src/styles.css"
           done
 
   # ── PLAN §4 Definition-of-Done gates ─────────────────────────────────────────────────

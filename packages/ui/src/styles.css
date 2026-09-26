@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* This package's own classes, wherever this file is read from: `src/` in the workspace, `dist/`
-   once published. Tailwind resolves `@source` against the stylesheet that declares it. */
+/* This package's own classes: Tailwind resolves `@source` against the stylesheet that declares
+   it, and this file is exported from `src/` (which ships), so it scans the package's sources. */
 @source "./";
 
 /*
