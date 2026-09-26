@@ -6,23 +6,23 @@
 
 import { JSX } from 'react';
 
-// @public (undocumented)
+// @public
 export type ChoiceOption = {
     value: string;
     label: string;
 };
 
-// @public (undocumented)
+// @public
 export function describeFields(schema: OptionsSchema): FieldSpec[];
 
-// @public (undocumented)
+// @public
 export type FieldKind = "text" | "number" | "boolean" | "string-list" | "json" |
 /** A closed set, few enough to show all at once. */
 "choice-inline" |
 /** A closed set, too many to show at once. */
 "choice";
 
-// @public (undocumented)
+// @public
 export type FieldSpec = {
     name: string;
     label: string;
@@ -49,7 +49,7 @@ export function jsonErrors(fields: FieldSpec[], values: RawValues): string[];
 // @public
 export function missingRequired(fields: FieldSpec[], values: RawValues): string[];
 
-// @public (undocumented)
+// @public
 export type OptionsSchema = {
     properties?: Record<string, SchemaNode>;
     required?: string[];
@@ -65,7 +65,7 @@ export function overrideCount(fields: FieldSpec[], values: RawValues): number;
 // @public
 export type RawValues = Record<string, string | boolean>;
 
-// @public (undocumented)
+// @public
 export function SchemaForm(input: {
     fields: FieldSpec[];
     values: RawValues;
@@ -94,15 +94,6 @@ export type SchemaNode = {
 
 // @public
 export function toOptions(fields: FieldSpec[], values: RawValues): Record<string, unknown>;
-
-// Warnings were encountered during analysis:
-//
-// dist/index.d.ts:56:1 - (ae-undocumented) Missing documentation for "OptionsSchema".
-// dist/index.d.ts:62:1 - (ae-undocumented) Missing documentation for "FieldKind".
-// dist/index.d.ts:67:1 - (ae-undocumented) Missing documentation for "ChoiceOption".
-// dist/index.d.ts:71:1 - (ae-undocumented) Missing documentation for "FieldSpec".
-// dist/index.d.ts:96:1 - (ae-undocumented) Missing documentation for "describeFields".
-// dist/index.d.ts:134:1 - (ae-undocumented) Missing documentation for "SchemaForm".
 
 // (No @packageDocumentation comment for this package)
 

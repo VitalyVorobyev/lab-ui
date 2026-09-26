@@ -30,7 +30,7 @@ import {
   Textarea,
   Input,
 } from "@vitavision/ui";
-import type { FieldSpec, RawValues } from "../api/schemaForm";
+import { displayValue, type FieldSpec, type RawValues } from "../api/schemaForm";
 
 /**
  * Which kinds are worth a full row. Everything else pairs up.
@@ -41,6 +41,15 @@ import type { FieldSpec, RawValues } from "../api/schemaForm";
  */
 const WIDE: ReadonlySet<FieldSpec["kind"]> = new Set(["json", "boolean"]);
 
+/**
+ * An options form rendered from `describeFields(schema)`: primary fields first, the rest
+ * folded under "Advanced", each with the control its schema node calls for.
+ *
+ * Controlled: `values` holds the raw control values (strings, or booleans for switches),
+ * and an empty string means "unset — the schema's default applies". Turn them into the
+ * options to send with `toOptions`, and gate a run on `missingRequired`, `outOfRange` and
+ * `jsonErrors`.
+ */
 export function SchemaForm({
   fields,
   values,
@@ -120,7 +129,7 @@ function SchemaField({
   const text = typeof value === "string" ? value : "";
   const fallback = field.fallback === undefined || field.fallback === null
     ? undefined
-    : String(field.fallback);
+    : displayValue(field.fallback);
 
   if (field.kind === "choice-inline") {
     return (
