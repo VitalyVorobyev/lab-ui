@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  displayValue,
   describeFields,
   initialValues,
   jsonErrors,
@@ -424,5 +425,24 @@ describe("overrideCount", () => {
     const values = { ...initialValues(fields), csv_path: "a.csv", defect_type_from_dir: false };
 
     expect(overrideCount(fields, values)).toBe(2);
+  });
+});
+
+describe("displayValue", () => {
+  it("shows scalars as themselves and structures as JSON, never [object Object]", () => {
+    expect(displayValue(4)).toBe("4");
+    expect(displayValue("bilinear")).toBe("bilinear");
+    expect(displayValue(false)).toBe("false");
+    expect(displayValue(null)).toBe("");
+    expect(displayValue(undefined)).toBe("");
+    expect(displayValue({ x: 1, y: [2, 3] })).toBe('{"x":1,"y":[2,3]}');
+  });
+
+  it("gives a nested-object default a readable placeholder", () => {
+    const [field] = describeFields({
+      properties: { roi: { type: "object", properties: {}, default: { x: 0, w: 64 } } },
+    });
+    expect(field?.fallback).toEqual({ x: 0, w: 64 });
+    expect(field?.placeholder).not.toContain("[object Object]");
   });
 });

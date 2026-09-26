@@ -66,7 +66,7 @@ describe("the generated options form", () => {
     // default as the operator's own choice and send it back on every request.
     renderSchema(MODEL_SCHEMA);
 
-    const input = screen.getByLabelText("Smoothing sigma") as HTMLInputElement;
+    const input = screen.getByLabelText<HTMLInputElement>("Smoothing sigma");
     expect(input.value).toBe("");
     expect(input.placeholder).toBe("4");
   });

@@ -54,6 +54,10 @@ export type SchemaNode = {
   "x-primary"?: boolean;
 };
 
+/**
+ * An options model's JSON Schema, as pydantic or schemars emits it for a whole model: the
+ * top-level object whose `properties` become the form's fields.
+ */
 export type OptionsSchema = {
   properties?: Record<string, SchemaNode>;
   required?: string[];
@@ -61,6 +65,7 @@ export type OptionsSchema = {
   $defs?: Record<string, SchemaNode>;
 };
 
+/** Which control a field is rendered as — decided from its schema node by `describeFields`. */
 export type FieldKind =
   | "text"
   | "number"
@@ -72,8 +77,13 @@ export type FieldKind =
   /** A closed set, too many to show at once. */
   | "choice";
 
+/** One entry of a closed set: the value as sent (stringified) and the label as shown. */
 export type ChoiceOption = { value: string; label: string };
 
+/**
+ * Everything the form needs to render one field, derived once from the schema by
+ * `describeFields` so the component makes no decisions of its own.
+ */
 export type FieldSpec = {
   name: string;
   label: string;
@@ -115,7 +125,8 @@ function deref(node: SchemaNode, defs: Record<string, SchemaNode> | undefined): 
   const target = defs?.[node.$ref.slice(DEFS_PREFIX.length)];
   if (target === undefined) return node;
 
-  const { $ref: _dropped, ...rest } = node;
+  const rest: SchemaNode = { ...node };
+  delete rest.$ref;
   return { ...target, ...rest };
 }
 
@@ -211,13 +222,23 @@ function labelFor(name: string, node: SchemaNode): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
+/**
+ * A value as a person reads it: scalars as themselves, anything structured as JSON rather
+ * than `[object Object]`.
+ */
+export function displayValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") return value.toString();
+  return JSON.stringify(value) ?? "";
+}
+
 function placeholderFor(kind: FieldKind, fallback: unknown): string {
   if (kind === "string-list") {
     return Array.isArray(fallback) && fallback.length > 0 ? fallback.join(", ") : "a, b, c";
   }
   if (kind === "json") return "{}";
-  if (fallback === null || fallback === undefined) return "";
-  return String(fallback);
+  return displayValue(fallback);
 }
 
 /** `rgb` reads better as `Rgb` in a picker, but `bilinear` must not become `Bi Linear`. */
@@ -252,6 +273,16 @@ function stepOf(resolved: SchemaNode): number | "any" | undefined {
   return "any";
 }
 
+/**
+ * Derive the form's fields from an options schema, in schema order.
+ *
+ * Resolves `$ref`s into `$defs`, looks through `anyOf: [T, null]`, picks a control per node
+ * (see `FieldKind`), and folds a field under "Advanced" when it is optional and its default
+ * already works — unless the schema says otherwise with `"x-primary"`.
+ *
+ * @param schema - The model's JSON Schema (draft 2020-12, as pydantic or schemars emit it).
+ * @returns One `FieldSpec` per property; empty for a model with no options.
+ */
 export function describeFields(schema: OptionsSchema): FieldSpec[] {
   const required = new Set(schema.required ?? []);
   const defs = schema.$defs;
