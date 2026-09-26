@@ -1,96 +1,66 @@
 name: Release
 
-# Publishing is driven by a git tag: `git tag v0.2.0 && git push --tags`.
-# Nothing publishes from a branch, so `main` can move without releasing, and a
-# release is always a named, immutable point in history.
+# Changesets drive releases (PLAN §7): every PR with a user-facing change carries a
+# changeset; on `main` this workflow either opens/updates the "Version Packages" PR (while
+# changesets are pending) or — once that PR is merged — publishes every package whose new
+# version is not yet on npm, and tags it.
 #
-# Authorisation is npm **trusted publishing** (OIDC), not a stored token — see the
-# `id-token` note below. The trusted publisher registered for @vitavision/lab-ui on
-# npmjs.com names three things, and all three have to keep matching what is here:
-# repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`.
-# Renaming this file, moving the job into another workflow, or dropping the
-# `environment:` line below stops publishing until that entry is updated to match —
-# which is exactly the point: the workflow's own identity is the credential.
+# Authorisation is npm **trusted publishing** (OIDC), not a stored token. Each package's
+# trusted publisher on npmjs.com names three things that must keep matching this file:
+# repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`. A package
+# name with no trusted publisher registered cannot be published from here — register it
+# (npmjs.com → package → Settings → Trusted publishing) before its first release.
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish to npm
+  release:
+    name: Version or publish
     runs-on: ubuntu-latest
-    # Part of the OIDC identity npm checks, not decoration: the environment name is a
-    # claim in the token GitHub mints, and the trusted publisher is configured with
-    # `npm` in it. It is also the place to add a required reviewer or a branch/tag
-    # restriction later — a gate on publishing, without a credential to guard.
     environment: npm
     permissions:
       contents: write
-      # npm trusted publishing. The registry authenticates *this workflow* by the
-      # short-lived OIDC token GitHub mints for it — repository, workflow file and
-      # environment, checked against the trusted publisher configured for the package
-      # on npmjs.com.
-      # That token is the entire credential: there is no npm token in this repo's
-      # secrets to leak, over-scope, forget to rotate, or hand to a third-party action.
-      # It is also what provenance is signed with, so the tarball still records,
-      # verifiably, which commit and which run produced it.
+      pull-requests: write
+      # The OIDC token npm exchanges for a publish credential, and signs provenance with.
       id-token: write
     steps:
       - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
-      # `npm publish` itself needs node — bun is used for install/build only.
-      # `registry-url` is still what points the publish at npmjs.org; it simply has no
-      # token to go with it any more.
-      - uses: actions/setup-node@v5
+      # `changeset publish` runs `npm publish`, and OIDC trusted publishing needs npm >= 11.5.1.
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
-
-      # Exchanging the OIDC token for a publish credential is npm CLI >= 11.5.1.
-      # Upgraded explicitly rather than trusting whatever the runner's Node image
-      # happens to bundle: a regression there would surface as an authentication
-      # failure on a tag push, which is the worst possible place to discover it.
       - name: Use an npm that can publish with OIDC
         run: npm install -g npm@latest
 
-      - name: Install
-        run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
 
-      # A tag that disagrees with package.json is the one failure mode of
-      # tag-driven publishing: npm would take the version from the manifest and
-      # silently publish something other than what the tag says. Fail instead.
-      - name: Check the tag matches package.json
+      - name: Typecheck and test
         run: |
-          tag="${GITHUB_REF_NAME#v}"
-          manifest="$(node -p "require('./package.json').version")"
-          if [ "$tag" != "$manifest" ]; then
-            echo "tag v$tag does not match package.json version $manifest" >&2
-            echo "bump the manifest and re-tag, or tag v$manifest" >&2
-            exit 1
-          fi
-          echo "publishing $manifest"
+          bun run check:deps
+          bun run typecheck
+          bun run test
+          bun run build
+          bun run check:consumer
 
-      - name: Typecheck
-        run: bun run typecheck
-
-      - name: Test
-        run: bun run test
-
-      - name: Build
-        run: bun run build
-
-      # No `env:` block — the OIDC token above *is* the credential. `--provenance` is
-      # implied by trusted publishing, but stated anyway so the signed link from tarball
-      # to commit cannot quietly disappear with a change in that default. `--access
-      # public` because the package is scoped, and scoped packages default to restricted.
-      - name: Publish
-        run: npm publish --provenance --access public
-
-      - name: Create the GitHub release
-        run: gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME"
+      - uses: changesets/action@v2
+        with:
+          version: bun run version-packages
+          publish: bun run release
+          commit: "chore(release): version packages"
+          title: "chore(release): version packages"
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          NPM_CONFIG_PROVENANCE: "true"
