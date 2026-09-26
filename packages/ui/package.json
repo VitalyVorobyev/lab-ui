@@ -1,6 +1,6 @@
 {
   "name": "@vitavision/ui",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "The vitavision instrument design system: Tailwind v4 tokens, theme, and React primitives.",
   "license": "MIT OR Apache-2.0",
   "repository": {
