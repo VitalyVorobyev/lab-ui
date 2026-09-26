@@ -40,7 +40,8 @@
     "test:watch": "vitest",
     "inventory:concepts": "bun tools/inventory/matrix.ts",
     "inventory:deps": "bun tools/inventory/deps.ts",
-    "test:tools": "bun test tools"
+    "test:tools": "bun test tools",
+    "bench": "cd tools/bench/stage2d && bun install && bun run bench"
   },
   "peerDependencies": {
     "react": "^19.2.8",
