@@ -14,8 +14,7 @@
     "@vitavision/ui": "workspace:*",
     "konva": "10.7.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-router": "8.4.0"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

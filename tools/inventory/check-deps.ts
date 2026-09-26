@@ -38,10 +38,7 @@ const MOTION = ["motion", "framer-motion"];
  * Temporary exceptions, each with the ticket that removes it. An entry here that no longer
  * matches anything is itself an error, so the list cannot outlive its reasons.
  */
-const TEMPORARY: { pkg: string; rule: string; until: string }[] = [
-  { pkg: "@vitavision/ui", rule: "router:react-router", until: "L1-3 (router decoupling)" },
-  { pkg: "@vitavision/lab-ui", rule: "router:react-router", until: "L1-3 (router decoupling)" },
-];
+const TEMPORARY: { pkg: string; rule: string; until: string }[] = [];
 
 interface Manifest {
   name: string;

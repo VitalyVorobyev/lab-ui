@@ -24,6 +24,7 @@ export {
 } from "./Input";
 export {
   PageHeader,
+  type BackLink,
   Panel,
   ReadoutStrip,
   Section,

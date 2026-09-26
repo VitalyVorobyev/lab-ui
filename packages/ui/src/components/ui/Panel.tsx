@@ -5,8 +5,8 @@
  * agrees with the others by construction rather than by luck.
  */
 
-import type { ReactNode } from "react";
-import { Link } from "react-router";
+import { Slot, Slottable } from "@radix-ui/react-slot";
+import { isValidElement, type ReactElement, type ReactNode } from "react";
 
 import { byDensity, useDensity } from "./Density";
 import { cn } from "./cn";
@@ -96,6 +96,14 @@ export function Section({
   );
 }
 
+/** Where `PageHeader`'s back link goes: a plain URL, or the app's own link element. */
+export type BackLink =
+  | { href: string; label: string }
+  /** A link element — typically a router's `<Link to="…">Label</Link>` — styled and prefixed with an arrow. */
+  | ReactElement;
+
+const BACK_CLASSES = "w-fit text-xs text-fg-muted transition-colors hover:text-signal";
+
 export function PageHeader({
   title,
   meta,
@@ -105,18 +113,26 @@ export function PageHeader({
   title: ReactNode;
   meta?: ReactNode;
   actions?: ReactNode;
-  back?: { to: string; label: string };
+  /**
+   * The way up. `{ href, label }` renders a plain `<a>`; for client-side navigation pass the
+   * router's own link — `back={<Link to="/experiments">Experiments</Link>}` — which is
+   * rendered with the back-link style and arrow, so this package never imports a router.
+   */
+  back?: BackLink | undefined;
 }) {
   return (
     <header className="flex flex-col gap-1.5">
-      {back && (
-        <Link
-          to={back.to}
-          className="w-fit text-xs text-fg-muted transition-colors hover:text-signal"
-        >
-          ← {back.label}
-        </Link>
-      )}
+      {back &&
+        (isHrefLink(back) ? (
+          <a href={back.href} className={BACK_CLASSES}>
+            ← {back.label}
+          </a>
+        ) : (
+          <Slot className={BACK_CLASSES}>
+            {"← "}
+            <Slottable>{back}</Slottable>
+          </Slot>
+        ))}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <h1 className="text-xl font-semibold tracking-tight text-fg">{title}</h1>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
@@ -126,12 +142,24 @@ export function PageHeader({
   );
 }
 
+function isHrefLink(back: BackLink): back is { href: string; label: string } {
+  return !isValidElement(back);
+}
+
 export type ReadoutItem = {
   /** A quiet prefix naming what the value is, where the value alone is ambiguous. */
-  label?: string;
+  label?: string | undefined;
   value: ReactNode;
-  to?: string;
+  /** Makes the value a plain `<a href>`. */
+  href?: string | undefined;
+  /**
+   * Makes the value a link through the app's own element — a router's `<Link to="…" />`,
+   * given without children: the value becomes its content. Takes precedence over `href`.
+   */
+  link?: ReactElement | undefined;
 };
+
+const READOUT_LINK = "text-fg transition-colors hover:text-signal";
 
 /**
  * The instrument's display line: the facts about what is on screen, in one fixed slot.
@@ -164,10 +192,15 @@ export function ReadoutStrip({
             </span>
           )}
           {item.label && <span className="text-fg-subtle">{item.label}</span>}
-          {item.to ? (
-            <Link to={item.to} className="text-fg transition-colors hover:text-signal">
+          {item.link ? (
+            <Slot className={READOUT_LINK}>
+              <Slottable>{item.link}</Slottable>
               {item.value}
-            </Link>
+            </Slot>
+          ) : item.href ? (
+            <a href={item.href} className={READOUT_LINK}>
+              {item.value}
+            </a>
           ) : (
             <span className="text-fg">{item.value}</span>
           )}
