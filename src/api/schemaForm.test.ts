@@ -111,6 +111,35 @@ describe("what an operator has to decide", () => {
   });
 });
 
+describe("a schema that marks its decisions", () => {
+  const fields = describeFields({
+    properties: {
+      backbone: { type: "string", default: "dinov2_vit_b14", "x-primary": true },
+      epochs: { type: "integer", default: 10 },
+      notes: { type: "string", default: null, "x-primary": false },
+      color: { $ref: "#/$defs/Color", default: "rgb", "x-primary": true },
+    },
+    $defs: { Color: { type: "string", enum: ["rgb", "gray"] } },
+  });
+  const named = (name: string) => fields.find((entry) => entry.name === name);
+
+  it("keeps a field marked primary in front, whatever its default", () => {
+    expect(named("backbone")?.advanced).toBe(false);
+  });
+
+  it("reads the mark beside a reference", () => {
+    expect(named("color")?.advanced).toBe(false);
+  });
+
+  it("folds a field marked not primary even when its default is empty", () => {
+    expect(named("notes")?.advanced).toBe(true);
+  });
+
+  it("falls back to the default for an unmarked field", () => {
+    expect(named("epochs")?.advanced).toBe(true);
+  });
+});
+
 describe("initialValues", () => {
   it("starts text and list controls empty even where a default exists", () => {
     const values = initialValues(fields);

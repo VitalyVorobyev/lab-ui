@@ -123,7 +123,10 @@ keep independent preferences.
 
 **Layout & forms** — `Tabs`; `SchemaForm`, which renders a JSON Schema as a form and is
 paired with the pure logic in `api/schemaForm.ts` (`describeFields`, `initialValues`,
-`toOptions`, `missingRequired`, `outOfRange`, `jsonErrors`, `overrideCount`).
+`toOptions`, `missingRequired`, `outOfRange`, `jsonErrors`, `overrideCount`). A field
+is folded under "Advanced" when its default already works; a schema that knows better marks
+its decisions with `"x-primary": true` (pydantic: `json_schema_extra={"x-primary": True}`),
+and `false` folds a field whatever its default.
 
 **Image viewing** — `ImageStage`, a pannable/zoomable frame that transforms every stacked
 child layer together (image, mask, measurement overlay, interactive handles) so they never

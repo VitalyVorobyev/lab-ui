@@ -48,6 +48,10 @@ export type SchemaNode = {
   exclusiveMinimum?: number;
   exclusiveMaximum?: number;
   multipleOf?: number;
+  /** The schema's own answer to "does the caller have to think about this?" — pydantic's
+   * `json_schema_extra={"x-primary": True}`. Overrides the default-based guess in both
+   * directions; a required field is primary regardless. */
+  "x-primary"?: boolean;
 };
 
 export type OptionsSchema = {
@@ -170,6 +174,20 @@ function isAdvanced(node: SchemaNode): boolean {
   return true;
 }
 
+/**
+ * A schema that marks its decisions says so with `x-primary`; one that does not is read by
+ * its defaults. The guess works for an adapter, whose open questions have empty defaults,
+ * and fails for a model's hyperparameters, where *every* field has a working default and the
+ * two that matter are indistinguishable from the fifteen that do not.
+ *
+ * Read from the raw node first: a `$ref` field carries its extras beside the reference.
+ */
+function isPrimary(node: SchemaNode, resolved: SchemaNode): boolean {
+  const hint = node["x-primary"] ?? resolved["x-primary"];
+  if (hint !== undefined) return hint;
+  return !isAdvanced(resolved);
+}
+
 /** Raw control state: what the operator chose, not what will be sent. */
 export type RawValues = Record<string, string | boolean>;
 
@@ -254,7 +272,7 @@ export function describeFields(schema: OptionsSchema): FieldSpec[] {
       required: required.has(name),
       fallback: resolved.default,
       placeholder: placeholderFor(kind, resolved.default),
-      advanced: !required.has(name) && isAdvanced(resolved),
+      advanced: !required.has(name) && !isPrimary(node, resolved),
       options: optionsFor(resolved, kind),
       numeric,
       ...(kind === "number"
