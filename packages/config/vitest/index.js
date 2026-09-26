@@ -42,8 +42,17 @@ export function dom(overrides = {}) {
 }
 
 /**
- * @param {{ coverage?: { lines?: number; functions?: number; branches?: number; statements?: number } }} [options]
- *   coverage thresholds, in percent, for the merged report
+ * PLAN §4.3: at least 90 % of lines for `*.ts` logic, 80 % for components — per file, so one
+ * well-covered module cannot carry an untested one.
+ */
+export const DOD_COVERAGE = {
+  "src/**/*.ts": { lines: 90, perFile: true },
+  "src/**/*.tsx": { lines: 80, perFile: true },
+};
+
+/**
+ * @param {{ coverage?: Record<string, unknown> }} [options]
+ *   coverage thresholds for the merged report (vitest `coverage.thresholds`); the DoD's by default
  */
 export function library(options = {}) {
   return defineConfig({
@@ -56,7 +65,7 @@ export function library(options = {}) {
         include: ["src/**/*.{ts,tsx}"],
         exclude: ["src/**/*.{test,stories}.{ts,tsx}", "src/index.ts"],
         reporter: ["text", "text-summary", "json-summary"],
-        ...(options.coverage ? { thresholds: options.coverage } : {}),
+        thresholds: options.coverage ?? DOD_COVERAGE,
       },
       projects: [
         {

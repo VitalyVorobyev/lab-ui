@@ -4,6 +4,7 @@ import type { ViteUserConfig } from "vitest/config";
 export declare function dom(overrides?: ViteUserConfig): ViteUserConfig;
 
 /** A package's unit (happy-dom) and stories (Chromium) projects with one merged coverage report. */
-export declare function library(options?: {
-  coverage?: { lines?: number; functions?: number; branches?: number; statements?: number };
-}): ViteUserConfig;
+export declare function library(options?: { coverage?: Record<string, unknown> }): ViteUserConfig;
+
+/** The PLAN §4.3 thresholds: ≥ 90 % lines per `*.ts` file, ≥ 80 % per `*.tsx` file. */
+export declare const DOD_COVERAGE: Record<string, { lines: number; perFile: boolean }>;
