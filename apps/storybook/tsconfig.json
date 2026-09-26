@@ -1,0 +1,5 @@
+{
+  "extends": "@vitavision/config-ts/tsconfig.lib.json",
+  "compilerOptions": { "types": ["vite/client", "@vitest/browser-playwright", "bun"] },
+  "include": ["src", "test", "visual", ".storybook", "*.config.ts"]
+}

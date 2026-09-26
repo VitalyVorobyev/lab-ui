@@ -17,6 +17,7 @@
     "dist",
     "src",
     "!src/**/*.test.*",
+    "!src/**/*.stories.*",
     "LICENSE-MIT",
     "LICENSE-APACHE"
   ],
@@ -26,7 +27,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles.css": "./dist/styles.css",
+    "./styles.css": "./src/styles.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -35,7 +36,10 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "api": "api-extractor run --local",
+    "coverage": "vitest run --coverage",
+    "api:check": "api-extractor run"
   },
   "peerDependencies": {
     "react": "^19.2.0",
@@ -43,5 +47,9 @@
   },
   "dependencies": {
     "@vitavision/ui": "workspace:^"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "10.6.0",
+    "storybook": "10.6.0"
   }
 }

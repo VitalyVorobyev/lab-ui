@@ -1,0 +1,36 @@
+{
+  "name": "@vitavision/storybook",
+  "private": true,
+  "type": "module",
+  "description": "Storybook for the @vitavision/* packages: the docs site, and the story fixtures every DoD test runs over.",
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build": "storybook build -o storybook-static",
+    "test": "vitest run",
+    "test:visual": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/ibm-plex-sans": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@vitavision/charts": "workspace:*",
+    "@vitavision/forms": "workspace:*",
+    "@vitavision/stage2d": "workspace:*",
+    "@vitavision/ui": "workspace:*",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@storybook/addon-a11y": "10.6.0",
+    "@storybook/addon-docs": "10.6.0",
+    "@storybook/react-vite": "10.6.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@vitest/browser-playwright": "5.0.2",
+    "@vitest/coverage-v8": "5.0.2",
+    "axe-core": "4.13.0",
+    "playwright": "1.63.0",
+    "storybook": "10.6.0",
+    "tailwindcss": "4.3.3"
+  }
+}

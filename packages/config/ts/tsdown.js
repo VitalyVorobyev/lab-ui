@@ -1,11 +1,11 @@
 // @ts-check
 /**
  * The build every `@vitavision/*` library shares: one ESM entry, bundled declarations,
- * dependencies and peers left external (tsdown's default), and the package's `styles.css`
- * copied into `dist/` unprocessed — it is Tailwind v4 *source*, compiled by the consumer.
+ * dependencies and peers left external (tsdown's default).
+ *
+ * `styles.css` is not built: it is Tailwind v4 *source*, compiled by the consumer, and is
+ * exported straight from `src/` (which ships), so the workspace needs no build to use it.
  */
-
-import { existsSync } from "node:fs";
 
 /** @param {import("tsdown").UserConfig} [overrides] */
 export function library(overrides = {}) {
@@ -18,7 +18,6 @@ export function library(overrides = {}) {
     dts: true,
     sourcemap: true,
     clean: true,
-    ...(existsSync("src/styles.css") ? { copy: [{ from: "src/styles.css", to: "dist" }] } : {}),
     ...overrides,
   };
   return config;

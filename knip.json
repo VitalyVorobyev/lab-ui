@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "compilers": { "css": true, "mdx": true },
+  "workspaces": {
+    ".": {
+      "entry": ["tools/inventory/*.ts", "tools/dod/*.ts"],
+      "project": ["tools/inventory/**/*.ts", "tools/dod/**/*.ts"]
+    },
+    "packages/*": {
+      "entry": ["src/**/*.stories.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/config/eslint": { "entry": ["rules/*.js"] },
+    "apps/storybook": {
+      "entry": [".storybook/*.{ts,tsx}", "test/**/*.{ts,tsx}", "visual/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "tools/bench/*": {
+      "project": ["**/*.{ts,tsx}"]
+    }
+  },
+  "ignoreExportsUsedInFile": true
+}

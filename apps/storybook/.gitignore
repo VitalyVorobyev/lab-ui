@@ -1,0 +1,4 @@
+storybook-static/
+visual-report/
+test-results/
+.vitest/
