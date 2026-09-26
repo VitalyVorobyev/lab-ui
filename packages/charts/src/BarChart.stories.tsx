@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 
 import { StackedBars, type BarRow } from "./BarChart";
-import { DEFECT_COLOUR, NORMAL_COLOUR, SERIES_COLOURS } from "./Frame";
+import { DEFECT_COLOUR, NORMAL_COLOUR, seriesColour } from "./Frame";
 
 function outcome(label: string, caught: number, missed: number): BarRow {
   return {
@@ -62,7 +62,7 @@ export const ManySegments: Story = {
       segments: ["ok", "rework", "scrap", "unread"].map((name, index) => ({
         name,
         value: ((row + 2) * (index + 3) * 7) % 23,
-        colour: SERIES_COLOURS[index] ?? "#8b949b",
+        colour: seriesColour(index),
       })),
     })),
   },

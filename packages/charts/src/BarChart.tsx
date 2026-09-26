@@ -7,20 +7,43 @@
  * proportion of a known total rather than independent counts.
  */
 
+import { cn } from "@vitavision/ui";
+
+/** One category of {@link StackedBars}: a label and its segments. */
 export interface BarRow {
+  /** The category, shown truncated in a fixed-width column (full text in `title`). */
   label: string;
   /** Segments in draw order, left to right. */
   segments: { name: string; value: number; colour: string }[];
 }
 
-export function StackedBars({ rows, label }: { rows: BarRow[]; label: string }) {
+/** Props for {@link StackedBars}. */
+export interface StackedBarsProps {
+  /** The categories, top to bottom. */
+  rows: BarRow[];
+  /** Accessible name of the table. Required. */
+  label: string;
+  /** Extra classes for the outer element, merged with `cn`. */
+  className?: string | undefined;
+}
+
+/**
+ * Horizontal stacked bars, one row per category, all on one shared scale (the widest row's
+ * total).
+ *
+ * @remarks
+ * Exposed as an ARIA `table`: each row has a `rowheader` (the category) and a text cell that
+ * spells every non-zero segment out as `"<value> <name>"`, so nothing depends on colour or
+ * on bar width. A row with no non-zero segment shows its total.
+ */
+export function StackedBars({ rows, label, className }: StackedBarsProps) {
   const widest = Math.max(
     1,
     ...rows.map((row) => row.segments.reduce((total, segment) => total + segment.value, 0)),
   );
 
   return (
-    <div className="flex flex-col gap-2" role="table" aria-label={label}>
+    <div className={cn("flex flex-col gap-2", className)} role="table" aria-label={label}>
       {rows.map((row) => {
         const total = row.segments.reduce((sum, segment) => sum + segment.value, 0);
         return (

@@ -16,24 +16,41 @@ import { extent, histogram, linearScale } from "./scale";
 // The histogram is always given a whole panel, never a column of a grid.
 const plotArea = areaFor("wide");
 
-// Green for normal, red for defect — the verdict pair, defined once in `Frame`.
+// Green for normal, red for defect — the verdict tokens, named once in `Frame`.
 const NORMAL_FILL = NORMAL_COLOUR;
 const DEFECT_FILL = DEFECT_COLOUR;
 
+/** Props for {@link ScoreHistogram}. */
 export interface HistogramProps {
+  /** Anomaly scores of the samples labelled normal. */
   normal: number[];
+  /** Anomaly scores of the samples labelled defective. */
   defect: number[];
+  /** The decision threshold, drawn as a dashed vertical rule. Omitted or non-finite: none. */
   threshold?: number;
+  /** Number of equal-width bins over the union of both classes' scores. Default 32. */
   bins?: number;
+  /** Accessible name of the chart (the SVG's `aria-label`). Required. */
   label: string;
+  /** Extra classes for the outer `<figure>`, merged with `cn`. */
+  className?: string | undefined;
 }
 
+/**
+ * Overlaid histograms of the normal and defect score distributions, with the threshold on
+ * them.
+ *
+ * @remarks
+ * Always the `wide` variant. Painted in the verdict tokens (`--normal`, `--defect`); the
+ * legend names both classes with their counts, so the chart does not rely on colour alone.
+ */
 export function ScoreHistogram({
   normal,
   defect,
   threshold,
   bins = 32,
   label,
+  className,
 }: HistogramProps) {
   const domain = extent([...normal, ...defect]);
   const normalBins = histogram(normal, domain, bins);
@@ -45,19 +62,21 @@ export function ScoreHistogram({
   const binWidth = (plotArea.x1 - plotArea.x0) / bins;
 
   const bars = (counts: number[], fill: string, opacity: number) =>
-    counts.map((count, index) =>
-      count === 0 ? null : (
-        <rect
-          key={`${fill}-${index}`}
-          x={plotArea.x0 + index * binWidth}
-          y={yScale.project(count)}
-          width={Math.max(0.5, binWidth - 0.5)}
-          height={plotArea.y0 - yScale.project(count)}
-          fill={fill}
-          opacity={opacity}
-        />
-      ),
-    );
+    counts
+      .map((count, index) => ({ count, x: plotArea.x0 + index * binWidth }))
+      .map(({ count, x }) =>
+        count === 0 ? null : (
+          <rect
+            key={`${fill}-${x}`}
+            x={x}
+            y={yScale.project(count)}
+            width={Math.max(0.5, binWidth - 0.5)}
+            height={plotArea.y0 - yScale.project(count)}
+            fill={fill}
+            opacity={opacity}
+          />
+        ),
+      );
 
   return (
     <Frame
@@ -67,6 +86,7 @@ export function ScoreHistogram({
       yLabel="samples"
       label={label}
       variant="wide"
+      className={className}
       footer={
         <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <li className="flex items-center gap-1.5">

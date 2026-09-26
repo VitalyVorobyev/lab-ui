@@ -12,6 +12,8 @@ export {
   NORMAL_COLOUR,
   SERIES_COLOURS,
   type FrameProps,
+  type LegendItem,
+  type LegendProps,
   type Variant,
 } from "./Frame";
 
@@ -30,7 +32,7 @@ export {
 
 export { LineChart, type LineChartProps, type Series } from "./LineChart";
 
-export { StackedBars, type BarRow } from "./BarChart";
+export { StackedBars, type BarRow, type StackedBarsProps } from "./BarChart";
 
 export { ScoreHistogram, type HistogramProps } from "./Histogram";
 

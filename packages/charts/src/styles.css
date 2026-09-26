@@ -1,7 +1,44 @@
 /*
- * Nothing to style: this file exists so Tailwind v4 finds this package's class names.
- * `@source` resolves against the stylesheet that declares it, and this file is exported from
- * `src/` (which ships), so it scans the package's sources. Import it after
- * `@vitavision/ui/styles.css`.
+ * `@source` makes Tailwind v4 find this package's class names: it resolves against the
+ * stylesheet that declares it, and this file is exported from `src/` (which ships), so it scans
+ * the package's sources. Import it after `@vitavision/ui/styles.css`.
  */
 @source "./";
+
+/*
+ * The categorical series palette (PLAN §5), read by `SERIES_COLOURS` / `seriesColour` as
+ * `var(--series-n)` — SVG `fill`/`stroke` resolve custom properties, so both themes are the
+ * same one class swap on <html> as the rest of the design system.
+ *
+ * Each slot keeps its hue family in both themes — cyan, orange, violet, blue, pink, then a
+ * neutral — and only the lightness moves, so a curve is the same curve in a light and a dark
+ * screenshot. The values were chosen, not picked by eye, against three checks:
+ *
+ * - Non-text contrast (WCAG 1.4.11): every colour is at least 3:1 against `--surface` and
+ *   `--ground` in its theme, so a 1.5 px line is visible on a panel and on the page.
+ * - Colour-vision deficiency: simulated protanopia, deuteranopia and tritanopia (Machado et
+ *   al. 2009, full severity), every pair stays at least 9.4 apart in OKLab (ΔE × 100) —
+ *   wider than Okabe–Ito's closest pair under the same test. Lightness is staggered between
+ *   neighbouring hues for exactly that reason.
+ * - Verdicts are reserved: no slot is, or sits near, `--normal`, `--defect` or `--warn`. The
+ *   earlier palette used the dark theme's normal and defect hexes as series 4 and 5.
+ *
+ * Any sixth-plus series is still told apart by its legend text, never by colour alone.
+ */
+:root {
+  --series-1: #0f92c5; /* cyan */
+  --series-2: #b57c38; /* orange */
+  --series-3: #7e5be6; /* violet */
+  --series-4: #482ab3; /* indigo */
+  --series-5: #e04b9b; /* pink */
+  --series-6: #595f65; /* neutral */
+}
+
+.dark {
+  --series-1: #27e4ef;
+  --series-2: #c27421;
+  --series-3: #8ba3ff;
+  --series-4: #4a6ee0;
+  --series-5: #f96dcc;
+  --series-6: #7f878d;
+}

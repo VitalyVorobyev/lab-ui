@@ -20,7 +20,6 @@ export function areaFor(variant: Variant): {
 
 // @public
 export interface BarRow {
-    // (undocumented)
     label: string;
     segments: {
         name: string;
@@ -29,44 +28,37 @@ export interface BarRow {
     }[];
 }
 
-// @public (undocumented)
-export const DEFECT_COLOUR = "#f87171";
+// @public
+export const DEFECT_COLOUR = "var(--defect)";
 
-// @public (undocumented)
+// @public
 export interface EdgeMark {
-    // (undocumented)
     label?: string;
     position: number;
-    // (undocumented)
     tone?: MeasureTone;
 }
 
-// @public (undocumented)
+// @public
 export function extent(values: readonly number[]): [number, number];
 
-// @public (undocumented)
+// @public
 export function formatTick(value: number, step: number): string;
 
-// @public (undocumented)
+// @public
 export function Frame(input: FrameProps): JSX.Element;
 
-// @public (undocumented)
+// @public
 export interface FrameProps {
     children?: ReactNode;
+    className?: string | undefined;
     footer?: ReactNode;
     label: string;
     variant?: Variant;
-    // (undocumented)
     xLabel?: string | undefined;
-    // (undocumented)
     xScale: Scale;
-    // (undocumented)
     xTicks?: number;
-    // (undocumented)
     yLabel?: string | undefined;
-    // (undocumented)
     yScale: Scale;
-    // (undocumented)
     yTicks?: number;
 }
 
@@ -75,52 +67,48 @@ export function histogram(values: readonly number[], domain: [number, number], c
 
 // @public
 export interface HistogramProps {
-    // (undocumented)
     bins?: number;
-    // (undocumented)
+    className?: string | undefined;
     defect: number[];
-    // (undocumented)
     label: string;
-    // (undocumented)
     normal: number[];
-    // (undocumented)
     threshold?: number;
 }
 
 // @public
-export function Legend(input: {
-    items: {
-        label: string;
-        colour: string;
-    }[];
-}): JSX.Element;
+export function Legend(input: LegendProps): JSX.Element;
+
+// @public
+export interface LegendItem {
+    colour: string;
+    label: string;
+}
+
+// @public
+export interface LegendProps {
+    className?: string | undefined;
+    items: LegendItem[];
+}
 
 // @public
 export function linearScale(domain: [number, number], rangeStart: number, rangeEnd: number): Scale;
 
-// @public (undocumented)
+// @public
 export function LineChart(input: LineChartProps): JSX.Element;
 
-// @public (undocumented)
+// @public
 export interface LineChartProps {
-    // (undocumented)
-    footer?: React.ReactNode;
-    // (undocumented)
+    className?: string | undefined;
+    footer?: ReactNode;
     label: string;
     logY?: boolean;
-    // (undocumented)
     series: Series[];
-    // (undocumented)
     showLegend?: boolean;
-    underlay?: (x: Scale, y: Scale) => React.ReactNode;
-    // (undocumented)
+    underlay?: (x: Scale, y: Scale) => ReactNode;
     variant?: Variant;
     xDomain?: [number, number];
-    // (undocumented)
     xLabel?: string;
-    // (undocumented)
     yDomain?: [number, number];
-    // (undocumented)
     yLabel?: string;
 }
 
@@ -130,29 +118,21 @@ export function linePath(points: readonly {
     y: number;
 }[], xScale: Scale, yScale: Scale): string;
 
-// @public (undocumented)
+// @public
 export function LineProfile(input: LineProfileProps): JSX.Element;
 
-// @public (undocumented)
+// @public
 export interface LineProfileProps {
+    className?: string | undefined;
     edges?: EdgeMark[];
-    // (undocumented)
-    footer?: React.ReactNode;
-    // (undocumented)
+    footer?: ReactNode;
     label: string;
-    // (undocumented)
     series: ProfileSeries[];
-    // (undocumented)
     showLegend?: boolean;
-    // (undocumented)
     variant?: Variant;
-    // (undocumented)
     xDomain?: [number, number];
-    // (undocumented)
     xLabel?: string;
-    // (undocumented)
     yDomain?: [number, number];
-    // (undocumented)
     yLabel?: string;
 }
 
@@ -163,7 +143,7 @@ export function logScale(domain: [number, number], rangeStart: number, rangeEnd:
 export function niceStep(rough: number): number;
 
 // @public
-export const NORMAL_COLOUR = "#34d399";
+export const NORMAL_COLOUR = "var(--normal)";
 
 // @public
 export function padDomain(min: number, max: number): [number, number];
@@ -178,11 +158,9 @@ export const plotArea: {
     height: 280 | 320;
 };
 
-// @public (undocumented)
+// @public
 export interface ProfileSeries {
-    // (undocumented)
     colour?: string;
-    // (undocumented)
     name: string;
     points: {
         x: number;
@@ -190,24 +168,20 @@ export interface ProfileSeries {
     }[];
 }
 
-// @public (undocumented)
+// @public
 export interface Scale {
     domain: [number, number];
     project: (value: number) => number;
-    // (undocumented)
     ticks: (count?: number) => Tick[];
 }
 
-// @public (undocumented)
+// @public
 export function ScoreHistogram(input: HistogramProps): JSX.Element;
 
-// @public (undocumented)
+// @public
 export interface Series {
-    // (undocumented)
     colour?: string;
-    // (undocumented)
     name: string;
-    // (undocumented)
     points: {
         x: number;
         y: number;
@@ -215,86 +189,29 @@ export interface Series {
 }
 
 // @public
-export const SERIES_COLOURS: readonly ["#3bc9db", "#f0883e", "#a78bfa", "#34d399", "#f87171", "#8b949b"];
+export const SERIES_COLOURS: readonly ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)", "var(--series-5)", "var(--series-6)"];
 
-// @public (undocumented)
+// @public
 export function seriesColour(index: number): string;
 
-// @public (undocumented)
-export function StackedBars(input: {
-    rows: BarRow[];
+// @public
+export function StackedBars(input: StackedBarsProps): JSX.Element;
+
+// @public
+export interface StackedBarsProps {
+    className?: string | undefined;
     label: string;
-}): JSX.Element;
+    rows: BarRow[];
+}
 
 // @public
 export interface Tick {
-    // (undocumented)
     label: string;
-    // (undocumented)
     value: number;
 }
 
-// @public (undocumented)
+// @public
 export type Variant = "panel" | "wide";
-
-// Warnings were encountered during analysis:
-//
-// dist/index.d.ts:17:3 - (ae-undocumented) Missing documentation for "value".
-// dist/index.d.ts:18:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:20:1 - (ae-undocumented) Missing documentation for "Scale".
-// dist/index.d.ts:25:3 - (ae-undocumented) Missing documentation for "ticks".
-// dist/index.d.ts:34:1 - (ae-undocumented) Missing documentation for "formatTick".
-// dist/index.d.ts:44:1 - (ae-undocumented) Missing documentation for "extent".
-// dist/index.d.ts:70:1 - (ae-undocumented) Missing documentation for "Variant".
-// dist/index.d.ts:89:1 - (ae-undocumented) Missing documentation for "FrameProps".
-// dist/index.d.ts:90:3 - (ae-undocumented) Missing documentation for "xScale".
-// dist/index.d.ts:91:3 - (ae-undocumented) Missing documentation for "yScale".
-// dist/index.d.ts:92:3 - (ae-undocumented) Missing documentation for "xLabel".
-// dist/index.d.ts:93:3 - (ae-undocumented) Missing documentation for "yLabel".
-// dist/index.d.ts:94:3 - (ae-undocumented) Missing documentation for "xTicks".
-// dist/index.d.ts:95:3 - (ae-undocumented) Missing documentation for "yTicks".
-// dist/index.d.ts:105:1 - (ae-undocumented) Missing documentation for "Frame".
-// dist/index.d.ts:137:22 - (ae-undocumented) Missing documentation for "DEFECT_COLOUR".
-// dist/index.d.ts:138:1 - (ae-undocumented) Missing documentation for "seriesColour".
-// dist/index.d.ts:141:1 - (ae-undocumented) Missing documentation for "Series".
-// dist/index.d.ts:142:3 - (ae-undocumented) Missing documentation for "name".
-// dist/index.d.ts:143:3 - (ae-undocumented) Missing documentation for "points".
-// dist/index.d.ts:147:3 - (ae-undocumented) Missing documentation for "colour".
-// dist/index.d.ts:149:1 - (ae-undocumented) Missing documentation for "LineChartProps".
-// dist/index.d.ts:150:3 - (ae-undocumented) Missing documentation for "series".
-// dist/index.d.ts:151:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:152:3 - (ae-undocumented) Missing documentation for "xLabel".
-// dist/index.d.ts:153:3 - (ae-undocumented) Missing documentation for "yLabel".
-// dist/index.d.ts:158:3 - (ae-undocumented) Missing documentation for "yDomain".
-// dist/index.d.ts:161:3 - (ae-undocumented) Missing documentation for "footer".
-// dist/index.d.ts:162:3 - (ae-undocumented) Missing documentation for "showLegend".
-// dist/index.d.ts:163:3 - (ae-undocumented) Missing documentation for "variant".
-// dist/index.d.ts:165:1 - (ae-undocumented) Missing documentation for "LineChart".
-// dist/index.d.ts:177:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:185:1 - (ae-undocumented) Missing documentation for "StackedBars".
-// dist/index.d.ts:203:3 - (ae-undocumented) Missing documentation for "normal".
-// dist/index.d.ts:204:3 - (ae-undocumented) Missing documentation for "defect".
-// dist/index.d.ts:205:3 - (ae-undocumented) Missing documentation for "threshold".
-// dist/index.d.ts:206:3 - (ae-undocumented) Missing documentation for "bins".
-// dist/index.d.ts:207:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:209:1 - (ae-undocumented) Missing documentation for "ScoreHistogram".
-// dist/index.d.ts:212:1 - (ae-undocumented) Missing documentation for "ProfileSeries".
-// dist/index.d.ts:213:3 - (ae-undocumented) Missing documentation for "name".
-// dist/index.d.ts:219:3 - (ae-undocumented) Missing documentation for "colour".
-// dist/index.d.ts:221:1 - (ae-undocumented) Missing documentation for "EdgeMark".
-// dist/index.d.ts:224:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:225:3 - (ae-undocumented) Missing documentation for "tone".
-// dist/index.d.ts:227:1 - (ae-undocumented) Missing documentation for "LineProfileProps".
-// dist/index.d.ts:228:3 - (ae-undocumented) Missing documentation for "series".
-// dist/index.d.ts:231:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:232:3 - (ae-undocumented) Missing documentation for "xLabel".
-// dist/index.d.ts:233:3 - (ae-undocumented) Missing documentation for "yLabel".
-// dist/index.d.ts:234:3 - (ae-undocumented) Missing documentation for "xDomain".
-// dist/index.d.ts:235:3 - (ae-undocumented) Missing documentation for "yDomain".
-// dist/index.d.ts:236:3 - (ae-undocumented) Missing documentation for "footer".
-// dist/index.d.ts:237:3 - (ae-undocumented) Missing documentation for "showLegend".
-// dist/index.d.ts:238:3 - (ae-undocumented) Missing documentation for "variant".
-// dist/index.d.ts:240:1 - (ae-undocumented) Missing documentation for "LineProfile".
 
 // (No @packageDocumentation comment for this package)
 
