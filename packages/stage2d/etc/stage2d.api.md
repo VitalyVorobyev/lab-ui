@@ -4,6 +4,7 @@
 
 ```ts
 
+import { ComponentPropsWithRef } from 'react';
 import { CSSProperties } from 'react';
 import { JSX } from 'react';
 import { MeasureTone } from '@vitavision/ui';
@@ -13,31 +14,23 @@ import { ReactNode } from 'react';
 // @public
 export function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string;
 
-// @public (undocumented)
+// @public
 export interface ArcPrimitive {
-    // (undocumented)
     cx: number;
-    // (undocumented)
     cy: number;
-    // (undocumented)
     endAngle: number;
-    // (undocumented)
     kind: "arc";
-    // (undocumented)
     r: number;
     startAngle: number;
-    // (undocumented)
     tone?: MeasureTone;
 }
 
 // @public
 export function arrowHeadPoints(tip: Point, angle: number, size: number): [Point, Point, Point];
 
-// @public (undocumented)
+// @public
 export interface Box {
-    // (undocumented)
     height: number;
-    // (undocumented)
     width: number;
 }
 
@@ -50,41 +43,31 @@ export function caliperArrow(cx: number, cy: number, width: number, angle: numbe
 // @public
 export function caliperCorners(cx: number, cy: number, width: number, height: number, angle: number): [Point, Point, Point, Point];
 
-// @public (undocumented)
+// @public
 export interface CaliperPrimitive {
     angle: number;
     cx: number;
-    // (undocumented)
     cy: number;
     height: number;
-    // (undocumented)
     kind: "caliper";
-    // (undocumented)
     label?: string;
     showDirection?: boolean;
-    // (undocumented)
     tone?: MeasureTone;
     width: number;
 }
 
-// @public (undocumented)
+// @public
 export interface CirclePrimitive {
-    // (undocumented)
     cx: number;
-    // (undocumented)
     cy: number;
     filled?: boolean;
-    // (undocumented)
     kind: "circle";
-    // (undocumented)
     r: number;
-    // (undocumented)
     tone?: MeasureTone;
 }
 
-// @public (undocumented)
+// @public
 export interface ClampOptions {
-    // (undocumented)
     maxScale?: number;
     minScaleVsFit?: number;
 }
@@ -109,10 +92,10 @@ export function contentUnder(view: View, pointer: {
 // @public
 export function crossSegments(x: number, y: number, size: number): [[Point, Point], [Point, Point]];
 
-// @public (undocumented)
+// @public
 export function decodePlane(buffer: ArrayBuffer): ValuePlane;
 
-// @public (undocumented)
+// @public
 export interface DimensionGeometry {
     angleDegrees: number;
     dimensionLine: [Point, Point];
@@ -124,26 +107,19 @@ export interface DimensionGeometry {
 // @public
 export function dimensionGeometry(x1: number, y1: number, x2: number, y2: number, offset: number): DimensionGeometry;
 
-// @public (undocumented)
+// @public
 export interface DimensionPrimitive {
-    // (undocumented)
     kind: "dimension";
-    // (undocumented)
     label: string;
     offset?: number;
-    // (undocumented)
     tone?: MeasureTone;
-    // (undocumented)
     x1: number;
-    // (undocumented)
     x2: number;
-    // (undocumented)
     y1: number;
-    // (undocumented)
     y2: number;
 }
 
-// @public (undocumented)
+// @public
 export function fetchPlane(url: string): Promise<ValuePlane>;
 
 // @public
@@ -170,32 +146,26 @@ export const FULL_TIER_ZOOM = 2;
 // @public
 export function imageLengthFor(view: StageView, css: number): number;
 
-// @public (undocumented)
+// @public
 export function ImageStage(input: ImageStageProps): JSX.Element;
 
-// @public (undocumented)
+// @public
 export interface ImageStageProps {
     banner?: ReactNode;
     children: ReactNode;
-    // (undocumented)
     clamp?: ClampOptions;
-    // (undocumented)
     className?: string;
     image: Box;
-    // (undocumented)
     label?: string;
     onBackgroundClick?: (event: PointerEvent_2<HTMLDivElement>) => void;
     onHover?: (point: Point | null) => void;
-    // (undocumented)
     onView: (view: StageView) => void;
     panKeys?: boolean;
     panTool?: boolean;
     readout?: ReactNode;
     shortcuts?: boolean;
-    // (undocumented)
     style?: CSSProperties;
     toolbar?: ReactNode;
-    // (undocumented)
     view: StageView | null;
 }
 
@@ -214,31 +184,28 @@ export function isFit(view: StageView, box: Box, image: Box): boolean;
 // @public
 export const MAX_SCALE = 32;
 
-// @public (undocumented)
+// @public
 export const MAX_ZOOM = 12;
 
-// @public (undocumented)
+// @public
 export function MeasureOverlay(input: MeasureOverlayProps): JSX.Element;
 
-// @public (undocumented)
+// @public
 export interface MeasureOverlayProps {
-    // (undocumented)
     className?: string;
-    // (undocumented)
     nativeHeight: number;
     nativeWidth: number;
-    // (undocumented)
     primitives: MeasurePrimitive[];
     strokeScale: number;
 }
 
-// @public (undocumented)
+// @public
 export type MeasurePrimitive = PointPrimitive | SegmentPrimitive | CirclePrimitive | ArcPrimitive | CaliperPrimitive | DimensionPrimitive;
 
 // @public
 export const MIN_SCALE_VS_FIT = 0.25;
 
-// @public (undocumented)
+// @public
 export const MIN_ZOOM = 1;
 
 // @public
@@ -247,30 +214,23 @@ export function nativeZoomFor(sourceWidth: number, boxWidth: number): number;
 // @public
 export const PIXEL_CENTRE = 0.5;
 
-// @public (undocumented)
+// @public
 export class PlaneFormatError extends Error {}
 
 // @public
 export interface Point {
-    // (undocumented)
     x: number;
-    // (undocumented)
     y: number;
 }
 
-// @public (undocumented)
+// @public
 export interface PointPrimitive {
     cross?: boolean;
-    // (undocumented)
     kind: "point";
-    // (undocumented)
     label?: string;
     radius?: number;
-    // (undocumented)
     tone?: MeasureTone;
-    // (undocumented)
     x: number;
-    // (undocumented)
     y: number;
 }
 
@@ -280,15 +240,11 @@ export function polygonPath(points: readonly Point[]): string;
 // @public
 export function preserveCenter(view: StageView, from: Box, to: Box, image: Box, options?: ClampOptions): StageView;
 
-// @public (undocumented)
+// @public
 export interface Rect {
-    // (undocumented)
     height: number;
-    // (undocumented)
     width: number;
-    // (undocumented)
     x: number;
-    // (undocumented)
     y: number;
 }
 
@@ -301,77 +257,79 @@ export function rotatePoint(x: number, y: number, angle: number): Point;
 // @public
 export function scaleRange(box: Box, image: Box, options?: ClampOptions): [number, number];
 
-// @public (undocumented)
+// @public
 export interface SegmentPrimitive {
     dashed?: boolean;
-    // (undocumented)
     kind: "segment";
-    // (undocumented)
     tone?: MeasureTone;
-    // (undocumented)
     x1: number;
-    // (undocumented)
     x2: number;
-    // (undocumented)
     y1: number;
-    // (undocumented)
     y2: number;
 }
 
 // @public
-export function StageButton(input: {
-    label: string;
-    onClick: () => void;
-    disabled?: boolean;
-    pressed?: boolean;
-    children: ReactNode;
-}): JSX.Element;
+export function StageButton(input: StageButtonProps): JSX.Element;
 
-// @public (undocumented)
+// @public
+export interface StageButtonProps extends Omit<ComponentPropsWithRef<"button">, "type" | "title" | "aria-label" | "aria-pressed" | "children"> {
+    children: ReactNode;
+    label: string;
+    pressed?: boolean;
+}
+
+// @public
 export interface StageContext {
     box: Box;
     fit: () => void;
     frame: (rect: Rect, pad?: number) => void;
     image: Box;
     imageLength: (css: number) => number;
-    // (undocumented)
     isFit: boolean;
     panMode: boolean;
     panning: boolean;
-    // (undocumented)
     setView: (view: StageView) => void;
     toClient: (image: Point) => Point;
     toImage: (client: Point) => Point;
     toViewport: (image: Point) => Point;
-    // (undocumented)
     view: StageView;
     zoomTo: (scale: number, anchor?: Point) => void;
 }
 
 // @public
-export function StageReadout(input: {
+export function StageReadout(input: StageReadoutProps): JSX.Element;
+
+// @public
+export interface StageReadoutProps {
+    className?: string;
     cursor?: {
         x: number;
         y: number;
     } | null;
     extra?: ReactNode;
-}): JSX.Element;
+}
 
-// @public (undocumented)
-export function StageToolbar(input: {
+// @public
+export function StageToolbar(input: StageToolbarProps): JSX.Element;
+
+// @public
+export function StageToolbarDivider(input: StageToolbarDividerProps): JSX.Element;
+
+// @public
+export interface StageToolbarDividerProps {
+    className?: string;
+}
+
+// @public
+export interface StageToolbarProps {
     children?: ReactNode;
     className?: string;
-}): JSX.Element;
-
-// @public (undocumented)
-export function StageToolbarDivider(): JSX.Element;
+}
 
 // @public
 export interface StageView {
     scale: number;
-    // (undocumented)
     tx: number;
-    // (undocumented)
     ty: number;
 }
 
@@ -396,25 +354,19 @@ export function valueAt(plane: ValuePlane, u: number, v: number, channel?: numbe
 // @public
 export interface ValuePlane {
     channels: number;
-    // (undocumented)
     height: number;
     stride: number;
-    // (undocumented)
     values: Float32Array;
-    // (undocumented)
     width: number;
 }
 
 // @public
 export function valuesAt(plane: ValuePlane, u: number, v: number): number[];
 
-// @public (undocumented)
+// @public
 export interface View {
-    // (undocumented)
     x: number;
-    // (undocumented)
     y: number;
-    // (undocumented)
     zoom: number;
 }
 
@@ -432,111 +384,24 @@ export function zoomAt(view: View, pointer: {
     height: number;
 }, factor: number): View;
 
-// @public (undocumented)
-export function ZoomPanCanvas(input: {
-    view: View;
-    onView: (view: View) => void;
+// @public @deprecated
+export function ZoomPanCanvas(input: ZoomPanCanvasProps): JSX.Element;
+
+// @public @deprecated
+export interface ZoomPanCanvasProps {
     children: ReactNode;
     className?: string;
-    style?: CSSProperties;
+    fitLabel?: ReactNode;
     label?: ReactNode;
     nativeWidth?: number;
-    fitLabel?: ReactNode;
     onHover?: (position: {
         u: number;
         v: number;
     } | null) => void;
-}): JSX.Element;
-
-// Warnings were encountered during analysis:
-//
-// dist/index.d.ts:16:3 - (ae-undocumented) Missing documentation for "x".
-// dist/index.d.ts:17:3 - (ae-undocumented) Missing documentation for "y".
-// dist/index.d.ts:74:1 - (ae-undocumented) Missing documentation for "DimensionGeometry".
-// dist/index.d.ts:101:3 - (ae-undocumented) Missing documentation for "tx".
-// dist/index.d.ts:102:3 - (ae-undocumented) Missing documentation for "ty".
-// dist/index.d.ts:104:1 - (ae-undocumented) Missing documentation for "Box".
-// dist/index.d.ts:105:3 - (ae-undocumented) Missing documentation for "width".
-// dist/index.d.ts:106:3 - (ae-undocumented) Missing documentation for "height".
-// dist/index.d.ts:108:1 - (ae-undocumented) Missing documentation for "Rect".
-// dist/index.d.ts:109:3 - (ae-undocumented) Missing documentation for "x".
-// dist/index.d.ts:110:3 - (ae-undocumented) Missing documentation for "y".
-// dist/index.d.ts:111:3 - (ae-undocumented) Missing documentation for "width".
-// dist/index.d.ts:112:3 - (ae-undocumented) Missing documentation for "height".
-// dist/index.d.ts:165:1 - (ae-undocumented) Missing documentation for "ClampOptions".
-// dist/index.d.ts:168:3 - (ae-undocumented) Missing documentation for "maxScale".
-// dist/index.d.ts:207:1 - (ae-undocumented) Missing documentation for "StageContext".
-// dist/index.d.ts:208:3 - (ae-undocumented) Missing documentation for "view".
-// dist/index.d.ts:209:3 - (ae-undocumented) Missing documentation for "setView".
-// dist/index.d.ts:228:3 - (ae-undocumented) Missing documentation for "isFit".
-// dist/index.d.ts:241:1 - (ae-undocumented) Missing documentation for "ImageStageProps".
-// dist/index.d.ts:244:3 - (ae-undocumented) Missing documentation for "view".
-// dist/index.d.ts:245:3 - (ae-undocumented) Missing documentation for "onView".
-// dist/index.d.ts:256:3 - (ae-undocumented) Missing documentation for "className".
-// dist/index.d.ts:257:3 - (ae-undocumented) Missing documentation for "style".
-// dist/index.d.ts:262:3 - (ae-undocumented) Missing documentation for "clamp".
-// dist/index.d.ts:271:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:273:1 - (ae-undocumented) Missing documentation for "ImageStage".
-// dist/index.d.ts:276:1 - (ae-undocumented) Missing documentation for "StageToolbar".
-// dist/index.d.ts:289:1 - (ae-undocumented) Missing documentation for "StageToolbarDivider".
-// dist/index.d.ts:305:1 - (ae-undocumented) Missing documentation for "View".
-// dist/index.d.ts:306:3 - (ae-undocumented) Missing documentation for "zoom".
-// dist/index.d.ts:307:3 - (ae-undocumented) Missing documentation for "x".
-// dist/index.d.ts:308:3 - (ae-undocumented) Missing documentation for "y".
-// dist/index.d.ts:312:22 - (ae-undocumented) Missing documentation for "MIN_ZOOM".
-// dist/index.d.ts:313:22 - (ae-undocumented) Missing documentation for "MAX_ZOOM".
-// dist/index.d.ts:367:1 - (ae-undocumented) Missing documentation for "ZoomPanCanvas".
-// dist/index.d.ts:413:3 - (ae-undocumented) Missing documentation for "width".
-// dist/index.d.ts:414:3 - (ae-undocumented) Missing documentation for "height".
-// dist/index.d.ts:428:3 - (ae-undocumented) Missing documentation for "values".
-// dist/index.d.ts:430:1 - (ae-undocumented) Missing documentation for "PlaneFormatError".
-// dist/index.d.ts:431:1 - (ae-undocumented) Missing documentation for "decodePlane".
-// dist/index.d.ts:447:1 - (ae-undocumented) Missing documentation for "fetchPlane".
-// dist/index.d.ts:450:1 - (ae-undocumented) Missing documentation for "PointPrimitive".
-// dist/index.d.ts:451:3 - (ae-undocumented) Missing documentation for "kind".
-// dist/index.d.ts:452:3 - (ae-undocumented) Missing documentation for "x".
-// dist/index.d.ts:453:3 - (ae-undocumented) Missing documentation for "y".
-// dist/index.d.ts:454:3 - (ae-undocumented) Missing documentation for "tone".
-// dist/index.d.ts:459:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:461:1 - (ae-undocumented) Missing documentation for "SegmentPrimitive".
-// dist/index.d.ts:462:3 - (ae-undocumented) Missing documentation for "kind".
-// dist/index.d.ts:463:3 - (ae-undocumented) Missing documentation for "x1".
-// dist/index.d.ts:464:3 - (ae-undocumented) Missing documentation for "y1".
-// dist/index.d.ts:465:3 - (ae-undocumented) Missing documentation for "x2".
-// dist/index.d.ts:466:3 - (ae-undocumented) Missing documentation for "y2".
-// dist/index.d.ts:467:3 - (ae-undocumented) Missing documentation for "tone".
-// dist/index.d.ts:471:1 - (ae-undocumented) Missing documentation for "CirclePrimitive".
-// dist/index.d.ts:472:3 - (ae-undocumented) Missing documentation for "kind".
-// dist/index.d.ts:473:3 - (ae-undocumented) Missing documentation for "cx".
-// dist/index.d.ts:474:3 - (ae-undocumented) Missing documentation for "cy".
-// dist/index.d.ts:475:3 - (ae-undocumented) Missing documentation for "r".
-// dist/index.d.ts:476:3 - (ae-undocumented) Missing documentation for "tone".
-// dist/index.d.ts:480:1 - (ae-undocumented) Missing documentation for "ArcPrimitive".
-// dist/index.d.ts:481:3 - (ae-undocumented) Missing documentation for "kind".
-// dist/index.d.ts:482:3 - (ae-undocumented) Missing documentation for "cx".
-// dist/index.d.ts:483:3 - (ae-undocumented) Missing documentation for "cy".
-// dist/index.d.ts:484:3 - (ae-undocumented) Missing documentation for "r".
-// dist/index.d.ts:487:3 - (ae-undocumented) Missing documentation for "endAngle".
-// dist/index.d.ts:488:3 - (ae-undocumented) Missing documentation for "tone".
-// dist/index.d.ts:490:1 - (ae-undocumented) Missing documentation for "CaliperPrimitive".
-// dist/index.d.ts:491:3 - (ae-undocumented) Missing documentation for "kind".
-// dist/index.d.ts:494:3 - (ae-undocumented) Missing documentation for "cy".
-// dist/index.d.ts:501:3 - (ae-undocumented) Missing documentation for "tone".
-// dist/index.d.ts:504:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:506:1 - (ae-undocumented) Missing documentation for "DimensionPrimitive".
-// dist/index.d.ts:507:3 - (ae-undocumented) Missing documentation for "kind".
-// dist/index.d.ts:508:3 - (ae-undocumented) Missing documentation for "x1".
-// dist/index.d.ts:509:3 - (ae-undocumented) Missing documentation for "y1".
-// dist/index.d.ts:510:3 - (ae-undocumented) Missing documentation for "x2".
-// dist/index.d.ts:511:3 - (ae-undocumented) Missing documentation for "y2".
-// dist/index.d.ts:512:3 - (ae-undocumented) Missing documentation for "label".
-// dist/index.d.ts:513:3 - (ae-undocumented) Missing documentation for "tone".
-// dist/index.d.ts:517:1 - (ae-undocumented) Missing documentation for "MeasurePrimitive".
-// dist/index.d.ts:518:1 - (ae-undocumented) Missing documentation for "MeasureOverlayProps".
-// dist/index.d.ts:521:3 - (ae-undocumented) Missing documentation for "nativeHeight".
-// dist/index.d.ts:522:3 - (ae-undocumented) Missing documentation for "primitives".
-// dist/index.d.ts:531:3 - (ae-undocumented) Missing documentation for "className".
-// dist/index.d.ts:533:1 - (ae-undocumented) Missing documentation for "MeasureOverlay".
+    onView: (view: View) => void;
+    style?: CSSProperties;
+    view: View;
+}
 
 // (No @packageDocumentation comment for this package)
 
