@@ -93,3 +93,10 @@ api-extractor 7.59.2 analyses with its bundled TypeScript 5.9.3 (ADR-0002 N1). T
 - Baselines were written on macOS in Chromium from Playwright 1.63, in `apps/storybook/visual/__screenshots__/`, and are about 9.5 MB.
 - A second run on the same machine, this time without `--update-snapshots`, passed 354 / 354, so the screenshots are deterministic.
 - The CI job runs on `macos-latest`. If the runner's font rasterisation differs from the machine that made the baselines, the fix (L1-5) is to regenerate the baselines from the CI job's artifacts. The gate is defined on the macOS runner.
+
+## First CI run (PR #19)
+
+- **Stories.** CI matches local exactly: 305 pass, 50 fail, and all 50 failures are the axe findings listed above.
+- **Visual (macos-latest).** 325 of 354 screenshots match the baselines made locally; **29 differ**. These are rasterisation differences between two macOS machines, not changes in the stories. L1-5 regenerates the baselines from the CI job's own screenshots. The gate is defined on the runner, not on a developer's machine.
+- **Controlled/uncontrolled warning.** The browser run logs React's "Select is changing from uncontrolled to controlled" warning. It comes from `Select` passing no `value` to Radix for the unset state. L1-5 needs to make Select controlled for its whole lifetime.
+- **api job.** In CI (non-`--local`) mode, api-extractor fails on its TSDoc syntax warnings, the unclosed backticks noted above.
