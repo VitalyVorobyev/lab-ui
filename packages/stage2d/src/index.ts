@@ -15,6 +15,10 @@ export {
   StageReadout,
   StageToolbar,
   StageToolbarDivider,
+  type StageButtonProps,
+  type StageReadoutProps,
+  type StageToolbarDividerProps,
+  type StageToolbarProps,
 } from "./components/stage/StageToolbar";
 
 export {
@@ -53,6 +57,7 @@ export {
   nativeZoomFor,
   zoomAt,
   type View,
+  type ZoomPanCanvasProps,
 } from "./components/ZoomPanCanvas";
 
 export {

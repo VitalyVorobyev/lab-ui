@@ -1,7 +1,7 @@
 /**
  * A pannable, zoomable frame that transforms **everything stacked inside it together**.
  *
- * @deprecated Use `ImageStage` (`components/stage`). Two limits of this component turned out
+ * Deprecated: use `ImageStage` (`components/stage`). Two limits of this component turned out
  * to be load-bearing rather than incidental, and neither can be lifted without changing what
  * its props mean:
  *
@@ -33,21 +33,30 @@
  * at a subpixel edge, is the sensor's own resolution with no resampling between them and it.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { cn } from "@vitavision/ui";
 
+/**
+ * `ZoomPanCanvas`'s view: `translate(x, y) scale(zoom)` about the frame's centre.
+ * `ImageStage` uses `StageView` instead.
+ */
 export interface View {
+  /** Magnification relative to fit; `1` is fit-to-window. */
   zoom: number;
+  /** Horizontal pan, in CSS pixels, from the centred position. */
   x: number;
+  /** Vertical pan, in CSS pixels, from the centred position. */
   y: number;
 }
 
 /** Zoom 1, centred — which is fit-to-window, given how the canvas is laid out. */
 export const RESET_VIEW: View = { zoom: 1, x: 0, y: 0 };
 
+/** The lowest zoom `zoomAt` allows: fit. */
 export const MIN_ZOOM = 1;
+/** The highest zoom `zoomAt` allows. */
 export const MAX_ZOOM = 12;
 const ZOOM_SENSITIVITY = 0.0015;
 
@@ -126,21 +135,19 @@ function clamp(value: number, low: number, high: number): number {
   return Math.min(high, Math.max(low, value));
 }
 
-export function ZoomPanCanvas({
-  view,
-  onView,
-  children,
-  className,
-  style,
-  label,
-  nativeWidth,
-  fitLabel = "Fit",
-  onHover,
-}: {
+/**
+ * Props of `ZoomPanCanvas`.
+ *
+ * @deprecated Use `ImageStage` and `ImageStageProps`.
+ */
+export interface ZoomPanCanvasProps {
+  /** The current view (controlled). */
   view: View;
+  /** Called with every view change — wheel, drag, double-click, the "Fit" button. */
   onView: (view: View) => void;
+  /** The stacked layers, each filling the frame. */
   children: ReactNode;
-  /** Height and any other framing; the transform and overflow are handled here. */
+  /** Height and any other framing, merged with `cn`; the transform and overflow are handled here. */
   className?: string;
   /** For `aspect-ratio`, which has to be a computed value rather than a utility class. */
   style?: CSSProperties;
@@ -161,14 +168,40 @@ export function ZoomPanCanvas({
    * image, not pointing at a pixel.
    */
   onHover?: (position: { u: number; v: number } | null) => void;
-}) {
-  const dragging = useRef<{ x: number; y: number } | null>(null);
+}
+
+/**
+ * A pannable, zoomable frame that transforms its stacked children together; zoom 1 is fit.
+ *
+ * State is exposed as `data-panning` (present during a drag) and `data-fit` (present at
+ * zoom 1) on the frame.
+ *
+ * @deprecated Use `ImageStage`. This component scales its layers by the frame's size (so
+ * the frame must be laid out at the image's aspect ratio) and captures every press to pan
+ * (so no interactive layer can live inside it). It stays exported, unchanged in behaviour,
+ * for consumers that have not migrated.
+ */
+export function ZoomPanCanvas({
+  view,
+  onView,
+  children,
+  className,
+  style,
+  label,
+  nativeWidth,
+  fitLabel = "Fit",
+  onHover,
+}: ZoomPanCanvasProps) {
+  const draggingRef = useRef<{ x: number; y: number } | null>(null);
   // Mirrored into state only so the cursor can change — the ref is what the move handler
   // reads, because a re-render per pointermove would be a cost for nothing.
   const [grabbing, setGrabbing] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
-  const latest = useRef(view);
-  latest.current = view;
+  const boxRef = useRef<HTMLDivElement>(null);
+  // What the wheel listener, attached once, reads: the view and callback of the last commit.
+  const latestRef = useRef({ view, onView });
+  useLayoutEffect(() => {
+    latestRef.current = { view, onView };
+  });
 
   /*
    * The wheel listener is attached by hand because React registers `wheel` at the root as
@@ -177,22 +210,23 @@ export function ZoomPanCanvas({
    * moves the document instead — which reads as the zoom being broken.
    */
   useEffect(() => {
-    const element = box.current;
+    const element = boxRef.current;
     if (!element) return;
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       const rect = element.getBoundingClientRect();
       const factor = 1 - event.deltaY * ZOOM_SENSITIVITY;
-      onView(zoomAt(latest.current, { x: event.clientX, y: event.clientY }, rect, factor));
+      const { view: current, onView: report } = latestRef.current;
+      report(zoomAt(current, { x: event.clientX, y: event.clientY }, rect, factor));
     };
 
     element.addEventListener("wheel", onWheel, { passive: false });
     return () => element.removeEventListener("wheel", onWheel);
-  }, [onView]);
+  }, []);
 
   const toggleNative = (event: { clientX: number; clientY: number }) => {
-    const element = box.current;
+    const element = boxRef.current;
     if (!element) return;
     const rect = element.getBoundingClientRect();
     const native = nativeZoomFor(nativeWidth ?? 0, rect.width);
@@ -202,26 +236,28 @@ export function ZoomPanCanvas({
   };
 
   const endDrag = () => {
-    dragging.current = null;
+    draggingRef.current = null;
     setGrabbing(false);
   };
 
   return (
     <div
-      ref={box}
+      ref={boxRef}
       style={style}
+      data-panning={grabbing ? "" : undefined}
+      data-fit={view.zoom <= MIN_ZOOM ? "" : undefined}
       className={cn(
-        "relative overflow-hidden rounded border border-line bg-[#08090a] select-none",
+        "relative overflow-hidden rounded border border-line bg-canvas select-none",
         grabbing ? "cursor-grabbing" : "cursor-grab",
         className,
       )}
       onPointerDown={(event) => {
-        dragging.current = { x: event.clientX - view.x, y: event.clientY - view.y };
+        draggingRef.current = { x: event.clientX - view.x, y: event.clientY - view.y };
         setGrabbing(true);
         event.currentTarget.setPointerCapture(event.pointerId);
       }}
       onPointerMove={(event) => {
-        const origin = dragging.current;
+        const origin = draggingRef.current;
         if (!origin) {
           onHover?.(contentUnder(view, event, event.currentTarget.getBoundingClientRect()));
           return;
