@@ -1,6 +1,6 @@
 {
   "name": "@vitavision/lab-ui",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "DEPRECATED \u2014 use @vitavision/ui, /forms, /charts and /stage2d. Re-exports them for 0.x consumers.",
   "license": "MIT OR Apache-2.0",
   "repository": {
