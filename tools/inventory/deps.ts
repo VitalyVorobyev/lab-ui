@@ -59,15 +59,15 @@ function manifestsOf(repo: Repo): string[] {
 
 type Manifest = { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
 
-async function readLocal(repo: Repo): Promise<{ sha: string; manifests: (Manifest | null)[] }> {
+function readLocal(repo: Repo): Promise<{ sha: string; manifests: (Manifest | null)[] }> {
   const root = expandHome(repo.root);
-  return {
+  return Promise.resolve({
     sha: gitSha(root),
     manifests: manifestsOf(repo).map((m) => {
       const path = join(root, m);
       return existsSync(path) ? (JSON.parse(readFileSync(path, "utf8")) as Manifest) : null;
     }),
-  };
+  });
 }
 
 async function readRemote(repo: Repo): Promise<{ sha: string; manifests: (Manifest | null)[] }> {
@@ -207,7 +207,7 @@ async function main() {
   const report = render(inventory, baseline, repos, values.remote ? "each repo's default branch on GitHub" : "local checkouts");
   if (values.out === "-") console.log(report);
   else {
-    writeFileSync(values.out!, report);
+    writeFileSync(values.out, report);
     console.error(`wrote ${values.out}`);
   }
 
