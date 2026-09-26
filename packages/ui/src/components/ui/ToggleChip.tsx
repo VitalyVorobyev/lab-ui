@@ -1,4 +1,4 @@
-/**
+/*
  * A dense on/off control for a thing that is drawn on screen.
  *
  * `Switch` is a settings row — a stacked label, a description, generous padding — and
@@ -16,6 +16,12 @@ import type { ReactNode } from "react";
 
 import { cn, focusRing } from "./cn";
 
+/**
+ * A dense on/off chip for a layer drawn on screen, with an optional swatch in the layer's
+ * colour: a toolbar-sized `Switch` (`role="switch"`, `aria-checked`).
+ *
+ * Controlled. State is exposed as `data-state` (`checked`/`unchecked`).
+ */
 export function ToggleChip({
   checked,
   onCheckedChange,
@@ -23,21 +29,29 @@ export function ToggleChip({
   swatch,
   disabled = false,
   title,
+  className,
 }: {
+  /** Whether the layer is shown. */
   checked: boolean;
+  /** Called with the new state. */
   onCheckedChange: (checked: boolean) => void;
+  /** The layer's name. */
   children: ReactNode;
   /** A CSS colour: the colour this layer is drawn in, shown as a dot. */
   swatch?: string;
-  disabled?: boolean;
+  /** Blocks the chip. */
+  disabled?: boolean | undefined;
   /** Why the control is disabled, or what the layer is. Never the only explanation. */
-  title?: string;
+  title?: string | undefined;
+  /** Merged with the chip's own classes through `cn`. */
+  className?: string | undefined;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      data-state={checked ? "checked" : "unchecked"}
       disabled={disabled}
       title={title}
       onClick={() => onCheckedChange(!checked)}
@@ -48,6 +62,7 @@ export function ToggleChip({
           : "border-line bg-transparent text-fg-muted hover:text-fg",
         "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-fg-muted",
         focusRing,
+        className,
       )}
     >
       {swatch !== undefined && (

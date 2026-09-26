@@ -1,4 +1,4 @@
-/**
+/*
  * The palette switch, shared by every lab app.
  *
  * Three states, not two, and cycled by one button rather than spread across a
@@ -20,7 +20,7 @@
  */
 
 import { Moon, Sun, SunMoon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { DEFAULT_THEME_STORAGE_KEY, readThemeChoice, setThemeChoice, type ThemeChoice } from "../theme";
 import { Tooltip } from "./ui/Tooltip";
@@ -34,23 +34,42 @@ const LABEL: Record<ThemeChoice, string> = {
   dark: "Theme: dark",
 };
 
+/** Another tab (or window) changing the stored choice re-renders the toggle. */
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
+
+/** What the server, and a hydrating client's first render, show: no stored choice read yet. */
+const serverChoice = (): ThemeChoice => "system";
+
+/**
+ * The palette switch: one button cycling system → light → dark, stored in `localStorage`
+ * under `storageKey` and painted as the `dark` class on `<html>`.
+ *
+ * Its `aria-label` (repeated in a tooltip) names the current state; it needs a
+ * `TooltipProvider` above it. The stored choice is read as an external store, so the server
+ * render and the hydrating first client render agree ("system") and the stored choice
+ * follows without a mismatch. The state is exposed as `data-theme-choice`.
+ */
 export function ThemeToggle({
   storageKey = DEFAULT_THEME_STORAGE_KEY,
   className,
 }: {
-  storageKey?: string;
-  className?: string;
+  /** The `localStorage` key; per app, so two apps sharing a profile keep their own choice. */
+  storageKey?: string | undefined;
+  /** Merged with the button's own classes through `cn`. */
+  className?: string | undefined;
 }) {
-  const [choice, setChoice] = useState<ThemeChoice>("system");
-
-  // Read after mount rather than during render: the inline script in index.html has
-  // already painted the right palette, and touching localStorage during render would make
-  // the first client render disagree with itself under StrictMode's double invocation.
-  useEffect(() => setChoice(readThemeChoice(storageKey)), [storageKey]);
+  const stored = useSyncExternalStore(subscribe, () => readThemeChoice(storageKey), serverChoice);
+  // What this toggle last set, so it keeps cycling even where storage is unavailable and the
+  // stored value cannot follow.
+  const [chosen, setChosen] = useState<{ key: string; choice: ThemeChoice } | null>(null);
+  const choice = chosen?.key === storageKey ? chosen.choice : stored;
 
   const advance = () => {
     const next = ORDER[(ORDER.indexOf(choice) + 1) % ORDER.length]!;
-    setChoice(next);
+    setChosen({ key: storageKey, choice: next });
     setThemeChoice(next, storageKey);
   };
 
@@ -62,6 +81,7 @@ export function ThemeToggle({
         type="button"
         onClick={advance}
         aria-label={LABEL[choice]}
+        data-theme-choice={choice}
         className={cn(
           "rounded-control p-1.5 text-fg-muted transition-colors hover:bg-raised hover:text-fg",
           focusRing,

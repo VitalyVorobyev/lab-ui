@@ -1,4 +1,4 @@
-/**
+/*
  * How much room the chrome takes, as one decision per region rather than per component.
  *
  * The default spacing is written for a page: a form you read through once, where generous
@@ -17,23 +17,50 @@
  * it had.
  */
 
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 import type { ReactNode } from "react";
 
+/**
+ * How much room the chrome takes: `comfortable` (the default, for a page you read through)
+ * or `compact` (for a permanent tool surface such as an inspector column).
+ */
 export type Density = "comfortable" | "compact";
 
-const Ctx = createContext<Density>("comfortable");
+const DensityContext = createContext<Density>("comfortable");
 
-/** The density in force here. Every primitive that has two spacings reads this. */
+/**
+ * The density in force here. Every primitive that has two spacings reads this.
+ *
+ * @returns The value of the nearest `DensityProvider`, or `comfortable` outside one.
+ */
 export function useDensity(): Density {
-  return useContext(Ctx);
+  return use(DensityContext);
 }
 
-/** Pick one of two values by the density in force — the primitives' own idiom. */
+/**
+ * Pick one of two values by the density in force — the primitives' own idiom.
+ *
+ * @param density - The density in force, from `useDensity()`.
+ * @param comfortable - The value for `comfortable`.
+ * @param compact - The value for `compact`.
+ * @returns `compact` when the density is compact, else `comfortable`.
+ */
 export function byDensity<T>(density: Density, comfortable: T, compact: T): T {
   return density === "compact" ? compact : comfortable;
 }
 
-export function DensityProvider({ value, children }: { value: Density; children: ReactNode }) {
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+/**
+ * Sets the density for a region: every primitive below it reads the value through
+ * `useDensity`. Nest providers to switch a sub-region back.
+ */
+export function DensityProvider({
+  value,
+  children,
+}: {
+  /** The density for everything below. */
+  value: Density;
+  /** The region. */
+  children: ReactNode;
+}) {
+  return <DensityContext value={value}>{children}</DensityContext>;
 }

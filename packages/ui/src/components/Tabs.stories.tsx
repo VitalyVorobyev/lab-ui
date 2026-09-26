@@ -28,6 +28,25 @@ function StatefulTabs(props: ComponentProps<typeof Tabs<View>>) {
   );
 }
 
+/** The strip wired to the one panel it controls, through `idPrefix`. */
+function PanelledTabs(props: ComponentProps<typeof Tabs<View>>) {
+  const [active, setActive] = useState(props.active);
+  const prefix = props.idPrefix ?? "tabs";
+  return (
+    <div className="flex flex-col gap-3">
+      <Tabs {...props} active={active} onSelect={setActive} />
+      <div
+        role="tabpanel"
+        id={`${prefix}-panel-${active}`}
+        aria-labelledby={`${prefix}-tab-${active}`}
+        className="text-sm text-fg-muted"
+      >
+        The {active} view.
+      </div>
+    </div>
+  );
+}
+
 const meta = {
   title: "ui/Tabs",
   component: Tabs<View>,
@@ -43,10 +62,11 @@ count is not shown. A disabled tab can carry a \`title\` explaining why it has n
 **Don't** use it for navigation between pages (that is a link), or for a setting's value (that
 is \`SegmentedControl\`). It only renders the strip — the caller renders the panel.
 
-**Accessibility**: a \`tablist\` named by \`label\`, of \`tab\` buttons with \`aria-selected\`. It does
-not implement the roving-tabindex/arrow-key pattern, and tabs do not point at a \`tabpanel\`
-(\`aria-controls\`); every tab is a separate Tab stop activated by Enter/Space. A disabled tab's
-\`title\` is not reachable by keyboard.`,
+**Accessibility**: a \`tablist\` named by \`label\`, of \`tab\` buttons with \`aria-selected\` and
+\`data-state\`. Roving focus: the strip is one Tab stop (the active tab); ←/→ move to the previous or
+next enabled tab and select it, Home/End jump to the ends, disabled tabs are skipped. Pass
+\`idPrefix\` and render the panel with the matching ids to get \`aria-controls\`/\`aria-labelledby\`
+(see *WithPanel*). A disabled tab's \`title\` is not reachable by keyboard.`,
       },
     },
   },
@@ -70,11 +90,57 @@ export const Default: Story = {
 
 export const Keyboard: Story = {
   play: async ({ canvas, args }) => {
+    const images = canvas.getByRole("tab", { name: /Images/ });
+    const labels = canvas.getByRole("tab", { name: "Labels" });
     const options = canvas.getByRole("tab", { name: /Options/ });
-    options.focus();
+    // One tab stop: only the active tab is in the tab order.
+    await expect(images).toHaveAttribute("tabindex", "0");
+    await expect(labels).toHaveAttribute("tabindex", "-1");
+
+    images.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(args.onSelect).toHaveBeenCalledWith("labels");
+    await expect(labels).toHaveFocus();
+    await expect(labels).toHaveAttribute("aria-selected", "true");
+
+    // The disabled History tab is skipped: past Options the focus wraps to Images.
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+    await expect(images).toHaveFocus();
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(options).toHaveFocus();
+    await userEvent.keyboard("{Home}");
+    await expect(images).toHaveFocus();
+    await userEvent.keyboard("{End}");
+    await expect(options).toHaveFocus();
+    await expect(options).toHaveAttribute("data-state", "active");
+
+    // Keys other than the arrows and Home/End are left alone; Enter still activates.
+    await userEvent.keyboard("{ArrowUp}");
+    await expect(options).toHaveFocus();
+    labels.focus();
     await userEvent.keyboard("{Enter}");
-    await expect(args.onSelect).toHaveBeenCalledWith("options");
-    await expect(options).toHaveAttribute("aria-selected", "true");
+    await expect(labels).toHaveAttribute("aria-selected", "true");
+  },
+};
+
+export const WithPanel: Story = {
+  args: { idPrefix: "dataset" },
+  render: (args) => <PanelledTabs {...args} />,
+  play: async ({ canvas }) => {
+    const images = canvas.getByRole("tab", { name: /Images/ });
+    await expect(images).toHaveAttribute("aria-controls", "dataset-panel-images");
+    await expect(canvas.getByRole("tabpanel", { name: /Images/ })).toHaveTextContent("The images view.");
+    await userEvent.click(canvas.getByRole("tab", { name: "Labels" }));
+    await expect(canvas.getByRole("tabpanel", { name: "Labels" })).toHaveTextContent("The labels view.");
+    await expect(images).not.toHaveAttribute("aria-controls");
+  },
+};
+
+export const DisabledActive: Story = {
+  args: { active: "history" },
+  play: async ({ canvas }) => {
+    // The active tab cannot take focus, so the first enabled tab keeps the strip reachable.
+    await expect(canvas.getByRole("tab", { name: /Images/ })).toHaveAttribute("tabindex", "0");
   },
 };
 

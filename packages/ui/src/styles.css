@@ -66,6 +66,11 @@
  * Light is the default so a document with no class still renders legibly -- a consumer's
  * own no-flash script sets `.dark` before first paint (see `theme.ts` and the README), but
  * a failure there should degrade to a readable page rather than black text on black.
+ *
+ * Contrast (WCAG AA, 4.5:1 for text): `fg-muted` and `fg-subtle` clear it on `ground`,
+ * `surface`, `raised` and `overlay`; `signal-fg` on `signal`; and each verdict colour, and
+ * `signal`, as text on its own /8–/15 tint over `ground`. That last pair is what sets the
+ * light verdict and accent values — change one only with the ratios re-measured.
  */
 :root {
   /* Held a little below the panel surface so a card reads as raised off the page without
@@ -79,16 +84,16 @@
   --canvas: #101214;
 
   --fg: #14171a;
-  --fg-muted: #5f6871;
-  --fg-subtle: #8b949b;
+  --fg-muted: #5b646d;
+  --fg-subtle: #646d74;
 
-  --signal: #0e8fa3;
-  --signal-strong: #0b7080;
+  --signal: #0a6b7a;
+  --signal-strong: #085763;
   --signal-fg: #ffffff;
 
-  --normal: #059669;
-  --defect: #dc2626;
-  --warn: #b45309;
+  --normal: #046e4d;
+  --defect: #b31d1d;
+  --warn: #9d4808;
 }
 
 .dark {
@@ -102,7 +107,7 @@
 
   --fg: #e8ebed;
   --fg-muted: #8b949b;
-  --fg-subtle: #616a71;
+  --fg-subtle: #838d94;
 
   --signal: #3bc9db;
   --signal-strong: #6fdde8;

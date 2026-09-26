@@ -1,4 +1,4 @@
-/**
+/*
  * Status colour, in one place.
  *
  * The tone vocabulary is deliberately small and deliberately *about verdicts*. The chrome
@@ -13,6 +13,11 @@ import type { ReactNode } from "react";
 
 import { cn } from "./cn";
 
+/**
+ * The badge and status-dot vocabulary: the verdicts (`normal`, `defect`, `warning`),
+ * `unlabeled` for a sample with no verdict yet, `info` for a statement of fact about a
+ * method, and `neutral` for everything else.
+ */
 export type Tone = "neutral" | "normal" | "defect" | "unlabeled" | "warning" | "info";
 
 const TONE_CLASSES: Record<Tone, string> = {
@@ -33,17 +38,27 @@ const DOT_CLASSES: Record<Tone, string> = {
   info: "bg-signal",
 };
 
+/**
+ * A short label in a tone: a verdict, a status, a count.
+ *
+ * The tone is exposed as `data-tone`, so a stylesheet or a test can read it without parsing
+ * class names.
+ */
 export function Badge({
   tone = "neutral",
   className,
   children,
 }: {
-  tone?: Tone;
-  className?: string;
+  /** Which colour, by meaning. Defaults to `neutral`. */
+  tone?: Tone | undefined;
+  /** Merged with the badge's own classes through `cn`. */
+  className?: string | undefined;
+  /** The label. */
   children: ReactNode;
 }) {
   return (
     <span
+      data-tone={tone}
       className={cn(
         "inline-flex items-center gap-1 rounded-control px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset",
         TONE_CLASSES[tone],
@@ -61,21 +76,45 @@ export function Badge({
  * The mapping from a domain status to a tone belongs to each caller -- only it knows
  * whether "running" is good news -- but the *rendering* of the answer does not.
  */
-export function StatusDot({ tone, children }: { tone: Tone; children?: ReactNode }) {
+export function StatusDot({
+  tone,
+  className,
+  children,
+}: {
+  /** The status, as a tone; also exposed as `data-tone`. */
+  tone: Tone;
+  /** Merged with the row's own classes through `cn`. */
+  className?: string | undefined;
+  /** The word beside the dot. The dot alone is decoration: say the status in words. */
+  children?: ReactNode;
+}) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-fg-muted">
+    <span
+      data-tone={tone}
+      className={cn("inline-flex items-center gap-1.5 text-xs text-fg-muted", className)}
+    >
       <span className={cn("size-1.5 shrink-0 rounded-full", DOT_CLASSES[tone])} aria-hidden />
       {children}
     </span>
   );
 }
 
-/** Counts as a compact `12 normal · 9 defect` run, skipping the zeroes. */
-export function CountRun({ counts }: { counts: [string, number, Tone][] }) {
+/** Counts as a compact `12 normal · 9 defect` run of badges, skipping the zeroes. */
+export function CountRun({
+  counts,
+  className,
+}: {
+  /** `[name, count, tone]` triples, in display order. Zero counts are dropped. */
+  counts: [string, number, Tone][];
+  /** Merged with the run's own classes through `cn`. */
+  className?: string | undefined;
+}) {
   const shown = counts.filter(([, value]) => value > 0);
-  if (shown.length === 0) return <span className="text-xs text-fg-subtle">empty</span>;
+  if (shown.length === 0) {
+    return <span className={cn("text-xs text-fg-subtle", className)}>empty</span>;
+  }
   return (
-    <span className="flex flex-wrap items-center gap-1.5">
+    <span className={cn("flex flex-wrap items-center gap-1.5", className)}>
       {shown.map(([name, value, tone]) => (
         <Badge key={name} tone={tone}>
           <span className="font-mono">{value}</span> {name}

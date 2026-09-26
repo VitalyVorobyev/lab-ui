@@ -97,6 +97,8 @@ export const Open: Story = {
     const body = within(document.body);
     const dialog = await body.findByRole("dialog", { name: "Rename dataset" });
     await expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveValue("bolts-2024");
+    // A body that fits adds no tab stop of its own.
+    await expect(dialog.querySelector("[data-overflowing]")).toBeNull();
     await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
     await expect(args.onOpenChange).toHaveBeenCalledWith(false);
@@ -148,6 +150,19 @@ export const LongBody: Story = {
         ))}
       </ul>
     ),
+  },
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog", { name: "Frames skipped" });
+    // The scroll region: the list's wrapper's parent. Where it overflows its cap (with the
+    // package CSS applied it does), it is a tab stop, so a keyboard can scroll it.
+    const region = dialog.querySelector("ul")!.parentElement!.parentElement!;
+    await waitFor(async () => {
+      const overflowing = region.scrollHeight > region.clientHeight + 1;
+      await expect({
+        marked: region.hasAttribute("data-overflowing"),
+        tabindex: region.getAttribute("tabindex"),
+      }).toEqual({ marked: overflowing, tabindex: overflowing ? "0" : null });
+    });
   },
 };
 

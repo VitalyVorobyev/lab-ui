@@ -105,6 +105,8 @@ export const WithUnsetEntry: Story = {
     // The sentinel never leaks: callers only ever see "".
     await expect(args.onValueChange).toHaveBeenCalledWith("");
     await waitFor(() => expect(body.queryByRole("listbox")).toBeNull());
+    // Back to unset: still controlled, and the trigger shows the placeholder again.
+    await expect(canvas.getByRole("combobox", { name: "Backbone" })).toHaveTextContent("Choose…");
   },
 };
 

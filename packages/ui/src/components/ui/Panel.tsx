@@ -1,4 +1,4 @@
-/**
+/*
  * The page furniture: what holds a screen together above the level of a single control.
  *
  * One heading size and one gap rule, defined once so every route in every consuming app
@@ -11,6 +11,10 @@ import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { byDensity, useDensity } from "./Density";
 import { cn } from "./cn";
 
+/**
+ * A bordered surface with an optional header (a title and actions) above a padded body.
+ * The header and the padding follow the density in force.
+ */
 export function Panel({
   title,
   actions,
@@ -18,10 +22,15 @@ export function Panel({
   bodyClassName,
   children,
 }: {
+  /** The header's heading (an `<h2>`). */
   title?: ReactNode;
+  /** Controls at the header's right end. */
   actions?: ReactNode;
-  className?: string;
-  bodyClassName?: string;
+  /** Merged with the panel's own classes through `cn`. */
+  className?: string | undefined;
+  /** Merged with the body's own classes (its padding) through `cn`. */
+  bodyClassName?: string | undefined;
+  /** The body. */
   children: ReactNode;
 }) {
   const density = useDensity();
@@ -66,18 +75,26 @@ export function Section({
   title,
   hint,
   actions,
+  className,
   children,
 }: {
-  step?: number;
+  /** The step's number, shown zero-padded before the title (decorative, `aria-hidden`). */
+  step?: number | undefined;
+  /** The step's heading (an `<h3>`). */
   title: string;
+  /** A short line after the title. */
   hint?: ReactNode;
+  /** Controls at the heading row's right end. */
   actions?: ReactNode;
+  /** Merged with the section's own classes through `cn`. */
+  className?: string | undefined;
+  /** The step's content. */
   children: ReactNode;
 }) {
   const density = useDensity();
 
   return (
-    <section className={cn("flex flex-col", byDensity(density, "gap-3", "gap-1.5"))}>
+    <section className={cn("flex flex-col", byDensity(density, "gap-3", "gap-1.5"), className)}>
       <div className={cn("flex items-baseline", byDensity(density, "gap-2.5", "gap-2"))}>
         {step !== undefined && (
           <span
@@ -96,7 +113,10 @@ export function Section({
   );
 }
 
-/** Where `PageHeader`'s back link goes: a plain URL, or the app's own link element. */
+/**
+ * Where `PageHeader`'s back link goes: `{ href, label }` for a plain URL, or the app's own
+ * link element (a router's `<Link>`).
+ */
 export type BackLink =
   | { href: string; label: string }
   /** A link element — typically a router's `<Link to="…">Label</Link>` — styled and prefixed with an arrow. */
@@ -104,14 +124,22 @@ export type BackLink =
 
 const BACK_CLASSES = "w-fit text-xs text-fg-muted transition-colors hover:text-signal";
 
+/**
+ * The top of a screen: an optional back link, the `<h1>` title with actions beside it, and
+ * a line of meta facts below. Links go through `back`, never a router import.
+ */
 export function PageHeader({
   title,
   meta,
   actions,
   back,
+  className,
 }: {
+  /** The screen's heading (the `<h1>`). */
   title: ReactNode;
+  /** Small facts under the title — an id, a date, a status badge. */
   meta?: ReactNode;
+  /** The screen's actions, beside the title. */
   actions?: ReactNode;
   /**
    * The way up. `{ href, label }` renders a plain `<a>`; for client-side navigation pass the
@@ -119,9 +147,11 @@ export function PageHeader({
    * rendered with the back-link style and arrow, so this package never imports a router.
    */
   back?: BackLink | undefined;
+  /** Merged with the header's own classes through `cn`. */
+  className?: string | undefined;
 }) {
   return (
-    <header className="flex flex-col gap-1.5">
+    <header className={cn("flex flex-col gap-1.5", className)}>
       {back &&
         (isHrefLink(back) ? (
           <a href={back.href} className={BACK_CLASSES}>
@@ -146,9 +176,11 @@ function isHrefLink(back: BackLink): back is { href: string; label: string } {
   return !isValidElement(back);
 }
 
+/** One fact on a `ReadoutStrip`: a value, optionally labelled and optionally a link. */
 export type ReadoutItem = {
   /** A quiet prefix naming what the value is, where the value alone is ambiguous. */
   label?: string | undefined;
+  /** The fact. An item whose value is `null` or `undefined` is skipped. */
   value: ReactNode;
   /** Makes the value a plain `<a href>`. */
   href?: string | undefined;
@@ -171,8 +203,10 @@ export function ReadoutStrip({
   items,
   className,
 }: {
+  /** The facts, in order. Items with no value are skipped. */
   items: ReadoutItem[];
-  className?: string;
+  /** Merged with the list's own classes through `cn`. */
+  className?: string | undefined;
 }) {
   const shown = items.filter((item) => item.value !== null && item.value !== undefined);
   if (shown.length === 0) return null;
@@ -185,6 +219,9 @@ export function ReadoutStrip({
       )}
     >
       {shown.map((item, index) => (
+        // The items are positional facts with no identity of their own (a label is optional
+        // and values repeat), so their place in the strip is the key.
+        // eslint-disable-next-line @eslint-react/no-array-index-key -- positional list, see above
         <li key={index} className="flex items-center gap-2">
           {index > 0 && (
             <span className="text-fg-subtle" aria-hidden>

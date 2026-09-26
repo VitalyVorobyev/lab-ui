@@ -1,4 +1,4 @@
-/**
+/*
  * The verdict vocabulary, for the components that paint outside of `className`.
  *
  * Every Tailwind-driven primitive under `components/ui` reaches the palette through a
@@ -12,6 +12,8 @@
  */
 
 /**
+ * A paint for SVG overlays and charts: the accent (`signal`), a verdict colour, or `muted`.
+ *
  * Named `MeasureTone` rather than `Tone` — `components/ui/Badge.tsx` already owns that name
  * for the verdict-badge vocabulary (`neutral`/`normal`/`defect`/`unlabeled`/`warning`/
  * `info`), and both are re-exported from the package root, where two types of the same name
@@ -27,7 +29,14 @@ const TONE_VAR: Record<MeasureTone, string> = {
   muted: "var(--fg-subtle)",
 };
 
-/** The CSS paint value for a tone — usable directly as a `stroke`, `fill` or `color`. */
+/**
+ * The CSS paint value for a tone — usable directly as a `stroke`, `fill` or `color`. It is a
+ * `var(--token)` reference, so it follows the theme without a re-render.
+ *
+ * @param tone - The tone; `undefined` falls back.
+ * @param fallback - The tone used when `tone` is `undefined`. Defaults to `signal`.
+ * @returns A `var(--…)` CSS value.
+ */
 export function toneColor(tone: MeasureTone | undefined, fallback: MeasureTone = "signal"): string {
   return TONE_VAR[tone ?? fallback];
 }

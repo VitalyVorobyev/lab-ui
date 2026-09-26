@@ -1,8 +1,7 @@
-/**
+/*
  * A choice among two or three, shown as two or three things.
  *
- * The control for a closed set the app can enumerate up front -- `Literal["small",
- * "medium"]`, an axis choice -- shown all at once, no popup, no typing, and no way to enter
+ * The control for a closed set the app can enumerate up front -- `Literal["small", "medium"]`, an axis choice -- shown all at once, no popup, no typing, and no way to enter
  * a value the backend or algorithm would reject.
  *
  * Built on native radios rather than a headless package: a radio group in one `name` gets
@@ -18,8 +17,18 @@
 
 import { useId } from "react";
 
+import { useFieldDescription } from "./Field";
 import { cn } from "./cn";
 
+/**
+ * A choice among two or three, shown as a strip of segments (native radios in one group, so
+ * arrow keys move between them).
+ *
+ * **`""` means unset.** The highlighted segment is always the *effective* value — `value`,
+ * or `defaultValue` while `value` is `""` — and choosing the segment that matches
+ * `defaultValue` reports `""`, so the default stays defined in one place. Each segment
+ * carries `data-state="checked"` or `"unchecked"`; the group carries `data-disabled`.
+ */
 export function SegmentedControl({
   value,
   defaultValue,
@@ -33,19 +42,27 @@ export function SegmentedControl({
   value: string;
   /** What applies when nothing is sent. Highlighted while `value` is `""`. */
   defaultValue?: string | undefined;
+  /** The segments, in order. */
   options: { value: string; label: string }[];
+  /** Called with the chosen value, or `""` when the default's segment is chosen. */
   onValueChange: (value: string) => void;
-  disabled?: boolean;
-  "aria-label"?: string;
-  className?: string;
+  /** Blocks every segment. */
+  disabled?: boolean | undefined;
+  /** Names the radio group. */
+  "aria-label"?: string | undefined;
+  /** Merged with the strip's own classes through `cn`. */
+  className?: string | undefined;
 }) {
-  const name = useId();
+  const nameId = useId();
+  const described = useFieldDescription();
   const effective = value === "" ? defaultValue : value;
 
   return (
     <div
       role="radiogroup"
       aria-label={ariaLabel}
+      aria-describedby={described["aria-describedby"]}
+      data-disabled={disabled ? "" : undefined}
       className={cn(
         // `shrink-0` because this is a control, not filler: in a crowded toolbar a flex item at
         // its default `1 1 auto` gives up width first, and the segment labels are what pay for
@@ -60,6 +77,7 @@ export function SegmentedControl({
         return (
           <label
             key={option.value}
+            data-state={checked ? "checked" : "unchecked"}
             className={cn(
               // `whitespace-nowrap` or a two-word label's min-content width is its longest
               // *word*, and "Side by side" is free to stack onto three lines inside a
@@ -74,7 +92,7 @@ export function SegmentedControl({
           >
             <input
               type="radio"
-              name={name}
+              name={nameId}
               value={option.value}
               checked={checked}
               disabled={disabled}

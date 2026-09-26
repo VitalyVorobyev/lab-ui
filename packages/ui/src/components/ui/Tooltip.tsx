@@ -1,4 +1,4 @@
-/**
+/*
  * A short explanation, on demand.
  *
  * Replaces the native `title` attribute, which appears after an unpredictable delay, in the
@@ -15,11 +15,35 @@ import type { ReactNode } from "react";
 
 import { cn, focusRing } from "./cn";
 
-export function TooltipProvider({ children }: { children: ReactNode }) {
+/**
+ * Shares one open delay (200 ms) across the tooltips below it. Mount it once near the root:
+ * `Tooltip` and `InfoHint` need it above them.
+ */
+export function TooltipProvider({
+  children,
+}: {
+  /** The app, or the region that uses tooltips. */
+  children: ReactNode;
+}) {
   return <RadixTooltip.Provider delayDuration={200}>{children}</RadixTooltip.Provider>;
 }
 
-export function Tooltip({ content, children }: { content: ReactNode; children: ReactNode }) {
+/**
+ * A short explanation on hover or focus of its child, for text that helps but is not needed
+ * to operate the control (that belongs in a field's description).
+ *
+ * The child must be one focusable element that accepts a ref (Radix `asChild`). Radix
+ * exposes `data-state` (`closed`/`delayed-open`/`instant-open`) on it.
+ */
+export function Tooltip({
+  content,
+  children,
+}: {
+  /** The explanation. */
+  content: ReactNode;
+  /** The one element it explains. */
+  children: ReactNode;
+}) {
   return (
     <RadixTooltip.Root>
       <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
@@ -54,9 +78,12 @@ export function InfoHint({
   label = "More information",
   icon: Icon = HelpCircle,
 }: {
+  /** The explanation shown on hover or focus. */
   children: ReactNode;
-  label?: string;
-  icon?: LucideIcon;
+  /** The button's accessible name. Defaults to "More information". */
+  label?: string | undefined;
+  /** The mark: `HelpCircle` (the default) for help, `Info` for facts about the thing. */
+  icon?: LucideIcon | undefined;
 }) {
   return (
     <Tooltip content={children}>

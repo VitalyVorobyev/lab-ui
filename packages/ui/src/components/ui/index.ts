@@ -1,4 +1,4 @@
-/**
+/*
  * The primitive set.
  *
  * Import from `components/ui` (or the package root); the individual modules are an
@@ -8,11 +8,19 @@
 export { cn, focusRing, focusRingInset } from "./cn";
 
 export { Badge, CountRun, StatusDot, type Tone } from "./Badge";
-export { Button, ButtonLink, buttonClasses } from "./Button";
+export { Button, ButtonLink, buttonClasses, type ButtonSize, type ButtonVariant } from "./Button";
 export { DensityProvider, byDensity, useDensity, type Density } from "./Density";
 export { ConfirmDialog, Dialog, DialogClose } from "./Dialog";
 export { Disclosure } from "./Disclosure";
-export { Callout, Empty, ErrorBox, ProgressBar, Skeleton, SkeletonRows } from "./Feedback";
+export {
+  Callout,
+  type CalloutTone,
+  Empty,
+  ErrorBox,
+  ProgressBar,
+  Skeleton,
+  SkeletonRows,
+} from "./Feedback";
 export { Field } from "./Field";
 export {
   Input,

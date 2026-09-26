@@ -45,7 +45,7 @@ so the number is always visible; \`onValueCommit\` fires once on release, for ex
 for a discrete choice of a few values (that is \`SegmentedControl\`).
 
 **Accessibility**: Radix Slider — the thumb is a \`role="slider"\` with \`aria-valuenow/min/max\`,
-moved by arrow keys, Page Up/Down and Home/End. \`aria-label\` is set on the slider root.`,
+moved by arrow keys, Page Up/Down and Home/End. \`aria-label\` (and a surrounding \`Field\`'s description) is set on the thumb, the element a screen reader announces.`,
       },
     },
   },
@@ -64,7 +64,7 @@ type Story = StoryObj<typeof meta>;
 
 export const WithReadout: Story = {
   play: async ({ canvas, args }) => {
-    const thumb = canvas.getByRole("slider");
+    const thumb = canvas.getByRole("slider", { name: "Threshold" });
     await expect(thumb).toHaveAttribute("aria-valuenow", "0.5");
     thumb.focus();
     await userEvent.keyboard("{ArrowRight}");

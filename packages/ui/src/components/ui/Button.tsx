@@ -1,12 +1,19 @@
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import { Loader2 } from "lucide-react";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { byDensity, useDensity } from "./Density";
 import { cn, focusRing } from "./cn";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-type ButtonSize = "sm" | "md";
+/**
+ * A button's look, by what the action is: `primary` for the one action a screen is for,
+ * `secondary` for the rest, `ghost` for toolbar actions, `danger` for an action that
+ * destroys something.
+ */
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+
+/** A button's height and padding. `md` is the comfortable density's size, `sm` the compact one's. */
+export type ButtonSize = "sm" | "md";
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-signal text-signal-fg hover:bg-signal-strong",
@@ -14,8 +21,9 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   ghost: "text-fg-muted hover:bg-raised hover:text-fg",
   // Soft rather than a solid red block. The verdict red is also the colour of a defect
   // badge, and a filled button of it reads as an alarm on a screen that is mostly grey.
-  // Genuinely destructive actions are behind a confirmation dialog regardless.
-  danger: "bg-defect/10 text-defect ring-1 ring-inset ring-defect/30 hover:bg-defect/20",
+  // Genuinely destructive actions are behind a confirmation dialog regardless. The hover
+  // tint stops at /15 so the red label keeps 4.5:1 on it.
+  danger: "bg-defect/10 text-defect ring-1 ring-inset ring-defect/30 hover:bg-defect/15",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
@@ -27,6 +35,10 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
  * The classes that make a control look like a button, for the one element that has to be
  * something else. Prefer `Button` and `ButtonLink`; this exists so a third shape — a
  * `<label>` wrapping a file input, say — does not have to copy the variant table.
+ *
+ * @param options - The variant (default `secondary`), the size (default `md`) and the
+ *   caller's own classes, merged last.
+ * @returns The class string.
  */
 export function buttonClasses({
   variant = "secondary",
@@ -60,6 +72,9 @@ function ButtonIcon({ icon }: { icon: ReactNode }) {
  * `<button>` — how a router's link becomes a button-shaped navigation without this package
  * knowing about routers: `<Button asChild><Link to="/runs">Runs</Link></Button>`.
  * For a plain URL, `ButtonLink` is the shorter spelling.
+ *
+ * Takes every `<button>` prop, `ref` included. State is exposed as `data-variant` and, while
+ * `loading`, `data-loading` (plus `aria-busy`).
  */
 export function Button({
   variant = "secondary",
@@ -72,12 +87,14 @@ export function Button({
   children,
   disabled,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
+}: ComponentProps<"button"> & {
+  /** What kind of action this is. Defaults to `secondary`. */
   variant?: ButtonVariant | undefined;
   /** Defaults to the density in force — `md` comfortable, `sm` compact. */
   size?: ButtonSize | undefined;
   /** Swaps the icon for a spinner and blocks the click, without the label changing. */
   loading?: boolean | undefined;
+  /** A leading icon, decorative (`aria-hidden`): the label carries the meaning. */
   icon?: ReactNode;
   /**
    * Render onto the one child element (Radix `Slot`) rather than a `<button>`. The child
@@ -91,7 +108,11 @@ export function Button({
 
   if (asChild) {
     return (
-      <Slot {...rest} className={buttonClasses({ variant, size: resolved, className })}>
+      <Slot
+        {...rest}
+        data-variant={variant}
+        className={buttonClasses({ variant, size: resolved, className })}
+      >
         {icon && <ButtonIcon icon={icon} />}
         <Slottable>{children}</Slottable>
       </Slot>
@@ -103,6 +124,8 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
+      data-variant={variant}
+      data-loading={loading ? "" : undefined}
       {...rest}
       className={buttonClasses({ variant, size: resolved, className })}
     >
@@ -125,8 +148,9 @@ export function Button({
  * a link that cannot be followed should not be rendered as one, and a navigation has no
  * pending state of its own.
  *
- * It renders a plain `<a href>`. For a router's link, pass it as the only child with
- * `asChild` — `<ButtonLink asChild><Link to="/runs">Runs</Link></ButtonLink>` — so client-side
+ * It renders a plain `<a href>`, and takes every `<a>` prop, `ref` included. For a router's
+ * link, pass it as the only child with `asChild` —
+ * `<ButtonLink asChild><Link to="/runs">Runs</Link></ButtonLink>` — so client-side
  * navigation keeps working and this package still never imports a router.
  */
 export function ButtonLink({
@@ -137,10 +161,12 @@ export function ButtonLink({
   className,
   children,
   ...rest
-}: AnchorHTMLAttributes<HTMLAnchorElement> & {
+}: ComponentProps<"a"> & {
+  /** What kind of action this is. Defaults to `secondary`. */
   variant?: ButtonVariant | undefined;
   /** Defaults to the density in force — `md` comfortable, `sm` compact. */
   size?: ButtonSize | undefined;
+  /** A leading icon, decorative (`aria-hidden`): the label carries the meaning. */
   icon?: ReactNode;
   /** Render onto the one child element — a router's `<Link>` — instead of an `<a>`. */
   asChild?: boolean | undefined;
@@ -150,7 +176,11 @@ export function ButtonLink({
   const Comp = asChild ? Slot : "a";
 
   return (
-    <Comp {...rest} className={buttonClasses({ variant, size: resolved, className })}>
+    <Comp
+      {...rest}
+      data-variant={variant}
+      className={buttonClasses({ variant, size: resolved, className })}
+    >
       {icon && <ButtonIcon icon={icon} />}
       <Slottable>{children}</Slottable>
     </Comp>

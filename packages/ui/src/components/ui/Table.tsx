@@ -1,4 +1,4 @@
-/**
+/*
  * A table.
  *
  * `numeric` is the column property that matters here. Quantities are set in mono with
@@ -11,15 +11,27 @@ import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { byDensity, useDensity } from "./Density";
 import { cn } from "./cn";
 
+/** One column of a `Table`: its header and how to render a row's cell. */
 export type Column<Row> = {
+  /** Unique among the columns; the React key of its header and cells. */
   key: string;
+  /** The `<th>` content. */
   header: ReactNode;
   /** Right-aligned, mono, tabular. Use for anything that is a quantity. */
   numeric?: boolean;
+  /** A CSS width for the column, e.g. `"6rem"`. */
   width?: string;
+  /** The cell's content for a row. */
   cell: (row: Row) => ReactNode;
 };
 
+/**
+ * A table of rows, with numeric columns set in mono and right-aligned.
+ *
+ * With `onRowClick` the rows are keyboard-reachable (Tab, then Enter or Space) while keeping
+ * their table semantics. The active row carries `aria-current` and `data-state="active"`;
+ * padding follows the density in force. With no rows it renders the `empty` message instead.
+ */
 export function Table<Row>({
   columns,
   rows,
@@ -31,12 +43,18 @@ export function Table<Row>({
   isRowActive,
   onRowHover,
 }: {
+  /** The columns, in order. */
   columns: Column<Row>[];
+  /** The rows, in order. */
   rows: Row[];
+  /** A stable key per row. */
   rowKey: (row: Row, index: number) => string | number;
+  /** Shown instead of the table when there are no rows. Defaults to "Nothing here.". */
   empty?: ReactNode;
-  caption?: string;
-  className?: string;
+  /** Names the table for assistive technology (a visually hidden `<caption>`). */
+  caption?: string | undefined;
+  /** Merged with the scroll wrapper's (or the empty message's) own classes through `cn`. */
+  className?: string | undefined;
   /** Makes rows activatable. Keyboard-reachable, so a table used as a list of
    * destinations is not a mouse-only control. The event is passed so a caller can read
    * modifiers — a list kept in step with a canvas needs shift-range and meta-toggle to mean
@@ -61,6 +79,7 @@ export function Table<Row>({
         className={cn(
           "text-center text-fg-muted",
           byDensity(density, "py-6 text-sm", "py-3 text-xs"),
+          className,
         )}
       >
         {empty}
@@ -94,6 +113,7 @@ export function Table<Row>({
           {rows.map((row, index) => (
             <tr
               key={rowKey(row, index)}
+              data-state={isRowActive?.(row, index) ? "active" : undefined}
               className={cn(
                 "border-b border-line/60 last:border-0",
                 onRowClick && "cursor-pointer hover:bg-raised",
