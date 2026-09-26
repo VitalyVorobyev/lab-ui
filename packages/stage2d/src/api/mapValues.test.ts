@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   PlaneFormatError,
   decodePlane,
+  fetchPlane,
   fractionOf,
   valueAt,
   valuesAt,
@@ -132,5 +133,27 @@ describe("fractionOf", () => {
     // A flat map, or a range nobody recorded — a percentage would be invented.
     expect(fractionOf(1, null)).toBeNull();
     expect(fractionOf(1, { low: 2, high: 2 })).toBeNull();
+  });
+});
+
+describe("fetchPlane", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("decodes the response body", async () => {
+    const body = encode([[[1, 2]]]);
+    const fetchMock = vi.fn(() => Promise.resolve(new Response(body)));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const plane = await fetchPlane("/values/1");
+    expect(fetchMock).toHaveBeenCalledWith("/values/1");
+    expect(plane.width).toBe(2);
+    expect(Array.from(plane.values)).toEqual([1, 2]);
+  });
+
+  it("fails on an error status rather than decoding an error page", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response("nope", { status: 404 }))));
+    await expect(fetchPlane("/values/missing")).rejects.toThrow("404 fetching values");
   });
 });

@@ -7,7 +7,7 @@ import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import type { Point } from "../measureGeometry";
 import { ImageStage, useStage, type ImageStageProps } from "./ImageStage";
 import { StageButton, StageReadout, StageToolbar, StageToolbarDivider } from "./StageToolbar";
-import type { Rect, StageView } from "./view";
+import { clampView, type Rect, type StageView } from "./view";
 
 /** The synthetic part's pixel size — larger than the frame, so fit and 100% differ. */
 const IMAGE = { width: 1280, height: 1024 };
@@ -53,10 +53,10 @@ function InspectionImage() {
 /** A layer that frames a rect once the stage has been measured — a "jump to finding". */
 function FrameOnMount({ rect }: { rect: Rect }) {
   const { frame, box } = useStage();
-  const done = useRef(false);
+  const doneRef = useRef(false);
   useEffect(() => {
-    if (done.current || !(box.width > 0)) return;
-    done.current = true;
+    if (doneRef.current || !(box.width > 0)) return;
+    doneRef.current = true;
     frame(rect);
   }, [box.width, frame, rect]);
   return null;
@@ -129,6 +129,12 @@ function stageTransform(root: HTMLElement): string {
   return root.querySelector<HTMLElement>("[data-stage]")?.style.transform ?? "";
 }
 
+/** The stage's `translate(tx, ty) scale(scale)` as numbers. */
+function stageView(root: HTMLElement): StageView {
+  const match = /^translate\((\S+)px, (\S+)px\) scale\((\S+)\)$/.exec(stageTransform(root));
+  return { scale: Number(match?.[3]), tx: Number(match?.[1]), ty: Number(match?.[2]) };
+}
+
 const meta = {
   title: "stage2d/ImageStage",
   component: ImageStage,
@@ -141,10 +147,14 @@ mask, a \`MeasureOverlay\`, interactive handles — so they stay registered at a
 
 The stage is laid out at the image's own pixel size and carries the whole transform; \`scale\` is CSS
 pixels per image pixel (\`1\` is 100%). The \`view\` is controlled: pass \`null\` to open at a sensible
-view (1:1 if the image fits, otherwise fit) and store what \`onView\` reports. Layers read the transform
-through \`useStage()\`. \`StageToolbar\` (zoom out / percentage menu / zoom in / fit / 100%, plus app
-groups built from \`StageButton\` and \`StageToolbarDivider\`) and \`StageReadout\` (cursor in image
-pixels, and scale) float over the image, outside the transform.
+view (1:1 if the image fits, otherwise fit) and store what \`onView\` reports; a non-null opening view
+is kept, only clamped to what the viewport allows. Layers read the transform through \`useStage()\`.
+\`StageToolbar\` (zoom out / percentage menu / zoom in / fit / 100%, plus app groups built from
+\`StageButton\` and \`StageToolbarDivider\`) and \`StageReadout\` (cursor in image pixels, and scale)
+float over the image, outside the transform.
+
+**State** is on the viewport as \`data-fit\`, \`data-panning\` and \`data-pan-mode\` (present or absent),
+so styling can follow it without a callback.
 
 **Use** it for any image result a reader inspects — anything drawn in source-image pixel coordinates.
 A press pans only when no layer claims it: an interactive layer stops propagation on \`pointerdown\`
@@ -228,9 +238,81 @@ export const WithToolbarAndReadout: Story = {
 
     // Hover: the readout switches from the image size to the cursor, in image pixels.
     const rect = stage.getBoundingClientRect();
-    fireEvent.pointerMove(stage, { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 });
+    await fireEvent.pointerMove(stage, { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 });
     await waitFor(() => expect(readoutText(canvasElement)).toMatch(/^\d+\.\d, \d+\.\d px · fit$/));
     await expect(args.onHover).toHaveBeenCalled();
+
+    // Registration: the stage sits inside the viewport's border, so a pointer over the
+    // centre of image pixel (100, 200) reads exactly that — not a border's width off.
+    const { scale, tx, ty } = stageView(canvasElement);
+    await fireEvent.pointerMove(stage, {
+      clientX: rect.left + stage.clientLeft + tx + 100.5 * scale,
+      clientY: rect.top + stage.clientTop + ty + 200.5 * scale,
+    });
+    await waitFor(() => expect(readoutText(canvasElement)).toBe("100.0, 200.0 px · fit"));
+  },
+};
+
+/** The percentage menu: fit and the presets this viewport allows. A press outside closes it. */
+export const ZoomMenu: Story = {
+  render: (args) => <StatefulStage {...args} options={{ toolbar: true, readout: "static" }} />,
+  play: async ({ canvas, canvasElement }) => {
+    await waitFor(() => expect(readoutText(canvasElement)).toBe("1280×1024 · fit"));
+    const stage = canvas.getByRole("application");
+    await expect(stage).toHaveAttribute("data-fit");
+
+    // The percentage button reads "Fit" at fit; its menu lists fit and the presets.
+    const trigger = canvas.getByRole("button", { name: "Fit" });
+    await expect(trigger).toHaveAttribute("data-state", "closed");
+    await userEvent.click(trigger);
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    await expect(trigger).toHaveAttribute("data-state", "open");
+    await expect(canvas.getByRole("menuitem", { name: "Fit" })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("menuitem", { name: "200%" }));
+    await waitFor(() => expect(readoutText(canvasElement)).toBe("1280×1024 · 200%"));
+    await expect(canvas.queryByRole("menu")).not.toBeInTheDocument();
+    await expect(stage).not.toHaveAttribute("data-fit");
+
+    // Back to fit through the menu.
+    await userEvent.click(canvas.getByRole("button", { name: "200%" }));
+    await userEvent.click(canvas.getByRole("menuitem", { name: "Fit" }));
+    await waitFor(() => expect(readoutText(canvasElement)).toBe("1280×1024 · fit"));
+
+    // A press anywhere outside the menu closes it without choosing.
+    await userEvent.click(canvas.getByRole("button", { name: "Fit" }));
+    await expect(canvas.getByRole("menu")).toBeInTheDocument();
+    await fireEvent.pointerDown(document.body);
+    await waitFor(() => expect(canvas.queryByRole("menu")).not.toBeInTheDocument());
+    await expect(readoutText(canvasElement)).toBe("1280×1024 · fit");
+
+    // 100%, then a step out; "Fit to window" returns.
+    const actual = canvas.getByRole("button", { name: "Actual size (100%)" });
+    await userEvent.click(actual);
+    await waitFor(() => expect(readoutText(canvasElement)).toBe("1280×1024 · 100%"));
+    await expect(actual).toHaveAttribute("aria-pressed", "true");
+    await expect(actual).toHaveAttribute("data-state", "on");
+    await userEvent.click(canvas.getByRole("button", { name: "Zoom out" }));
+    await waitFor(() => expect(readoutText(canvasElement)).toBe("1280×1024 · 67%"));
+    await userEvent.click(canvas.getByRole("button", { name: "Fit to window" }));
+    await waitFor(() => expect(readoutText(canvasElement)).toBe("1280×1024 · fit"));
+  },
+};
+
+/** An app-supplied opening view: kept as given once the viewport is measured, not replaced by fit. */
+export const ControlledInitialView: Story = {
+  args: { view: { scale: 2, tx: -900, ty: -700 } },
+  render: (args) => <StatefulStage {...args} options={{ toolbar: true, readout: "static" }} />,
+  play: async ({ canvas, canvasElement, args }) => {
+    await waitFor(() => expect(args.onView).toHaveBeenCalled());
+    // 200%, not the fit (or 1:1) a `null` view would open at — only clamped to what this
+    // viewport allows.
+    await expect(readoutText(canvasElement)).toBe("1280×1024 · 200%");
+    const stage = canvas.getByRole("application");
+    const legal = clampView({ scale: 2, tx: -900, ty: -700 }, { width: stage.clientWidth, height: stage.clientHeight }, IMAGE);
+    const shown = stageView(canvasElement);
+    await expect(shown.scale).toBe(2);
+    await expect(shown.tx).toBeCloseTo(legal.tx, 1);
+    await expect(shown.ty).toBeCloseTo(legal.ty, 1);
   },
 };
 
@@ -336,9 +418,9 @@ export const InteractiveLayer: Story = {
     const label = handle.getAttribute("aria-label");
     const r = handle.getBoundingClientRect();
     const from = { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 };
-    fireEvent.pointerDown(handle, { button: 0, pointerId: 1, ...from });
-    fireEvent.pointerMove(window, { pointerId: 1, clientX: from.clientX + 60, clientY: from.clientY + 30 });
-    fireEvent.pointerUp(window, { button: 0, pointerId: 1, clientX: from.clientX + 60, clientY: from.clientY + 30 });
+    await fireEvent.pointerDown(handle, { button: 0, pointerId: 1, ...from });
+    await fireEvent.pointerMove(window, { pointerId: 1, clientX: from.clientX + 60, clientY: from.clientY + 30 });
+    await fireEvent.pointerUp(window, { button: 0, pointerId: 1, clientX: from.clientX + 60, clientY: from.clientY + 30 });
     await waitFor(() => expect(handle.getAttribute("aria-label")).not.toBe(label));
     await expect(stageTransform(canvasElement)).toBe(before);
 
@@ -346,8 +428,8 @@ export const InteractiveLayer: Story = {
     const stage = canvas.getByRole("application");
     const s = stage.getBoundingClientRect();
     const corner = { clientX: s.left + 12, clientY: s.top + 12 };
-    fireEvent.pointerDown(stage, { button: 0, pointerId: 1, ...corner });
-    fireEvent.pointerUp(stage, { button: 0, pointerId: 1, ...corner });
+    await fireEvent.pointerDown(stage, { button: 0, pointerId: 1, ...corner });
+    await fireEvent.pointerUp(stage, { button: 0, pointerId: 1, ...corner });
     await waitFor(() => expect(handle).toHaveAttribute("aria-pressed", "false"));
     await expect(args.onBackgroundClick).toHaveBeenCalled();
   },
@@ -372,9 +454,9 @@ export const PanTool: Story = {
     const before = stageTransform(canvasElement);
     const s = stage.getBoundingClientRect();
     const from = { clientX: s.left + s.width / 2, clientY: s.top + s.height / 2 };
-    fireEvent.pointerDown(stage, { button: 0, pointerId: 1, ...from });
-    fireEvent.pointerMove(stage, { pointerId: 1, clientX: from.clientX - 80, clientY: from.clientY - 40 });
-    fireEvent.pointerUp(stage, { button: 0, pointerId: 1, clientX: from.clientX - 80, clientY: from.clientY - 40 });
+    await fireEvent.pointerDown(stage, { button: 0, pointerId: 1, ...from });
+    await fireEvent.pointerMove(stage, { pointerId: 1, clientX: from.clientX - 80, clientY: from.clientY - 40 });
+    await fireEvent.pointerUp(stage, { button: 0, pointerId: 1, clientX: from.clientX - 80, clientY: from.clientY - 40 });
     await waitFor(() => expect(stageTransform(canvasElement)).not.toBe(before));
   },
 };

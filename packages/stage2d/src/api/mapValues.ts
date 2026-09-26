@@ -16,8 +16,11 @@
 const MAGIC = 0x56414d31; // "VAM1", read big-endian so the constant is legible.
 const HEADER_SIZE = 24;
 
+/** A decoded value plane: the numbers behind a rendered map, one `Float32` per pixel and channel. */
 export interface ValuePlane {
+  /** Columns in the plane (after `stride` decimation). */
   width: number;
+  /** Rows in the plane (after `stride` decimation). */
   height: number;
   /**
    * The integer decimation applied upstream. `1` means every source pixel is here;
@@ -32,11 +35,23 @@ export interface ValuePlane {
    * source is three, and nothing here may encode which — channel count is data.
    */
   channels: number;
+  /** The samples, plane-major: channel, then row, then column. */
   values: Float32Array;
 }
 
+/** Thrown by `decodePlane` when a buffer is not a well-formed value plane. */
 export class PlaneFormatError extends Error {}
 
+/**
+ * Decode a value plane from its binary form: a 24-byte header (big-endian magic `VAM1`,
+ * then little-endian `u32` width, height, stride and channels, and 4 reserved bytes)
+ * followed by `width · height · channels` little-endian `f32` values.
+ *
+ * The returned `values` is a view onto `buffer`, not a copy.
+ *
+ * @throws `PlaneFormatError` when the header is short, the magic is wrong, or the buffer
+ *   holds fewer values than the header promises.
+ */
 export function decodePlane(buffer: ArrayBuffer): ValuePlane {
   if (buffer.byteLength < HEADER_SIZE) {
     throw new PlaneFormatError("a value plane is at least a 24-byte header");
@@ -100,6 +115,11 @@ export function fractionOf(
   return (value - range.low) / (range.high - range.low);
 }
 
+/**
+ * Fetch a value plane from `url` and decode it.
+ *
+ * @throws `Error` on a non-2xx response, or `PlaneFormatError` for a malformed body.
+ */
 export async function fetchPlane(url: string): Promise<ValuePlane> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`${response.status} fetching values`);

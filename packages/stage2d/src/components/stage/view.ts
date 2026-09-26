@@ -40,25 +40,35 @@ import type { Point } from "../measureGeometry";
 export interface StageView {
   /** CSS pixels per image pixel. `1` is 100%. */
   scale: number;
+  /** Horizontal offset of the image's top-left corner from the viewport's, in CSS pixels. */
   tx: number;
+  /** Vertical offset of the image's top-left corner from the viewport's, in CSS pixels. */
   ty: number;
 }
 
+/** A size: the viewport's in CSS pixels, or the image's in image pixels. */
 export interface Box {
+  /** Horizontal extent. */
   width: number;
+  /** Vertical extent. */
   height: number;
 }
 
+/** An axis-aligned rectangle in image coordinates, from its top-left corner. */
 export interface Rect {
+  /** Left edge. */
   x: number;
+  /** Top edge. */
   y: number;
+  /** Horizontal extent. */
   width: number;
+  /** Vertical extent. */
   height: number;
 }
 
 /**
- * The offset between the two conventions above: an image coordinate `i` sits at CSS `i +
- * 0.5` inside a stage laid out at the image's natural size.
+ * The offset between the two pixel conventions: an image coordinate `i` sits at CSS
+ * `i + 0.5` inside a stage laid out at the image's natural size.
  */
 export const PIXEL_CENTRE = 0.5;
 
@@ -182,9 +192,11 @@ export function zoomAbout(view: StageView, scale: number, anchor: Point): StageV
   };
 }
 
+/** The scale range `clampView` and `scaleRange` allow. */
 export interface ClampOptions {
   /** Lowest scale, as a multiple of fit. Defaults to `MIN_SCALE_VS_FIT`. */
   minScaleVsFit?: number;
+  /** Highest scale, in CSS pixels per image pixel. Defaults to `MAX_SCALE`. */
   maxScale?: number;
 }
 
