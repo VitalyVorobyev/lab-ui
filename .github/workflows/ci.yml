@@ -43,6 +43,9 @@ jobs:
       - name: Build
         run: bun run build
 
+      - name: A consumer installing the packed tarballs gets working packages
+        run: bun run check:consumer
+
       - name: Verify each package's entry points exist
         run: |
           for p in ui forms charts stage2d lab-ui; do

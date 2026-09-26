@@ -36,10 +36,22 @@ publishing, `bun link` the package there and rebuild it.
 
 ## Releasing
 
-Changesets, independent versions, all 0.x: every PR with a user-facing change carries one
-(`bun run changeset`). Publishing is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers)
-from `.github/workflows/release.yml` — no npm token in the repo; each package name needs its
-trusted publisher registered on npmjs.com.
+Changesets, independent versions, all 0.x (PLAN §7). Every PR with a user-facing change
+carries a changeset (`bun run changeset`); a breaking change is a **minor**.
+
+On `main`, `.github/workflows/release.yml` keeps a **"Version Packages" PR** open while
+changesets are pending. Merging that PR is the release: the workflow typechecks, tests,
+builds, runs the consumer check (`bun run check:consumer` — the packed tarballs installed
+into a fresh app), and publishes every package whose version is not yet on npm, with
+provenance.
+
+Publishing is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) — no npm
+token in the repo. **Each package name needs its trusted publisher registered on npmjs.com**
+(repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`) before its
+first release from CI. After the first release of the split, mark the compat package
+deprecated: `npm deprecate @vitavision/lab-ui "Split into @vitavision/ui, /forms, /charts and /stage2d — see its README"`.
+
+The Storybook docs site deploys from `main` to GitHub Pages (`.github/workflows/storybook.yml`).
 
 ## Scope
 

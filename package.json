@@ -28,7 +28,10 @@
     "size": "size-limit",
     "test:stories": "bun run --filter @vitavision/storybook test",
     "test:visual": "bun run --filter @vitavision/storybook test:visual",
-    "coverage": "bun run --filter './packages/*' coverage"
+    "coverage": "bun run --filter './packages/*' coverage",
+    "version-packages": "changeset version && bun install --lockfile-only",
+    "release": "bun run build && changeset publish",
+    "check:consumer": "bun tools/dod/consumer.ts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
