@@ -2,7 +2,7 @@
   "name": "@vitavision/bench-stage2d",
   "private": true,
   "type": "module",
-  "description": "L0-3: the 2D stage benchmark — one scene, three rendering engines, measured in Chromium.",
+  "description": "L0-3: the 2D stage benchmark \u2014 one scene, three rendering engines, measured in Chromium.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,6 +10,8 @@
     "test": "bun test src"
   },
   "dependencies": {
+    "@vitavision/stage2d": "workspace:*",
+    "@vitavision/ui": "workspace:*",
     "konva": "10.7.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

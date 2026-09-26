@@ -1,0 +1,9 @@
+/*
+ * Deprecated: the 0.x stylesheet, now the four packages' stylesheets in one import. Each
+ * carries its own `@source`, so the `@source …/lab-ui/dist` line a 0.x consumer has is
+ * harmless and no longer needed.
+ */
+@import "@vitavision/ui/styles.css";
+@import "@vitavision/forms/styles.css";
+@import "@vitavision/charts/styles.css";
+@import "@vitavision/stage2d/styles.css";

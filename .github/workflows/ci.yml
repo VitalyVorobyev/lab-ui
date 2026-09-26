@@ -18,10 +18,13 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       - name: Install
         run: bun install --frozen-lockfile
+
+      - name: Layering rules (PLAN §2)
+        run: bun run check:deps
 
       - name: Typecheck
         run: bun run typecheck
@@ -29,17 +32,15 @@ jobs:
       - name: Test
         run: bun run test
 
-      # `dist/` is gitignored, so this is also the check that the published
-      # artefact can actually be produced from a clean checkout — the thing a
-      # consumer resolving `@vitavision/lab-ui` from npm depends on.
+      # `dist/` is gitignored, so this is also the check that every published artefact can
+      # be produced from a clean checkout.
       - name: Build
         run: bun run build
 
-      # The package declares `files: ["dist"]` and points `main`/`types` inside
-      # it. A build that succeeds but leaves an entry point missing would only
-      # be discovered by a consumer, after publishing.
-      - name: Verify the package's own entry points exist
+      - name: Verify each package's entry points exist
         run: |
-          test -f dist/index.js
-          test -f dist/index.d.ts
-          test -f dist/styles.css
+          for p in ui forms charts stage2d lab-ui; do
+            test -f "packages/$p/dist/index.js"
+            test -f "packages/$p/dist/index.d.ts"
+            test -f "packages/$p/dist/styles.css"
+          done

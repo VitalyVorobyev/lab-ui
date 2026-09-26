@@ -1,0 +1,19 @@
+{
+  "name": "@vitavision/config-ts",
+  "version": "0.1.0",
+  "description": "Shared TypeScript compiler options and tsdown library preset for vitavision frontends.",
+  "license": "MIT OR Apache-2.0",
+  "repository": { "type": "git", "url": "git+https://github.com/VitalyVorobyev/lab-ui.git", "directory": "packages/config/ts" },
+  "type": "module",
+  "sideEffects": false,
+  "files": ["tsconfig.json", "tsconfig.lib.json", "tsdown.js", "tsdown.d.ts"],
+  "exports": {
+    "./tsconfig.json": "./tsconfig.json",
+    "./tsconfig.lib.json": "./tsconfig.lib.json",
+    "./tsdown": { "types": "./tsdown.d.ts", "default": "./tsdown.js" },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": { "access": "public" },
+  "peerDependencies": { "typescript": "^6.0.3", "tsdown": "0.23.0" },
+  "peerDependenciesMeta": { "tsdown": { "optional": true } }
+}
