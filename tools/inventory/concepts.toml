@@ -1,0 +1,381 @@
+# The concept matrix: which file implements which UI concept, in which repo.
+#
+# The mapping is written by hand, on purpose. A heuristic ("anything named *Button*") both
+# misses re-implementations with other names and counts wrappers as implementations; the
+# point of this table is to be exactly as right as a person who read the code, and to fail
+# loudly when a listed file moves (`matrix.ts` checks every path exists).
+#
+# Two kinds of entry per concept:
+#   impl.<repo> = ["path", …]   files in that repo that *implement* the concept locally.
+#   uses.<repo> = "<package>"   the repo gets the concept from a shared package instead.
+#   note.<repo> = "…"           anything a reader needs that is not a file (inline markup,
+#                               a third-party library, a near-miss that is not the concept).
+# Paths are relative to the repo's `frontend` directory.
+#
+# Progress in PLAN.md is measured here, not with jscpd: cross-repo duplication is
+# independent re-implementation, which copy-paste detection cannot see (F2).
+
+# ── Repositories ────────────────────────────────────────────────────────────────────────
+# `root` may start with `~`. `in_plan` is false for frontends found by the GitHub survey
+# that PLAN.md §0 does not list; they are mapped, not yet in scope for migration.
+
+[repos.lab-ui]
+root = "~/vision/lab-ui"
+frontend = "."
+github = "VitalyVorobyev/lab-ui"
+in_plan = true
+
+[repos.val]
+label = "visual-anomaly-lab"
+root = "~/vision/visual-anomaly-lab"
+frontend = "frontend"
+github = "VitalyVorobyev/visual-anomaly-lab"
+in_plan = true
+
+[repos.vitavision]
+root = "~/vitavision"
+frontend = "."
+github = "VitalyVorobyev/vitavision"
+in_plan = true
+
+[repos.calibration-rs]
+root = "~/vision/calibration-rs"
+frontend = "app"
+github = "VitalyVorobyev/calibration-rs"
+in_plan = true
+
+[repos.ct-studio]
+label = "calib-targets-rs/studio"
+root = "~/vision/calib-targets-rs"
+frontend = "studio"
+github = "VitalyVorobyev/calib-targets-rs"
+in_plan = true
+
+[repos.ct-demo]
+label = "calib-targets-rs/demo"
+root = "~/vision/calib-targets-rs"
+frontend = "demo"
+github = "VitalyVorobyev/calib-targets-rs"
+in_plan = true
+
+[repos.chess-demo]
+label = "chess-corners-rs/demo"
+root = "~/vision/chess-rs"
+frontend = "demo"
+github = "VitalyVorobyev/chess-corners-rs"
+in_plan = false
+
+[repos.vm-lab]
+label = "vision-metrology/lab"
+root = "~/vision/vision-metrology"
+frontend = "lab/frontend"
+github = "VitalyVorobyev/vision-metrology"
+in_plan = false
+
+[repos.operator-ui]
+label = "vision-lab/operator-ui"
+root = "~/vision/vision-lab"
+frontend = "apps/operator-ui/ui"
+github = "VitalyVorobyev/vision-lab"
+in_plan = false
+
+[repos.viva-studio]
+label = "viva-genicam/studio"
+root = "~/vision/viva-genicam"
+frontend = "studio/ui/viva-studio-ui"
+github = "VitalyVorobyev/viva-genicam"
+in_plan = false
+
+# ── ui ──────────────────────────────────────────────────────────────────────────────────
+
+[concepts.button]
+label = "Button"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Button.tsx"]
+impl.calibration-rs = ["src/components/ui/Button.tsx"]
+impl.operator-ui = ["src/components/ui/Button.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+note.vitavision = "inline <button> with utility classes"
+note.ct-studio = "inline <button>"
+note.ct-demo = "inline <button>"
+note.chess-demo = "inline <button>"
+note.viva-studio = "inline <button>"
+
+[concepts.panel]
+label = "Panel / section / page header"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Panel.tsx"]
+impl.val = ["src/components/viewer/RailSection.tsx"]
+impl.vitavision = ["src/components/editor/panels/RailSection.tsx"]
+impl.calibration-rs = ["src/components/ui/Panel.tsx", "src/components/ui/SectionHeader.tsx"]
+impl.operator-ui = ["src/components/ui/Panel.tsx"]
+impl.viva-studio = ["src/components/ImageViewer/SidebarSection.tsx"]
+uses.vm-lab = "@vitavision/lab-ui"
+note.val = "Panel itself comes from @vitavision/lab-ui; RailSection is a local variant"
+
+[concepts.badge]
+label = "Badge / status pill"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Badge.tsx"]
+impl.calibration-rs = ["src/components/ui/Badge.tsx"]
+impl.operator-ui = ["src/components/ui/StatusPill.tsx"]
+uses.val = "@vitavision/lab-ui"
+note.vitavision = "editorial badges only (blog/atlas/papers): outside the interactive boundary"
+
+[concepts.table]
+label = "Table"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Table.tsx"]
+impl.calibration-rs = ["src/components/ui/Table.tsx"]
+impl.ct-studio = ["src/components/DiffTable.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+note.val = "plus raw <table>s tracked by uiRules.test.ts"
+
+[concepts.select]
+label = "Select"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Select.tsx"]
+impl.vitavision = ["src/components/editor/algorithms/SelectField.tsx"]
+impl.calibration-rs = ["src/components/ui/Select.tsx"]
+impl.operator-ui = ["src/components/ui/Select.tsx"]
+impl.viva-studio = ["src/components/FeatureBrowser/editors/EnumEditor.tsx"]
+uses.val = "@vitavision/lab-ui"
+note.ct-studio = "raw <select>"
+note.ct-demo = "raw <select>"
+
+[concepts.dialog]
+label = "Dialog / modal"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Dialog.tsx"]
+impl.vitavision = ["src/components/editor/panels/ConfigModal.tsx"]
+impl.calibration-rs = ["src/workspaces/RunWorkspace/AskUserModal.tsx"]
+uses.val = "@vitavision/lab-ui"
+
+[concepts.tooltip]
+label = "Tooltip / info hint"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Tooltip.tsx"]
+impl.vitavision = ["src/components/ui/Tooltip.tsx", "src/components/editor/algorithms/fieldChrome.tsx"]
+impl.ct-studio = ["src/components/InfoTip.tsx"]
+impl.ct-demo = ["src/components/InfoTip.tsx"]
+impl.chess-demo = ["src/components/InfoTip.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+note.calibration-rs = "title= attributes only"
+
+[concepts.slider]
+label = "Slider"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Slider.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+note.vitavision = "raw range <input> in editor/panels/ResultsPanel.tsx"
+note.viva-studio = "raw range <input> in ImageViewer sections"
+
+[concepts.switch]
+label = "Switch / checkbox / toggle chip"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Toggle.tsx", "src/components/ui/ToggleChip.tsx"]
+impl.vitavision = ["src/components/editor/algorithms/CheckboxField.tsx"]
+impl.ct-studio = ["src/components/LayerToggles.tsx"]
+impl.ct-demo = ["src/components/LayerToggles.tsx"]
+impl.chess-demo = ["src/components/LayerToggles.tsx"]
+impl.viva-studio = ["src/components/FeatureBrowser/editors/BoolEditor.tsx"]
+uses.val = "@vitavision/lab-ui"
+note.calibration-rs = "inline checkbox in lib/configForm.tsx"
+
+[concepts.segmented-control]
+label = "Segmented control"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/SegmentedControl.tsx"]
+impl.operator-ui = ["src/components/ui/SegmentedControl.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+note.vitavision = "SelectField presentation=\"segmented\""
+
+[concepts.tabs]
+label = "Tabs"
+layer = "ui"
+impl.lab-ui = ["src/components/Tabs.tsx"]
+impl.val = ["src/components/ChannelTabs.tsx"]
+uses.val = "@vitavision/lab-ui"
+note.vitavision = "algorithms/AtlasViewTabs.tsx is editorial navigation"
+
+[concepts.input]
+label = "Input / number input / field"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Input.tsx", "src/components/ui/Field.tsx"]
+impl.vitavision = ["src/components/editor/algorithms/NumberField.tsx"]
+impl.viva-studio = ["src/components/FeatureBrowser/editors/FloatEditor.tsx", "src/components/FeatureBrowser/editors/IntegerEditor.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+note.calibration-rs = "inline in lib/configForm.tsx"
+note.ct-studio = "inline in ParamForm.tsx"
+
+[concepts.disclosure]
+label = "Disclosure / collapsible section"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Disclosure.tsx"]
+impl.vitavision = ["src/components/editor/algorithms/sections.tsx"]
+impl.calibration-rs = ["src/workspaces/RunWorkspace/CollapsibleSection.tsx"]
+
+[concepts.feedback]
+label = "Feedback: empty / error / callout / progress"
+layer = "ui"
+impl.lab-ui = ["src/components/ui/Feedback.tsx"]
+impl.calibration-rs = ["src/components/ui/EmptyState.tsx", "src/components/ui/Banner.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+note.vitavision = "sonner toasts"
+note.viva-studio = "src/components/Layout/ToastContainer.tsx (toast)"
+
+[concepts.theme-toggle]
+label = "Theme toggle + theme init"
+layer = "ui"
+impl.lab-ui = ["src/components/ThemeToggle.tsx", "src/theme.ts"]
+impl.calibration-rs = ["src/layouts/AppShell.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+note.vitavision = "next-themes, toggle in layout/Navbar.tsx"
+
+# ── forms ───────────────────────────────────────────────────────────────────────────────
+
+[concepts.schema-form]
+label = "Schema-driven form"
+layer = "forms"
+impl.lab-ui = ["src/components/SchemaForm.tsx", "src/api/schemaForm.ts"]
+impl.vitavision = [
+  "src/components/editor/algorithms/calibrationTargets/CharucoConfigForm.tsx",
+  "src/components/editor/algorithms/calibrationTargets/ChessboardConfigForm.tsx",
+  "src/components/editor/algorithms/calibrationTargets/MarkerBoardConfigForm.tsx",
+  "src/components/editor/algorithms/chessCorners/ChessCornersConfigForm.tsx",
+  "src/components/editor/algorithms/puzzleboard/PuzzleboardConfigForm.tsx",
+  "src/components/editor/algorithms/radsym/RadsymConfigForm.tsx",
+  "src/components/editor/algorithms/ringgrid/RinggridConfigForm.tsx",
+]
+impl.calibration-rs = ["src/lib/configForm.tsx"]
+impl.ct-studio = ["src/components/ParamForm.tsx", "src/components/ConfigEditor.tsx"]
+uses.val = "@vitavision/lab-ui"
+note.vitavision = "hand-written per detector, not schema-driven (F4)"
+note.viva-studio = "GenICam node-map editors (FeatureBrowser/editors/*): driven by the camera XML, not JSON Schema"
+
+# ── charts ──────────────────────────────────────────────────────────────────────────────
+
+[concepts.histogram]
+label = "Histogram"
+layer = "charts"
+impl.lab-ui = ["src/components/charts/Histogram.tsx"]
+impl.calibration-rs = ["src/components/Histogram.tsx"]
+impl.viva-studio = ["src/components/ImageViewer/HistogramOverlay.tsx", "src/components/ImageViewer/histogramUtils.ts"]
+uses.val = "@vitavision/lab-ui"
+
+[concepts.line-chart]
+label = "Line chart"
+layer = "charts"
+impl.lab-ui = ["src/components/charts/LineChart.tsx", "src/components/charts/Frame.tsx", "src/components/charts/scale.ts"]
+impl.val = ["src/components/charts/CurveChart.tsx", "src/routes/compare/CompareCurves.tsx"]
+note.val = "wrappers over lab-ui LineChart"
+
+[concepts.bar-chart]
+label = "Bar chart"
+layer = "charts"
+impl.lab-ui = ["src/components/charts/BarChart.tsx"]
+uses.val = "@vitavision/lab-ui"
+
+[concepts.line-profile]
+label = "Line profile"
+layer = "charts"
+impl.lab-ui = ["src/components/charts/LineProfile.tsx"]
+impl.viva-studio = ["src/components/ImageViewer/LineProfilePanel.tsx", "src/components/ImageViewer/lineProfileUtils.ts"]
+
+# ── stage2d ─────────────────────────────────────────────────────────────────────────────
+
+[concepts.image-stage]
+label = "2D image stage (zoom / pan / layers)"
+layer = "stage2d"
+impl.lab-ui = ["src/components/stage/ImageStage.tsx", "src/components/stage/view.ts", "src/components/ZoomPanCanvas.tsx"]
+impl.val = ["src/components/annotation/AnnotationCanvas.tsx", "src/components/annotation/canvasView.ts"]
+impl.vitavision = ["src/components/editor/CanvasWorkspace.tsx", "src/components/editor/hooks/useCanvasGestures.ts"]
+impl.calibration-rs = ["src/components/FrameCanvas.tsx", "src/components/CompareViewer.tsx"]
+impl.ct-studio = ["src/components/CanvasViewport.tsx"]
+impl.ct-demo = ["src/components/CanvasViewport.tsx"]
+impl.chess-demo = ["src/components/CanvasViewport.tsx"]
+impl.operator-ui = ["src/components/live/FrameCanvas.tsx", "src/components/live/LiveViewport.tsx"]
+impl.viva-studio = ["src/components/ImageViewer/ViewerCanvas.tsx", "src/components/ImageViewer/useZoomPan.ts"]
+uses.vm-lab = "@vitavision/lab-ui"
+note.val = "Konva annotation editor; sample/result viewers already use lab-ui ImageStage (viewer/SampleStage.tsx)"
+note.vitavision = "Konva"
+note.calibration-rs = "raw Canvas2D"
+note.ct-studio = "raw Canvas2D"
+note.vm-lab = "canvas/CanvasStage.tsx composes lab-ui ImageStage"
+
+[concepts.stage-toolbar]
+label = "Stage zoom controls / toolbar"
+layer = "stage2d"
+impl.lab-ui = ["src/components/stage/StageToolbar.tsx"]
+impl.vitavision = ["src/components/shared/ZoomControls.tsx"]
+impl.calibration-rs = ["src/components/ZoomControls.tsx"]
+impl.operator-ui = ["src/components/live/ViewportToolbar.tsx"]
+impl.viva-studio = ["src/components/ImageViewer/ViewerToolbar.tsx"]
+uses.vm-lab = "@vitavision/lab-ui"
+
+[concepts.measure-tool]
+label = "Measurement overlay"
+layer = "stage2d"
+impl.lab-ui = ["src/components/MeasureOverlay.tsx", "src/components/measureGeometry.ts"]
+impl.viva-studio = ["src/components/ImageViewer/LineOverlay.tsx", "src/components/ImageViewer/RoiOverlay.tsx"]
+uses.val = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/lab-ui"
+
+[concepts.pixel-readout]
+label = "Pixel value readout"
+layer = "stage2d"
+impl.lab-ui = ["src/api/mapValues.ts"]
+impl.val = ["src/components/annotation/pixelReadout.ts"]
+impl.vitavision = ["src/components/editor/hooks/usePixelSampler.ts"]
+impl.viva-studio = ["src/components/ImageViewer/pixelInspectorUtils.ts"]
+
+# ── overlays ────────────────────────────────────────────────────────────────────────────
+
+[concepts.target-overlay]
+label = "Calibration-target / feature overlay"
+layer = "overlays"
+impl.vitavision = [
+  "src/components/editor/canvas/overlays/CharucoOverlay.tsx",
+  "src/components/editor/canvas/overlays/ChessboardOverlay.tsx",
+  "src/components/editor/canvas/overlays/MarkerboardOverlay.tsx",
+  "src/components/editor/canvas/overlays/GridEdgesGroup.tsx",
+  "src/components/editor/algorithms/puzzleboard/PuzzleboardOverlay.tsx",
+  "src/components/editor/algorithms/radsym/RadsymOverlay.tsx",
+]
+impl.calibration-rs = ["src/workspaces/EpipolarWorkspace/EpipolarOverlay.tsx"]
+impl.ct-studio = ["src/components/overlays.ts", "src/components/diagnoseOverlays.ts"]
+impl.ct-demo = ["src/components/overlays.ts"]
+impl.chess-demo = ["src/components/overlays.ts"]
+impl.operator-ui = ["src/components/live/OverlayLayer.tsx"]
+note.calibration-rs = "residual arrows drawn inside FrameCanvas.tsx"
+
+[concepts.heatmap]
+label = "Heatmap / colour-scale layer"
+layer = "overlays"
+impl.vitavision = ["src/components/editor/canvas/HeatmapLayer.tsx", "src/components/editor/algorithms/radsym/useRadsymHeatmap.ts"]
+impl.val = ["src/components/viewer/LabelLayer.tsx"]
+
+# ── three ───────────────────────────────────────────────────────────────────────────────
+
+[concepts.3d-frustum]
+label = "3D scene / camera frustum / target board"
+layer = "three"
+impl.calibration-rs = [
+  "src/workspaces/Viewer3DWorkspace/Scene.tsx",
+  "src/workspaces/Viewer3DWorkspace/CameraFrustum.tsx",
+  "src/workspaces/Viewer3DWorkspace/TargetBoard.tsx",
+  "src/workspaces/Viewer3DWorkspace/LaserPlane.tsx",
+]
+
+[concepts.point-cloud]
+label = "3D point cloud"
+layer = "three"
+impl.calibration-rs = ["src/workspaces/DepthWorkspace/PointCloudView.tsx"]
