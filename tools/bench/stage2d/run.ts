@@ -14,7 +14,7 @@
 import { spawnSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { cpus, platform, release, totalmem } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 import { chromium } from "@playwright/test";
