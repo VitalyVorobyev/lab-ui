@@ -1,0 +1,9 @@
+{
+  // A package in this monorepo. `@vitavision/source` makes a sibling package resolve to its
+  // `src/` (see each package's `exports`), so typechecking needs no prior build.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "customConditions": ["@vitavision/source"],
+    "declaration": true
+  }
+}

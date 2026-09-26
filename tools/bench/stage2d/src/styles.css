@@ -1,2 +1,2 @@
-@import "../../../../src/styles.css";
-@source "../../../../src";
+@import "@vitavision/ui/styles.css";
+@import "@vitavision/stage2d/styles.css";

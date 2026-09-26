@@ -1,0 +1,47 @@
+{
+  "name": "@vitavision/charts",
+  "version": "0.5.0",
+  "description": "Small SVG charts for the vitavision lab apps: histogram, line, bar, line profile, scales.",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VitalyVorobyev/lab-ui.git",
+    "directory": "packages/charts"
+  },
+  "homepage": "https://github.com/VitalyVorobyev/lab-ui/tree/main/packages/charts#readme",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.*",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
+  "exports": {
+    ".": {
+      "@vitavision/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "dependencies": {
+    "@vitavision/ui": "workspace:^"
+  }
+}

@@ -1,7 +1,7 @@
 /**
  * (a) lab-ui `ImageStage`: the photograph as a DOM `<img>` and the overlay as an
  * `<svg viewBox="0 0 W H">`, both inside the one CSS-transformed stage element — the
- * library's current engine, imported from this repo's source.
+ * library's current engine, from the `@vitavision/stage2d` workspace package.
  *
  * Screen-constant geometry via `vector-effect: non-scaling-stroke`, so the overlay does not
  * re-render when the view changes; point markers are zero-length paths with round caps.
@@ -17,7 +17,7 @@ import { memo, useState } from "react";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 
-import { ImageStage } from "../../../../../src/components/stage/ImageStage";
+import { ImageStage } from "@vitavision/stage2d";
 import { buildGrid, nearest, type GridIndex } from "../grid";
 import { IMAGE, MARKER_DIAMETER_PX, STROKE_PX, type Scene } from "../scene";
 import { toImage, type Box, type View } from "../workload";
