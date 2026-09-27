@@ -33,6 +33,7 @@ export interface CameraFrustumProps {
     borderRays: ArrayLike<number>;
     depth: number;
     onSelect?: (() => void) | undefined;
+    pickPadding?: number;
 }
 
 // @public
