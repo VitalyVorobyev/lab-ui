@@ -13,7 +13,7 @@ import { readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const PACKAGES = ["ui", "forms", "charts", "stage2d", "lab-ui"].map((p) => join(ROOT, "packages", p));
+const PACKAGES = ["ui", "forms", "charts", "stage2d", "three", "three-react", "lab-ui"].map((p) => join(ROOT, "packages", p));
 const CONFIGS = readdirSync(join(ROOT, "packages/config")).map((p) => join(ROOT, "packages/config", p));
 
 const tool = process.argv[2];

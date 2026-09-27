@@ -1,7 +1,7 @@
 # lab-ui
 
 The `@vitavision/*` frontend packages — one home for the UI primitives, forms, charts, the 2D
-image stage and (later) calibration overlays and the 3D scene used across the vitavision apps.
+image stage, the 3D scene and (later) calibration overlays used across the vitavision apps.
 The design direction is an *instrument*: the chrome is grey so the data can be loud.
 
 | Package | What | |
@@ -10,6 +10,8 @@ The design direction is an *instrument*: the chrome is grey so the data can be l
 | [`@vitavision/forms`](packages/forms) | JSON Schema → options form | depends on `ui` |
 | [`@vitavision/charts`](packages/charts) | Histogram, line, bar, line profile, scales | depends on `ui` |
 | [`@vitavision/stage2d`](packages/stage2d) | Image stage: view transform, zoom/pan, layers, measurement | depends on `ui` |
+| [`@vitavision/three`](packages/three) | Framework-agnostic three.js for robot-cell scenes: conventions, frame-tree runtime, robots, frusta, laser fans, targets | no React; peers `three` |
+| [`@vitavision/three-react`](packages/three-react) | React Three Fiber components over `three` | depends on `three`; peers `@react-three/fiber` |
 | [`@vitavision/lab-ui`](packages/lab-ui) | **Deprecated** re-export of the four, for 0.x consumers | |
 | [`@vitavision/config-ts`](packages/config/ts), [`config-eslint`](packages/config/eslint), [`config-vitest`](packages/config/vitest) | Shared toolchain presets for the apps | |
 

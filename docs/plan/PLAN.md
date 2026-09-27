@@ -317,6 +317,12 @@ vitavision. The last is last because of SSR and the router.
 - **L8-1 — Build `@vitavision/three` and `@vitavision/three-react`** per etendue PLAN
   P2-2/P2-3, including the calibration-rs `Viewer3DWorkspace` extraction proof (P2-4).
   The gates are unchanged (G2.2 and the rest).
+  *Done by the PR that adds `packages/three` and `packages/three-react`:* both were
+  incubated in etendue (`web/packages/three{,-react}`, etendue `docs/pivot/PLAN.md`
+  P2-2/P2-3) and moved here unchanged apart from the §4 fixes the PR lists. G2.2 passed there
+  (etendue `docs/measurements/g2_2_perf.md`: p95 frame interval 7.8 ms). The P2-4
+  extraction proof is a calibration-rs branch and remains open; per etendue PLAN §7 the web
+  packages publish only after it.
 
 ### L9 — Close-out
 

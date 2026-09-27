@@ -6,10 +6,12 @@
  * Checked, per publishable package:
  *   - runtime `dependencies` come from that layer's allow-list;
  *   - `react` / `react-dom` are peers, never dependencies, and no package peers or depends
- *     on a router;
+ *     on a router — except in a React-free layer (`three`), which neither depends on, peers
+ *     on, nor imports React at all;
  *   - every bare import in `src/` is a declared dependency or peer (so nothing works only
  *     because a sibling happened to hoist it), and `src/` never imports a router;
- *   - the manifest is ESM-only, ships `exports` with `types`, and limits `sideEffects` to CSS.
+ *   - the manifest is ESM-only, ships `exports` with `types`, and limits `sideEffects` to CSS
+ *     (`false` for a package with no CSS at all).
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -29,7 +31,15 @@ const ALLOWED: Record<string, (string | RegExp)[]> = {
   // lucide-react for the toolbar's icons: already in `ui`'s set, so no new third party.
   "@vitavision/stage2d": ["@vitavision/ui", "lucide-react"],
   "@vitavision/lab-ui": ["@vitavision/ui", "@vitavision/forms", "@vitavision/charts", "@vitavision/stage2d"],
+  // The 3D layer (PLAN L8-1). `three` itself is a peer of both, never a dependency: three
+  // breaks on minor releases, so the app picks the one copy (ADR-0002 pins it exactly).
+  "@vitavision/three": [],
+  "@vitavision/three-react": ["@vitavision/three"],
 };
+
+/** Layers that must not touch React at all: no dependency, no peer, no import (PLAN §2). */
+const REACT_FREE = new Set(["@vitavision/three"]);
+const REACT = ["react", "react-dom"];
 
 const ROUTERS = ["react-router", "react-router-dom", "@tanstack/react-router", "wouter"];
 const MOTION = ["motion", "framer-motion"];
@@ -90,25 +100,30 @@ export function check(): string[] {
     const deps = Object.keys(manifest.dependencies ?? {});
     const peers = Object.keys(manifest.peerDependencies ?? {});
 
+    const reactFree = REACT_FREE.has(name);
     for (const dep of deps) {
-      if (dep === "react" || dep === "react-dom") report(name, "react-peer", `${dep} must be a peer dependency`);
+      if (REACT.includes(dep) && reactFree) report(name, "react-free", `depends on ${dep}, but this layer never uses React`);
+      else if (REACT.includes(dep)) report(name, "react-peer", `${dep} must be a peer dependency`);
       else if (ROUTERS.includes(dep)) report(name, `router:${dep}`, `depends on router ${dep}`);
       else if (MOTION.includes(dep)) report(name, `motion:${dep}`, `depends on motion library ${dep}`);
       else if (!matches(dep, allowed)) report(name, `layer:${dep}`, `dependency ${dep} is outside this layer's allow-list`);
     }
     for (const peer of peers) {
       if (ROUTERS.includes(peer)) report(name, `router:${peer}`, `peers on router ${peer}`);
+      if (reactFree && REACT.includes(peer)) report(name, "react-free", `peers on ${peer}, but this layer never uses React`);
     }
-    for (const needed of ["react", "react-dom"]) {
-      if (!peers.includes(needed)) report(name, "react-peer", `${needed} must be declared as a peer`);
+    if (!reactFree) {
+      for (const needed of REACT) {
+        if (!peers.includes(needed)) report(name, "react-peer", `${needed} must be declared as a peer`);
+      }
     }
 
     if (manifest.type !== "module") report(name, "esm", `"type" must be "module"`);
     const root = manifest.exports?.["."] as Record<string, string> | undefined;
     if (!root?.types || !root.import) report(name, "exports", `exports["."] needs "types" and "import"`);
     const sideEffects = manifest.sideEffects;
-    if (!Array.isArray(sideEffects) || sideEffects.some((s) => !s.endsWith(".css")))
-      report(name, "side-effects", `"sideEffects" must list CSS files only`);
+    if (sideEffects !== false && (!Array.isArray(sideEffects) || sideEffects.some((s) => !s.endsWith(".css"))))
+      report(name, "side-effects", `"sideEffects" must be false or list CSS files only`);
 
     const declared = new Set([...deps, ...peers]);
     for (const file of sourceFiles(join(PACKAGES, dir, "src"))) {
@@ -118,6 +133,8 @@ export function check(): string[] {
         if (!pkg) continue;
         const where = file.slice(ROOT.length + 1);
         if (ROUTERS.includes(pkg)) report(name, `router:${pkg}`, `${where} imports ${pkg}`);
+        else if (reactFree && (REACT.includes(pkg) || pkg.startsWith("@react-three/")))
+          report(name, "react-free", `${where} imports ${pkg}, but this layer never uses React`);
         else if (!declared.has(pkg)) report(name, `undeclared:${pkg}`, `${where} imports undeclared ${pkg}`);
       }
       if (/^(?:const|let|var)\s+\w+\s*=\s*(?:window|document)\b/m.test(text))

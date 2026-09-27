@@ -17,8 +17,12 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const PACKAGES = ["ui", "forms", "charts", "stage2d", "lab-ui"];
+const PACKAGES = ["ui", "forms", "charts", "stage2d", "three", "three-react", "lab-ui"];
 const root = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { devDependencies: Record<string, string> };
+// The 3D peers at the versions the 3D packages are built and tested against (ADR-0002 pins three exactly).
+const threeReact = JSON.parse(readFileSync(join(ROOT, "packages/three-react/package.json"), "utf8")) as {
+  devDependencies: Record<string, string>;
+};
 
 function run(cmd: string, args: string[], cwd: string): string {
   const result = spawnSync(cmd, args, { cwd, encoding: "utf8" });
@@ -47,7 +51,13 @@ try {
       name: "consumer",
       private: true,
       type: "module",
-      dependencies: { ...tarball, react: v("react"), "react-dom": v("react-dom") },
+      dependencies: {
+        ...tarball,
+        react: v("react"),
+        "react-dom": v("react-dom"),
+        three: threeReact.devDependencies["three"],
+        "@react-three/fiber": threeReact.devDependencies["@react-three/fiber"],
+      },
       overrides: tarball,
       devDependencies: { vite: v("vite"), "@vitejs/plugin-react": v("@vitejs/plugin-react"), tailwindcss: "4.3.3", "@tailwindcss/vite": "4.3.3" },
     }),
@@ -62,7 +72,11 @@ import { Button, Panel, TooltipProvider } from "@vitavision/ui";
 import { SchemaForm, describeFields } from "@vitavision/forms";
 import { LineChart } from "@vitavision/charts";
 import { MeasureOverlay } from "@vitavision/stage2d";
+import { FrameTreeRuntime } from "@vitavision/three";
 import * as compat from "@vitavision/lab-ui";
+const I = { rotation: [0, 0, 0, 1], translation: [0, 0, 0] };
+const runtime = new FrameTreeRuntime({ dt: 0.1, frames: ["world", "cam"], samples: [{ t: 0, world_se3_frame: [I, I] }] });
+if (runtime.frame("cam")?.name !== "cam") throw new Error("three: frame tree failed");
 const fields = describeFields({ properties: { sigma: { type: "number", default: 2 } } });
 const html = renderToString(
   <TooltipProvider>
@@ -81,7 +95,14 @@ console.log("ssr ok", html.length);
   // 2. Tailwind finds the packages' classes from their stylesheets alone.
   writeFileSync(join(app, "index.html"), `<!doctype html><div id="root"></div><script type="module" src="/src/main.tsx"></script>`);
   writeFileSync(join(app, "src", "styles.css"), `@import "tailwindcss";\n@import "@vitavision/lab-ui/styles.css";\n`);
-  writeFileSync(join(app, "src", "main.tsx"), `import "./styles.css";\nimport { Button } from "@vitavision/ui";\nexport const b = Button;\n`);
+  // `three-react` is checked here, in the bundler, not in the Bun server render above:
+  // @react-three/fiber 9 ships no `exports` map, so Bun's runtime takes its CommonJS build,
+  // whose `require("three")` Bun cannot load (three's CJS entry re-requires its ESM build).
+  // Its stories' server render runs in the Storybook harness (Vitest, Node).
+  writeFileSync(
+    join(app, "src", "main.tsx"),
+    `import "./styles.css";\nimport { Button } from "@vitavision/ui";\nimport { SceneCanvas } from "@vitavision/three-react";\nexport const b = [Button, SceneCanvas];\n`,
+  );
   writeFileSync(
     join(app, "vite.config.js"),
     `import tailwindcss from "@tailwindcss/vite"; import react from "@vitejs/plugin-react"; export default { plugins: [react(), tailwindcss()] };`,

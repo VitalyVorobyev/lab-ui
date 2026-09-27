@@ -58,6 +58,29 @@
     ]
   },
   {
+    "name": "@vitavision/three",
+    "path": "packages/three/dist/index.js",
+    "import": "*",
+    "limit": "3.75 kB",
+    "ignore": [
+      "three"
+    ]
+  },
+  {
+    "name": "@vitavision/three-react",
+    "path": "packages/three-react/dist/index.js",
+    "import": "*",
+    "limit": "2.18 kB",
+    "ignore": [
+      "@react-three/fiber",
+      "@vitavision/three",
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "three"
+    ]
+  },
+  {
     "name": "@vitavision/lab-ui",
     "path": "packages/lab-ui/dist/index.js",
     "import": "*",

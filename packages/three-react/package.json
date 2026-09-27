@@ -1,0 +1,57 @@
+{
+  "name": "@vitavision/three-react",
+  "version": "0.0.0",
+  "description": "React Three Fiber components over @vitavision/three: a Z-up scene canvas, baked-scenario frame trees read per frame, robots and gizmos in vitavision colours.",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VitalyVorobyev/lab-ui.git",
+    "directory": "packages/three-react"
+  },
+  "homepage": "https://github.com/VitalyVorobyev/lab-ui/tree/main/packages/three-react#readme",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.*",
+    "!src/**/*.stories.*",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
+  "exports": {
+    ".": {
+      "@vitavision/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "api": "api-extractor run --local",
+    "coverage": "vitest run --coverage",
+    "api:check": "api-extractor run"
+  },
+  "peerDependencies": {
+    "@react-three/fiber": "^9.8.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.186.0"
+  },
+  "dependencies": {
+    "@vitavision/three": "workspace:^"
+  },
+  "devDependencies": {
+    "@react-three/fiber": "9.8.1",
+    "@storybook/react-vite": "10.6.0",
+    "@types/three": "0.186.0",
+    "storybook": "10.6.0",
+    "three": "0.186.1"
+  }
+}

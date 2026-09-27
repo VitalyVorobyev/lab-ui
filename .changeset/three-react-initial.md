@@ -1,0 +1,10 @@
+---
+"@vitavision/three-react": minor
+---
+
+New package (PLAN L8-1): React Three Fiber components over `@vitavision/three`. Peers are `react`, `react-dom`, `three` (`^0.186.0`) and `@react-three/fiber` (`^9.8.1`). The package was incubated in etendue's studio and moved here with its stories.
+
+- `SceneCanvas`: a Z-up viewport in vitavision colours, with orbit controls, a ground grid and lights.
+- `FrameTree`, `AtFrame` and `useFrameTree`: a baked scenario as a frame graph, posed at `playhead.get()` on every rendered frame (`PlayheadSource`, e.g. a `@vitavision/workbench` playhead). Playback never re-renders React.
+- `Robot`, `CameraFrustum`, `LaserFan`, `TargetBoard`, `LightGizmo` and `FrameAxes`. Their colours come only from design tokens.
+- `useSceneColors`: the theme's scene colours, which follow the `dark` class. It is server-safe and returns neutral colours on the server.
