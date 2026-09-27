@@ -22,6 +22,14 @@ deprecated predecessor, still exported unchanged.
 (`decodePlane`, `valueAt`, `valuesAt`, `fractionOf`, `fetchPlane`) — it never draws;
 colour range and colormap stay the caller's decision.
 
+**Annotation layers** — `ContourEditor` edits ordered source-image pixel-center
+vertices; `MaskEditor` paints or erases a row-major binary mask with a bounded
+source-pixel brush. Both are controlled layers for `ImageStage`: the caller owns
+the geometry, undo history, persistence, and approval policy. `onCommit` marks
+the end of a gesture. The contour supports arrow-key nudging, Insert for a
+midpoint, and Delete; the mask supports arrow-key brush movement and Enter.
+Raster masks use `Uint8Array` values 0/1 with exactly `width × height` entries.
+
 **Measurement overlay** — `MeasureOverlay` is a pure-props SVG layer meant to sit inside
 `ImageStage`'s transformed stack, drawing `point`, `segment`, `circle`, `arc`, `caliper`
 and `dimension` primitives given in **source-image pixel coordinates**, each with an

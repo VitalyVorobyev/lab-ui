@@ -2,4 +2,4 @@
 "@vitavision/stage2d": patch
 ---
 
-Add an interactive contour layer for ImageStage with pixel-center vertex dragging, keyboard nudging, and point insertion and removal.
+Add reusable contour and binary-mask editing layers for ImageStage. Contour vertices support pointer dragging and keyboard edits; masks support bounded paint/erase strokes in source-image coordinates.
