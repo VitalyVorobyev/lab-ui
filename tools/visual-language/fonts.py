@@ -1,0 +1,61 @@
+"""Measure the fonts `@vitavision/ui/fonts.css` ships (ADR-0003).
+
+Run: uv run --with fonttools --with brotli python tools/visual-language/fonts.py
+Prints a Markdown table. The D1 comparison with Inter + Geist Mono in
+docs/measurements/l3-1-foundations.md was made by this script at 15aad00, before L3-2
+vendored the fonts and dropped the candidates.
+"""
+
+from pathlib import Path
+
+from fontTools.ttLib import TTFont
+
+FONTS_DIR = Path(__file__).resolve().parents[2] / "packages/ui/src/fonts"
+FONTS = {
+    "IBM Plex Sans (variable, latin)": FONTS_DIR / "ibm-plex-sans-latin-wght-normal.woff2",
+    "IBM Plex Mono 400 (IBM, Latin1)": FONTS_DIR / "IBMPlexMono-Regular-Latin1.woff2",
+    "IBM Plex Mono 500 (IBM, Latin1)": FONTS_DIR / "IBMPlexMono-Medium-Latin1.woff2",
+}
+# A line an inspector column actually prints: label, value, unit, count.
+SAMPLE = "Reprojection error 0.184 px, 42 frames, 1736 corners"
+FEATURES = ["tnum", "zero", "cv05", "cv08", "case", "frac"]
+
+
+def advance(font: TTFont, text: str) -> float:
+    cmap = font.getBestCmap()
+    hmtx = font["hmtx"]
+    return sum(hmtx[cmap[ord(c)]][0] for c in text)
+
+
+def main() -> None:
+    rows = []
+    for name, path in FONTS.items():
+        font = TTFont(path)
+        upm = font["head"].unitsPerEm
+        os2 = font["OS/2"]
+        cmap = font.getBestCmap()
+        digits = {font["hmtx"][cmap[ord(d)]][0] for d in "0123456789"}
+        gsub = font["GSUB"].table.FeatureList.FeatureRecord if "GSUB" in font else []
+        feats = sorted({r.FeatureTag for r in gsub})
+        axes = [a.axisTag + f" {a.minValue:g}–{a.maxValue:g}" for a in font["fvar"].axes] if "fvar" in font else ["static"]
+        rows.append(
+            (
+                name,
+                f"{os2.sxHeight / upm:.3f}",
+                f"{os2.sCapHeight / upm:.3f}",
+                f"{advance(font, SAMPLE) / upm:.2f} em",
+                "yes" if len(digits) == 1 else "no (needs tnum)",
+                ", ".join(f for f in FEATURES if f in feats) or "—",
+                "; ".join(axes),
+                f"{path.stat().st_size / 1024:.0f} KB",
+            )
+        )
+    print(f"Sample line: `{SAMPLE}`\n")
+    print("| Font | x-height / em | cap height / em | sample width | digits tabular by default | features of interest | axes | woff2 file |")
+    print("|---|---|---|---|---|---|---|---|")
+    for row in rows:
+        print("| " + " | ".join(row) + " |")
+
+
+if __name__ == "__main__":
+    main()

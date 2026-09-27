@@ -7,14 +7,18 @@
     ".": {
       "entry": [
         "tools/inventory/*.ts",
-        "tools/dod/*.ts"
+        "tools/dod/*.ts",
+        "tools/visual-language/*.ts"
       ],
       "project": [
         "tools/inventory/**/*.ts",
-        "tools/dod/**/*.ts"
+        "tools/dod/**/*.ts",
+        "tools/visual-language/**/*.ts"
       ],
       "ignoreDependencies": [
-        "@arethetypeswrong/cli"
+        "@arethetypeswrong/cli",
+        "@fontsource-variable/ibm-plex-sans",
+        "@ibm/plex-mono"
       ]
     },
     "packages/*": {
@@ -53,6 +57,7 @@
     "apps/storybook": {
       "entry": [
         ".storybook/*.{ts,tsx}",
+        "src/**/*.stories.tsx",
         "test/**/*.{ts,tsx}",
         "visual/**/*.ts"
       ],

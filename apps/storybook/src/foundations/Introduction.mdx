@@ -1,0 +1,26 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Foundations/Introduction" />
+
+# Foundations
+
+The living specimen of [`docs/visual-language.md`](https://github.com/VitalyVorobyev/lab-ui/blob/main/docs/visual-language.md),
+the spec every `@vitavision/*` package and every migrated app follows. Each page renders the
+real tokens and components, so it changes when they do.
+
+This is an **instrument** design system. The chrome is true-neutral grey so the data can be
+loud. There is one accent, `signal`, which means "you can act here". The verdict colours
+`normal`, `defect` and `warn` are used for verdicts and nothing else.
+
+| Page | What it settles |
+|---|---|
+| Colour | The semantic tokens by role, and text on every surface |
+| Type | IBM Plex Sans + IBM Plex Mono (decision D1, ADR-0003) on an instrument screen, and the confusable glyphs |
+| Scales | Seven type roles, the spacing steps, compact vs comfortable density, radii and elevation |
+| Data-vis palette | The categorical series under simulated colour-vision deficiencies; sequential and diverging maps |
+| Overlay grammar | Screen-pixel strokes at any zoom, one glyph per feature kind, role colours, and hover / selected / dimmed |
+
+Motion has no page: shared packages use CSS transitions only, at 150 ms, and
+`prefers-reduced-motion` turns them all off (spec §6).
+
+Apps load the fonts with `@import "@vitavision/ui/fonts.css";` next to the package stylesheets.

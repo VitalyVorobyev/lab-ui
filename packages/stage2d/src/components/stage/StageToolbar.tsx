@@ -241,7 +241,7 @@ export function StageReadout({ cursor, extra, className }: StageReadoutProps) {
   return (
     <span
       className={cn(
-        "rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white tabular-nums",
+        "rounded-control bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white tabular-nums",
         className,
       )}
     >

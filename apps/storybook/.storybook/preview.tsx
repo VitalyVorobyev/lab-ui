@@ -32,6 +32,18 @@ const preview: Preview = {
   initialGlobals: { theme: "light" },
   parameters: {
     layout: "fullscreen",
+    options: {
+      storySort: {
+        order: [
+          "Foundations",
+          ["Introduction", "Colour", "Type", "Scales", "Data-vis palette", "Overlay grammar"],
+          "ui",
+          "forms",
+          "charts",
+          "stage2d",
+        ],
+      },
+    },
     controls: { expanded: true },
     a11y: { test: "error" },
   },

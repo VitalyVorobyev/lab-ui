@@ -21,6 +21,7 @@ From the CSS entry that already has `@import "tailwindcss";`:
 
 ```css
 @import "tailwindcss";
+@import "@vitavision/ui/fonts.css";
 @import "@vitavision/ui/styles.css";
 /* and, for each other @vitavision package you use: */
 @import "@vitavision/stage2d/styles.css";
@@ -29,6 +30,12 @@ From the CSS entry that already has `@import "tailwindcss";`:
 Each stylesheet ships **unprocessed** — Tailwind v4 *source*, resolved by your own build — and
 declares its own `@source "./"`, which Tailwind resolves against that stylesheet: the package's
 class names are found without an `@source` line of yours.
+
+`fonts.css` serves the type pair, IBM Plex Sans and IBM Plex Mono (ADR-0003), from files in this
+package (SIL Open Font License). Its Plex Mono is IBM's own build, which keeps the `zero` feature,
+so values get a slashed zero; `unicode-range` means a page fetches only the subsets its text
+uses (about 80 KB for Latin). Drop any fontsource or Google Fonts Plex you loaded before — their
+Plex Mono shows a dotted zero, and two faces under one family name race.
 
 ### 2. Set the theme before the first paint
 

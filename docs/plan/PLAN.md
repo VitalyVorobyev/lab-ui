@@ -352,6 +352,7 @@ as `@vitavision/worker`. Promote it only when VAL or another app needs it.
 - **D1 Type family.** IBM Plex Sans/Mono (lab-ui, VAL) vs Inter + Geist Mono
   (vitavision, calibration-rs). Default: render both in the Foundations specimen
   (L3-1) and the user picks. Source Serif stays for vitavision's editorial pages either way.
+  **Decided 2026-09-27: IBM Plex Sans + IBM Plex Mono** (ADR-0003).
 - **D2 Repo name.** Keep `lab-ui` or rename it to something like `vitavision-ui`. Default:
   keep it (GitHub redirects renames, but the packages move to new names regardless).
 - **D3 Storybook deployment.** Default: GitHub Pages, public.
