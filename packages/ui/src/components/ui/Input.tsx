@@ -5,7 +5,7 @@
  * can still pick up the shared palette and focus treatment.
  */
 
-import type { ComponentProps } from "react";
+import { useId, type ComponentProps } from "react";
 
 import { byDensity, useDensity } from "./Density";
 import { useFieldDescription } from "./Field";
@@ -54,22 +54,46 @@ export function Input({ className, "aria-describedby": describedBy, ...rest }: C
   );
 }
 
-/**
- * A number, with the schema's own bounds attached.
- *
- * `font-mono` because these are read as quantities and compared down a column. Takes every
- * `<input>` prop, `ref` included (`type` is always `number`).
- */
-export function NumberInput({
-  className,
-  "aria-describedby": describedBy,
-  ...rest
-}: Omit<ComponentProps<"input">, "min" | "max"> & {
+/** Props of `NumberInput`: every `<input>` prop, `ref` included, with numeric bounds and a `unit`. */
+export type NumberInputProps = Omit<ComponentProps<"input">, "min" | "max"> & {
   /** The smallest accepted value. */
   min?: number | undefined;
   /** The largest accepted value. */
   max?: number | undefined;
-}) {
+  /**
+   * The quantity's unit (`mm`, `m`, `°`, `px`), written inside the field after the number, in
+   * mono and muted. It is not part of the value. It is announced as the field's description
+   * (`aria-describedby`): after the caller's own `aria-describedby`, before a surrounding
+   * `Field`'s description and error.
+   */
+  unit?: string | undefined;
+};
+
+/**
+ * A number, with the schema's own bounds attached and, optionally, its unit written in the
+ * field.
+ *
+ * `font-mono` because these are read as quantities and compared down a column. Takes every
+ * `<input>` prop, `ref` included (`type` is always `number`); `className`, `style` and `ref`
+ * always go to the `<input>`.
+ *
+ * With a `unit`, the input sits in a `relative` full-width wrapper carrying `data-unit`, keeps
+ * room on its right for the unit, and is described by it; size such a field through its
+ * container. Without one — or with `""` — the markup is exactly the plain input.
+ */
+export function NumberInput({ unit, ...props }: NumberInputProps) {
+  return unit === undefined || unit === "" ? (
+    <PlainNumberInput {...props} />
+  ) : (
+    <UnitNumberInput unit={unit} {...props} />
+  );
+}
+
+function PlainNumberInput({
+  className,
+  "aria-describedby": describedBy,
+  ...rest
+}: Omit<NumberInputProps, "unit">) {
   return (
     <input
       {...useFieldDescription(describedBy)}
@@ -78,6 +102,39 @@ export function NumberInput({
       inputMode="decimal"
       className={cn(controlClasses, useControlHeight(), "font-mono tabular-nums", className)}
     />
+  );
+}
+
+/*
+ * A component of its own so that only a field with a unit calls `useId`: a plain
+ * `NumberInput` stays byte-identical to the one before `unit` existed, down to the ids React
+ * hands the elements rendered after it.
+ */
+function UnitNumberInput({
+  unit,
+  style,
+  "aria-describedby": describedBy,
+  ...rest
+}: Omit<NumberInputProps, "unit"> & { unit: string }) {
+  const unitId = useId();
+  return (
+    <span data-unit={unit} className="relative flex w-full min-w-0 items-center">
+      <PlainNumberInput
+        {...rest}
+        aria-describedby={describedBy ? `${describedBy} ${unitId}` : unitId}
+        // Room for the unit: its width in the unit's own characters, plus the field's padding.
+        style={{ paddingInlineEnd: `calc(${unit.length}ch + 1rem)`, ...style }}
+      />
+      {/* `aria-hidden` keeps the unit out of the field's *name* when a `<label>` wraps it;
+          `aria-describedby` still reads it, as the description. */}
+      <span
+        id={unitId}
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center font-mono text-xs text-fg-subtle select-none"
+      >
+        {unit}
+      </span>
+    </span>
   );
 }
 

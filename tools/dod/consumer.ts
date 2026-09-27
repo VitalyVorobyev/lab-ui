@@ -58,7 +58,7 @@ try {
   writeFileSync(
     join(app, "ssr.tsx"),
     `import { renderToString } from "react-dom/server";
-import { Button, Panel, TooltipProvider } from "@vitavision/ui";
+import { Button, NumberInput, Panel, TooltipProvider, VectorInput } from "@vitavision/ui";
 import { SchemaForm, describeFields } from "@vitavision/forms";
 import { LineChart } from "@vitavision/charts";
 import { MeasureOverlay } from "@vitavision/stage2d";
@@ -67,12 +67,14 @@ const fields = describeFields({ properties: { sigma: { type: "number", default: 
 const html = renderToString(
   <TooltipProvider>
     <Panel title="p"><Button variant="primary">Go</Button></Panel>
+    <NumberInput aria-label="f" unit="mm" defaultValue={16} />
+    <VectorInput aria-label="t" value={[0, 1, 2]} unit="m" />
     <SchemaForm fields={fields} values={{}} onChange={() => {}} />
     <LineChart series={[{ label: "a", points: [{ x: 0, y: 0 }, { x: 1, y: 1 }] }]} label="c" />
     <svg><MeasureOverlay nativeWidth={10} nativeHeight={10} primitives={[]} strokeScale={1} /></svg>
   </TooltipProvider>,
 );
-if (!html.includes("Go") || typeof compat.ImageStage !== "function") throw new Error("render failed");
+if (!html.includes("Go") || !html.includes("data-unit") || typeof compat.ImageStage !== "function") throw new Error("render failed");
 console.log("ssr ok", html.length);
 `,
   );
