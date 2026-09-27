@@ -52,7 +52,7 @@ export function StackedBars({ rows, label, className }: StackedBarsProps) {
               {row.label}
             </span>
             <div
-              className="flex h-4 flex-1 overflow-hidden rounded bg-raised"
+              className="flex h-4 flex-1 overflow-hidden rounded-control bg-raised"
               role="cell"
             >
               {row.segments.map((segment) =>

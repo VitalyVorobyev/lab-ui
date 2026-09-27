@@ -247,7 +247,7 @@ export function ZoomPanCanvas({
       data-panning={grabbing ? "" : undefined}
       data-fit={view.zoom <= MIN_ZOOM ? "" : undefined}
       className={cn(
-        "relative overflow-hidden rounded border border-line bg-canvas select-none",
+        "relative overflow-hidden rounded-control border border-line bg-canvas select-none",
         grabbing ? "cursor-grabbing" : "cursor-grab",
         className,
       )}
@@ -286,14 +286,14 @@ export function ZoomPanCanvas({
         {children}
       </div>
       {label && (
-        <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-black/60 px-1 font-mono text-[10px] text-white">
+        <span className="pointer-events-none absolute bottom-1 left-1 rounded-control bg-black/60 px-1 font-mono text-[10px] text-white">
           {label}
         </span>
       )}
       {fitLabel !== null && view.zoom > MIN_ZOOM && (
         <button
           type="button"
-          className="absolute right-1 bottom-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white hover:bg-black/80"
+          className="absolute right-1 bottom-1 rounded-control bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white hover:bg-black/80"
           // Stopping `pointerdown` is what makes the button work at all: without it the
           // press bubbles to the canvas, which calls `setPointerCapture` on itself and
           // takes the click with it, so the button rendered and did nothing.

@@ -41,3 +41,10 @@ Serif 4** stays on vitavision's editorial pages (spec §7).
 - **Storybook cleanup (L3-2):** the Inter comparison is retired. That removes the
   toolbar's **Type** switch, `inter-ui` and Geist Mono. *Foundations / Type family* becomes
   the Plex specimen.
+
+## Update — L3-2 (2026-09-27)
+
+- **Delivery is settled.** `@vitavision/ui/fonts.css` serves Plex Sans (variable,
+  fontsource's files) and IBM's split Plex Mono 400/500, vendored into the package by
+  `tools/visual-language/vendor-fonts.ts`. Apps import it next to `styles.css`.
+- **The Inter comparison is gone from Storybook.** *Foundations / Type* is the Plex specimen.

@@ -9,6 +9,8 @@ palette was chosen against (packages/charts/src/styles.css). "none" is typical v
 
 import itertools
 import math
+import re
+from pathlib import Path
 
 SIMULATIONS = {
     "none": [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
@@ -17,16 +19,29 @@ SIMULATIONS = {
     "tritan": [[1.255528, -0.076749, -0.178779], [-0.078411, 0.930809, 0.147602], [0.004733, 0.691367, 0.303900]],
 }
 
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def css_tokens(path: str, selector: str) -> dict[str, str]:
+    """The `--name: #hex;` declarations of one rule block, read from the source stylesheet."""
+    css = (ROOT / path).read_text()
+    start = css.index(f"{selector} {{")
+    body = css[start : css.index("}", start)]
+    return dict(re.findall(r"--([\w-]+):\s*(#[0-9a-fA-F]{6});", body))
+
+
+UI, CHARTS = "packages/ui/src/styles.css", "packages/charts/src/styles.css"
+CHROME = {"light": css_tokens(UI, ":root"), "dark": css_tokens(UI, ".dark")}
 SERIES = {
-    "light": ["#0f92c5", "#b57c38", "#7e5be6", "#482ab3", "#e04b9b", "#595f65"],
-    "dark": ["#27e4ef", "#c27421", "#8ba3ff", "#4a6ee0", "#f96dcc", "#7f878d"],
-}
-CHROME = {
-    "light": {"signal": "#0a6b7a", "normal": "#046e4d", "defect": "#b31d1d", "warn": "#9d4808"},
-    "dark": {"signal": "#3bc9db", "normal": "#34d399", "defect": "#f87171", "warn": "#fbbf24"},
+    theme: [tokens[f"series-{n}"] for n in range(1, 7)]
+    for theme, tokens in (("light", css_tokens(CHARTS, ":root")), ("dark", css_tokens(CHARTS, ".dark")))
 }
 # Overlays sit on the (dark) canvas in both themes: selection is the dark `signal`.
-OVERLAY_FIXED = {"selection": "#3bc9db", "label": "#e8ebed", **{k: v for k, v in CHROME["dark"].items() if k != "signal"}}
+OVERLAY_FIXED = {
+    "selection": CHROME["dark"]["signal"],
+    "label": "#e8ebed",
+    **{k: CHROME["dark"][k] for k in ("normal", "defect", "warn")},
+}
 
 
 def to_linear(channel: float) -> float:

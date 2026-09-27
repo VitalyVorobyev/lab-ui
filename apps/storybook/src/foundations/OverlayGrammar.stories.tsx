@@ -12,14 +12,14 @@ import { type ReactNode, useId } from "react";
  * Role colours. Overlays sit on the image, not on the chrome, so they are one set for both
  * themes — the dark theme's `signal` for selection, because the canvas is dark in both.
  * `feature` and `model` were searched in OKLCH (`tools/visual-language/colours.py`):
- * under typical vision and each simulated dichromacy they stay ≥ 7.4 OKLab ΔE×100 from each
+ * under typical vision and each simulated dichromacy they stay ≥ 7.3 OKLab ΔE×100 from each
  * other, from `selection`, from the label white and from every verdict colour.
  */
 const ROLE = {
   feature: "#ed9d43",
-  model: "#77a2fc",
+  model: "#9dbdff",
   structure: "rgba(232, 235, 237, 0.55)",
-  selection: "#3bc9db",
+  selection: "#2db2d4",
   halo: "rgba(8, 10, 11, 0.72)",
   label: "#e8ebed",
 } as const;

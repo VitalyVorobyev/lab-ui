@@ -17,28 +17,10 @@ import { useState } from "react";
 import { expect } from "storybook/test";
 
 /**
- * Decision D1 (PLAN §8): the default type pair. Each column is the same instrument screen —
- * the ramp the packages actually use, a help paragraph, the confusable glyphs, a numeric
- * table, an inspector, and a chart — set in one candidate, at the same pixel sizes, in the
- * build and settings it would ship with (`src/styles.css` has the details).
+ * IBM Plex Sans + IBM Plex Mono (D1, ADR-0003) on an instrument screen: the ramp the packages
+ * use, a help paragraph, the confusable glyphs, a numeric table, an inspector and a chart.
+ * The fonts come from `@vitavision/ui/fonts.css`, as every app loads them.
  */
-
-type Family = "plex" | "inter";
-
-/** A candidate as it would ship, or (`-today`) as the apps load it now. */
-type Variant = Family | "plex-today" | "inter-today";
-
-const FAMILIES: Record<Family, { name: string; today: string }> = {
-  plex: { name: "IBM Plex Sans + IBM Plex Mono", today: "lab-ui and VAL today" },
-  inter: { name: "Inter + Geist Mono", today: "vitavision and calibration-rs today" },
-};
-
-const VARIANTS: { variant: Variant; name: string; note: string }[] = [
-  { variant: "plex-today", name: "Plex, today", note: "fontsource Plex Mono: dotted zero" },
-  { variant: "plex", name: "Plex, as shipped", note: "IBM's complete Plex Mono: slashed zero" },
-  { variant: "inter-today", name: "Inter, today", note: "I and l identical; tnum re-spaces the hyphen" },
-  { variant: "inter", name: "Inter, as shipped", note: "cv05 + cv08: l with a tail, I with serifs" },
-];
 
 /** The sizes and weights the packages use (10 / 11 / 12 / 14 / 20 px), each in its role. */
 const RAMP: { spec: string; className: string; sample: string }[] = [
@@ -135,16 +117,14 @@ function Inspector() {
   );
 }
 
-function Specimen({ family }: { family: Family }) {
-  const { name, today } = FAMILIES[family];
-  const headingId = `specimen-${family}`;
+function SpecimenScreen() {
   return (
-    <section data-type-family={family} aria-labelledby={headingId} className="flex min-w-0 flex-col gap-4">
+    <section aria-labelledby="type-specimen" className="flex max-w-2xl min-w-0 flex-col gap-4">
       <header className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
-        <h2 id={headingId} className="text-sm font-semibold tracking-tight">
-          {name}
+        <h2 id="type-specimen" className="text-sm font-semibold tracking-tight">
+          IBM Plex Sans + IBM Plex Mono
         </h2>
-        <span className="text-xs text-fg-muted">{today}</span>
+        <span className="text-xs text-fg-muted">ADR-0003</span>
       </header>
 
       <ReadoutStrip
@@ -180,12 +160,12 @@ function Specimen({ family }: { family: Family }) {
         </p>
       </div>
 
-      <Table columns={COLUMNS} rows={CAMERAS} rowKey={(row) => row.id} caption={`Intrinsics (${name})`} />
+      <Table columns={COLUMNS} rows={CAMERAS} rowKey={(row) => row.id} caption="Intrinsics" />
 
       <Inspector />
 
       <LineChart
-        label={`Reprojection RMS per iteration (${name})`}
+        label="Reprojection RMS per iteration"
         xLabel="iteration"
         yLabel="RMS (px)"
         series={CONVERGENCE}
@@ -195,15 +175,14 @@ function Specimen({ family }: { family: Family }) {
 }
 
 const meta = {
-  title: "Foundations/Type family (D1)",
+  title: "Foundations/Type",
   parameters: {
     docs: {
       description: {
-        component: `Decision **D1** (PLAN §8), **settled 2026-09-27: IBM Plex** (ADR-0003). This page is the
-comparison it was made on; L3-2 turns it into the Plex specimen.
-Both columns are the same screen at the same pixel sizes, in the ramp the packages use today.
-The toolbar's **Type** switch renders every other story in Inter + Geist Mono too. The measured
-differences — x-height, width, tabular digits, the zero — are in \`docs/visual-language.md\` §2.`,
+        component: `**IBM Plex Sans** for text, **IBM Plex Mono** for values (decision D1, ADR-0003).
+Load them once with \`@import "@vitavision/ui/fonts.css";\` — IBM's Plex Mono files, which keep the
+\`zero\` feature, so mono values get a slashed zero. Sans digits are tabular by default; the ramp is
+spec §3's type roles. Spec: \`docs/visual-language.md\` §2.`,
       },
     },
   },
@@ -212,42 +191,24 @@ differences — x-height, width, tabular digits, the zero — are in \`docs/visu
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The two candidates side by side. */
-export const SideBySide: Story = {
-  render: () => (
-    <div className="grid grid-cols-2 gap-8">
-      <Specimen family="plex" />
-      <Specimen family="inter" />
-    </div>
-  ),
+/** The type pair on an instrument screen, at the sizes the packages use. */
+export const Specimen: Story = {
+  render: () => <SpecimenScreen />,
   play: async ({ canvas }) => {
-    const plex = canvas.getByRole("region", { name: FAMILIES.plex.name });
-    const inter = canvas.getByRole("region", { name: FAMILIES.inter.name });
-    await expect(getComputedStyle(plex).fontFamily).toMatch(/^"IBM Plex Sans Variable"/);
-    await expect(getComputedStyle(inter).fontFamily).toMatch(/^"?InterVariable/);
-    const mono = (region: HTMLElement) => getComputedStyle(region.querySelector(".font-mono") as Element).fontFamily;
-    await expect(mono(plex)).toMatch(/^"IBM Plex Mono Complete"/);
-    await expect(mono(inter)).toMatch(/^"Geist Mono Variable"/);
+    const region = canvas.getByRole("region", { name: "IBM Plex Sans + IBM Plex Mono" });
+    await expect(getComputedStyle(region).fontFamily).toMatch(/^"IBM Plex Sans Variable"/);
+    const mono = region.querySelector(".font-mono") as Element;
+    await expect(getComputedStyle(mono).fontFamily).toMatch(/^"IBM Plex Mono"/);
+    await expect(getComputedStyle(mono).fontVariantNumeric).toContain("slashed-zero");
   },
 };
 
-/** The glyphs an instrument UI misreads most, large: sans, then mono, today and as shipped. */
-export const Confusables: Story = {
+/** The glyphs an instrument UI misreads most, large: sans, then mono. */
+export const Glyphs: Story = {
   render: () => (
-    <div className="flex flex-col gap-5">
-      {VARIANTS.map(({ variant, name, note }) => (
-        <section
-          key={variant}
-          data-type-family={variant}
-          aria-label={name}
-          className="grid grid-cols-[14rem_1fr] items-baseline gap-x-4 gap-y-1"
-        >
-          <h2 className="text-xs font-medium">{name}</h2>
-          <p className="text-4xl">Il1| O0 rn m 5S 8B 0.184 a-b</p>
-          <p className="text-xs text-fg-muted">{note}</p>
-          <p className="font-mono text-4xl">Il1| O0 rn m 5S 8B 0.184</p>
-        </section>
-      ))}
-    </div>
+    <section aria-label="Confusable glyphs" className="flex flex-col gap-2">
+      <p className="text-4xl">Il1| O0 rn m 5S 8B 0.184 a-b</p>
+      <p className="font-mono text-4xl">Il1| O0 rn m 5S 8B 0.184</p>
+    </section>
   ),
 };

@@ -80,7 +80,10 @@ console.log("ssr ok", html.length);
 
   // 2. Tailwind finds the packages' classes from their stylesheets alone.
   writeFileSync(join(app, "index.html"), `<!doctype html><div id="root"></div><script type="module" src="/src/main.tsx"></script>`);
-  writeFileSync(join(app, "src", "styles.css"), `@import "tailwindcss";\n@import "@vitavision/lab-ui/styles.css";\n`);
+  writeFileSync(
+    join(app, "src", "styles.css"),
+    `@import "tailwindcss";\n@import "@vitavision/ui/fonts.css";\n@import "@vitavision/lab-ui/styles.css";\n`,
+  );
   writeFileSync(join(app, "src", "main.tsx"), `import "./styles.css";\nimport { Button } from "@vitavision/ui";\nexport const b = Button;\n`);
   writeFileSync(
     join(app, "vite.config.js"),
@@ -92,7 +95,12 @@ console.log("ssr ok", html.length);
   for (const cls of [".rounded-control", ".bg-signal", ".text-fg-muted"]) {
     if (!text.includes(cls)) throw new Error(`generated CSS lacks ${cls}: a package's @source is not reaching Tailwind`);
   }
-  console.log(`css ok (${text.length} bytes)`);
+  // 3. The fonts resolve from the packed package: the build emits the woff2 files.
+  const fonts = readdirSync(join(app, "dist", "assets")).filter((f) => f.endsWith(".woff2"));
+  if (!fonts.some((f) => f.startsWith("IBMPlexMono-Regular-Latin1")) || !fonts.some((f) => f.startsWith("ibm-plex-sans-latin-wght"))) {
+    throw new Error(`fonts.css did not resolve its files: ${fonts.join(", ") || "none"}`);
+  }
+  console.log(`css ok (${text.length} bytes), ${fonts.length} font files`);
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
