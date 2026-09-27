@@ -7,5 +7,6 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@vitavision/bench-stage2d"]
+  "ignore": ["@vitavision/bench-stage2d"],
+  "privatePackages": { "version": false, "tag": false }
 }
