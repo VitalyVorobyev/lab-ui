@@ -1,5 +1,7 @@
 # @vitavision/lab-ui — deprecated
 
+Frozen at 0.6.0: it is deprecated on npm and no longer released from this repository (`"private": true`). It stays in the workspace, still built and tested, until PLAN L9-1 removes it.
+
 This package was split. It now only re-exports the four packages below, with the identical
 0.5 surface, so an existing consumer keeps working while it migrates. New code should depend
 on the packages directly.

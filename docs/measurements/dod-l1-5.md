@@ -40,3 +40,5 @@ The full story suite totals 363 tests (browser and SSR) plus 362 visual baseline
 
 - **L3-2.** At AA, `fg-subtle` is close to `fg-muted`, so the type scale has to carry that hierarchy. The token-pair contrast tests are L3-2 scope.
 - **L6.** `steppedScale` stops at 0.125 when the minimum scale is below it, so "Zoom out" stays enabled but does nothing.
+- **L3 start (PLAN §7).** Per-PR preview packages through pkg.pr.new are not wired yet. Add them when an app first consumes an unreleased change.
+- **L6-1 (PLAN §7).** The L0-3 bench does not run as a CI regression job yet (fails on a > 20 % regression). Add it with the stage-engine ADR. It needs a macOS runner, like the visual job.
