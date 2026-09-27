@@ -48,11 +48,15 @@
     "apps/storybook": {
       "entry": [
         ".storybook/*.{ts,tsx}",
+        "src/**/*.stories.tsx",
         "test/**/*.{ts,tsx}",
         "visual/**/*.ts"
       ],
       "project": [
         "**/*.{ts,tsx,css}"
+      ],
+      "ignoreDependencies": [
+        "@ibm/plex-mono"
       ]
     },
     "tools/bench/*": {

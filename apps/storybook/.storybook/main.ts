@@ -4,11 +4,12 @@ import { defaultClientConditions, mergeConfig } from "vite";
 
 /**
  * Stories live next to their components (`packages/<pkg>/src/**\/*.stories.tsx`): they are the
- * fixtures every DoD test runs over, so a package's tests can import them. This app only
- * collects them, adds the Foundations pages, and builds the docs site.
+ * fixtures every DoD test runs over, so a package's tests can import them. This app
+ * collects them, adds the Foundations pages (`src/foundations/`, the visual language's living
+ * specimen), and builds the docs site.
  */
 const config: StorybookConfig = {
-  stories: ["../src/**/*.mdx", "../../../packages/*/src/**/*.stories.tsx"],
+  stories: ["../src/**/*.mdx", "../src/**/*.stories.tsx", "../../../packages/*/src/**/*.stories.tsx"],
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y"],
   framework: { name: "@storybook/react-vite", options: {} },
   core: { disableTelemetry: true },
