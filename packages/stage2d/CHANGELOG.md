@@ -1,5 +1,13 @@
 # @vitavision/stage2d
 
+## 0.6.1
+
+### Patch Changes
+
+- bab71f8: The canvas frame and the zoom and coordinate chips use `rounded-control` (6 px) instead of a bare `rounded`.
+- Updated dependencies [bab71f8]
+  - @vitavision/ui@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes
