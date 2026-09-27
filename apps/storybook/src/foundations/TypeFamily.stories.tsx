@@ -199,7 +199,8 @@ const meta = {
   parameters: {
     docs: {
       description: {
-        component: `Decision **D1** (PLAN §8): which pair becomes the default in \`@vitavision/ui\`.
+        component: `Decision **D1** (PLAN §8), **settled 2026-09-27: IBM Plex** (ADR-0003). This page is the
+comparison it was made on; L3-2 turns it into the Plex specimen.
 Both columns are the same screen at the same pixel sizes, in the ramp the packages use today.
 The toolbar's **Type** switch renders every other story in Inter + Geist Mono too. The measured
 differences — x-height, width, tabular digits, the zero — are in \`docs/visual-language.md\` §2.`,

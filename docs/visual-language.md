@@ -5,7 +5,8 @@ specimen: every rule below has a page there, rendered from the real tokens and c
 The numbers come from `tools/visual-language/` and are recorded in
 [`docs/measurements/l3-1-foundations.md`](measurements/l3-1-foundations.md).
 
-- **Status.** L3-1 proposal. Decision **D1** (§2) is open.
+- **Status.** Accepted in L3-1. Decision **D1** (§2) is settled: IBM Plex
+  ([ADR-0003](adrs/0003-type-family-ibm-plex.md)).
 - **Rule words.** *Must* is enforced, or will be by the ticket named. *Should* is the default,
   and a reviewer can accept a stated reason to break it.
 - **Starting point.** lab-ui's own principle is an *instrument* design system. The chrome is
@@ -33,10 +34,18 @@ The semantic tokens live in `@vitavision/ui/styles.css`. Specimen: *Foundations 
   (OKLab ΔE×100, both themes). A tritanope cannot tell "selected" from "passed" by colour.
   L3-2 moves one of them apart, together with the contrast tests.
 
-## 2. Type — decision D1 (open)
+## 2. Type — IBM Plex Sans + IBM Plex Mono (D1)
 
-The repos disagree. lab-ui and VAL use IBM Plex Sans/Mono; vitavision and calibration-rs
-use Inter/Geist Mono. Specimen: *Foundations / Type family (D1)*. The toolbar's **Type**
+**Decision (2026-09-27, [ADR-0003](adrs/0003-type-family-ibm-plex.md)):** IBM Plex Sans for
+text and IBM Plex Mono for values, in every package and migrated app.
+
+- **Must:** the mono build carries the `zero` feature in weights 400 and 500: IBM's
+  complete or split files, or a subset made from them. fontsource's build drops it, and
+  there the slashed zero silently becomes a dotted one. L3-2 settles how the files reach
+  the apps.
+
+The comparison the decision was made on follows. Before the decision, lab-ui and VAL used
+IBM Plex Sans/Mono, and vitavision and calibration-rs used Inter/Geist Mono. Specimen: *Foundations / Type family (D1)*. The toolbar's **Type**
 switch re-renders every story in either pair.
 
 Measured from the files each candidate would ship (`tools/visual-language/fonts.py`):
