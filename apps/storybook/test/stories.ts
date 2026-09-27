@@ -12,7 +12,9 @@ setProjectAnnotations(preview);
 
 type StoryModule = Parameters<typeof composeStories>[0];
 
-const modules = import.meta.glob<StoryModule>("../../../packages/*/src/**/*.stories.tsx", { eager: true });
+const modules = import.meta.glob<StoryModule>(["../../../packages/*/src/**/*.stories.tsx", "../src/**/*.stories.tsx"], {
+  eager: true,
+});
 
 /** The part of a composed story the harness uses: render it, or run it (render + `play`). */
 export type ComposedStory = ComponentType & { run: (context?: { canvasElement?: HTMLElement }) => Promise<void> };
@@ -24,7 +26,7 @@ export interface Case {
 }
 
 export const cases: Case[] = Object.entries(modules).flatMap(([path, module]) => {
-  const pkg = /packages\/([^/]+)\//.exec(path)?.[1] ?? "?";
+  const pkg = /packages\/([^/]+)\//.exec(path)?.[1] ?? "storybook";
   const title = (module.default as { title?: string }).title ?? path;
   const composed = composeStories(module) as unknown as Record<string, ComposedStory>;
   return Object.entries(composed).map(([name, Story]) => ({ id: `${pkg} · ${title} › ${name}`, Story }));

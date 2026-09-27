@@ -13,6 +13,20 @@ const withTheme: Decorator = (Story, context) => {
   return <Story />;
 };
 
+/**
+ * The D1 comparison (PLAN §8): "Inter + Geist Mono" renders every story in the other candidate
+ * pair (see `src/styles.css`). The default leaves `<html>` alone, so the package's own family
+ * applies — what the tests and the visual baselines see.
+ */
+const withTypeFamily: Decorator = (Story, context) => {
+  if (typeof document !== "undefined") {
+    const root = document.documentElement;
+    if (context.globals["typeFamily"] === "inter") root.dataset["typeFamily"] = "inter";
+    else delete root.dataset["typeFamily"];
+  }
+  return <Story />;
+};
+
 const withProviders: Decorator = (Story) => (
   <TooltipProvider>
     <div className="bg-ground p-4 text-fg">
@@ -22,16 +36,40 @@ const withProviders: Decorator = (Story) => (
 );
 
 const preview: Preview = {
-  decorators: [withProviders, withTheme],
+  decorators: [withProviders, withTheme, withTypeFamily],
   globalTypes: {
     theme: {
       description: "Colour theme",
       toolbar: { title: "Theme", icon: "mirror", items: ["light", "dark"], dynamicTitle: true },
     },
+    typeFamily: {
+      description: "Type family (decision D1)",
+      toolbar: {
+        title: "Type",
+        icon: "paragraph",
+        items: [
+          { value: "plex", title: "IBM Plex Sans + Mono" },
+          { value: "inter", title: "Inter + Geist Mono" },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
-  initialGlobals: { theme: "light" },
+  initialGlobals: { theme: "light", typeFamily: "plex" },
   parameters: {
     layout: "fullscreen",
+    options: {
+      storySort: {
+        order: [
+          "Foundations",
+          ["Introduction", "Colour", "Type family (D1)", "Scales", "Data-vis palette", "Overlay grammar"],
+          "ui",
+          "forms",
+          "charts",
+          "stage2d",
+        ],
+      },
+    },
     controls: { expanded: true },
     a11y: { test: "error" },
   },
