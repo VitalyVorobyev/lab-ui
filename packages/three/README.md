@@ -30,8 +30,13 @@ nothing re-implements a camera model.
 | `conventions` | `Iso3Wire` (`{rotation: [qx,qy,qz,qw], translation}`), `matrixFromIso3`, `composeIso3`, `invertIso3`, `CV_TO_GL` (Rx(π)), `glCameraMatrix`, `Z_UP`, URDF roll-pitch-yaw |
 | `FrameTreeRuntime` | one `Object3D` per baked frame, `apply(k)`, `pose(frame, k)`, capture markers |
 | `robot` | `loadRobotVisuals` (per-link GLB, failures reported not thrown), `attachRobotVisuals`, `applyRobotMaterial` |
-| primitives | `CameraFrustum`, `LaserFan`, `TargetBoard`, `LightGizmo`, `Axes` |
-| `theme` | `readSceneColors` / `observeSceneColors`: scene colours from the `@vitavision/ui` tokens |
+| primitives | `CameraFrustum` (with `pickPadding`: a padded pick hull and a pickable optical centre), `LaserFan` and `TargetBoard` (`setActive`; the board also `setOpacity`; their outlines never take picks), `LightGizmo`, `Axes` |
+| `layers` | `PHYSICAL_LAYER` (0, what a sensor sees) and `GIZMO_LAYER` (1, viewer-only); every gizmo above is on `GIZMO_LAYER`; `setLayer` |
+| `SensorView` | a calibrated camera's image: renders the canonical pinhole (physical layer only), then resamples it through a host-supplied remap LUT (`RemapTable`, e.g. `@etendue/wasm` `remap`), so distortion, skew and Scheimpflug geometry appear with no camera math in the shader |
+| `theme` | `readSceneColors` / `observeSceneColors`: scene colours from the `@vitavision/ui` tokens (including `canvas`), normalised by `normalizeColor` so three parses modern CSS colours (`oklch()`, space-separated `hsl()`, `color-mix()`) |
+
+A viewport camera and its raycaster must enable `GIZMO_LAYER` to show and pick gizmos
+(`@vitavision/three-react`'s `SceneCanvas` does); a `SensorView` never does.
 
 Frames: world +Z up, metres; camera frames are OpenCV (+Z forward, +Y down); lasers fan in
 their `x = 0` plane about +Z; targets lie in `z = 0` facing +Z; lights emit along +Z.

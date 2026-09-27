@@ -61,7 +61,7 @@
     "name": "@vitavision/three",
     "path": "packages/three/dist/index.js",
     "import": "*",
-    "limit": "3.75 kB",
+    "limit": "5.28 kB",
     "ignore": [
       "three"
     ]
@@ -70,7 +70,7 @@
     "name": "@vitavision/three-react",
     "path": "packages/three-react/dist/index.js",
     "import": "*",
-    "limit": "2.18 kB",
+    "limit": "2.71 kB",
     "ignore": [
       "@react-three/fiber",
       "@vitavision/three",

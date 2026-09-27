@@ -5,16 +5,18 @@
 ```ts
 
 import { BakedScenarioLike } from '@vitavision/three';
+import { CanonicalPinhole } from '@vitavision/three';
 import { FrameTreeRuntime } from '@vitavision/three';
 import { JSX } from 'react';
 import { LightShapeLike } from '@vitavision/three';
 import { MeshLoader } from '@vitavision/three';
 import { ReactNode } from 'react';
+import { RemapTable } from '@vitavision/three';
 import { RobotVisual } from '@vitavision/three';
 import { SceneColors } from '@vitavision/three';
 
 // @public
-export function AtFrame(input: AtFrameProps): JSX.Element | null;
+export function AtFrame(input: AtFrameProps): JSX | null;
 
 // @public
 export interface AtFrameProps {
@@ -23,7 +25,7 @@ export interface AtFrameProps {
 }
 
 // @public
-export function CameraFrustum(input: CameraFrustumProps): JSX.Element;
+export function CameraFrustum(input: CameraFrustumProps): JSX;
 
 // @public
 export interface CameraFrustumProps {
@@ -34,7 +36,7 @@ export interface CameraFrustumProps {
 }
 
 // @public
-export function FrameAxes(input: FrameAxesProps): JSX.Element;
+export function FrameAxes(input: FrameAxesProps): JSX;
 
 // @public
 export interface FrameAxesProps {
@@ -42,7 +44,7 @@ export interface FrameAxesProps {
 }
 
 // @public
-export function FrameTree(input: FrameTreeProps): JSX.Element;
+export function FrameTree(input: FrameTreeProps): JSX;
 
 // @public
 export interface FrameTreeProps {
@@ -53,17 +55,18 @@ export interface FrameTreeProps {
 }
 
 // @public
-export function LaserFan(input: LaserFanProps): JSX.Element;
+export function LaserFan(input: LaserFanProps): JSX;
 
 // @public
 export interface LaserFanProps {
+    active?: boolean;
     halfAngle: number;
     length: number;
     onSelect?: (() => void) | undefined;
 }
 
 // @public
-export function LightGizmo(input: LightGizmoProps): JSX.Element;
+export function LightGizmo(input: LightGizmoProps): JSX;
 
 // @public
 export interface LightGizmoProps {
@@ -78,7 +81,7 @@ export interface PlayheadSource {
 }
 
 // @public
-export function Robot(input: RobotProps): JSX.Element;
+export function Robot(input: RobotProps): JSX;
 
 // @public
 export interface RobotProps {
@@ -94,21 +97,47 @@ export interface RobotProps {
 }
 
 // @public
-export function SceneCanvas(input: SceneCanvasProps): JSX.Element;
+export function SceneCanvas(input: SceneCanvasProps): JSX;
 
 // @public
 export interface SceneCanvasProps {
     children?: ReactNode;
     className?: string;
+    clip?: readonly [number, number];
     eye?: readonly [number, number, number];
+    fov?: number;
     grid?: number;
     label?: string;
     onPointerMissed?: (() => void) | undefined;
     target?: readonly [number, number, number];
+    up?: readonly [number, number, number];
 }
 
 // @public
-export function TargetBoard(input: TargetBoardProps): JSX.Element;
+export function SceneColorsProvider(input: SceneColorsProviderProps): JSX.Element;
+
+// @public
+export interface SceneColorsProviderProps {
+    children?: ReactNode;
+    colors: Partial<SceneColors>;
+}
+
+// @public
+export function SensorImage(input: SensorImageProps): JSX;
+
+// @public
+export interface SensorImageProps {
+    canonical: CanonicalPinhole;
+    className?: string;
+    frame: string;
+    label?: string;
+    lut: RemapTable;
+    playhead: PlayheadSource;
+    runtime: FrameTreeRuntime;
+}
+
+// @public
+export function TargetBoard(input: TargetBoardProps): JSX;
 
 // @public
 export interface TargetBoardProps {

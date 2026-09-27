@@ -72,11 +72,13 @@ import { Button, Panel, TooltipProvider } from "@vitavision/ui";
 import { SchemaForm, describeFields } from "@vitavision/forms";
 import { LineChart } from "@vitavision/charts";
 import { MeasureOverlay } from "@vitavision/stage2d";
-import { FrameTreeRuntime } from "@vitavision/three";
+import { FrameTreeRuntime, GIZMO_LAYER, normalizeColor } from "@vitavision/three";
 import * as compat from "@vitavision/lab-ui";
 const I = { rotation: [0, 0, 0, 1], translation: [0, 0, 0] };
 const runtime = new FrameTreeRuntime({ dt: 0.1, frames: ["world", "cam"], samples: [{ t: 0, world_se3_frame: [I, I] }] });
 if (runtime.frame("cam")?.name !== "cam") throw new Error("three: frame tree failed");
+// Server-safe: with no document the colour normaliser passes values through.
+if (GIZMO_LAYER !== 1 || normalizeColor(" teal ") !== "teal") throw new Error("three: layers/theme failed");
 const fields = describeFields({ properties: { sigma: { type: "number", default: 2 } } });
 const html = renderToString(
   <TooltipProvider>
@@ -101,7 +103,7 @@ console.log("ssr ok", html.length);
   // Its stories' server render runs in the Storybook harness (Vitest, Node).
   writeFileSync(
     join(app, "src", "main.tsx"),
-    `import "./styles.css";\nimport { Button } from "@vitavision/ui";\nimport { SceneCanvas } from "@vitavision/three-react";\nexport const b = [Button, SceneCanvas];\n`,
+    `import "./styles.css";\nimport { Button } from "@vitavision/ui";\nimport { SceneCanvas, SceneColorsProvider, SensorImage } from "@vitavision/three-react";\nexport const b = [Button, SceneCanvas, SceneColorsProvider, SensorImage];\n`,
   );
   writeFileSync(
     join(app, "vite.config.js"),

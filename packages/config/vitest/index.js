@@ -5,10 +5,13 @@
  * `dom()` — component and logic tests in happy-dom: React plugin, Testing Library cleanup,
  * and the `@vitavision/source` condition so workspace siblings resolve to their sources.
  *
- * `library()` — a package's full suite as two projects sharing one coverage report:
- * `unit` (happy-dom, `src/**\/*.test.{ts,tsx}`) and `stories` (Chromium via Vitest browser
- * mode, `src/stories.test.tsx`, which runs every story's `play` — see `./stories`). Stories
- * are the component fixtures (PLAN §4.3), so component coverage counts them.
+ * `library()` — a package's full suite as three projects sharing one coverage report:
+ * `unit` (happy-dom, `src/**\/*.test.{ts,tsx}`), `stories` (Chromium via Vitest browser
+ * mode, `src/stories.test.tsx`, which runs every story's `play` — see `./stories`) and
+ * `browser` (Chromium, `src/**\/*.browser.test.{ts,tsx}`: logic that needs a real browser,
+ * e.g. WebGL read-back or the CSS colour parser). Stories are the component fixtures
+ * (PLAN §4.3), so component coverage counts them. A package without stories or browser
+ * tests uses the same preset; an empty project is skipped.
  */
 
 import react from "@vitejs/plugin-react";
@@ -75,7 +78,7 @@ export function library(options = {}) {
             environment: "happy-dom",
             setupFiles: [setup],
             include: ["src/**/*.test.{ts,tsx}"],
-            exclude: ["src/stories.test.tsx"],
+            exclude: ["src/stories.test.tsx", "src/**/*.browser.test.{ts,tsx}"],
           },
         },
         {
@@ -87,6 +90,23 @@ export function library(options = {}) {
               enabled: true,
               headless: true,
               provider: playwright(),
+              instances: [{ browser: "chromium" }],
+            },
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: "browser",
+            include: ["src/**/*.browser.test.{ts,tsx}"],
+            browser: {
+              enabled: true,
+              headless: true,
+              // Software WebGL (SwiftShader) on every host, so pixel read-backs agree
+              // between a GPU laptop and a GPU-less CI runner.
+              provider: playwright({
+                launchOptions: { args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] },
+              }),
               instances: [{ browser: "chromium" }],
             },
           },

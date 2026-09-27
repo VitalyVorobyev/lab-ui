@@ -13,7 +13,10 @@ import { Matrix4 } from 'three';
 import { Mesh } from 'three';
 import { MeshStandardMaterial } from 'three';
 import { Object3D } from 'three';
+import { PerspectiveCamera } from 'three';
 import { Vector3 } from 'three';
+import { WebGLRenderer } from 'three';
+import { WebGLRenderTarget } from 'three';
 
 // @public
 export function applyRobotMaterial(roots: Iterable<Object3D>, color: ColorRepresentation): MeshStandardMaterial;
@@ -65,6 +68,14 @@ export interface CameraFrustumOptions {
     borderRays: ArrayLike<number>;
     color: ColorRepresentation;
     depth: number;
+    pickPadding?: number;
+}
+
+// @public
+export interface CanonicalPinhole {
+    focalPx: number;
+    height: number;
+    width: number;
 }
 
 // @public
@@ -95,6 +106,9 @@ export class FrameTreeRuntime {
     readonly root: Group;
     readonly sampleCount: number;
 }
+
+// @public
+export const GIZMO_LAYER = 1;
 
 // @public
 export function glCameraMatrix(worldSe3Cv: Matrix4, target?: Matrix4): Matrix4;
@@ -129,6 +143,8 @@ export interface Iso3Wire {
 // @public
 export class LaserFan extends Group {
     constructor(input: LaserFanOptions);
+    get active(): boolean;
+    setActive(value: boolean): void;
     setColor(color: ColorRepresentation): void;
 }
 
@@ -171,13 +187,30 @@ export interface MeshLoader {
 }
 
 // @public
+export function normalizeColor(css: string): string;
+
+// @public
 export function observeSceneColors(onChange: (colors: SceneColors) => void, root?: Element): () => void;
+
+// @public
+export const PHYSICAL_LAYER = 0;
+
+// @public
+export type PixelCentre = "integer" | "half";
 
 // @public
 export function quaternionFromRpy(rpy: ArrayLike<number>): [number, number, number, number];
 
 // @public
 export function readSceneColors(root?: Element): SceneColors;
+
+// @public
+export interface RemapTable {
+    data: Float32Array;
+    height: number;
+    pixelCentre: PixelCentre;
+    width: number;
+}
 
 // @public
 export interface RobotVisual {
@@ -200,6 +233,7 @@ export function rpyFromQuaternion(rotation: ArrayLike<number>): [number, number,
 // @public
 export interface SceneColors {
     background: string;
+    canvas: string;
     defect: string;
     fg: string;
     line: string;
@@ -212,9 +246,33 @@ export interface SceneColors {
 }
 
 // @public
+export class SensorView {
+    constructor(input: SensorViewOptions);
+    readonly camera: PerspectiveCamera;
+    readonly canonicalTarget: WebGLRenderTarget;
+    dispose(): void;
+    render(renderer: WebGLRenderer, scene: Object3D, worldSe3Cv: Matrix4, target?: WebGLRenderTarget | null): void;
+    setBackground(color: ColorRepresentation): void;
+}
+
+// @public
+export interface SensorViewOptions {
+    canonical: CanonicalPinhole;
+    clip?: readonly [number, number];
+    lut: RemapTable;
+    samples?: number;
+}
+
+// @public
+export function setLayer(root: Object3D, layer: number): void;
+
+// @public
 export class TargetBoard extends Group {
     constructor(input: TargetBoardOptions);
+    get active(): boolean;
+    setActive(value: boolean): void;
     setColors(color: ColorRepresentation, edgeColor: ColorRepresentation): void;
+    setOpacity(opacity: number): void;
 }
 
 // @public

@@ -1,5 +1,6 @@
-import { DOD_COVERAGE, dom } from "@vitavision/config-vitest";
+import { library } from "@vitavision/config-vitest";
 
-// No components, so no stories project: the unit suite (happy-dom) is the whole suite, held
-// to the DoD coverage thresholds. Rendering is exercised by @vitavision/three-react's stories.
-export default dom({ test: { coverage: { thresholds: DOD_COVERAGE } } });
+// No components, so no stories: logic runs in happy-dom (`*.test.ts`), and what needs a real
+// browser (WebGL read-back, the CSS colour parser) runs in Chromium (`*.browser.test.ts`).
+// Rendering through React is exercised by @vitavision/three-react's stories.
+export default library();

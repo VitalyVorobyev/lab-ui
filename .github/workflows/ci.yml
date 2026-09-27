@@ -25,7 +25,7 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
-      # Each package's `stories` test project runs in Chromium (Vitest browser mode).
+      # Each package's `stories` and `browser` test projects run in Chromium (Vitest browser mode).
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
 

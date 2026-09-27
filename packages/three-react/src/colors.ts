@@ -1,5 +1,5 @@
 import { observeSceneColors, readSceneColors, type SceneColors } from "@vitavision/three";
-import { useSyncExternalStore } from "react";
+import { createContext, createElement, type JSX, type ReactNode, use, useMemo, useSyncExternalStore } from "react";
 
 let cached: SceneColors | undefined;
 const listeners = new Set<() => void>();
@@ -32,6 +32,7 @@ function snapshot(): SceneColors {
  */
 const SERVER_COLORS: SceneColors = Object.freeze({
   background: "gray",
+  canvas: "gray",
   surface: "gray",
   fg: "gray",
   muted: "gray",
@@ -44,11 +45,35 @@ const SERVER_COLORS: SceneColors = Object.freeze({
 });
 const serverSnapshot = (): SceneColors => SERVER_COLORS;
 
+const OverrideContext = createContext<Partial<SceneColors> | null>(null);
+
+/** Props of {@link SceneColorsProvider}. */
+export interface SceneColorsProviderProps {
+  /**
+   * Colours to use instead of the `@vitavision/ui` tokens, for an app whose palette does not
+   * define them. Any CSS colour three.js parses; keys left out still follow the tokens.
+   */
+  colors: Partial<SceneColors>;
+  /** The subtree that sees the overrides. */
+  children?: ReactNode;
+}
+
 /**
- * The vitavision scene colours (`SceneColors` from `@vitavision/three`), re-read whenever the theme class on
- * the document element changes. One observer is shared by every caller. Server-safe: a
- * server render gets neutral `gray` for every colour.
+ * Override scene colours for everything inside (see {@link useSceneColors}). Overrides apply
+ * on the server too, so an app palette renders the same before and after hydration.
+ */
+export function SceneColorsProvider({ colors, children }: SceneColorsProviderProps): JSX.Element {
+  return createElement(OverrideContext, { value: colors }, children);
+}
+
+/**
+ * The scene colours (`SceneColors` from `@vitavision/three`): the vitavision tokens, re-read
+ * whenever the theme class on the document element changes (one observer shared by every
+ * caller), with any {@link SceneColorsProvider} overrides applied. Server-safe: a server
+ * render gets neutral `gray` for every colour a provider does not override.
  */
 export function useSceneColors(): SceneColors {
-  return useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const tokens = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const override = use(OverrideContext);
+  return useMemo(() => (override ? { ...tokens, ...override } : tokens), [tokens, override]);
 }

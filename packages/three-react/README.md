@@ -29,17 +29,24 @@ moved here as PLAN L8-1.
 ```
 
 - `SceneCanvas` — Z-up canvas in vitavision colours: orbit controls, ground grid, lights.
+  `up`, `fov` and `clip` suit other scenes (`up={[0, -1, 0]}` for a camera-frame, CV
+  scene). Its camera and raycaster enable `GIZMO_LAYER`.
 - `FrameTree` / `AtFrame` / `useFrameTree` — a baked scenario as a frame graph; children of
   `AtFrame` live in that frame.
 - `Robot`, `CameraFrustum`, `LaserFan`, `TargetBoard`, `LightGizmo`, `FrameAxes`.
+- `SensorImage` — a camera's calibrated image of the enclosing `FrameTree` (a `SensorView`
+  on its own canvas, physical layer only) at the playhead.
 - `useSceneColors` — the theme's scene colours, following the `dark` class.
+- `SceneColorsProvider` — colours to use instead of the tokens, for an app whose palette
+  does not define them; keys left out still follow the tokens.
 
 Colours are tokens only: `signal` for selection, `fg-muted` for robots and idle cameras,
 `defect` for laser light and X axes, `normal` Y, `signal` Z, `warn` lights.
 
 **Server rendering.** Safe to render on the server: `SceneCanvas` renders its labelled
-wrapper and R3F's empty canvas element, and `useSceneColors` returns neutral `gray` (there
-is no document to read the tokens from) until the client hydrates. The stories run through the
+wrapper and R3F's empty canvas element, `SensorImage` renders its empty canvas, and
+`useSceneColors` returns neutral `gray` (there is no document to read the tokens from) until
+the client hydrates, except for colours a `SceneColorsProvider` sets. The stories run through the
 same axe, SSR and visual harness as every other package, with no opt-outs: the WebGL canvas is
 screenshotted like any other story.
 
