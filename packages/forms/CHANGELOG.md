@@ -1,5 +1,12 @@
 # @vitavision/forms
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [bab71f8]
+  - @vitavision/ui@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes
