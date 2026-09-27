@@ -6,16 +6,23 @@ import { imageViewBox } from "./stage/view";
 import { useStage } from "./stage/ImageStage";
 import type { Point } from "./measureGeometry";
 
+/** An ordered, closed contour drawn in source-image pixel-center coordinates. */
 export interface ContourEditorProps {
+  /** Ordered vertices; the final vertex connects back to the first. */
   points: Point[];
+  /** Receives a complete replacement point list after each edit. */
   onChange: (points: Point[]) => void;
   /** Called at the end of a pointer or keyboard edit; useful for history snapshots. */
   onCommit?: () => void;
+  /** Show draggable, keyboard-editable vertices. */
   editable?: boolean;
+  /** Accessible name for the contour and its vertices. */
   label?: string;
+  /** CSS stroke color. */
   stroke?: string;
 }
 
+/** Return the index of the closest segment, with the last vertex joined to the first. */
 export function nearestContourSegment(points: Point[], point: Point): number {
   let nearest = 0;
   let distance = Infinity;
@@ -32,6 +39,7 @@ export function nearestContourSegment(points: Point[], point: Point): number {
   return nearest;
 }
 
+/** Edit contour vertices over an ImageStage using its shared source-image transform. */
 export function ContourEditor({ points, onChange, onCommit, editable = false, label = "Contour", stroke = "var(--signal)" }: ContourEditorProps) {
   const stage = useStage();
   const draggingRef = useRef<number | null>(null);
@@ -90,14 +98,21 @@ export function ContourEditor({ points, onChange, onCommit, editable = false, la
       onChange(points.filter((_, i) => i !== index));
       setSelected(null);
       onCommit?.();
+    } else if (event.key === "Insert" && points.length >= 3) {
+      event.preventDefault();
+      event.stopPropagation();
+      const next = points[(index + 1) % points.length]!;
+      onChange([...points.slice(0, index + 1), { x: (p.x + next.x) / 2, y: (p.y + next.y) / 2 }, ...points.slice(index + 1)]);
+      setSelected(index + 1);
+      onCommit?.();
     }
   }
 
   return (
-    <svg viewBox={imageViewBox(stage.image)} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-label={label}>
+    <svg viewBox={imageViewBox(stage.image)} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" role={editable ? undefined : "img"} aria-label={label}>
       <polygon points={line} fill="none" stroke={stroke} strokeWidth={hairline} />
       {editable && points.length >= 3 && (
-        <polygon points={line} fill="none" stroke="transparent" strokeWidth={stage.imageLength(12)} className="pointer-events-auto" aria-label={`Add point to ${label}`} onDoubleClick={(event) => {
+        <polygon points={line} fill="none" stroke="transparent" strokeWidth={stage.imageLength(12)} className="pointer-events-auto" onDoubleClick={(event) => {
           if (stage.panMode) return;
           event.stopPropagation();
           const point = stage.toImage({ x: event.clientX, y: event.clientY });

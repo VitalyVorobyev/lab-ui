@@ -90,6 +90,19 @@ export function contentUnder(view: View, pointer: {
 } | null;
 
 // @public
+export function ContourEditor(input: ContourEditorProps): JSX.Element;
+
+// @public
+export interface ContourEditorProps {
+    editable?: boolean;
+    label?: string;
+    onChange: (points: Point[]) => void;
+    onCommit?: () => void;
+    points: Point[];
+    stroke?: string;
+}
+
+// @public
 export function crossSegments(x: number, y: number, size: number): [[Point, Point], [Point, Point]];
 
 // @public
@@ -210,6 +223,9 @@ export const MIN_ZOOM = 1;
 
 // @public
 export function nativeZoomFor(sourceWidth: number, boxWidth: number): number;
+
+// @public
+export function nearestContourSegment(points: Point[], point: Point): number;
 
 // @public
 export const PIXEL_CENTRE = 0.5;

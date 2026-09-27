@@ -23,4 +23,59 @@ describe("ContourEditor", () => {
     fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "Delete" });
     expect(onChange.mock.calls[1]?.[0]).toHaveLength(3);
   });
+
+  it("inserts, nudges precisely, and preserves a three-point contour", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const onCommit = vi.fn();
+    const triangle = points.slice(0, 3);
+    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={triangle} onChange={onChange} onCommit={onCommit} editable label="Weld" /></ImageStage>);
+    const handle = getByRole("button", { name: "Weld point 1" });
+    fireEvent.keyDown(handle, { key: "Delete" });
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(handle, { key: "ArrowLeft", shiftKey: true });
+    expect(onChange.mock.lastCall?.[0][0]).toEqual({ x: 1.9, y: 2 });
+    fireEvent.keyDown(handle, { key: "Insert" });
+    expect(onChange.mock.lastCall?.[0][1]).toEqual({ x: 5, y: 2 });
+    expect(onCommit).toHaveBeenCalledTimes(2);
+  });
+
+  it("clamps edits to image bounds and adds a point on double-click", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const onCommit = vi.fn();
+    const { container, getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} onCommit={onCommit} editable /></ImageStage>);
+    fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "ArrowUp" });
+    expect(onChange.mock.lastCall?.[0][0]).toEqual({ x: 2, y: 1 });
+    const hitArea = container.querySelector('polygon[stroke="transparent"]');
+    expect(hitArea).not.toBeNull();
+    fireEvent.doubleClick(hitArea!, { clientX: 5, clientY: 2 });
+    expect(onChange.mock.lastCall?.[0]).toHaveLength(5);
+    expect(onCommit).toHaveBeenCalledTimes(2);
+  });
+
+  it("drags vertices and commits once when the gesture ends", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const onCommit = vi.fn();
+    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} onCommit={onCommit} editable /></ImageStage>);
+    const handle = getByRole("button", { name: "Contour point 1" });
+    handle.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 4 });
+    fireEvent.pointerMove(handle, { clientX: 100, clientY: -10, pointerId: 4 });
+    expect(onChange.mock.lastCall?.[0][0]).toEqual({ x: 9, y: 0 });
+    fireEvent.pointerUp(handle, { pointerId: 4 });
+    expect(onCommit).toHaveBeenCalledOnce();
+  });
+
+  it("does not edit when read-only or the pan tool is active", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const { getByRole, rerender } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable /></ImageStage>);
+    const handle = getByRole("button", { name: "Contour point 1" });
+    fireEvent.pointerDown(handle, { button: 1, pointerId: 1 });
+    fireEvent.pointerMove(handle, { clientX: 6, clientY: 6 });
+    expect(onChange).not.toHaveBeenCalled();
+    rerender(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} panTool><ContourEditor points={points} onChange={onChange} editable /></ImageStage>);
+    fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "ArrowRight" });
+    expect(onChange).not.toHaveBeenCalled();
+    rerender(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} /></ImageStage>);
+    expect(getByRole("img", { name: "Contour" })).toBeTruthy();
+  });
 });
