@@ -19,8 +19,9 @@ The semantic tokens live in `@vitavision/ui/styles.css`. Specimen: *Foundations 
 
 | Group | Tokens | Rule |
 |---|---|---|
-| Surfaces | `ground`, `surface`, `raised`, `overlay`, `canvas`, `line`, `line-strong` | True-neutral greys, never blue-tinted. `canvas` is dark in both themes, because an image reads against black. |
-| Text | `fg`, `fg-muted`, `fg-subtle` | ≥ 4.5:1 on `ground`, `surface`, `raised` and `overlay`, in both themes (L3-2 adds the unit tests). |
+| Surfaces | `ground`, `surface`, `raised`, `overlay`, `canvas`, `line` | True-neutral greys, never blue-tinted. `canvas` is dark in both themes, because an image reads against black. `line` is for dividers, which are decoration and exempt from contrast rules. |
+| Boundaries | `line-strong` | The border that identifies a control: inputs, selects, segmented controls, switches, checkboxes, secondary buttons. ≥ 3:1 against `ground`, `surface` and `overlay` (WCAG 1.4.11). |
+| Text | `fg`, `fg-muted`, `fg-subtle` | ≥ 4.5:1 on `ground`, `surface`, `raised` and `overlay`, in both themes. |
 | Accent | `signal`, `signal-strong`, `signal-fg` | Means "you can act here": focus, selection, the active item, the primary action. It is never decoration. |
 | Verdicts | `normal`, `defect`, `warn` | Only for a pass/fail/attention judgement the app has actually made. They are never a series colour, a decoration, or a continuous scale. `defect` also marks destructive actions. |
 
@@ -30,9 +31,17 @@ The semantic tokens live in `@vitavision/ui/styles.css`. Specimen: *Foundations 
 - **Must:** a "verdict" means the app compared a value with a declared threshold and said
   so. A continuous quality (a score, an error in px) is a magnitude and uses a sequential
   map (§4), even when low values are "good".
-- **Open (L3-2):** under simulated tritanopia, `signal` and `normal` are only 1.7 apart
-  (OKLab ΔE×100, both themes). A tritanope cannot tell "selected" from "passed" by colour.
-  L3-2 moves one of them apart, together with the contrast tests.
+- **Must:** every text and boundary pair above holds in both themes. `ui/src/contrast.test.ts`
+  checks them against the values in `styles.css`, including each verdict colour and `signal`
+  as text on their own /12 tint.
+- **Must:** `signal` stays apart from every verdict colour for a reader with any dichromacy:
+  ≥ 8 OKLab ΔE×100 in light, ≥ 9.3 in dark (the same test file).
+  - L3-2 retuned both for this. The 0.6 values were 1.7 apart under tritanopia, so a
+    tritanope saw "selected" and "passed" as one colour.
+  - That is why the light accent is a deep slate-teal (`#235159`). It must stay dark enough
+    for 4.5:1 text, which leaves hue as the only lever.
+- **Should:** colour is never the only cue. A verdict carries its text or an icon, and a
+  selection carries a shape (outline, fill, check).
 
 ## 2. Type — IBM Plex Sans + IBM Plex Mono (D1)
 
@@ -41,12 +50,20 @@ text and IBM Plex Mono for values, in every package and migrated app.
 
 - **Must:** the mono build carries the `zero` feature in weights 400 and 500: IBM's
   complete or split files, or a subset made from them. fontsource's build drops it, and
-  there the slashed zero silently becomes a dotted one. L3-2 settles how the files reach
-  the apps.
+  there the slashed zero silently becomes a dotted one.
+- **Must:** apps load the fonts with `@import "@vitavision/ui/fonts.css";`, next to
+  `styles.css`.
+  - The files ship inside `@vitavision/ui`, so every app gets the same build: Plex Sans
+    variable (fontsource) and IBM's split Plex Mono 400/500, which keep `zero`.
+  - They are vendored by `tools/visual-language/vendor-fonts.ts`.
+  - With `unicode-range`, a page fetches about 80 KB: Plex Sans latin, plus the Plex Mono
+    Latin1 file at 400 and at 500.
+- **Should not:** load Plex from fontsource or Google Fonts as well. Those builds lose the
+  slashed zero, and two faces with one family name race.
 
 The comparison the decision was made on follows. Before the decision, lab-ui and VAL used
-IBM Plex Sans/Mono, and vitavision and calibration-rs used Inter/Geist Mono. Specimen: *Foundations / Type family (D1)*. The toolbar's **Type**
-switch re-renders every story in either pair.
+IBM Plex Sans/Mono, and vitavision and calibration-rs used Inter/Geist Mono. The side-by-side
+specimen is in PR #35's Storybook. Today's specimen is *Foundations / Type*.
 
 Measured from the files each candidate would ship (`tools/visual-language/fonts.py`):
 
@@ -68,12 +85,12 @@ The *Confusables* story also shows both pairs the way the apps load them today.
 Rules that hold whichever pair wins:
 
 - **Must:** numbers that are compared — table columns, readouts, axes, live counters — use
-  tabular figures, and mono values use a slashed zero. With Plex, that means the global
-  `tabular-nums` of today. With Inter, tabular figures are applied only where numbers are
-  compared, and prose keeps Inter's defaults.
+  tabular figures, and mono values use a slashed zero. Plex's digits are tabular by
+  default and Plex has no `tnum`, so the global `tabular-nums` and `slashed-zero` of
+  `styles.css` cover it.
 - **Must:** the sans and mono families are two tokens (`--font-sans`, `--font-mono`) in
-  `@vitavision/ui/styles.css`. L3-2 swaps them in one place.
-- **Boundary:** Source Serif 4 stays on vitavision's editorial pages whichever pair wins.
+  `@vitavision/ui/styles.css`.
+- **Boundary:** Source Serif 4 stays on vitavision's editorial pages.
 
 ## 3. Scales
 
@@ -117,16 +134,16 @@ padding and leading, never hit targets or type below 10 px.
 | field | `gap-1.5`, label 12 px | `gap-1`, label 11 px |
 | table cell / header | `py-2 pr-3` 14 px / `pb-2` 12 px | `py-0.5 pr-2` 11 px / `pb-1` 10 px |
 
-- **Known deviation (L3-2):** the `Select` trigger is fixed at `h-8` and ignores density.
+Every control, the `Select` trigger included (fixed in L3-2), takes its height from
+`useControlHeight`.
 
 ### Radii and elevation
 
 - **Radii:**
   - `rounded-control` (6 px) for controls.
   - `rounded-panel` (10 px) for panels, cards and dialogs.
-  - `rounded-full` for pills, dots and switches.
-- **Known deviation (L3-2):** a bare `rounded` appears 7 times in `charts` and `stage2d`.
-  Each becomes `rounded-control`.
+  - `rounded-full` for pills, dots, switches and line swatches.
+  - There is no bare `rounded`; L3-2 moved the last seven to the tokens.
 - **Elevation:**
   - The page and panels are flat, separated by `ground` vs `surface` and a `ring-line`.
   - Only floating layers cast a shadow: popovers, menus and tooltips use `shadow-lg`;
@@ -140,10 +157,10 @@ Specimen: *Foundations / Data-vis palette*.
 - **Categorical.** Use `--series-1..6` (`@vitavision/charts`, `SERIES_COLOURS`).
   - Each colour is ≥ 3:1 against `surface` and `ground` in its theme.
   - Under the Machado simulations of protanopia, deuteranopia and tritanopia, no two
-    colours are closer than **9.4** (light) or **9.1** (dark) OKLab ΔE×100.
-    - The dark theme is under the 9.4 stated in `charts/src/styles.css`: series 3 and 5
-      under protanopia.
-    - L3-2 either retunes that pair or restates the floor.
+    colours are closer than **9.4** OKLab ΔE×100, in either theme.
+    - L3-2 nudged dark series 3 from `#8ba3ff` to `#7ba8ff`. It had been 9.1 under
+      protanopia.
+    - `charts/src/palette.test.ts` holds both rules.
   - A seventh series reuses a slot and is told apart by its legend text.
 - **Sequential**, for magnitude. Use perceptually uniform maps only:
   - `viridis` is the default on the chrome: residual size, per-cell error, confidence.
@@ -185,15 +202,15 @@ both themes.
 | Role | Colour | For |
 |---|---|---|
 | feature | `#ed9d43` | what was detected or observed: corners, markers, rings, keypoints |
-| model | `#77a2fc` | what the model predicts: reprojections, fitted geometry, predictions |
+| model | `#9dbdff` | what the model predicts: reprojections, fitted geometry, predictions |
 | structure | 55 % white | context: the board outline, grid lines |
-| selection | `#3bc9db` (dark `signal`) | the selected feature, always with a ring |
+| selection | `#2db2d4` (dark `signal`) | the selected feature, always with a ring |
 | label | `#e8ebed` on the halo | ids and indices |
 | halo | `rgba(8, 10, 11, .72)` | under every stroke (+2 px) and label (3 px, `paint-order: stroke`), so a glyph holds on a white or a black image |
 
 - **How `feature` and `model` were chosen:** by an OKLCH search
   (`tools/visual-language/colours.py`).
-  - Under typical vision and each simulated dichromacy, they stay ≥ **7.4** OKLab ΔE×100
+  - Under typical vision and each simulated dichromacy, they stay ≥ **7.3** OKLab ΔE×100
     from each other, from `selection`, from the label white, and from every verdict
     colour.
   - The obvious magenta/cyan pair fails: 1.9 under deuteranopia.
@@ -259,7 +276,7 @@ both themes.
 | Rule | Enforced by |
 |---|---|
 | tokens only, no palette classes or hex literals | G5.1 lint rule, L3-3..n |
-| text contrast ≥ 4.5:1, UI boundaries ≥ 3:1 | unit tests in `ui`, L3-2 |
+| text contrast ≥ 4.5:1, UI boundaries ≥ 3:1, signal vs verdicts under dichromacy | `ui/src/contrast.test.ts` |
 | axe, light and dark | the story harness, today (Foundations included) |
-| series palette ≥ 3:1 and CVD separation | `tools/visual-language/colours.py`; a unit test when L3-2 retunes the palette |
+| series palette ≥ 3:1 and CVD separation | `charts/src/palette.test.ts`; `tools/visual-language/colours.py` prints the numbers |
 | overlay strokes in screen px | `stage2d` view-math unit tests, today; the overlay tokens in L6-2 |

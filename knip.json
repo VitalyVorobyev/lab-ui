@@ -7,14 +7,18 @@
     ".": {
       "entry": [
         "tools/inventory/*.ts",
-        "tools/dod/*.ts"
+        "tools/dod/*.ts",
+        "tools/visual-language/*.ts"
       ],
       "project": [
         "tools/inventory/**/*.ts",
-        "tools/dod/**/*.ts"
+        "tools/dod/**/*.ts",
+        "tools/visual-language/**/*.ts"
       ],
       "ignoreDependencies": [
-        "@arethetypeswrong/cli"
+        "@arethetypeswrong/cli",
+        "@fontsource-variable/ibm-plex-sans",
+        "@ibm/plex-mono"
       ]
     },
     "packages/*": {
@@ -54,9 +58,6 @@
       ],
       "project": [
         "**/*.{ts,tsx,css}"
-      ],
-      "ignoreDependencies": [
-        "@ibm/plex-mono"
       ]
     },
     "tools/bench/*": {

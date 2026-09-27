@@ -28,6 +28,7 @@
       "import": "./dist/index.js"
     },
     "./styles.css": "./src/styles.css",
+    "./fonts.css": "./src/fonts/fonts.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {

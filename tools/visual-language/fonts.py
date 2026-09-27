@@ -1,20 +1,20 @@
-"""Measure the D1 candidate type families, in the builds each would ship with.
+"""Measure the fonts `@vitavision/ui/fonts.css` ships (ADR-0003).
 
 Run: uv run --with fonttools --with brotli python tools/visual-language/fonts.py
-(from the repo root, after `bun install`). Prints a Markdown table.
+Prints a Markdown table. The D1 comparison with Inter + Geist Mono in
+docs/measurements/l3-1-foundations.md was made by this script at 15aad00, before L3-2
+vendored the fonts and dropped the candidates.
 """
 
 from pathlib import Path
 
 from fontTools.ttLib import TTFont
 
-NM = Path("apps/storybook/node_modules")
+FONTS_DIR = Path(__file__).resolve().parents[2] / "packages/ui/src/fonts"
 FONTS = {
-    "IBM Plex Sans (fontsource, variable)": NM / "@fontsource-variable/ibm-plex-sans/files/ibm-plex-sans-latin-wght-normal.woff2",
-    "Inter (inter-ui, variable latin)": NM / "inter-ui/variable-latin/InterVariable-subset.woff2",
-    "IBM Plex Mono 400 (fontsource)": NM / "@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2",
-    "IBM Plex Mono 400 (IBM complete)": NM / "@ibm/plex-mono/fonts/complete/woff2/IBMPlexMono-Regular.woff2",
-    "Geist Mono (fontsource, variable)": NM / "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2",
+    "IBM Plex Sans (variable, latin)": FONTS_DIR / "ibm-plex-sans-latin-wght-normal.woff2",
+    "IBM Plex Mono 400 (IBM, Latin1)": FONTS_DIR / "IBMPlexMono-Regular-Latin1.woff2",
+    "IBM Plex Mono 500 (IBM, Latin1)": FONTS_DIR / "IBMPlexMono-Medium-Latin1.woff2",
 }
 # A line an inspector column actually prints: label, value, unit, count.
 SAMPLE = "Reprojection error 0.184 px, 42 frames, 1736 corners"

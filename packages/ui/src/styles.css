@@ -67,10 +67,11 @@
  * own no-flash script sets `.dark` before first paint (see `theme.ts` and the README), but
  * a failure there should degrade to a readable page rather than black text on black.
  *
- * Contrast (WCAG AA, 4.5:1 for text): `fg-muted` and `fg-subtle` clear it on `ground`,
- * `surface`, `raised` and `overlay`; `signal-fg` on `signal`; and each verdict colour, and
- * `signal`, as text on its own /8–/15 tint over `ground`. That last pair is what sets the
- * light verdict and accent values — change one only with the ratios re-measured.
+ * Every value below is held by `contrast.test.ts` (WCAG 2.2 AA, both themes): text ≥ 4.5:1
+ * on every surface, including each verdict colour and `signal` on its own /12 tint, and the
+ * control boundary `line-strong` and `signal` (focus, checked) ≥ 3:1. `signal` and `normal`
+ * are also kept apart for a tritanope (docs/visual-language.md §1) — the reason the light
+ * accent is a deep slate-teal rather than a brighter one. Change a value only with the tests.
  */
 :root {
   /* Held a little below the panel surface so a card reads as raised off the page without
@@ -80,18 +81,18 @@
   --raised: #f4f6f7;
   --overlay: #ffffff;
   --line: #e3e6e8;
-  --line-strong: #c8cdd1;
+  --line-strong: #878b8f;
   --canvas: #101214;
 
   --fg: #14171a;
   --fg-muted: #5b646d;
   --fg-subtle: #646d74;
 
-  --signal: #0a6b7a;
-  --signal-strong: #085763;
+  --signal: #235159;
+  --signal-strong: #1c3e44;
   --signal-fg: #ffffff;
 
-  --normal: #046e4d;
+  --normal: #086e4c;
   --defect: #b31d1d;
   --warn: #9d4808;
 }
@@ -102,18 +103,18 @@
   --raised: #1b1f23;
   --overlay: #1f242a;
   --line: #23282d;
-  --line-strong: #3a4147;
+  --line-strong: #666e74;
   --canvas: #080a0b;
 
   --fg: #e8ebed;
   --fg-muted: #8b949b;
   --fg-subtle: #838d94;
 
-  --signal: #3bc9db;
-  --signal-strong: #6fdde8;
+  --signal: #2db2d4;
+  --signal-strong: #5fc7e0;
   --signal-fg: #04262c;
 
-  --normal: #34d399;
+  --normal: #2edeac;
   --defect: #f87171;
   --warn: #fbbf24;
 }

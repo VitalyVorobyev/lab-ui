@@ -15,7 +15,7 @@ loud. There is one accent, `signal`, which means "you can act here". The verdict
 | Page | What it settles |
 |---|---|
 | Colour | The semantic tokens by role, and text on every surface |
-| Type family (D1) | The default type pair, IBM Plex vs Inter + Geist Mono, set side by side on the same screen. **Open: the owner decides.** |
+| Type | IBM Plex Sans + IBM Plex Mono (decision D1, ADR-0003) on an instrument screen, and the confusable glyphs |
 | Scales | Seven type roles, the spacing steps, compact vs comfortable density, radii and elevation |
 | Data-vis palette | The categorical series under simulated colour-vision deficiencies; sequential and diverging maps |
 | Overlay grammar | Screen-pixel strokes at any zoom, one glyph per feature kind, role colours, and hover / selected / dimmed |
@@ -23,4 +23,4 @@ loud. There is one accent, `signal`, which means "you can act here". The verdict
 Motion has no page: shared packages use CSS transitions only, at 150 ms, and
 `prefers-reduced-motion` turns them all off (spec §6).
 
-The toolbar's **Type** switch re-renders any story in either D1 candidate.
+Apps load the fonts with `@import "@vitavision/ui/fonts.css";` next to the package stylesheets.

@@ -496,7 +496,7 @@ export function ImageStage({
         data-panning={panning ? "" : undefined}
         data-pan-mode={panMode ? "" : undefined}
         className={cn(
-          "relative h-full w-full overflow-hidden rounded border border-line bg-canvas select-none",
+          "relative h-full w-full overflow-hidden rounded-control border border-line bg-canvas select-none",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-signal",
           panning ? "cursor-grabbing" : panMode ? "cursor-grab" : "cursor-default",
           className,

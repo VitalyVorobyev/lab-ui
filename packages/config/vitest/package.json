@@ -17,7 +17,9 @@
     "index.d.ts",
     "setup.js",
     "stories.js",
-    "stories.d.ts"
+    "stories.d.ts",
+    "colour.js",
+    "colour.d.ts"
   ],
   "exports": {
     ".": {
@@ -27,6 +29,10 @@
     "./stories": {
       "types": "./stories.d.ts",
       "default": "./stories.js"
+    },
+    "./colour": {
+      "types": "./colour.d.ts",
+      "default": "./colour.js"
     },
     "./setup": "./setup.js",
     "./package.json": "./package.json"

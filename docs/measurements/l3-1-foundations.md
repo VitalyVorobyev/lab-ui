@@ -4,7 +4,7 @@ These are the numbers behind `docs/visual-language.md` §2 (D1), §4 and §5.
 
 - **Measured:** 2026-09-27, macOS / Apple M-series, Chromium from Playwright 1.63.
 - **lab-ui:** branch `l3-1-foundations`, on `main` at `1165e4e` (#34).
-- **Reproduce** from the repo root, after `bun install`:
+- **Reproduce** at `15aad00` (L3-2 replaced the candidates with the vendored Plex), from the repo root, after `bun install`:
 
   ```bash
   uv run --with fonttools --with brotli python tools/visual-language/fonts.py

@@ -16,6 +16,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 import { useFieldDescription } from "./Field";
+import { useControlHeight } from "./Input";
 import { cn, focusRingInset } from "./cn";
 
 const UNSET_SENTINEL = "__unset__";
@@ -72,6 +73,8 @@ export function Select({
 }) {
   const [open, setOpen] = useState(false);
   const described = useFieldDescription(ownDescribedBy);
+  // The trigger is a control like any input: 32 px comfortable, 28 px compact.
+  const height = useControlHeight();
 
   return (
     <RadixSelect.Root
@@ -91,7 +94,8 @@ export function Select({
         // order. Focus returns to it on close all the same.
         tabIndex={open ? -1 : undefined}
         className={cn(
-          "flex h-8 w-full items-center justify-between gap-2 rounded-control border border-line-strong bg-raised px-2.5 text-sm text-fg",
+          "flex w-full items-center justify-between gap-2 rounded-control border border-line-strong bg-raised px-2.5 text-sm text-fg",
+          height,
           "transition-colors hover:border-fg-subtle",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "data-[placeholder]:text-fg-subtle",

@@ -241,7 +241,7 @@ export function Legend({ items, className }: LegendProps) {
         <li key={item.label} className="flex items-center gap-1.5">
           <span
             aria-hidden
-            className="inline-block h-0.5 w-4 rounded"
+            className="inline-block h-0.5 w-4 rounded-full"
             style={{ backgroundColor: item.colour }}
           />
           <span className="font-mono text-xs">{item.label}</span>

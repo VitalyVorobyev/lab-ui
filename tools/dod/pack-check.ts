@@ -3,7 +3,7 @@
  *
  *     bun tools/dod/pack-check.ts publint   # 0 errors
  *     bun tools/dod/pack-check.ts attw      # 0 problems (ESM-only profile: no CJS entry by design;
- *                                         #   `styles.css` is Tailwind source, not a module)
+ *                                         #   `styles.css` is Tailwind source and `fonts.css` font faces, not modules)
  *
  * Needs a prior `bun run build`.
  */
@@ -19,7 +19,7 @@ const CONFIGS = readdirSync(join(ROOT, "packages/config")).map((p) => join(ROOT,
 const tool = process.argv[2];
 const commands: Record<string, (dir: string) => string[]> = {
   publint: (dir) => ["publint", "run", dir, "--strict", "--pack", "npm"],
-  attw: (dir) => ["attw", "--pack", dir, "--profile", "esm-only", "--exclude-entrypoints", "styles.css", "--format", "table-flipped"],
+  attw: (dir) => ["attw", "--pack", dir, "--profile", "esm-only", "--exclude-entrypoints", "styles.css", "fonts.css", "--format", "table-flipped"],
 };
 const command = tool ? commands[tool] : undefined;
 if (!command) {
