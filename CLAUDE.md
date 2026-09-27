@@ -19,7 +19,7 @@ bun run check:deps   # PLAN §2 layering rules
 ## Layering (PLAN §2, enforced by `tools/inventory/check-deps.ts`)
 
 - `ui` depends only on Radix, `clsx`, `tailwind-merge`, `lucide-react`. No router, no motion library.
-- `forms`, `charts`, `stage2d` depend on `ui`. `overlays` on `stage2d` (and the WASM packages as optional type-only peers). `three-react` on `three`; `three` never imports React.
+- `forms`, `charts`, `stage2d` depend on `ui`; `workbench` on `ui` and `lucide-react` (ADR-0003). `overlays` on `stage2d` (and the WASM packages as optional type-only peers). `three-react` on `three`; `three` never imports React.
 - `react` / `react-dom` are always peers. No package depends on a router.
 - Every package: ESM only, `exports` with `types`, `sideEffects` limited to CSS.
 - Workspace siblings resolve to their sources via the `@vitavision/source` export condition.

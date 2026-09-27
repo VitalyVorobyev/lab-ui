@@ -58,6 +58,19 @@
     ]
   },
   {
+    "name": "@vitavision/workbench",
+    "path": "packages/workbench/dist/index.js",
+    "import": "*",
+    "limit": "8.54 kB",
+    "ignore": [
+      "@vitavision/ui",
+      "lucide-react",
+      "react",
+      "react-dom",
+      "react/jsx-runtime"
+    ]
+  },
+  {
     "name": "@vitavision/lab-ui",
     "path": "packages/lab-ui/dist/index.js",
     "import": "*",

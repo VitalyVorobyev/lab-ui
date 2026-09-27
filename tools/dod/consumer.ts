@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const PACKAGES = ["ui", "forms", "charts", "stage2d", "lab-ui"];
+const PACKAGES = ["ui", "forms", "charts", "stage2d", "workbench", "lab-ui"];
 const root = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { devDependencies: Record<string, string> };
 
 function run(cmd: string, args: string[], cwd: string): string {
@@ -62,6 +62,7 @@ import { Button, NumberInput, Panel, TooltipProvider, VectorInput } from "@vitav
 import { SchemaForm, describeFields } from "@vitavision/forms";
 import { LineChart } from "@vitavision/charts";
 import { MeasureOverlay } from "@vitavision/stage2d";
+import { PlaybackBar, SplitPane, createPlayhead } from "@vitavision/workbench";
 import * as compat from "@vitavision/lab-ui";
 const fields = describeFields({ properties: { sigma: { type: "number", default: 2 } } });
 const html = renderToString(
@@ -72,9 +73,10 @@ const html = renderToString(
     <SchemaForm fields={fields} values={{}} onChange={() => {}} />
     <LineChart series={[{ label: "a", points: [{ x: 0, y: 0 }, { x: 1, y: 1 }] }]} label="c" />
     <svg><MeasureOverlay nativeWidth={10} nativeHeight={10} primitives={[]} strokeScale={1} /></svg>
+    <SplitPane><div>a</div><PlaybackBar playhead={createPlayhead(10, 0.1)} playing={false} onPlayingChange={() => {}} /></SplitPane>
   </TooltipProvider>,
 );
-if (!html.includes("Go") || !html.includes("data-unit") || typeof compat.ImageStage !== "function") throw new Error("render failed");
+if (!html.includes("Go") || !html.includes("data-unit") || !html.includes('role="separator"') || typeof compat.ImageStage !== "function") throw new Error("render failed");
 console.log("ssr ok", html.length);
 `,
   );
@@ -84,7 +86,7 @@ console.log("ssr ok", html.length);
   writeFileSync(join(app, "index.html"), `<!doctype html><div id="root"></div><script type="module" src="/src/main.tsx"></script>`);
   writeFileSync(
     join(app, "src", "styles.css"),
-    `@import "tailwindcss";\n@import "@vitavision/ui/fonts.css";\n@import "@vitavision/lab-ui/styles.css";\n`,
+    `@import "tailwindcss";\n@import "@vitavision/ui/fonts.css";\n@import "@vitavision/lab-ui/styles.css";\n@import "@vitavision/workbench/styles.css";\n`,
   );
   writeFileSync(join(app, "src", "main.tsx"), `import "./styles.css";\nimport { Button } from "@vitavision/ui";\nexport const b = Button;\n`);
   writeFileSync(
@@ -94,7 +96,8 @@ console.log("ssr ok", html.length);
   run("bunx", ["vite", "build", "--logLevel", "error"], app);
   const css = readdirSync(join(app, "dist", "assets")).find((f) => f.endsWith(".css"))!;
   const text = readFileSync(join(app, "dist", "assets", css), "utf8");
-  for (const cls of [".rounded-control", ".bg-signal", ".text-fg-muted"]) {
+  // `.h-dvh` and `.cursor-col-resize` occur only in workbench (AppShell, SplitPane).
+  for (const cls of [".rounded-control", ".bg-signal", ".text-fg-muted", ".h-dvh", ".cursor-col-resize"]) {
     if (!text.includes(cls)) throw new Error(`generated CSS lacks ${cls}: a package's @source is not reaching Tailwind`);
   }
   // 3. The fonts resolve from the packed package: the build emits the woff2 files.
