@@ -1,7 +1,8 @@
 # lab-ui
 
 The `@vitavision/*` frontend packages — one home for the UI primitives, forms, charts, the 2D
-image stage and (later) calibration overlays and the 3D scene used across the vitavision apps.
+image stage, the building blocks of studio apps and (later) calibration overlays and the 3D
+scene used across the vitavision apps.
 The design direction is an *instrument*: the chrome is grey so the data can be loud.
 
 | Package | What | |
@@ -10,6 +11,7 @@ The design direction is an *instrument*: the chrome is grey so the data can be l
 | [`@vitavision/forms`](packages/forms) | JSON Schema → options form | depends on `ui` |
 | [`@vitavision/charts`](packages/charts) | Histogram, line, bar, line profile, scales | depends on `ui` |
 | [`@vitavision/stage2d`](packages/stage2d) | Image stage: view transform, zoom/pan, layers, measurement | depends on `ui` |
+| [`@vitavision/workbench`](packages/workbench) | Studio-app shell: app frame, split panes, tree view, playback bar and playhead store, file drop, toasts | depends on `ui` |
 | [`@vitavision/lab-ui`](packages/lab-ui) | **Deprecated** re-export of the four, for 0.x consumers | |
 | [`@vitavision/config-ts`](packages/config/ts), [`config-eslint`](packages/config/eslint), [`config-vitest`](packages/config/vitest) | Shared toolchain presets for the apps | |
 
@@ -57,8 +59,11 @@ The Storybook docs site deploys from `main` to GitHub Pages (`.github/workflows/
 
 Deliberately not here:
 
-- **App-shell layout rules.** How an app fills the viewport is that app's decision; a
-  design system should not force every consumer into a fixed-viewport shell.
+- **App-shell layout rules in `ui`.** How a page-shaped app fills the viewport is that app's
+  decision, and `ui` does not force every consumer into a fixed-viewport shell. A *studio* —
+  permanent navigator, viewport, inspector and timeline, nothing scrolling but the panels —
+  takes its frame from the separate `@vitavision/workbench`
+  ([ADR-0003](docs/adrs/0003-workbench-app-shell.md)); an app that scrolls never installs it.
 - **Compiled CSS.** `styles.css` is Tailwind source on purpose — pre-compiling it would
   fix its utilities against *this* package's Tailwind config instead of yours.
 - **API routes and generated types.** `fetchPlane` takes a URL and `SchemaForm` types its

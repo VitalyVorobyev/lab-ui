@@ -28,6 +28,8 @@ const ALLOWED: Record<string, (string | RegExp)[]> = {
   "@vitavision/charts": ["@vitavision/ui"],
   // lucide-react for the toolbar's icons: already in `ui`'s set, so no new third party.
   "@vitavision/stage2d": ["@vitavision/ui", "lucide-react"],
+  // App-shell building blocks (ADR-0003); lucide-react for the transport's icons, as in stage2d.
+  "@vitavision/workbench": ["@vitavision/ui", "lucide-react"],
   "@vitavision/lab-ui": ["@vitavision/ui", "@vitavision/forms", "@vitavision/charts", "@vitavision/stage2d"],
 };
 
