@@ -209,10 +209,14 @@ export const inputClasses: string;
 export type MeasureTone = "signal" | "normal" | "defect" | "warn" | "muted";
 
 // @public
-export function NumberInput(input: Omit<ComponentProps<"input">, "min" | "max"> & {
+export function NumberInput(input: NumberInputProps): JSX.Element;
+
+// @public
+export type NumberInputProps = Omit<ComponentProps<"input">, "min" | "max"> & {
     min?: number | undefined;
     max?: number | undefined;
-}): JSX.Element;
+    unit?: string | undefined;
+};
 
 // @public
 export function PageHeader(input: {
@@ -233,12 +237,38 @@ export function Panel(input: {
 }): JSX.Element;
 
 // @public
+export function PoseInput(input: PoseInputProps): JSX.Element;
+
+// @public
+export interface PoseInputProps {
+    "aria-label"?: string | undefined;
+    className?: string | undefined;
+    disabled?: boolean | undefined;
+    onValueChange?: ((value: PoseValue) => void) | undefined;
+    readOnly?: boolean | undefined;
+    rotationPrecision?: number | undefined;
+    rotationView: RotationView;
+    translationPrecision?: number | undefined;
+    translationUnit?: "m" | "mm" | undefined;
+    value: PoseValue;
+}
+
+// @public
+export interface PoseValue {
+    rotation: Quaternion;
+    translation: Vec3;
+}
+
+// @public
 export function ProgressBar(input: {
     fraction: number;
     label?: string | undefined;
     "aria-label"?: string | undefined;
     className?: string | undefined;
 }): JSX.Element;
+
+// @public
+export type Quaternion = readonly [number, number, number, number];
 
 // @public
 export type ReadoutItem = {
@@ -259,6 +289,13 @@ export function readThemeChoice(storageKey?: string): ThemeChoice;
 
 // @public
 export function resolveTheme(choice: ThemeChoice): "light" | "dark";
+
+// @public
+export interface RotationView {
+    fromEuler: (angles: Vec3) => Quaternion;
+    labels?: readonly [string, string, string] | undefined;
+    toEuler: (rotation: Quaternion) => Vec3;
+}
 
 // @public
 export function Section(input: {
@@ -428,6 +465,28 @@ export function useControlHeight(): string;
 
 // @public
 export function useDensity(): Density;
+
+// @public
+export type Vec3 = readonly [number, number, number];
+
+// @public
+export function VectorInput(input: VectorInputProps): JSX.Element;
+
+// @public
+export interface VectorInputProps {
+    "aria-label": string;
+    className?: string | undefined;
+    disabled?: boolean | undefined;
+    labels?: readonly string[] | undefined;
+    max?: number | undefined;
+    min?: number | undefined;
+    onValueChange?: ((value: number[]) => void) | undefined;
+    precision?: number | undefined;
+    readOnly?: boolean | undefined;
+    step?: number | undefined;
+    unit?: string | undefined;
+    value: readonly number[];
+}
 
 // (No @packageDocumentation comment for this package)
 

@@ -11,7 +11,8 @@ const meta = {
     docs: {
       description: {
         component: `Text entry on the shared control palette and focus treatment: \`Input\` for text,
-\`NumberInput\` for a quantity (mono, tabular figures, the schema's bounds as \`min\`/\`max\`),
+\`NumberInput\` for a quantity (mono, tabular figures, the schema's bounds as \`min\`/\`max\`, and a \`unit\`
+written in the field — see \`ui/NumberInput\`),
 \`Textarea\` for multi-line text.
 
 **Use** them inside a \`Field\`, which supplies the label. The height follows the density in force.

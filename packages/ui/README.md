@@ -124,10 +124,25 @@ keep independent preferences.
 
 **Primitives** — `Badge`, `CountRun`, `StatusDot` · `Button`, `ButtonLink` (a navigation styled as a button — never nest a `Button` in a link), `buttonClasses` · `Dialog`, `ConfirmDialog`,
 `DialogClose` · `Disclosure` · `Callout`, `Empty`, `ErrorBox`, `ProgressBar`, `Skeleton`,
-`SkeletonRows` · `Field` · `Input`, `NumberInput`, `Textarea` · `PageHeader`, `Panel`,
+`SkeletonRows` · `Field` · `Input`, `NumberInput` (with an optional `unit` written in the
+field), `Textarea` · `VectorInput`, `PoseInput` · `PageHeader`, `Panel`,
 `ReadoutStrip`, `Section` · `SegmentedControl` · `Select` · `Slider` · `Table` ·
 `Checkbox`, `Switch` · `ToggleChip` · `InfoHint`, `Tooltip`, `TooltipProvider` ·
 `ThemeToggle` · plus `cn`, `focusRing`, `focusRingInset`.
+
+`PoseInput` edits an SE(3) pose in the wire form `{ rotation: [qx, qy, qz, qw], translation:
+[tx, ty, tz] }` as a translation and roll/pitch/yaw in degrees, but does no rotation
+mathematics: the quaternion ↔ angles conversion — and so what "roll, pitch, yaw" means — is
+passed in as a `RotationView` by the package that owns the frame conventions:
+
+```tsx
+<PoseInput
+  value={camera.world_se3_self}
+  onValueChange={setPose}
+  rotationView={{ toEuler: quatToRpy, fromEuler: rpyToQuat }}
+  translationUnit="mm"
+/>
+```
 
 ### Density
 
