@@ -260,7 +260,9 @@ export interface SensorViewOptions {
     canonical: CanonicalPinhole;
     clip?: readonly [number, number];
     lut: RemapTable;
+    precision?: "byte" | "half";
     samples?: number;
+    taps?: number;
 }
 
 // @public
