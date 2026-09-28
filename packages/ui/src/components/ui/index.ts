@@ -29,6 +29,7 @@ export {
   controlClasses,
   inputClasses,
   useControlHeight,
+  type NumberInputProps,
 } from "./Input";
 export {
   PageHeader,
@@ -38,6 +39,14 @@ export {
   Section,
   type ReadoutItem,
 } from "./Panel";
+export {
+  PoseInput,
+  type PoseInputProps,
+  type PoseValue,
+  type Quaternion,
+  type RotationView,
+  type Vec3,
+} from "./PoseInput";
 export { SegmentedControl } from "./SegmentedControl";
 export { Select, type SelectOption } from "./Select";
 export { Slider } from "./Slider";
@@ -45,3 +54,4 @@ export { Table, type Column } from "./Table";
 export { Checkbox, Switch } from "./Toggle";
 export { ToggleChip } from "./ToggleChip";
 export { InfoHint, Tooltip, TooltipProvider } from "./Tooltip";
+export { VectorInput, type VectorInputProps } from "./VectorInput";

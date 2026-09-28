@@ -1,6 +1,7 @@
 /**
  * The compatibility promise, as a test: `@vitavision/lab-ui` still exports every runtime
- * value 0.5.0 did — and nothing else — now that the code lives in four packages.
+ * value 0.5.0 did — and nothing else but the values listed as added after the freeze — now
+ * that the code lives in four packages.
  *
  * `SURFACE_0_5` was read from the published 0.5.0 declarations (value exports only; the
  * type exports were compared once, by name, when the split landed: 171 of 171).
@@ -141,8 +142,16 @@ const SURFACE_0_5 = [
   "zoomAt",
 ];
 
+/*
+ * Values the four packages gained after the freeze at 0.6.0. The compat package re-exports
+ * with `export *`, so they reach it in the workspace too; it is private and no longer
+ * published, so no consumer of the frozen 0.6.0 sees them. Listed so this test stays an
+ * exact check: a value that appears or disappears unannounced still fails it.
+ */
+const ADDED_AFTER_FREEZE = ["PoseInput", "VectorInput"];
+
 describe("@vitavision/lab-ui compatibility surface", () => {
-  it("exports exactly the 0.5.0 runtime values", () => {
-    expect(Object.keys(labUi).sort()).toEqual(SURFACE_0_5);
+  it("exports exactly the 0.5.0 runtime values, plus those added after the freeze", () => {
+    expect(Object.keys(labUi).sort()).toEqual([...SURFACE_0_5, ...ADDED_AFTER_FREEZE].sort());
   });
 });
