@@ -1,6 +1,6 @@
 {
   "name": "@vitavision/forms",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "JSON Schema (draft 2020-12, schemars output) rendered as a vitavision options form.",
   "license": "MIT OR Apache-2.0",
   "repository": {
