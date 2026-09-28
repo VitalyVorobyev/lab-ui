@@ -48,7 +48,7 @@ jobs:
 
       - name: Verify each package's entry points exist
         run: |
-          for p in ui forms charts stage2d lab-ui three three-react; do
+          for p in ui forms charts stage2d workbench three three-react lab-ui; do
             test -f "packages/$p/dist/index.js"
             test -f "packages/$p/dist/index.d.ts"
           done

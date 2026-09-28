@@ -44,6 +44,7 @@
         "@vitavision/forms": "workspace:*",
         "@vitavision/stage2d": "workspace:*",
         "@vitavision/ui": "workspace:*",
+        "@vitavision/workbench": "workspace:*",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
       },
@@ -219,6 +220,22 @@
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
         "tailwindcss": "^4.3.0",
+      },
+    },
+    "packages/workbench": {
+      "name": "@vitavision/workbench",
+      "version": "0.0.0",
+      "dependencies": {
+        "@vitavision/ui": "workspace:^",
+        "lucide-react": "^1.48.0",
+      },
+      "devDependencies": {
+        "@storybook/react-vite": "10.6.0",
+        "storybook": "10.6.0",
+      },
+      "peerDependencies": {
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
       },
     },
     "tools/bench/stage2d": {
@@ -834,6 +851,8 @@
     "@vitavision/three-react": ["@vitavision/three-react@workspace:packages/three-react"],
 
     "@vitavision/ui": ["@vitavision/ui@workspace:packages/ui"],
+
+    "@vitavision/workbench": ["@vitavision/workbench@workspace:packages/workbench"],
 
     "@vitejs/plugin-react": ["@vitejs/plugin-react@6.1.1", "", { "dependencies": { "@rolldown/pluginutils": "^1.0.1" }, "peerDependencies": { "@rolldown/plugin-babel": "^0.1.7 || ^0.2.0", "babel-plugin-react-compiler": "^1.0.0", "oxc-transform-react": "^0.145.0", "vite": "^8.0.0" }, "optionalPeers": ["@rolldown/plugin-babel", "babel-plugin-react-compiler", "oxc-transform-react"] }, "sha512-yxLaQV9gkhS8ezJqCM6+ndU7mDY6gqAg75NQ+0IjwEI8IYOmQCgkRwHKVSfWXW076DsqMo0Dk+0FK1U+M5RgFw=="],
 

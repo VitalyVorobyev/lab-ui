@@ -67,6 +67,7 @@ lab-ui/                                  bun workspace · changesets · one CI
 │   ├── forms/         @vitavision/forms        JSON Schema (draft 2020-12, schemars output) → form
 │   ├── charts/        @vitavision/charts       Histogram, Line, LineProfile, Bar, scales
 │   ├── stage2d/       @vitavision/stage2d      view transform, zoom/pan, layered overlays, hit-test, measure
+│   ├── workbench/     @vitavision/workbench    studio-app shell: split panes, tree, playback, file drop, toasts (ADR-0003)
 │   ├── overlays/      @vitavision/overlays     calib-target / feature overlays on stage2d
 │   ├── three/         @vitavision/three        framework-agnostic 3D (spec: etendue PLAN §2–§4, P2-2)
 │   ├── three-react/   @vitavision/three-react  thin R3F bindings (etendue PLAN P2-3)
@@ -82,7 +83,8 @@ lab-ui/                                  bun workspace · changesets · one CI
 
 - `ui` depends only on Radix, `clsx`, `tailwind-merge`, and `lucide-react`. It has **no
   router and no motion library**.
-- `forms` and `charts` depend on `ui`. `stage2d` depends on `ui`. `overlays` depends on
+- `forms` and `charts` depend on `ui`. `stage2d` depends on `ui`. `workbench` depends on `ui`
+  and `lucide-react` (ADR-0003). `overlays` depends on
   `stage2d`, and on `@vitavision/{calib-targets,chess-corners,ringgrid,radsym}` as
   **optional peers used for types only**.
 - `three-react` depends on `three`, and `three` never imports React.
@@ -323,6 +325,19 @@ vitavision. The last is last because of SSR and the router.
   (etendue `docs/measurements/g2_2_perf.md`: p95 frame interval 7.8 ms). The P2-4
   extraction proof is a calibration-rs branch and remains open; per etendue PLAN §7 the web
   packages publish only after it.
+
+### W — Studio building blocks (ADR-0003)
+
+- **W-1 — `@vitavision/workbench`.** Repo: lab-ui. Files: `packages/workbench/`,
+  `docs/adrs/0003-workbench-app-shell.md`. The building blocks of a studio app: `AppShell`,
+  `SplitPane`, `TreeView`, `PlaybackBar` with its external playhead store
+  (`createPlayhead`, `usePlayhead`, `usePlaybackClock`), `FileDrop`, and `Toaster`/`toast()`.
+  User decision 2026-09-27: shared studio UI and one visual language across the studio apps.
+  Incubated in etendue (`web/packages/workbench`, etendue PLAN P2-6) to the §4 DoD and moved
+  here by PR. First consumer: etendue studio. Expected second: calibration-rs
+  `calibration-diagnose`. Done when §4 holds for the package, it is published at 0.1.0 (its
+  npm trusted publisher registered first, ADR-0001), and etendue studio consumes the
+  published version.
 
 ### L9 — Close-out
 

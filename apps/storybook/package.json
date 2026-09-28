@@ -15,6 +15,7 @@
     "@vitavision/forms": "workspace:*",
     "@vitavision/stage2d": "workspace:*",
     "@vitavision/ui": "workspace:*",
+    "@vitavision/workbench": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
