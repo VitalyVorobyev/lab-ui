@@ -82,6 +82,9 @@ export {
   type SegmentPrimitive,
 } from "./components/MeasureOverlay";
 
+export { ContourEditor, nearestContourSegment, type ContourEditorProps } from "./components/ContourEditor";
+export { MaskEditor, paintMask, type MaskEditorProps } from "./components/MaskEditor";
+
 export {
   arcPath,
   arrowHeadPoints,

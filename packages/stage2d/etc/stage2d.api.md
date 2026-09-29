@@ -90,6 +90,19 @@ export function contentUnder(view: View, pointer: {
 } | null;
 
 // @public
+export function ContourEditor(input: ContourEditorProps): JSX.Element;
+
+// @public
+export interface ContourEditorProps {
+    editable?: boolean;
+    label?: string;
+    onChange: (points: Point[]) => void;
+    onCommit?: () => void;
+    points: Point[];
+    stroke?: string;
+}
+
+// @public
 export function crossSegments(x: number, y: number, size: number): [[Point, Point], [Point, Point]];
 
 // @public
@@ -182,6 +195,21 @@ export function insideImage(p: Point, image: Box): boolean;
 export function isFit(view: StageView, box: Box, image: Box): boolean;
 
 // @public
+export function MaskEditor(input: MaskEditorProps): JSX.Element;
+
+// @public
+export interface MaskEditorProps {
+    brushRadius?: number;
+    color?: readonly [number, number, number, number];
+    editable?: boolean;
+    label?: string;
+    mask: Uint8Array;
+    mode?: "paint" | "erase";
+    onChange: (mask: Uint8Array) => void;
+    onCommit?: () => void;
+}
+
+// @public
 export const MAX_SCALE = 32;
 
 // @public
@@ -210,6 +238,12 @@ export const MIN_ZOOM = 1;
 
 // @public
 export function nativeZoomFor(sourceWidth: number, boxWidth: number): number;
+
+// @public
+export function nearestContourSegment(points: Point[], point: Point): number;
+
+// @public
+export function paintMask(mask: Uint8Array, width: number, height: number, from: Point, to: Point, radius: number, value: 0 | 1): Uint8Array;
 
 // @public
 export const PIXEL_CENTRE = 0.5;

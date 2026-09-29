@@ -4,10 +4,226 @@
 
 ```ts
 
+import { arcPath } from '@vitavision/stage2d';
+import { ArcPrimitive } from '@vitavision/stage2d';
+import { arrowHeadPoints } from '@vitavision/stage2d';
+import { Box } from '@vitavision/stage2d';
+import { caliperArrow } from '@vitavision/stage2d';
+import { caliperCorners } from '@vitavision/stage2d';
+import { CaliperPrimitive } from '@vitavision/stage2d';
+import { CirclePrimitive } from '@vitavision/stage2d';
+import { ClampOptions } from '@vitavision/stage2d';
+import { clampView } from '@vitavision/stage2d';
+import { contentUnder } from '@vitavision/stage2d';
+import { crossSegments } from '@vitavision/stage2d';
+import { decodePlane } from '@vitavision/stage2d';
+import { DimensionGeometry } from '@vitavision/stage2d';
+import { dimensionGeometry } from '@vitavision/stage2d';
+import { DimensionPrimitive } from '@vitavision/stage2d';
+import { fetchPlane } from '@vitavision/stage2d';
+import { fitScale } from '@vitavision/stage2d';
+import { fitView } from '@vitavision/stage2d';
+import { formatScale } from '@vitavision/stage2d';
+import { fractionOf } from '@vitavision/stage2d';
+import { frameRect } from '@vitavision/stage2d';
+import { FULL_TIER_ZOOM } from '@vitavision/stage2d';
+import { imageLengthFor } from '@vitavision/stage2d';
+import { ImageStage } from '@vitavision/stage2d';
+import { ImageStageProps } from '@vitavision/stage2d';
+import { imageViewBox } from '@vitavision/stage2d';
+import { initialView } from '@vitavision/stage2d';
+import { insideImage } from '@vitavision/stage2d';
+import { isFit } from '@vitavision/stage2d';
+import { MAX_SCALE } from '@vitavision/stage2d';
+import { MAX_ZOOM } from '@vitavision/stage2d';
+import { MeasureOverlay } from '@vitavision/stage2d';
+import { MeasureOverlayProps } from '@vitavision/stage2d';
+import { MeasurePrimitive } from '@vitavision/stage2d';
+import { MIN_SCALE_VS_FIT } from '@vitavision/stage2d';
+import { MIN_ZOOM } from '@vitavision/stage2d';
+import { nativeZoomFor } from '@vitavision/stage2d';
+import { PIXEL_CENTRE } from '@vitavision/stage2d';
+import { PlaneFormatError } from '@vitavision/stage2d';
+import { Point } from '@vitavision/stage2d';
+import { PointPrimitive } from '@vitavision/stage2d';
+import { polygonPath } from '@vitavision/stage2d';
+import { preserveCenter } from '@vitavision/stage2d';
+import { Rect } from '@vitavision/stage2d';
+import { RESET_VIEW } from '@vitavision/stage2d';
+import { rotatePoint } from '@vitavision/stage2d';
+import { scaleRange } from '@vitavision/stage2d';
+import { SegmentPrimitive } from '@vitavision/stage2d';
+import { StageButton } from '@vitavision/stage2d';
+import { StageButtonProps } from '@vitavision/stage2d';
+import { StageContext } from '@vitavision/stage2d';
+import { StageReadout } from '@vitavision/stage2d';
+import { StageReadoutProps } from '@vitavision/stage2d';
+import { StageToolbar } from '@vitavision/stage2d';
+import { StageToolbarDivider } from '@vitavision/stage2d';
+import { StageToolbarDividerProps } from '@vitavision/stage2d';
+import { StageToolbarProps } from '@vitavision/stage2d';
+import { StageView } from '@vitavision/stage2d';
+import { steppedScale } from '@vitavision/stage2d';
+import { strokeWidthFor } from '@vitavision/stage2d';
+import { toImage } from '@vitavision/stage2d';
+import { toScreen } from '@vitavision/stage2d';
+import { useStage } from '@vitavision/stage2d';
+import { valueAt } from '@vitavision/stage2d';
+import { ValuePlane } from '@vitavision/stage2d';
+import { valuesAt } from '@vitavision/stage2d';
+import { View } from '@vitavision/stage2d';
+import { zoomAbout } from '@vitavision/stage2d';
+import { zoomAt } from '@vitavision/stage2d';
+import { ZoomPanCanvas } from '@vitavision/stage2d';
+import { ZoomPanCanvasProps } from '@vitavision/stage2d';
+
+export { arcPath }
+
+export { ArcPrimitive }
+
+export { arrowHeadPoints }
+
+export { Box }
+
+export { caliperArrow }
+
+export { caliperCorners }
+
+export { CaliperPrimitive }
+
+export { CirclePrimitive }
+
+export { ClampOptions }
+
+export { clampView }
+
+export { contentUnder }
+
+export { crossSegments }
+
+export { decodePlane }
+
+export { DimensionGeometry }
+
+export { dimensionGeometry }
+
+export { DimensionPrimitive }
+
+export { fetchPlane }
+
+export { fitScale }
+
+export { fitView }
+
+export { formatScale }
+
+export { fractionOf }
+
+export { frameRect }
+
+export { FULL_TIER_ZOOM }
+
+export { imageLengthFor }
+
+export { ImageStage }
+
+export { ImageStageProps }
+
+export { imageViewBox }
+
+export { initialView }
+
+export { insideImage }
+
+export { isFit }
+
+export { MAX_SCALE }
+
+export { MAX_ZOOM }
+
+export { MeasureOverlay }
+
+export { MeasureOverlayProps }
+
+export { MeasurePrimitive }
+
+export { MIN_SCALE_VS_FIT }
+
+export { MIN_ZOOM }
+
+export { nativeZoomFor }
+
+export { PIXEL_CENTRE }
+
+export { PlaneFormatError }
+
+export { Point }
+
+export { PointPrimitive }
+
+export { polygonPath }
+
+export { preserveCenter }
+
+export { Rect }
+
+export { RESET_VIEW }
+
+export { rotatePoint }
+
+export { scaleRange }
+
+export { SegmentPrimitive }
+
+export { StageButton }
+
+export { StageButtonProps }
+
+export { StageContext }
+
+export { StageReadout }
+
+export { StageReadoutProps }
+
+export { StageToolbar }
+
+export { StageToolbarDivider }
+
+export { StageToolbarDividerProps }
+
+export { StageToolbarProps }
+
+export { StageView }
+
+export { steppedScale }
+
+export { strokeWidthFor }
+
+export { toImage }
+
+export { toScreen }
+
+export { useStage }
+
+export { valueAt }
+
+export { ValuePlane }
+
+export { valuesAt }
+
+export { View }
+
+export { zoomAbout }
+
+export { zoomAt }
+
+export { ZoomPanCanvas }
+
+export { ZoomPanCanvasProps }
+
 
 export * from "@vitavision/charts";
 export * from "@vitavision/forms";
-export * from "@vitavision/stage2d";
 export * from "@vitavision/ui";
 
 // (No @packageDocumentation comment for this package)
