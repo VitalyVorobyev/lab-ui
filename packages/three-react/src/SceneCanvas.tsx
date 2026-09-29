@@ -97,7 +97,12 @@ function OrbitControls({ target }: { target: readonly [number, number, number] }
     controls.target.copy(new Vector3(tx, ty, tz));
     controls.update();
   }, [controls, tx, ty, tz]);
-  useEffect(() => () => controls.dispose(), [controls]);
+  useEffect(() => {
+    // StrictMode runs the cleanup and then this effect again on the same memoised controls,
+    // and `dispose()` removes their listeners: reconnect (a no-op when already connected).
+    controls.connect(element);
+    return () => controls.dispose();
+  }, [controls, element]);
   useFrame(() => controls.update());
   return null;
 }

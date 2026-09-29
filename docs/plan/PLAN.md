@@ -323,8 +323,9 @@ vitavision. The last is last because of SSR and the router.
   incubated in etendue (`web/packages/three{,-react}`, etendue `docs/pivot/PLAN.md`
   P2-2/P2-3) and moved here unchanged apart from the §4 fixes the PR lists. G2.2 passed there
   (etendue `docs/measurements/g2_2_perf.md`: p95 frame interval 7.8 ms). The P2-4
-  extraction proof is a calibration-rs branch and remains open; per etendue PLAN §7 the web
-  packages publish only after it.
+  extraction proof is a calibration-rs branch and remains open. Etendue PLAN §7 had the web
+  packages publish only after it; user decision 2026-09-29: publish them now (0.1.0), ahead
+  of P2-4.
 
 ### W — Studio building blocks (ADR-0003)
 

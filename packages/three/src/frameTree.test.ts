@@ -43,6 +43,11 @@ describe("FrameTreeRuntime", () => {
     expect(worldPos(r, "robot/tool0")).toBe(3);
     expect(r.apply(-5)).toBe(0);
     expect(r.apply(0)).toBe(0);
+    r.apply(1);
+    expect(r.apply(Number.NaN)).toBe(1);
+    expect(r.apply(Number.POSITIVE_INFINITY)).toBe(1);
+    expect(r.current).toBe(1);
+    expect(worldPos(r, "robot/tool0")).toBe(2);
   });
 
   it("reads a frame's pose at any sample", () => {
@@ -51,6 +56,8 @@ describe("FrameTreeRuntime", () => {
     expect(r.pose("robot/tool0")!.translation[0]).toBe(1);
     expect(r.pose("nope")).toBeUndefined();
     expect(r.pose("world", 7)).toBeUndefined();
+    expect(r.pose("robot/tool0", 1.6)).toEqual(r.pose("robot/tool0", 2));
+    expect(r.pose("robot/tool0", Number.NaN)).toBeUndefined();
   });
 
   it("rejects malformed scenarios", () => {

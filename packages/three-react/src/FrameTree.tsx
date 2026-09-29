@@ -1,6 +1,6 @@
-import { createPortal, useFrame } from "@react-three/fiber";
+import { type ComputeFunction, createPortal, useFrame, useThree } from "@react-three/fiber";
 import { type BakedScenarioLike, FrameTreeRuntime } from "@vitavision/three";
-import { createContext, type ReactNode, use, useEffect, useMemo } from "react";
+import { createContext, type ReactNode, use, useEffect, useMemo, useRef } from "react";
 
 const RuntimeContext = createContext<FrameTreeRuntime | null>(null);
 
@@ -28,9 +28,14 @@ export interface FrameTreeProps {
  */
 export function FrameTree({ baked, playhead, onRuntime, children }: FrameTreeProps) {
   const runtime = useMemo(() => new FrameTreeRuntime(baked), [baked]);
+  // Held in a ref so an inline callback is called once per runtime, not on every render.
+  const onRuntimeRef = useRef(onRuntime);
   useEffect(() => {
-    onRuntime?.(runtime);
-  }, [runtime, onRuntime]);
+    onRuntimeRef.current = onRuntime;
+  }, [onRuntime]);
+  useEffect(() => {
+    onRuntimeRef.current?.(runtime);
+  }, [runtime]);
   useFrame(() => {
     if (playhead) runtime.apply(playhead.get());
   });
@@ -63,5 +68,20 @@ export interface AtFrameProps {
  */
 export function AtFrame({ name, children }: AtFrameProps) {
   const frame = useFrameTree().frame(name);
-  return frame ? createPortal(children, frame) : null;
+  // A portal raycasts its objects with a raycaster of its own, on layer 0 only: give it the
+  // enclosing one's layers on every event, so gizmos in a frame are picked on the layers the
+  // viewport enables (`GIZMO_LAYER` in `SceneCanvas`).
+  const compute = useThree((s) => s.events.compute);
+  const portalState = useMemo(
+    () => ({
+      events: {
+        compute: ((event, state, previous) => {
+          compute?.(event, state, previous);
+          if (previous) state.raycaster.layers.mask = previous.raycaster.layers.mask;
+        }) satisfies ComputeFunction,
+      },
+    }),
+    [compute],
+  );
+  return frame ? createPortal(children, frame, portalState) : null;
 }

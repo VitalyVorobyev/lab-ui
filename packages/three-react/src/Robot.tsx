@@ -19,9 +19,9 @@ export interface RobotProps {
   id: string;
   /** The manifest's `visuals`. */
   visuals: readonly RobotVisual[];
-  /** Maps a manifest-relative mesh path to a URL. */
+  /** Maps a manifest-relative mesh path to a URL. Read when the meshes load (a new `visuals`). */
   resolve: (meshPath: string) => string;
-  /** Mesh loader (default: glTF). */
+  /** Mesh loader (default: glTF). Read when the meshes load (a new `visuals`). */
   loader?: MeshLoader;
   /** Links to draw axes for, e.g. the TCP; links whose mesh failed get axes too. */
   axes?: readonly string[];
@@ -41,15 +41,21 @@ export function Robot({ id, visuals, resolve, loader, axes = [], onLoaded }: Rob
     failed: [],
   });
   const onLoadedRef = useRef(onLoaded);
+  // Inline `resolve`/`loader` (and a re-created but equal `visuals`) must not re-fetch and
+  // re-attach every mesh on each parent render: load by the visuals' content.
+  const sourceRef = useRef({ resolve, loader });
   useEffect(() => {
     onLoadedRef.current = onLoaded;
-  }, [onLoaded]);
+    sourceRef.current = { resolve, loader };
+  }, [onLoaded, resolve, loader]);
+  const visualsKey = JSON.stringify(visuals);
 
   useEffect(() => {
     let cancelled = false;
     let meshes: Map<string, Object3D> | undefined;
     let material: MeshStandardMaterial | undefined;
-    void loadRobotVisuals(visuals, resolve, loader).then((result) => {
+    const { resolve: resolveUrl, loader: meshLoader } = sourceRef.current;
+    void loadRobotVisuals(JSON.parse(visualsKey) as RobotVisual[], resolveUrl, meshLoader).then((result) => {
       if (cancelled) {
         for (const m of result.meshes.values()) disposeObject(m);
         return;
@@ -69,7 +75,7 @@ export function Robot({ id, visuals, resolve, loader, axes = [], onLoaded }: Rob
       }
       material?.dispose();
     };
-  }, [runtime, id, visuals, resolve, loader]);
+  }, [runtime, id, visualsKey]);
 
   useEffect(() => {
     state.material?.color.set(colors.muted);

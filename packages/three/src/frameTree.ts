@@ -124,9 +124,11 @@ export class FrameTreeRuntime {
 
   /**
    * Pose every frame at sample `k` (rounded and clamped to the valid range). Cheap when `k` is
-   * already applied. Returns the sample index applied.
+   * already applied. A non-finite `k` (e.g. a playhead before its duration is known) changes
+   * nothing. Returns the sample index applied.
    */
   apply(k: number): number {
+    if (!Number.isFinite(k)) return this.#current;
     const index = Math.min(this.sampleCount - 1, Math.max(0, Math.round(k)));
     if (index === this.#current) return index;
     const n = this.frameNames.length;
@@ -139,11 +141,15 @@ export class FrameTreeRuntime {
     return index;
   }
 
-  /** `world_se3_frame` of frame `name` at sample `k` (default: the current one). */
+  /**
+   * `world_se3_frame` of frame `name` at sample `k` (default: the current one), rounded to the
+   * nearest sample. `undefined` for an unknown frame or a sample outside the scenario.
+   */
   pose(name: string, k = this.#current): Iso3 | undefined {
     const f = this.frameNames.indexOf(name);
-    if (f < 0 || k < 0 || k >= this.sampleCount) return undefined;
-    this.#read(k, f, this.frameNames.length);
+    const index = Math.round(k);
+    if (f < 0 || !(index >= 0 && index < this.sampleCount)) return undefined;
+    this.#read(index, f, this.frameNames.length);
     const { rotation: r, translation: t } = this.#wire;
     return { rotation: [r[0]!, r[1]!, r[2]!, r[3]!], translation: [t[0]!, t[1]!, t[2]!] };
   }

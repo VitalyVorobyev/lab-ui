@@ -8,7 +8,7 @@ import {
   TargetBoard as TargetBoardObject,
   disposeObject,
 } from "@vitavision/three";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Object3D } from "three";
 
 import { useSceneColors } from "./colors";
@@ -21,7 +21,18 @@ function useDisposed<T extends Object3D>(object: T): T {
   return object;
 }
 
-function pick(onSelect: (() => void) | undefined) {
+function usePick(onSelect: (() => void) | undefined) {
+  const hoveredRef = useRef(false);
+  const pickable = onSelect !== undefined;
+  // `onPointerOut` never fires when the object unmounts or stops being pickable under the
+  // pointer: restore the cursor then.
+  useEffect(
+    () => () => {
+      if (hoveredRef.current) document.body.style.cursor = "";
+      hoveredRef.current = false;
+    },
+    [pickable],
+  );
   if (!onSelect) return {};
   return {
     onClick: (e: ThreeEvent<MouseEvent>) => {
@@ -30,9 +41,11 @@ function pick(onSelect: (() => void) | undefined) {
     },
     onPointerOver: (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
+      hoveredRef.current = true;
       document.body.style.cursor = "pointer";
     },
     onPointerOut: () => {
+      hoveredRef.current = false;
       document.body.style.cursor = "";
     },
   };
@@ -59,6 +72,7 @@ export interface CameraFrustumProps {
 /** A camera's field of view, in the camera frame (place it with `AtFrame`). */
 export function CameraFrustum({ borderRays, depth, active = false, pickPadding, onSelect }: CameraFrustumProps) {
   const colors = useSceneColors();
+  const picking = usePick(onSelect);
   const object = useDisposed(
     useMemo(
       () =>
@@ -75,7 +89,7 @@ export function CameraFrustum({ borderRays, depth, active = false, pickPadding, 
     object.setActive(active);
     object.setColor(active ? colors.signal : colors.muted);
   }, [object, active, colors.signal, colors.muted]);
-  return <primitive object={object} {...pick(onSelect)} />;
+  return <primitive object={object} {...picking} />;
 }
 
 /** Props of {@link LaserFan}. */
@@ -93,12 +107,13 @@ export interface LaserFanProps {
 /** A line laser's light sheet, in the laser frame. Drawn in the `defect` (red) token. */
 export function LaserFan({ halfAngle, length, active = false, onSelect }: LaserFanProps) {
   const colors = useSceneColors();
+  const picking = usePick(onSelect);
   const object = useDisposed(useMemo(() => new LaserFanObject({ halfAngle, length, color: UNSET }), [halfAngle, length]));
   useEffect(() => {
     object.setColor(colors.defect);
     object.setActive(active);
   }, [object, active, colors.defect]);
-  return <primitive object={object} {...pick(onSelect)} />;
+  return <primitive object={object} {...picking} />;
 }
 
 /** Props of {@link TargetBoard}. */
@@ -118,6 +133,7 @@ export interface TargetBoardProps {
 /** A planar target in the target frame (z = 0, facing +Z). */
 export function TargetBoard({ width, height, checker, active = false, onSelect }: TargetBoardProps) {
   const colors = useSceneColors();
+  const picking = usePick(onSelect);
   const cols = checker?.cols;
   const rows = checker?.rows;
   const object = useDisposed(
@@ -137,7 +153,7 @@ export function TargetBoard({ width, height, checker, active = false, onSelect }
     object.setColors(colors.surface, active ? colors.signal : colors.fg);
     object.setActive(active);
   }, [object, active, colors]);
-  return <primitive object={object} {...pick(onSelect)} />;
+  return <primitive object={object} {...picking} />;
 }
 
 /** Props of {@link LightGizmo}. */
@@ -153,10 +169,11 @@ export interface LightGizmoProps {
 /** A light's wireframe symbol, in the light frame. Drawn in the `warn` token. */
 export function LightGizmo({ shape, size = 0.05, onSelect }: LightGizmoProps) {
   const colors = useSceneColors();
+  const picking = usePick(onSelect);
   const key = JSON.stringify(shape);
   const object = useDisposed(useMemo(() => new LightGizmoObject(JSON.parse(key) as LightShapeLike, UNSET, size), [key, size]));
   useEffect(() => object.setColor(colors.warn), [object, colors.warn]);
-  return <primitive object={object} {...pick(onSelect)} />;
+  return <primitive object={object} {...picking} />;
 }
 
 /** Props of {@link FrameAxes}. */
