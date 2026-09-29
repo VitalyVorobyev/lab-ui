@@ -1,6 +1,6 @@
 {
   "name": "@vitavision/stage2d",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "The vitavision 2D image stage: view transform, zoom/pan, layered overlays, measurement.",
   "license": "MIT OR Apache-2.0",
   "repository": {

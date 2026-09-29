@@ -1,5 +1,16 @@
 # @vitavision/stage2d
 
+## 0.7.0
+
+### Minor Changes
+
+- 98411e2: Add reusable contour and binary-mask editing layers for ImageStage. Contour vertices support pointer dragging and keyboard edits; masks support bounded paint/erase strokes in source-image coordinates.
+
+### Patch Changes
+
+- Updated dependencies [a019b87]
+  - @vitavision/ui@0.8.0
+
 ## 0.6.1
 
 ### Patch Changes
