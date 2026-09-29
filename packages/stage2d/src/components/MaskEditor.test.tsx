@@ -52,13 +52,46 @@ describe("MaskEditor", () => {
     const { getByRole, rerender } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={onChange} onCommit={onCommit} editable brushRadius={0.5} /></ImageStage>);
     fireEvent.keyDown(getByRole("button", { name: "Mask brush" }), { key: "ArrowRight" });
     fireEvent.keyDown(getByRole("button", { name: "Mask brush" }), { key: "Enter" });
-    expect(onChange.mock.lastCall?.[0][1]).toBe(1);
+    // The keyboard brush starts at the image centre (4, 4).
+    expect(onChange.mock.lastCall?.[0][37]).toBe(1);
     rerender(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={onChange.mock.lastCall![0]} onChange={onChange} onCommit={onCommit} editable mode="erase" brushRadius={0.5} /></ImageStage>);
     fireEvent.keyDown(getByRole("button", { name: "Mask brush" }), { key: "Enter" });
-    expect(onChange.mock.lastCall?.[0][1]).toBe(0);
+    expect(onChange.mock.lastCall?.[0][37]).toBe(0);
     expect(onCommit).toHaveBeenCalledTimes(2);
     rerender(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={onChange} /></ImageStage>);
     expect(getByRole("img", { name: "Mask brush" })).toBeTruthy();
+  });
+
+  it("draws the keyboard brush where Enter will paint, and hides it on blur", () => {
+    const { container, getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable brushRadius={2} /></ImageStage>);
+    const canvas = getByRole("button", { name: "Mask brush" });
+    fireEvent.focus(canvas);
+    fireEvent.keyDown(canvas, { key: "ArrowUp" });
+    const ring = container.querySelector("svg[aria-hidden] circle");
+    expect([ring?.getAttribute("cx"), ring?.getAttribute("cy"), ring?.getAttribute("r")]).toEqual(["4", "3", "2"]);
+    fireEvent.blur(canvas);
+    expect(container.querySelector("svg[aria-hidden] circle")).toBeNull();
+  });
+
+  it("starts each stroke from the caller's mask, so a rejected edit is dropped", () => {
+    const onChange = vi.fn<(mask: Uint8Array) => void>();
+    const { getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={onChange} editable brushRadius={0.5} /></ImageStage>);
+    const canvas = getByRole("button", { name: "Mask brush" });
+    canvas.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(canvas, { button: 0, pointerId: 1, clientX: 0.5, clientY: 0.5 });
+    fireEvent.pointerUp(canvas, { pointerId: 1 });
+    fireEvent.pointerDown(canvas, { button: 0, pointerId: 1, clientX: 6.5, clientY: 6.5 });
+    fireEvent.pointerUp(canvas, { pointerId: 1 });
+    const last = onChange.mock.lastCall![0];
+    expect(last[0]).toBe(0);
+    expect(last[54]).toBe(1);
+  });
+
+  it("keeps double-clicks from reaching the stage while editing", () => {
+    const outer = vi.fn();
+    const { getByRole } = render(<div onDoubleClick={outer}><ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable /></ImageStage></div>);
+    fireEvent.doubleClick(getByRole("button", { name: "Mask brush" }));
+    expect(outer).not.toHaveBeenCalled();
   });
 
   it("defers to pan mode", () => {

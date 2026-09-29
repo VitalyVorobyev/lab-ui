@@ -65,6 +65,30 @@ describe("ContourEditor", () => {
     expect(onCommit).toHaveBeenCalledOnce();
   });
 
+  it("commits only edits that change the contour", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const onCommit = vi.fn();
+    const edge = [{ x: 0, y: 0 }, { x: 8, y: 2 }, { x: 8, y: 8 }];
+    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={edge} onChange={onChange} onCommit={onCommit} editable /></ImageStage>);
+    const handle = getByRole("button", { name: "Contour point 1" });
+    handle.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 2 });
+    fireEvent.pointerUp(handle, { pointerId: 2 });
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it("clamps a double-clicked point into the image and keeps vertex double-clicks from the stage", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const outer = vi.fn();
+    const { container, getByRole } = render(<div onDoubleClick={outer}><ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable /></ImageStage></div>);
+    fireEvent.doubleClick(container.querySelector('polygon[stroke="transparent"]')!, { clientX: -3, clientY: 5.5 });
+    expect(onChange.mock.lastCall?.[0][4]).toEqual({ x: 0, y: 5 });
+    fireEvent.doubleClick(getByRole("button", { name: "Contour point 2" }));
+    expect(outer).not.toHaveBeenCalled();
+  });
+
   it("does not edit when read-only or the pan tool is active", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const { getByRole, rerender } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable /></ImageStage>);

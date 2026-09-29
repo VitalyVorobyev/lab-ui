@@ -1,7 +1,8 @@
 /** A source-pixel raster mask layer with a small paint/erase brush. */
 
-import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent, type PointerEvent } from "react";
 
+import { imageViewBox } from "./stage/view";
 import { useStage } from "./stage/ImageStage";
 import type { Point } from "./measureGeometry";
 
@@ -54,10 +55,16 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const draftRef = useRef(mask);
   const lastRef = useRef<Point | null>(null);
-  const cursorRef = useRef<Point>({ x: 0, y: 0 });
+  // The keyboard brush; it starts at the image centre and follows the last pointer stroke.
+  const cursorRef = useRef<Point | null>(null);
+  // Where the keyboard brush is drawn, while the layer has keyboard focus.
+  const [brush, setBrush] = useState<Point | null>(null);
+
+  function cursor(): Point {
+    return cursorRef.current ?? { x: Math.floor(stage.image.width / 2), y: Math.floor(stage.image.height / 2) };
+  }
 
   useEffect(() => {
-    if (lastRef.current === null) draftRef.current = mask;
     if (mask.length !== stage.image.width * stage.image.height) throw new RangeError("Mask dimensions do not match ImageStage.");
     const context = canvasRef.current?.getContext("2d");
     if (!context) return;
@@ -79,8 +86,11 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
     const point = stage.toImage({ x: event.clientX, y: event.clientY });
+    // Each stroke starts from the mask the caller holds, so an edit it rejected is not carried forward.
+    draftRef.current = mask;
     lastRef.current = point;
     cursorRef.current = point;
+    setBrush(null);
     apply(point, point);
   }
 
@@ -110,17 +120,35 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
     if (delta) {
       event.preventDefault();
       event.stopPropagation();
+      const from = cursor();
       cursorRef.current = {
-        x: Math.max(0, Math.min(stage.image.width - 1, cursorRef.current.x + delta.x)),
-        y: Math.max(0, Math.min(stage.image.height - 1, cursorRef.current.y + delta.y)),
+        x: Math.max(0, Math.min(stage.image.width - 1, from.x + delta.x)),
+        y: Math.max(0, Math.min(stage.image.height - 1, from.y + delta.y)),
       };
+      setBrush(cursorRef.current);
     } else if (event.key === "Enter") {
       event.preventDefault();
       event.stopPropagation();
-      apply(cursorRef.current, cursorRef.current);
+      const at = cursor();
+      draftRef.current = mask;
+      setBrush(at);
+      apply(at, at);
       onCommit?.();
     }
   }
 
-  return <canvas ref={canvasRef} width={stage.image.width} height={stage.image.height} className={`absolute inset-0 h-full w-full ${editable ? "pointer-events-auto cursor-crosshair" : "pointer-events-none"}`} style={{ imageRendering: "pixelated" }} role={editable ? "button" : "img"} tabIndex={editable ? 0 : undefined} aria-label={label} aria-description={editable ? "Arrow keys move the brush; Enter paints or erases." : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onLostPointerCapture={up} onKeyDown={keyDown} />;
+  function focus(event: FocusEvent<HTMLCanvasElement>) {
+    if (editable && event.currentTarget.matches(":focus-visible")) setBrush(cursor());
+  }
+
+  return (
+    <>
+      <canvas ref={canvasRef} width={stage.image.width} height={stage.image.height} className={`absolute inset-0 h-full w-full ${editable ? "pointer-events-auto cursor-crosshair" : "pointer-events-none"}`} style={{ imageRendering: "pixelated" }} role={editable ? "button" : "img"} tabIndex={editable ? 0 : undefined} aria-label={label} aria-description={editable ? "Arrow keys move the brush; Enter paints or erases." : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onLostPointerCapture={up} onDoubleClick={(event) => { if (editable && !stage.panMode) event.stopPropagation(); }} onKeyDown={keyDown} onFocus={focus} onBlur={() => setBrush(null)} />
+      {brush && (
+        <svg viewBox={imageViewBox(stage.image)} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
+          <circle cx={brush.x} cy={brush.y} r={Math.max(0.75, brushRadius)} fill="none" stroke="var(--signal)" strokeWidth={stage.imageLength(1.5)} />
+        </svg>
+      )}
+    </>
+  );
 }

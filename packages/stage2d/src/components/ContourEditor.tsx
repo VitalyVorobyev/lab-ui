@@ -43,18 +43,28 @@ export function nearestContourSegment(points: Point[], point: Point): number {
 export function ContourEditor({ points, onChange, onCommit, editable = false, label = "Contour", stroke = "var(--signal)" }: ContourEditorProps) {
   const stage = useStage();
   const draggingRef = useRef<number | null>(null);
+  const movedRef = useRef(false);
   const [selected, setSelected] = useState<number | null>(null);
   const line = points.map((point) => `${point.x},${point.y}`).join(" ");
   const radius = stage.imageLength(5);
   const hairline = stage.imageLength(1.5);
 
-  function move(index: number, point: Point) {
-    const next = [...points];
-    next[index] = {
+  function clamp(point: Point): Point {
+    return {
       x: Math.max(0, Math.min(stage.image.width - 1, point.x)),
       y: Math.max(0, Math.min(stage.image.height - 1, point.y)),
     };
+  }
+
+  /** Replace one vertex; returns whether anything changed, so no-op edits add no history. */
+  function move(index: number, point: Point): boolean {
+    const current = points[index];
+    const target = clamp(point);
+    if (!current || (current.x === target.x && current.y === target.y)) return false;
+    const next = [...points];
+    next[index] = target;
     onChange(next);
+    return true;
   }
 
   function pointerDown(event: PointerEvent<SVGCircleElement>, index: number) {
@@ -62,20 +72,21 @@ export function ContourEditor({ points, onChange, onCommit, editable = false, la
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
     draggingRef.current = index;
+    movedRef.current = false;
     setSelected(index);
   }
 
   function pointerMove(event: PointerEvent<SVGCircleElement>) {
     if (draggingRef.current === null) return;
     event.stopPropagation();
-    move(draggingRef.current, stage.toImage({ x: event.clientX, y: event.clientY }));
+    if (move(draggingRef.current, stage.toImage({ x: event.clientX, y: event.clientY }))) movedRef.current = true;
   }
 
   function pointerUp(event: PointerEvent<SVGCircleElement>) {
     if (draggingRef.current === null) return;
     event.stopPropagation();
     draggingRef.current = null;
-    onCommit?.();
+    if (movedRef.current) onCommit?.();
   }
 
   function keyDown(event: KeyboardEvent<SVGCircleElement>, index: number) {
@@ -90,8 +101,7 @@ export function ContourEditor({ points, onChange, onCommit, editable = false, la
     if (shift[event.key]) {
       event.preventDefault();
       event.stopPropagation();
-      move(index, { x: p.x + shift[event.key]!.x, y: p.y + shift[event.key]!.y });
-      onCommit?.();
+      if (move(index, { x: p.x + shift[event.key]!.x, y: p.y + shift[event.key]!.y })) onCommit?.();
     } else if ((event.key === "Delete" || event.key === "Backspace") && points.length > 3) {
       event.preventDefault();
       event.stopPropagation();
@@ -115,7 +125,7 @@ export function ContourEditor({ points, onChange, onCommit, editable = false, la
         <polygon points={line} fill="none" stroke="transparent" strokeWidth={stage.imageLength(12)} className="pointer-events-auto" onDoubleClick={(event) => {
           if (stage.panMode) return;
           event.stopPropagation();
-          const point = stage.toImage({ x: event.clientX, y: event.clientY });
+          const point = clamp(stage.toImage({ x: event.clientX, y: event.clientY }));
           const index = nearestContourSegment(points, point);
           onChange([...points.slice(0, index + 1), point, ...points.slice(index + 1)]);
           setSelected(index + 1);
@@ -125,7 +135,7 @@ export function ContourEditor({ points, onChange, onCommit, editable = false, la
       {editable && points.map((point, index) => (
         // The contour API is an ordered point list without vertex IDs; indices are stable across drag edits.
         // eslint-disable-next-line @eslint-react/no-array-index-key
-        <circle key={index} cx={point.x} cy={point.y} r={selected === index ? radius * 1.3 : radius} fill="var(--surface)" stroke={stroke} strokeWidth={hairline} className="pointer-events-auto cursor-move" tabIndex={0} role="button" aria-label={`${label} point ${index + 1}`} onPointerDown={(event) => pointerDown(event, index)} onPointerMove={pointerMove} onPointerUp={pointerUp} onLostPointerCapture={pointerUp} onKeyDown={(event) => keyDown(event, index)} onFocus={() => setSelected(index)} />
+        <circle key={index} cx={point.x} cy={point.y} r={selected === index ? radius * 1.3 : radius} fill="var(--surface)" stroke={stroke} strokeWidth={hairline} className="pointer-events-auto cursor-move" tabIndex={0} role="button" aria-label={`${label} point ${index + 1}`} onPointerDown={(event) => pointerDown(event, index)} onPointerMove={pointerMove} onPointerUp={pointerUp} onLostPointerCapture={pointerUp} onDoubleClick={(event) => { if (!stage.panMode) event.stopPropagation(); }} onKeyDown={(event) => keyDown(event, index)} onFocus={() => setSelected(index)} />
       ))}
     </svg>
   );
