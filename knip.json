@@ -29,6 +29,11 @@
         "src/**/*.{ts,tsx}"
       ]
     },
+    "packages/three": {
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
     "packages/lab-ui": {
       "project": [
         "src/**/*.{ts,tsx}"
