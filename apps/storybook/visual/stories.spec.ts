@@ -24,6 +24,13 @@ for (const { id } of stories) {
     test(`${id} [${theme}]`, async ({ page }) => {
       await page.goto(`/iframe.html?id=${id}&viewMode=story&globals=theme:${theme}`);
       await page.waitForSelector("#storybook-root > *", { state: "attached" });
+      // Wait for the story's `play` to finish: the first stable frame can otherwise be the
+      // state before `play` ran (seen on workbench-treeview--keyboard).
+      await page.waitForFunction(() => {
+        const phase = (window as { __STORYBOOK_PREVIEW__?: { currentRender?: { phase?: string } } })
+          .__STORYBOOK_PREVIEW__?.currentRender?.phase;
+        return phase === "finished" || phase === "errored" || phase === "aborted";
+      });
       await page.evaluate(() => document.fonts.ready);
       await expect(page).toHaveScreenshot(`${id}--${theme}.png`, { fullPage: true });
     });
