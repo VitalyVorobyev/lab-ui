@@ -32,7 +32,7 @@ Cells: **n** = files in that repo implementing the concept locally · ◆ = uses
 | [Pixel value readout](#pixel-readout) | stage2d | 4 | **1** | **1** | **1** |  |  |  |  |  |  | **1** |
 | [Calibration-target / feature overlay](#target-overlay) | overlays | 6 |  |  | **6** | **1** | **2** | **1** | **1** |  | **1** |  |
 | [Heatmap / colour-scale layer](#heatmap) | overlays | 2 |  | **1** | **2** |  |  |  |  |  |  |  |
-| [3D scene / camera frustum / target board](#3d-frustum) | three | 1 |  |  |  | **4** |  |  |  |  |  |  |
+| [3D scene / camera frustum / target board](#3d-frustum) | three | 1 | **3** |  |  | ◆ |  |  |  |  |  |  |
 | [3D point cloud](#point-cloud) | three | 1 |  |  |  | **1** |  |  |  |  |  |  |
 
 Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not yet in scope).
@@ -321,7 +321,8 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 ### 3D scene / camera frustum / target board
 
-- **calibration-rs**: `src/workspaces/Viewer3DWorkspace/Scene.tsx`, `src/workspaces/Viewer3DWorkspace/CameraFrustum.tsx`, `src/workspaces/Viewer3DWorkspace/TargetBoard.tsx`, `src/workspaces/Viewer3DWorkspace/LaserPlane.tsx`
+- **lab-ui**: `packages/three/src/primitives/frustum.ts`, `packages/three/src/primitives/targetBoard.ts`, `packages/three/src/primitives/laserFan.ts`
+- **calibration-rs**: uses `@vitavision/three-react` · _Viewer3DWorkspace keeps app-only parts around the package primitives: rig-frame Canvas and auto-fit, camera label and apex marker, board sizing from residuals (calibration-rs#121, P2-4)_
 
 <a id="point-cloud"></a>
 
@@ -333,16 +334,16 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 | Repo | Frontend | Commit | In PLAN §0 |
 |---|---|---|---|
-| [lab-ui](https://github.com/VitalyVorobyev/lab-ui) | `.` | `708941cd3f+dirty` | yes |
-| [visual-anomaly-lab](https://github.com/VitalyVorobyev/visual-anomaly-lab) | `frontend` | `f55fa9cc92+dirty` | yes |
+| [lab-ui](https://github.com/VitalyVorobyev/lab-ui) | `.` | `a60a0aa81d` | yes |
+| [visual-anomaly-lab](https://github.com/VitalyVorobyev/visual-anomaly-lab) | `frontend` | `01ab1fcde6` | yes |
 | [vitavision](https://github.com/VitalyVorobyev/vitavision) | `.` | `b87b214c5d` | yes |
-| [calibration-rs](https://github.com/VitalyVorobyev/calibration-rs) | `app` | `9896a99052` | yes |
-| [calib-targets-rs/studio](https://github.com/VitalyVorobyev/calib-targets-rs) | `studio` | `d8ba43f3b5` | yes |
-| [calib-targets-rs/demo](https://github.com/VitalyVorobyev/calib-targets-rs) | `demo` | `d8ba43f3b5` | yes |
+| [calibration-rs](https://github.com/VitalyVorobyev/calibration-rs) | `app` | `69426e12db` | yes |
+| [calib-targets-rs/studio](https://github.com/VitalyVorobyev/calib-targets-rs) | `studio` | `43378026d5` | yes |
+| [calib-targets-rs/demo](https://github.com/VitalyVorobyev/calib-targets-rs) | `demo` | `43378026d5` | yes |
 | [chess-corners-rs/demo](https://github.com/VitalyVorobyev/chess-corners-rs) | `demo` | `5400b8661a` | no |
 | [vision-metrology/lab](https://github.com/VitalyVorobyev/vision-metrology) | `lab/frontend` | `05025e4140` | no |
 | [vision-lab/operator-ui](https://github.com/VitalyVorobyev/vision-lab) | `apps/operator-ui/ui` | `9ee2883c37+dirty` | no |
-| [viva-genicam/studio](https://github.com/VitalyVorobyev/viva-genicam) | `studio/ui/viva-studio-ui` | `f2f59ccf77` | no |
+| [viva-genicam/studio](https://github.com/VitalyVorobyev/viva-genicam) | `studio/ui/viva-studio-ui` | `41704ac042+dirty` | no |
 
 ## React frontends on GitHub not in PLAN §0
 

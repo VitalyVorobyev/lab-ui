@@ -376,12 +376,13 @@ impl.val = ["src/components/viewer/LabelLayer.tsx"]
 [concepts.3d-frustum]
 label = "3D scene / camera frustum / target board"
 layer = "three"
-impl.calibration-rs = [
-  "src/workspaces/Viewer3DWorkspace/Scene.tsx",
-  "src/workspaces/Viewer3DWorkspace/CameraFrustum.tsx",
-  "src/workspaces/Viewer3DWorkspace/TargetBoard.tsx",
-  "src/workspaces/Viewer3DWorkspace/LaserPlane.tsx",
+impl.lab-ui = [
+  "packages/three/src/primitives/frustum.ts",
+  "packages/three/src/primitives/targetBoard.ts",
+  "packages/three/src/primitives/laserFan.ts",
 ]
+uses.calibration-rs = "@vitavision/three-react"
+note.calibration-rs = "Viewer3DWorkspace keeps app-only parts around the package primitives: rig-frame Canvas and auto-fit, camera label and apex marker, board sizing from residuals (calibration-rs#121, P2-4)"
 
 [concepts.point-cloud]
 label = "3D point cloud"

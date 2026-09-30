@@ -322,10 +322,10 @@ vitavision. The last is last because of SSR and the router.
   *Done by the PR that adds `packages/three` and `packages/three-react`:* both were
   incubated in etendue (`web/packages/three{,-react}`, etendue `docs/pivot/PLAN.md`
   P2-2/P2-3) and moved here unchanged apart from the §4 fixes the PR lists. G2.2 passed there
-  (etendue `docs/measurements/g2_2_perf.md`: p95 frame interval 7.8 ms). The P2-4
-  extraction proof is a calibration-rs branch and remains open. Etendue PLAN §7 had the web
-  packages publish only after it; user decision 2026-09-29: publish them now (0.1.0), ahead
-  of P2-4.
+  (etendue `docs/measurements/g2_2_perf.md`: p95 frame interval 7.8 ms). User decision
+  2026-09-29: publish ahead of the P2-4 extraction proof (etendue PLAN §7 had it the other
+  way round); both were published at 0.1.0 on 2026-09-30 (#42). P2-4 closed the same day:
+  calibration-rs's 3D viewer runs on the published packages (calibration-rs#121).
 
 ### W — Studio building blocks (ADR-0003)
 
