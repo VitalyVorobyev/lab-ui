@@ -272,6 +272,8 @@ vitavision. The last is last because of SSR and the router.
   migrate tokens for the editorial pages and components for the interactive areas.
   Done when the concept matrix shows 0 local implementations for the ui concepts in that
   repo and G5.1 holds in the migrated directories.
+  *Done 2026-09-30 in all four repos:* calibration-rs#142, visual-anomaly-lab#165,
+  calib-targets-rs#107, vitavision#168 + #169 (`docs/measurements/l3-3-*.md`).
 
 ### L4 — Forms
 
