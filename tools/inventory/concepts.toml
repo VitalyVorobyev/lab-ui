@@ -100,7 +100,7 @@ in_plan = false
 label = "Button"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Button.tsx"]
-impl.calibration-rs = ["src/components/ui/Button.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 impl.operator-ui = ["src/components/ui/Button.tsx"]
 uses.val = "@vitavision/lab-ui"
 uses.vm-lab = "@vitavision/lab-ui"
@@ -116,7 +116,7 @@ layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Panel.tsx"]
 impl.val = ["src/components/viewer/RailSection.tsx"]
 impl.vitavision = ["src/components/editor/panels/RailSection.tsx"]
-impl.calibration-rs = ["src/components/ui/Panel.tsx", "src/components/ui/SectionHeader.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 impl.operator-ui = ["src/components/ui/Panel.tsx"]
 impl.viva-studio = ["src/components/ImageViewer/SidebarSection.tsx"]
 uses.vm-lab = "@vitavision/lab-ui"
@@ -126,7 +126,7 @@ note.val = "Panel itself comes from @vitavision/lab-ui; RailSection is a local v
 label = "Badge / status pill"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Badge.tsx"]
-impl.calibration-rs = ["src/components/ui/Badge.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 impl.operator-ui = ["src/components/ui/StatusPill.tsx"]
 uses.val = "@vitavision/lab-ui"
 note.vitavision = "editorial badges only (blog/atlas/papers): outside the interactive boundary"
@@ -135,7 +135,7 @@ note.vitavision = "editorial badges only (blog/atlas/papers): outside the intera
 label = "Table"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Table.tsx"]
-impl.calibration-rs = ["src/components/ui/Table.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 impl.ct-studio = ["src/components/DiffTable.tsx"]
 uses.val = "@vitavision/lab-ui"
 uses.vm-lab = "@vitavision/lab-ui"
@@ -146,7 +146,7 @@ label = "Select"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Select.tsx"]
 impl.vitavision = ["src/components/editor/algorithms/SelectField.tsx"]
-impl.calibration-rs = ["src/components/ui/Select.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 impl.operator-ui = ["src/components/ui/Select.tsx"]
 impl.viva-studio = ["src/components/FeatureBrowser/editors/EnumEditor.tsx"]
 uses.val = "@vitavision/lab-ui"
@@ -158,7 +158,7 @@ label = "Dialog / modal"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Dialog.tsx"]
 impl.vitavision = ["src/components/editor/panels/ConfigModal.tsx"]
-impl.calibration-rs = ["src/workspaces/RunWorkspace/AskUserModal.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 uses.val = "@vitavision/lab-ui"
 
 [concepts.tooltip]
@@ -171,7 +171,7 @@ impl.ct-demo = ["src/components/InfoTip.tsx"]
 impl.chess-demo = ["src/components/InfoTip.tsx"]
 uses.val = "@vitavision/lab-ui"
 uses.vm-lab = "@vitavision/lab-ui"
-note.calibration-rs = "title= attributes only"
+uses.calibration-rs = "@vitavision/ui"
 
 [concepts.slider]
 label = "Slider"
@@ -192,7 +192,8 @@ impl.ct-demo = ["src/components/LayerToggles.tsx"]
 impl.chess-demo = ["src/components/LayerToggles.tsx"]
 impl.viva-studio = ["src/components/FeatureBrowser/editors/BoolEditor.tsx"]
 uses.val = "@vitavision/lab-ui"
-note.calibration-rs = "inline checkbox in lib/configForm.tsx"
+uses.calibration-rs = "@vitavision/ui"
+note.calibration-rs = "ToggleChip for toolbar toggles; lib/configForm.tsx keeps an inline checkbox until L4"
 
 [concepts.segmented-control]
 label = "Segmented control"
@@ -202,6 +203,7 @@ impl.operator-ui = ["src/components/ui/SegmentedControl.tsx"]
 uses.val = "@vitavision/lab-ui"
 uses.vm-lab = "@vitavision/lab-ui"
 note.vitavision = "SelectField presentation=\"segmented\""
+uses.calibration-rs = "@vitavision/ui"
 
 [concepts.tabs]
 label = "Tabs"
@@ -219,7 +221,8 @@ impl.vitavision = ["src/components/editor/algorithms/NumberField.tsx"]
 impl.viva-studio = ["src/components/FeatureBrowser/editors/FloatEditor.tsx", "src/components/FeatureBrowser/editors/IntegerEditor.tsx"]
 uses.val = "@vitavision/lab-ui"
 uses.vm-lab = "@vitavision/lab-ui"
-note.calibration-rs = "inline in lib/configForm.tsx"
+uses.calibration-rs = "@vitavision/ui"
+note.calibration-rs = "Input in the ask-user dialog; lib/configForm.tsx keeps inline inputs until L4"
 note.ct-studio = "inline in ParamForm.tsx"
 
 [concepts.disclosure]
@@ -227,13 +230,13 @@ label = "Disclosure / collapsible section"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Disclosure.tsx"]
 impl.vitavision = ["src/components/editor/algorithms/sections.tsx"]
-impl.calibration-rs = ["src/workspaces/RunWorkspace/CollapsibleSection.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 
 [concepts.feedback]
 label = "Feedback: empty / error / callout / progress"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Feedback.tsx"]
-impl.calibration-rs = ["src/components/ui/EmptyState.tsx", "src/components/ui/Banner.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 uses.val = "@vitavision/lab-ui"
 uses.vm-lab = "@vitavision/lab-ui"
 note.vitavision = "sonner toasts"
@@ -243,7 +246,7 @@ note.viva-studio = "src/components/Layout/ToastContainer.tsx (toast)"
 label = "Theme toggle + theme init"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ThemeToggle.tsx", "packages/ui/src/theme.ts"]
-impl.calibration-rs = ["src/layouts/AppShell.tsx"]
+uses.calibration-rs = "@vitavision/ui"
 uses.val = "@vitavision/lab-ui"
 uses.vm-lab = "@vitavision/lab-ui"
 note.vitavision = "next-themes, toggle in layout/Navbar.tsx"
