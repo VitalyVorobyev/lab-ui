@@ -1,5 +1,12 @@
 # @vitavision/charts
 
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [a019b87]
+  - @vitavision/ui@0.8.0
+
 ## 0.6.1
 
 ### Patch Changes

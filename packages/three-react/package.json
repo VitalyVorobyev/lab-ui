@@ -1,6 +1,6 @@
 {
   "name": "@vitavision/three-react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React Three Fiber components over @vitavision/three: a Z-up scene canvas, baked-scenario frame trees read per frame, robots and gizmos in vitavision colours.",
   "license": "MIT OR Apache-2.0",
   "repository": {
