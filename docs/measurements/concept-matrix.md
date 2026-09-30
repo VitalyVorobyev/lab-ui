@@ -6,21 +6,21 @@ Cells: **n** = files in that repo implementing the concept locally · ◆ = uses
 
 | Concept | Layer | Impl. | lab-ui | visual-anomaly-lab | vitavision | calibration-rs | calib-targets-rs/studio | calib-targets-rs/demo | chess-corners-rs/demo | vision-metrology/lab | vision-lab/operator-ui | viva-genicam/studio |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| [Button](#button) | ui | 2 | **1** | ◆ | · | ◆ | · | · | · | ◆ | **1** | · |
-| [Panel / section / page header](#panel) | ui | 5 | **1** | **1** | **1** | ◆ |  |  |  | ◆ | **1** | **1** |
-| [Badge / status pill](#badge) | ui | 2 | **1** | ◆ | · | ◆ |  |  |  |  | **1** |  |
-| [Table](#table) | ui | 2 | **1** | ◆ |  | ◆ | **1** |  |  | ◆ |  |  |
-| [Select](#select) | ui | 4 | **1** | ◆ | **1** | ◆ | · | · |  |  | **1** | **1** |
+| [Button](#button) | ui | 2 | **1** | ◆ | · | ◆ | ◆ | · | · | ◆ | **1** | · |
+| [Panel / section / page header](#panel) | ui | 4 | **1** | ◆ | **1** | ◆ | ◆ |  |  | ◆ | **1** | **1** |
+| [Badge / status pill](#badge) | ui | 2 | **1** | ◆ | · | ◆ | ◆ |  |  |  | **1** |  |
+| [Table](#table) | ui | 1 | **1** | ◆ |  | ◆ | ◆ |  |  | ◆ |  |  |
+| [Select](#select) | ui | 4 | **1** | ◆ | **1** | ◆ | ◆ | · |  |  | **1** | **1** |
 | [Dialog / modal](#dialog) | ui | 2 | **1** | ◆ | **1** | ◆ |  |  |  |  |  |  |
-| [Tooltip / info hint](#tooltip) | ui | 5 | **1** | ◆ | **2** | ◆ | **1** | **1** | **1** | ◆ |  |  |
+| [Tooltip / info hint](#tooltip) | ui | 4 | **1** | ◆ | **2** | ◆ | ◆ | **1** | **1** | ◆ |  |  |
 | [Slider](#slider) | ui | 1 | **1** | ◆ | · |  |  |  |  | ◆ |  | · |
-| [Switch / checkbox / toggle chip](#switch) | ui | 6 | **2** | ◆ | **1** | ◆ | **1** | **1** | **1** |  |  | **1** |
-| [Segmented control](#segmented-control) | ui | 2 | **1** | ◆ | · | ◆ |  |  |  | ◆ | **1** |  |
-| [Tabs](#tabs) | ui | 2 | **1** | **1** ◆ | · |  |  |  |  |  |  |  |
-| [Input / number input / field](#input) | ui | 3 | **2** | ◆ | **1** | ◆ | · |  |  | ◆ |  | **2** |
+| [Switch / checkbox / toggle chip](#switch) | ui | 5 | **2** | ◆ | **1** | ◆ | ◆ | **1** | **1** |  |  | **1** |
+| [Segmented control](#segmented-control) | ui | 2 | **1** | ◆ | · | ◆ | ◆ |  |  | ◆ | **1** |  |
+| [Tabs](#tabs) | ui | 1 | **1** | ◆ | · |  | ◆ |  |  |  |  |  |
+| [Input / number input / field](#input) | ui | 3 | **2** | ◆ | **1** | ◆ | ◆ |  |  | ◆ |  | **2** |
 | [Disclosure / collapsible section](#disclosure) | ui | 2 | **1** |  | **1** | ◆ |  |  |  |  |  |  |
-| [Feedback: empty / error / callout / progress](#feedback) | ui | 1 | **1** | ◆ | · | ◆ |  |  |  | ◆ |  | · |
-| [Theme toggle + theme init](#theme-toggle) | ui | 1 | **2** | ◆ | · | ◆ |  |  |  | ◆ |  |  |
+| [Feedback: empty / error / callout / progress](#feedback) | ui | 1 | **1** | ◆ | · | ◆ | ◆ |  |  | ◆ |  | · |
+| [Theme toggle + theme init](#theme-toggle) | ui | 1 | **2** | ◆ | · | ◆ | ◆ |  |  | ◆ |  |  |
 | [Schema-driven form](#schema-form) | forms | 4 | **2** | ◆ | **7** | **1** | **2** |  |  |  |  | · |
 | [Histogram](#histogram) | charts | 3 | **1** | ◆ |  | **1** |  |  |  |  |  | **2** |
 | [Line chart](#line-chart) | charts | 2 | **3** | **2** |  |  |  |  |  |  |  |  |
@@ -41,7 +41,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 | Layer | Concepts | Local implementations | Concepts with >1 implementation |
 |---|---|---|---|
-| ui | 15 | 40 | 12 |
+| ui | 15 | 35 | 10 |
 | forms | 1 | 4 | 1 |
 | charts | 4 | 8 | 3 |
 | stage2d | 4 | 20 | 4 |
@@ -55,10 +55,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Button
 
 - **lab-ui**: `packages/ui/src/components/ui/Button.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: _inline <button> with utility classes_
 - **calibration-rs**: uses `@vitavision/ui`
-- **calib-targets-rs/studio**: _inline <button>_
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **calib-targets-rs/demo**: _inline <button>_
 - **chess-corners-rs/demo**: _inline <button>_
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
@@ -70,9 +70,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Panel / section / page header
 
 - **lab-ui**: `packages/ui/src/components/ui/Panel.tsx`
-- **visual-anomaly-lab**: `src/components/viewer/RailSection.tsx` · _Panel itself comes from @vitavision/lab-ui; RailSection is a local variant_
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: `src/components/editor/panels/RailSection.tsx`
 - **calibration-rs**: uses `@vitavision/ui`
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
 - **vision-lab/operator-ui**: `src/components/ui/Panel.tsx`
 - **viva-genicam/studio**: `src/components/ImageViewer/SidebarSection.tsx`
@@ -82,9 +83,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Badge / status pill
 
 - **lab-ui**: `packages/ui/src/components/ui/Badge.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: _editorial badges only (blog/atlas/papers): outside the interactive boundary_
 - **calibration-rs**: uses `@vitavision/ui`
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **vision-lab/operator-ui**: `src/components/ui/StatusPill.tsx`
 
 <a id="table"></a>
@@ -92,9 +94,9 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Table
 
 - **lab-ui**: `packages/ui/src/components/ui/Table.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui` · _plus raw <table>s tracked by uiRules.test.ts_
+- **visual-anomaly-lab**: uses `@vitavision/ui` · _plus raw <table>s tracked by uiRules.test.ts_
 - **calibration-rs**: uses `@vitavision/ui`
-- **calib-targets-rs/studio**: `src/components/DiffTable.tsx`
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
 
 <a id="select"></a>
@@ -102,10 +104,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Select
 
 - **lab-ui**: `packages/ui/src/components/ui/Select.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: `src/components/editor/algorithms/SelectField.tsx`
 - **calibration-rs**: uses `@vitavision/ui`
-- **calib-targets-rs/studio**: _raw <select>_
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **calib-targets-rs/demo**: _raw <select>_
 - **vision-lab/operator-ui**: `src/components/ui/Select.tsx`
 - **viva-genicam/studio**: `src/components/FeatureBrowser/editors/EnumEditor.tsx`
@@ -115,7 +117,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Dialog / modal
 
 - **lab-ui**: `packages/ui/src/components/ui/Dialog.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: `src/components/editor/panels/ConfigModal.tsx`
 - **calibration-rs**: uses `@vitavision/ui`
 
@@ -124,10 +126,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Tooltip / info hint
 
 - **lab-ui**: `packages/ui/src/components/ui/Tooltip.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: `src/components/ui/Tooltip.tsx`, `src/components/editor/algorithms/fieldChrome.tsx`
 - **calibration-rs**: uses `@vitavision/ui`
-- **calib-targets-rs/studio**: `src/components/InfoTip.tsx`
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **calib-targets-rs/demo**: `src/components/InfoTip.tsx`
 - **chess-corners-rs/demo**: `src/components/InfoTip.tsx`
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
@@ -137,7 +139,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Slider
 
 - **lab-ui**: `packages/ui/src/components/ui/Slider.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: _raw range <input> in editor/panels/ResultsPanel.tsx_
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
 - **viva-genicam/studio**: _raw range <input> in ImageViewer sections_
@@ -147,10 +149,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Switch / checkbox / toggle chip
 
 - **lab-ui**: `packages/ui/src/components/ui/Toggle.tsx`, `packages/ui/src/components/ui/ToggleChip.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: `src/components/editor/algorithms/CheckboxField.tsx`
 - **calibration-rs**: uses `@vitavision/ui` · _ToggleChip for toolbar toggles; lib/configForm.tsx keeps an inline checkbox until L4_
-- **calib-targets-rs/studio**: `src/components/LayerToggles.tsx`
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **calib-targets-rs/demo**: `src/components/LayerToggles.tsx`
 - **chess-corners-rs/demo**: `src/components/LayerToggles.tsx`
 - **viva-genicam/studio**: `src/components/FeatureBrowser/editors/BoolEditor.tsx`
@@ -160,9 +162,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Segmented control
 
 - **lab-ui**: `packages/ui/src/components/ui/SegmentedControl.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: _SelectField presentation="segmented"_
 - **calibration-rs**: uses `@vitavision/ui`
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
 - **vision-lab/operator-ui**: `src/components/ui/SegmentedControl.tsx`
 
@@ -171,18 +174,19 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Tabs
 
 - **lab-ui**: `packages/ui/src/components/Tabs.tsx`
-- **visual-anomaly-lab**: `src/components/ChannelTabs.tsx` · uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: _algorithms/AtlasViewTabs.tsx is editorial navigation_
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 
 <a id="input"></a>
 
 ### Input / number input / field
 
 - **lab-ui**: `packages/ui/src/components/ui/Input.tsx`, `packages/ui/src/components/ui/Field.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: `src/components/editor/algorithms/NumberField.tsx`
 - **calibration-rs**: uses `@vitavision/ui` · _Input in the ask-user dialog; lib/configForm.tsx keeps inline inputs until L4_
-- **calib-targets-rs/studio**: _inline in ParamForm.tsx_
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
 - **viva-genicam/studio**: `src/components/FeatureBrowser/editors/FloatEditor.tsx`, `src/components/FeatureBrowser/editors/IntegerEditor.tsx`
 
@@ -199,9 +203,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Feedback: empty / error / callout / progress
 
 - **lab-ui**: `packages/ui/src/components/ui/Feedback.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: _sonner toasts_
 - **calibration-rs**: uses `@vitavision/ui`
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
 - **viva-genicam/studio**: _src/components/Layout/ToastContainer.tsx (toast)_
 
@@ -210,9 +215,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Theme toggle + theme init
 
 - **lab-ui**: `packages/ui/src/components/ThemeToggle.tsx`, `packages/ui/src/theme.ts`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: _next-themes, toggle in layout/Navbar.tsx_
 - **calibration-rs**: uses `@vitavision/ui`
+- **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
 
 <a id="schema-form"></a>
@@ -220,7 +226,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Schema-driven form
 
 - **lab-ui**: `packages/forms/src/components/SchemaForm.tsx`, `packages/forms/src/api/schemaForm.ts`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/forms`
 - **vitavision**: `src/components/editor/algorithms/calibrationTargets/CharucoConfigForm.tsx`, `src/components/editor/algorithms/calibrationTargets/ChessboardConfigForm.tsx`, `src/components/editor/algorithms/calibrationTargets/MarkerBoardConfigForm.tsx`, `src/components/editor/algorithms/chessCorners/ChessCornersConfigForm.tsx`, `src/components/editor/algorithms/puzzleboard/PuzzleboardConfigForm.tsx`, `src/components/editor/algorithms/radsym/RadsymConfigForm.tsx`, `src/components/editor/algorithms/ringgrid/RinggridConfigForm.tsx` · _hand-written per detector, not schema-driven (F4)_
 - **calibration-rs**: `src/lib/configForm.tsx`
 - **calib-targets-rs/studio**: `src/components/ParamForm.tsx`, `src/components/ConfigEditor.tsx`
@@ -231,7 +237,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Histogram
 
 - **lab-ui**: `packages/charts/src/Histogram.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/charts`
 - **calibration-rs**: `src/components/Histogram.tsx`
 - **viva-genicam/studio**: `src/components/ImageViewer/HistogramOverlay.tsx`, `src/components/ImageViewer/histogramUtils.ts`
 
@@ -247,7 +253,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Bar chart
 
 - **lab-ui**: `packages/charts/src/BarChart.tsx`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/charts`
 
 <a id="line-profile"></a>
 
@@ -287,7 +293,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Measurement overlay
 
 - **lab-ui**: `packages/stage2d/src/components/MeasureOverlay.tsx`, `packages/stage2d/src/components/measureGeometry.ts`
-- **visual-anomaly-lab**: uses `@vitavision/lab-ui`
+- **visual-anomaly-lab**: uses `@vitavision/stage2d`
 - **vision-metrology/lab**: uses `@vitavision/lab-ui`
 - **viva-genicam/studio**: `src/components/ImageViewer/LineOverlay.tsx`, `src/components/ImageViewer/RoiOverlay.tsx`
 
@@ -335,12 +341,12 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 | Repo | Frontend | Commit | In PLAN §0 |
 |---|---|---|---|
-| [lab-ui](https://github.com/VitalyVorobyev/lab-ui) | `.` | `df9de94245` | yes |
-| [visual-anomaly-lab](https://github.com/VitalyVorobyev/visual-anomaly-lab) | `frontend` | `01ab1fcde6` | yes |
+| [lab-ui](https://github.com/VitalyVorobyev/lab-ui) | `.` | `2c083ec738` | yes |
+| [visual-anomaly-lab](https://github.com/VitalyVorobyev/visual-anomaly-lab) | `frontend` | `d41cd6347b` | yes |
 | [vitavision](https://github.com/VitalyVorobyev/vitavision) | `.` | `b87b214c5d` | yes |
 | [calibration-rs](https://github.com/VitalyVorobyev/calibration-rs) | `app` | `0c623a3be7` | yes |
-| [calib-targets-rs/studio](https://github.com/VitalyVorobyev/calib-targets-rs) | `studio` | `43378026d5` | yes |
-| [calib-targets-rs/demo](https://github.com/VitalyVorobyev/calib-targets-rs) | `demo` | `43378026d5` | yes |
+| [calib-targets-rs/studio](https://github.com/VitalyVorobyev/calib-targets-rs) | `studio` | `1381645516` | yes |
+| [calib-targets-rs/demo](https://github.com/VitalyVorobyev/calib-targets-rs) | `demo` | `1381645516` | yes |
 | [chess-corners-rs/demo](https://github.com/VitalyVorobyev/chess-corners-rs) | `demo` | `5400b8661a` | no |
 | [vision-metrology/lab](https://github.com/VitalyVorobyev/vision-metrology) | `lab/frontend` | `05025e4140` | no |
 | [vision-lab/operator-ui](https://github.com/VitalyVorobyev/vision-lab) | `apps/operator-ui/ui` | `9ee2883c37+dirty` | no |
