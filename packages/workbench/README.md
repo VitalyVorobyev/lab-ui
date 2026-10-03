@@ -19,12 +19,13 @@ bun add @vitavision/workbench @vitavision/ui
 
 | Export | What |
 |---|---|
-| `AppShell` | Full-viewport frame: `header`, `left` \| `main` \| `right` (side panels resizable and optionally remembered), `bottom`. Landmarks included. |
+| `AppShell` | Full-viewport frame: `header`, a fixed-width `rail` (an icon nav, `<nav>`), `left` \| `main` \| `right` (side panels resizable and optionally remembered), `bottom`. Landmarks included. |
 | `SplitPane` | Two panes, horizontal or vertical, with a draggable, keyboard-operable divider (`role="separator"`, WAI-ARIA window splitter). Sizes in px or `%`, min/max, collapsible, controlled or not, `storageKey`. Nests. |
 | `TreeView` | Data-driven tree (`TreeNode[]` with `icon`/`meta`), WAI-ARIA tree keyboard, controlled selection, controlled or uncontrolled expansion; reveals a selection made elsewhere. |
 | `PlaybackBar` | Transport for a sampled timeline: step, play/pause, markers, scrubber, `t = k · dt`, speed, loop. |
 | `createPlayhead`, `usePlayhead`, `usePlaybackClock` | The playback position as an external store, and the real-time clock that drives it. |
-| `FileDrop` | Drop zone (or full-window `overlay`) plus an "Open files…" button; `accept` applied to both routes; dropped folders walked. |
+| `FileDrop` | Drop zone (or full-window `overlay`) plus an "Open files…" button; `accept` applied to both routes; dropped folders walked. In a desktop shell, a `pathSource` yields paths to `onPaths` instead of `File`s (see below). |
+| `SequenceNavigator` | The current item of an ordered set (a frame of a capture) as a lazy thumbnail strip with previous/next, the position, and `[` / `]` from anywhere outside a text field. |
 | `Toaster`, `toast()` | Notifications from anywhere; one `<Toaster />` near the root. **Now lives in `@vitavision/ui`**; re-exported here (same bindings, one default store) so existing imports keep working. Prefer `import { toast } from "@vitavision/ui"`. |
 
 The pure logic behind them is exported too and tested without a DOM: `splitSize.ts`
@@ -69,6 +70,39 @@ The contract, kept deliberately small:
 Every member may be called detached. Only the bar (and anything using `usePlayhead`)
 re-renders during playback. The fractional position real-time playback needs lives in the
 clock, not the store, so a reader never sees a fractional frame.
+
+### Desktop shells: paths, not files
+
+A Tauri or Electron webview gives paths, not `File`s: its native drops and dialogs report file
+system paths, and an app that opens images by path never wants their bytes in the webview.
+Give `FileDrop` a `pathSource` built on the shell's APIs, and it delivers paths to `onPaths`,
+filtered by `accept` on their extensions. The package stays shell-agnostic. For Tauri 2:
+
+```tsx
+import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { open } from "@tauri-apps/plugin-dialog";
+import type { PathSource } from "@vitavision/workbench";
+
+const tauriPaths: PathSource = {
+  pick: async ({ multiple, directory }) => {
+    const chosen = await open({ multiple, directory });
+    return chosen === null ? [] : Array.isArray(chosen) ? chosen : [chosen];
+  },
+  subscribe: ({ onEnter, onLeave, onDrop }) => {
+    let stop = () => {};
+    void getCurrentWebview()
+      .onDragDropEvent(({ payload }) => {
+        if (payload.type === "enter") onEnter();
+        else if (payload.type === "leave") onLeave();
+        else if (payload.type === "drop") onDrop(payload.paths);
+      })
+      .then((unlisten) => (stop = unlisten));
+    return () => stop();
+  },
+};
+
+<FileDrop overlay accept="image/*" pathSource={tauriPaths} onPaths={openByPath} />
+```
 
 ### Scope
 

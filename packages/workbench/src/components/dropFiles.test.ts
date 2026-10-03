@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type DropEntry, acceptsFile, carriesFiles, collectDroppedFiles, partitionFiles } from "./dropFiles";
+import { type DropEntry, acceptsFile, acceptsPath, carriesFiles, collectDroppedFiles, partitionFiles } from "./dropFiles";
 
 const file = (name: string, type = "") => new File(["x"], name, { type });
 
@@ -100,5 +100,16 @@ describe("collectDroppedFiles", () => {
   it("skips items without an entry when a folder is among them", async () => {
     const files = await collectDroppedFiles(transfer([dirEntry("d", [fileEntry("d/x.json")]), null]));
     expect(files.map((f) => f.name)).toEqual(["x.json"]);
+  });
+});
+
+describe("acceptsPath", () => {
+  it("matches extensions and, through the extension, MIME types and wildcards", () => {
+    expect(acceptsPath("/data/frames/0001.PNG", ".png")).toBe(true);
+    expect(acceptsPath("C:\\captures\\a.bmp", "image/*")).toBe(true);
+    expect(acceptsPath("/x/model.json", "application/json")).toBe(true);
+    expect(acceptsPath("/x/notes.md", "image/*,.json")).toBe(false);
+    expect(acceptsPath("/x/no-extension", "image/*")).toBe(false);
+    expect(acceptsPath("/x/anything.bin", undefined)).toBe(true);
   });
 });
