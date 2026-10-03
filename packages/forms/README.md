@@ -18,6 +18,19 @@ is folded under "Advanced" when its default already works; a schema that knows b
 its decisions with `"x-primary": true` (pydantic: `json_schema_extra={"x-primary": True}`),
 and `false` folds a field whatever its default.
 
+`SchemaValueForm`, which edits a **whole JSON value** (a config, nested to any depth)
+through its schema and hands back the whole next value — `value` / `defaultValue` /
+`onValueChange`. It reads `$ref` into `$defs`, `anyOf: [T, null]` and `type: ["T", "null"]`,
+serde enums (plain, externally tagged including newtype variants, internally tagged on `kind`),
+tuples, string lists, and falls back to a JSON textarea for the rest. What the schema cannot
+say goes in a `UiSchema` (`groups`, per-path `fields`, a `renderField` escape hatch). Pure
+helpers for building your own: `defaultValueForSchema`, `resolveSchema`, `shapeOf`, `fieldAt` /
+`fieldsAt`, `getAtPath` / `setAtPath`, `firstParagraph`.
+
+```tsx
+<SchemaValueForm schema={schema} value={config} onValueChange={setConfig} ui={ui} columns={1} />
+```
+
 ## License
 
 Licensed under either of

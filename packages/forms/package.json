@@ -18,6 +18,7 @@
     "src",
     "!src/**/*.test.*",
     "!src/**/*.stories.*",
+    "!src/**/__fixtures__",
     "LICENSE-MIT",
     "LICENSE-APACHE"
   ],

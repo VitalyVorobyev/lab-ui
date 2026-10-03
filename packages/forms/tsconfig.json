@@ -1,6 +1,6 @@
 {
   "extends": "@vitavision/config-ts/tsconfig.lib.json",
-  // `vite/client` for `import.meta.glob` in src/stories.test.tsx.
-  "compilerOptions": { "types": ["vite/client"] },
+  // `vite/client` for `import.meta.glob` in src/stories.test.tsx; JSON for the schema fixtures.
+  "compilerOptions": { "types": ["vite/client"], "resolveJsonModule": true },
   "include": ["src", "*.config.ts"]
 }

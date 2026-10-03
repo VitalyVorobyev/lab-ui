@@ -5,6 +5,8 @@
 ```ts
 
 import { JSX } from 'react';
+import { ReactNode } from 'react';
+import { Ref } from 'react';
 
 // @public
 export type ChoiceOption = {
@@ -13,7 +15,38 @@ export type ChoiceOption = {
 };
 
 // @public
+export function defaultValueForSchema(schema: JsonSchema, root?: JsonSchema): unknown;
+
+// @public
 export function describeFields(schema: OptionsSchema): FieldSpec[];
+
+// @public
+export interface EnumOption {
+    description?: string | undefined;
+    label: string;
+    value: EnumValue;
+}
+
+// @public
+export type EnumValue = string | number | boolean;
+
+// @public
+export interface ExternalVariant {
+    description?: string | undefined;
+    label: string;
+    payload: JsonSchema | undefined;
+    tag: string;
+}
+
+// @public
+export function fieldAt(schema: JsonSchema, path: string, root?: JsonSchema, value?: unknown): FieldInfo | undefined;
+
+// @public
+export interface FieldInfo {
+    key: string;
+    required: boolean;
+    schema: JsonSchema;
+}
 
 // @public
 export type FieldKind = "text" | "number" | "boolean" | "string-list" | "json" |
@@ -21,6 +54,9 @@ export type FieldKind = "text" | "number" | "boolean" | "string-list" | "json" |
 "choice-inline" |
 /** A closed set, too many to show at once. */
 "choice";
+
+// @public
+export function fieldsAt(schema: JsonSchema, path: string, root?: JsonSchema, value?: unknown): FieldInfo[];
 
 // @public
 export type FieldSpec = {
@@ -41,10 +77,66 @@ export type FieldSpec = {
 };
 
 // @public
+export interface FieldUi {
+    descriptionAs?: "hint" | "inline" | "none" | undefined;
+    enumLabels?: Record<string, string> | undefined;
+    hidden?: boolean | undefined;
+    hint?: ReactNode;
+    label?: string | undefined;
+    max?: number | undefined;
+    min?: number | undefined;
+    restoreDefaultOnClear?: boolean | undefined;
+    span?: 1 | 2 | undefined;
+    step?: number | undefined;
+    unit?: string | undefined;
+    widget?: FieldWidget | undefined;
+}
+
+// @public
+export type FieldWidget = "number" | "text" | "select" | "segmented" | "checkbox" | "switch" | "json" | "tuple-row" | "string-list";
+
+// @public
+export function firstParagraph(description: string | null | undefined): string;
+
+// @public
+export function getAtPath(value: unknown, path: string): unknown;
+
+// @public
 export function initialValues(fields: FieldSpec[]): RawValues;
 
 // @public
 export function jsonErrors(fields: FieldSpec[], values: RawValues): string[];
+
+// @public
+export interface JsonSchema {
+    "x-primary"?: boolean | undefined;
+    "x-unit"?: string | undefined;
+    $defs?: Record<string, JsonSchema> | undefined;
+    $ref?: string | undefined;
+    additionalProperties?: JsonSchema | boolean | undefined;
+    allOf?: JsonSchema[] | undefined;
+    anyOf?: JsonSchema[] | undefined;
+    const?: unknown;
+    default?: unknown;
+    definitions?: Record<string, JsonSchema> | undefined;
+    description?: string | undefined;
+    enum?: unknown[] | undefined;
+    exclusiveMaximum?: number | undefined;
+    exclusiveMinimum?: number | undefined;
+    format?: string | undefined;
+    items?: JsonSchema | boolean | undefined;
+    maximum?: number | undefined;
+    maxItems?: number | undefined;
+    minimum?: number | undefined;
+    minItems?: number | undefined;
+    multipleOf?: number | undefined;
+    oneOf?: JsonSchema[] | undefined;
+    prefixItems?: JsonSchema[] | undefined;
+    properties?: Record<string, JsonSchema> | undefined;
+    required?: string[] | undefined;
+    title?: string | undefined;
+    type?: string | string[] | undefined;
+}
 
 // @public
 export function missingRequired(fields: FieldSpec[], values: RawValues): string[];
@@ -64,6 +156,30 @@ export function overrideCount(fields: FieldSpec[], values: RawValues): number;
 
 // @public
 export type RawValues = Record<string, string | boolean>;
+
+// @public
+export type RenderField = (context: RenderFieldContext) => ReactNode;
+
+// @public
+export interface RenderFieldContext {
+    disabled: boolean;
+    onChange: (next: unknown) => void;
+    path: string;
+    schema: JsonSchema;
+    value: unknown;
+}
+
+// @public
+export interface ResolvedSchema<T extends JsonSchema = JsonSchema> {
+    nullable: boolean;
+    schema: T;
+}
+
+// @public
+export function resolveRef(ref: string, root: JsonSchema): JsonSchema | undefined;
+
+// @public
+export function resolveSchema<T extends JsonSchema>(node: T, root?: JsonSchema): ResolvedSchema<T>;
 
 // @public
 export function SchemaForm(input: {
@@ -93,7 +209,101 @@ export type SchemaNode = {
 };
 
 // @public
+export type SchemaShape =
+/** A struct: its fields in schema order. */
+    {
+    kind: "object";
+    fields: FieldInfo[];
+} | {
+    kind: "string";
+} | {
+    kind: "integer";
+} | {
+    kind: "number";
+} | {
+    kind: "boolean";
+} |
+/** A closed set of primitives: `enum`, `const`, or `oneOf` of `{ const }`. */
+    {
+    kind: "enum";
+    options: EnumOption[];
+} |
+/** An enum whose variants are objects named by a shared `const` property. */
+    {
+    kind: "tagged";
+    discriminator: string;
+    variants: TaggedVariant[];
+} |
+/** A serde externally tagged enum. */
+    {
+    kind: "external";
+    variants: ExternalVariant[];
+} |
+/** An array of plain strings. */
+    {
+    kind: "string-list";
+    item: JsonSchema;
+} |
+/** A fixed-length array: `prefixItems`, or `minItems === maxItems` of numbers or objects. */
+    {
+    kind: "tuple";
+    items: JsonSchema[];
+} |
+/** Anything else: edited as JSON. */
+    {
+    kind: "json";
+};
+
+// @public
+export function SchemaValueForm(input: SchemaValueFormProps): JSX.Element;
+
+// @public
+export interface SchemaValueFormProps {
+    className?: string | undefined;
+    columns?: 1 | 2 | undefined;
+    defaultValue?: unknown;
+    disabled?: boolean | undefined;
+    onValueChange?: ((next: unknown) => void) | undefined;
+    ref?: Ref<HTMLDivElement> | undefined;
+    renderField?: RenderField | undefined;
+    schema: JsonSchema;
+    ui?: UiSchema | undefined;
+    value?: unknown;
+}
+
+// @public
+export function setAtPath(value: unknown, path: string, next: unknown): unknown;
+
+// @public
+export function shapeOf(node: JsonSchema, root?: JsonSchema): SchemaShape;
+
+// @public
+export interface TaggedVariant {
+    description?: string | undefined;
+    fields: FieldInfo[];
+    label: string;
+    schema: JsonSchema;
+    tag: string;
+}
+
+// @public
 export function toOptions(fields: FieldSpec[], values: RawValues): Record<string, unknown>;
+
+// @public
+export interface UiGroup {
+    collapsible?: boolean | undefined;
+    defaultOpen?: boolean | undefined;
+    fields: string[];
+    hint?: ReactNode;
+    id: string;
+    title: string;
+}
+
+// @public
+export interface UiSchema {
+    fields?: Record<string, FieldUi> | undefined;
+    groups?: UiGroup[] | undefined;
+}
 
 // (No @packageDocumentation comment for this package)
 

@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChessDetectorConfig",
+  "description": "Chessboard corner detector settings.\n\nHand-written in the shape schemars 1.x gives a Rust config struct.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "threshold": {
+      "$ref": "#/$defs/ThresholdMode",
+      "default": "Auto",
+      "description": "How the response threshold is chosen.\n\nSee `ThresholdMode` for the variants."
+    },
+    "nms_radius": {
+      "description": "Non-maximum suppression radius.",
+      "type": "number",
+      "format": "double",
+      "exclusiveMinimum": 0,
+      "default": 2.5,
+      "x-unit": "px"
+    },
+    "min_strength": {
+      "description": "Reject corners weaker than this. Unset keeps every corner.",
+      "type": ["number", "null"],
+      "format": "double",
+      "minimum": 0,
+      "default": null
+    },
+    "max_corners": {
+      "description": "Stop after this many corners; unset means no limit.",
+      "type": ["integer", "null"],
+      "format": "uint",
+      "minimum": 0,
+      "default": null
+    },
+    "refiner": {
+      "$ref": "#/$defs/RefinerKind",
+      "default": { "kind": "CenterOfMass", "radius": 3 },
+      "description": "Sub-pixel refinement, **tagged** on `kind`."
+    },
+    "upscale": {
+      "$ref": "#/$defs/Upscale",
+      "default": "None",
+      "description": "Image upscaling before detection."
+    },
+    "anchors": {
+      "description": "Three reference points on the board, in millimetres.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/Point" },
+      "minItems": 3,
+      "maxItems": 3,
+      "default": [
+        { "x": 0.0, "y": 0.0 },
+        { "x": 10.0, "y": 0.0 },
+        { "x": 0.0, "y": 10.0 }
+      ]
+    },
+    "roi": {
+      "description": "Region of interest `[x, y, w, h]` in pixels; unset searches the whole image.",
+      "type": ["array", "null"],
+      "items": { "type": "integer", "format": "uint32", "minimum": 0 },
+      "minItems": 4,
+      "maxItems": 4,
+      "default": null,
+      "x-unit": "px"
+    },
+    "pyramid": {
+      "anyOf": [{ "$ref": "#/$defs/Pyramid" }, { "type": "null" }],
+      "default": null,
+      "description": "Coarse-to-fine search. Unset searches at full resolution."
+    },
+    "blur_sigma": {
+      "description": "Gaussian blur before the response.",
+      "type": "number",
+      "format": "float",
+      "minimum": 0,
+      "maximum": 10,
+      "default": 1.0,
+      "x-unit": "px"
+    },
+    "channel_weights": {
+      "description": "Weights for converting a colour image to grey.",
+      "type": "array",
+      "items": { "type": "number", "format": "double" },
+      "default": [0.299, 0.587, 0.114]
+    },
+    "debug_dirs": {
+      "description": "Write intermediate images to these directories.",
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "debug_overlay": {
+      "description": "Draw the detected grid over the image.",
+      "type": "boolean",
+      "default": false
+    },
+    "label": {
+      "description": "Free-form note kept with the result.",
+      "type": ["string", "null"],
+      "default": null
+    }
+  },
+  "required": ["nms_radius", "refiner"],
+  "$defs": {
+    "ThresholdMode": {
+      "description": "How the response threshold is chosen.",
+      "oneOf": [
+        {
+          "description": "Pick the threshold from the response histogram.",
+          "type": "string",
+          "const": "Auto"
+        },
+        {
+          "description": "A fixed 8-bit response level.",
+          "type": "object",
+          "properties": {
+            "Fixed": { "type": "integer", "format": "uint32", "minimum": 0, "maximum": 255 }
+          },
+          "required": ["Fixed"],
+          "additionalProperties": false
+        },
+        {
+          "description": "A fraction of the strongest response.",
+          "type": "object",
+          "properties": {
+            "Relative": {
+              "type": "object",
+              "properties": {
+                "fraction": { "type": "number", "format": "double", "minimum": 0, "maximum": 1 },
+                "floor": { "type": "number", "format": "double", "minimum": 0, "default": 0.0 }
+              },
+              "required": ["fraction"]
+            }
+          },
+          "required": ["Relative"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "RefinerKind": {
+      "description": "Sub-pixel refinement strategy.",
+      "oneOf": [
+        {
+          "description": "Intensity-weighted centroid.",
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "CenterOfMass" },
+            "radius": { "description": "Window radius.", "type": "integer", "format": "uint32", "minimum": 1, "default": 3, "x-unit": "px" }
+          },
+          "required": ["kind", "radius"]
+        },
+        {
+          "description": "Forstner operator.",
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "Forstner" },
+            "radius": { "type": "integer", "format": "uint32", "minimum": 1, "default": 4, "x-unit": "px" },
+            "min_eigenvalue": { "type": ["number", "null"], "format": "double", "default": null }
+          },
+          "required": ["kind", "radius"]
+        },
+        {
+          "description": "Saddle-point fit.",
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "SaddlePoint" },
+            "max_iters": { "type": "integer", "format": "uint", "minimum": 1, "default": 10 }
+          },
+          "required": ["kind"]
+        }
+      ]
+    },
+    "Upscale": {
+      "oneOf": [
+        { "description": "Keep the image as it is.", "type": "string", "const": "None" },
+        { "description": "Double each side.", "type": "string", "const": "Double" },
+        { "description": "Quadruple each side.", "type": "string", "const": "Quadruple" },
+        { "description": "Eight times each side.", "type": "string", "const": "Octuple" }
+      ]
+    },
+    "Point": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number", "format": "double", "x-unit": "mm" },
+        "y": { "type": "number", "format": "double", "x-unit": "mm" }
+      },
+      "required": ["x", "y"]
+    },
+    "Pyramid": {
+      "type": "object",
+      "properties": {
+        "levels": { "type": "integer", "format": "uint8", "minimum": 1, "maximum": 8, "default": 3 },
+        "scale": { "type": "number", "format": "double", "exclusiveMinimum": 0, "exclusiveMaximum": 1, "default": 0.5 }
+      },
+      "required": ["levels", "scale"],
+      "additionalProperties": false
+    }
+  }
+}
