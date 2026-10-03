@@ -51,7 +51,8 @@
     },
     "packages/config/vitest": {
       "ignoreDependencies": [
-        "@storybook/react-vite"
+        "@storybook/react-vite",
+        "@vitest/browser-playwright"
       ]
     },
     "apps/storybook": {

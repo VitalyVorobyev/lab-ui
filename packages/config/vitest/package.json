@@ -15,6 +15,8 @@
   "files": [
     "index.js",
     "index.d.ts",
+    "dom.js",
+    "dom.d.ts",
     "setup.js",
     "stories.js",
     "stories.d.ts",
@@ -25,6 +27,10 @@
     ".": {
       "types": "./index.d.ts",
       "default": "./index.js"
+    },
+    "./dom": {
+      "types": "./dom.d.ts",
+      "default": "./dom.js"
     },
     "./stories": {
       "types": "./stories.d.ts",
@@ -54,6 +60,9 @@
       "optional": true
     },
     "@storybook/react-vite": {
+      "optional": true
+    },
+    "@vitest/browser-playwright": {
       "optional": true
     }
   }
