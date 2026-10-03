@@ -14,6 +14,14 @@ export {
 export { ImageLayer, type ImageLayerProps, type ImageTier } from "./components/stage/ImageLayer";
 
 export {
+  StageSurface,
+  useStageDrag,
+  type StageDrag,
+  type StagePress,
+  type StageSurfaceProps,
+} from "./components/stage/StageSurface";
+
+export {
   StageButton,
   StageLayersMenu,
   StageReadout,
@@ -90,6 +98,23 @@ export {
 
 export { ContourEditor, nearestContourSegment, type ContourEditorProps } from "./components/ContourEditor";
 export { RectRoiEditor, type RectRoiEditorProps } from "./components/RectRoiEditor";
+export {
+  PolylineSet,
+  type PolylineSelectMode,
+  type PolylineSetItem,
+  type PolylineSetProps,
+} from "./components/PolylineSet";
+export {
+  buildPolylineIndex,
+  nearestPolyline,
+  polylineBounds,
+  polylinePath,
+  polylinesInRect,
+  type Polyline,
+  type PolylineHit,
+  type PolylineId,
+  type PolylineIndex,
+} from "./components/polylineIndex";
 export {
   ROI_HANDLES,
   ROI_HANDLE_CURSOR,
