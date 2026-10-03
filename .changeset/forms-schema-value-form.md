@@ -1,5 +1,0 @@
----
-"@vitavision/forms": minor
----
-
-Add `SchemaValueForm`: edits a whole JSON value through its JSON Schema (schemars 1.x, draft 2020-12) and hands back the whole next value (`value` / `defaultValue` / `onValueChange`). Nested objects at any depth, `$ref` into `$defs`, `type: ["T", "null"]` and `anyOf: [T, null]` (a switch for a nullable block, an empty control for a nullable number or string), serde enums (plain, externally tagged including newtype variants, internally tagged on `kind`), tuples, string lists and a JSON fallback; integers stay integers. A `UiSchema` (`groups`, per-path `fields`, `columns`) carries the layout the schema cannot, and `renderField` takes over any field. New pure helpers: `defaultValueForSchema`, `resolveSchema`, `resolveRef`, `shapeOf`, `fieldAt`, `fieldsAt`, `getAtPath`, `setAtPath`, `firstParagraph`. `SchemaForm` and its helpers are unchanged; they now read `$ref` and the "or null" encodings through the same resolver, so `type: ["T", "null"]` and a `$ref` anywhere a schema is read now resolve there too.
