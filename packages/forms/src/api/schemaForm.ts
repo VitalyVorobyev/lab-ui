@@ -29,6 +29,8 @@
  * reported nowhere near the field that caused it.
  */
 
+import { labelFor, resolveSchema } from "./schemaNode";
+
 /** The subset of JSON Schema that pydantic (or an equivalent generator) emits for an options model. */
 export type SchemaNode = {
   type?: string;
@@ -108,51 +110,18 @@ export type FieldSpec = {
   range: string | null;
 };
 
-const DEFS_PREFIX = "#/$defs/";
-
 /**
- * Follow a `$ref` into `$defs`.
+ * The node that says what this field *is*, looked through `$ref` and "or null" encodings
+ * by the same resolver `SchemaValueForm` reads schemas with (see `schemaNode.ts`).
  *
- * The merge order matters and is the opposite of the obvious one. Pydantic writes the
- * field's `default` and `description` *beside* the `$ref`, while the target carries the
- * enum's own `title` and sometimes its own docstring as a `description`. The field's
- * statement about itself wins; the type's is the fallback.
+ * Both sides of the null-unwrap can hold the `$ref`: a plain `ColorMode` is a bare
+ * `$ref`, while an `Optional[ColorMode]` hides one inside `anyOf`.
  */
-function deref(node: SchemaNode, defs: Record<string, SchemaNode> | undefined): SchemaNode {
-  if (node.$ref === undefined) return node;
-  if (!node.$ref.startsWith(DEFS_PREFIX)) return node;
-
-  const target = defs?.[node.$ref.slice(DEFS_PREFIX.length)];
-  if (target === undefined) return node;
-
-  const rest: SchemaNode = { ...node };
-  delete rest.$ref;
-  return { ...target, ...rest };
+function resolve(node: SchemaNode, root: OptionsSchema): SchemaNode {
+  return resolveSchema(node, root).schema;
 }
 
-/**
- * Look through pydantic's `str | None` encoding to the type that carries the meaning.
- *
- * An optional string arrives as `anyOf: [{type: "string"}, {type: "null"}]`, and treating
- * that as an unrecognised node would give every nullable option a JSON textarea.
- */
-function unwrap(node: SchemaNode): SchemaNode {
-  if (!node.anyOf) return node;
-  const meaningful = node.anyOf.filter((branch) => branch.type !== "null");
-  return meaningful.length === 1 ? { ...node, ...meaningful[0] } : node;
-}
-
-/**
- * The node that says what this field *is*.
- *
- * Dereferenced on both sides of the unwrap because either can hold the `$ref`: a plain
- * `ColorMode` is a bare `$ref`, while an `Optional[ColorMode]` hides one inside `anyOf`.
- */
-function resolve(node: SchemaNode, defs: Record<string, SchemaNode> | undefined): SchemaNode {
-  return deref(unwrap(deref(node, defs)), defs);
-}
-
-function kindOf(resolved: SchemaNode): FieldKind {
+function kindOf(resolved: SchemaNode, root: OptionsSchema): FieldKind {
   // Before `type`, always: a `Literal` carries both, and the closed set is the stronger
   // statement of the two.
   if (Array.isArray(resolved.enum) && resolved.enum.length > 0) {
@@ -161,7 +130,7 @@ function kindOf(resolved: SchemaNode): FieldKind {
   if (resolved.type === "boolean") return "boolean";
   if (resolved.type === "integer" || resolved.type === "number") return "number";
   if (resolved.type === "string") return "text";
-  if (resolved.type === "array" && unwrap(resolved.items ?? {}).type === "string") {
+  if (resolved.type === "array" && resolve(resolved.items ?? {}, root).type === "string") {
     return "string-list";
   }
   return "json";
@@ -201,26 +170,6 @@ function isPrimary(node: SchemaNode, resolved: SchemaNode): boolean {
 
 /** Raw control state: what the operator chose, not what will be sent. */
 export type RawValues = Record<string, string | boolean>;
-
-/**
- * Humanise `normal_dirs` into `Normal dirs`.
- *
- * Pydantic emits a `title` for every field whether or not anyone wrote one, and its
- * generated form is Title Case — `Csv Path`, `Defect Type From Dir` — which reads like a
- * spreadsheet header rather than a form label. So a title is used only when it is *not*
- * the one pydantic would have generated, which is exactly when a human chose it.
- *
- * Read from the *unresolved* node on purpose. Dereferencing pulls in the enum class's own
- * title, so a resolved `color` field would be labelled "ColorMode".
- */
-function labelFor(name: string, node: SchemaNode): string {
-  const words = name.split("_");
-  const generated = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
-  if (node.title && node.title !== generated) return node.title;
-
-  const spaced = words.join(" ");
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-}
 
 /**
  * A value as a person reads it: scalars as themselves, anything structured as JSON rather
@@ -285,11 +234,9 @@ function stepOf(resolved: SchemaNode): number | "any" | undefined {
  */
 export function describeFields(schema: OptionsSchema): FieldSpec[] {
   const required = new Set(schema.required ?? []);
-  const defs = schema.$defs;
-
   return Object.entries(schema.properties ?? {}).map(([name, node]) => {
-    const resolved = resolve(node, defs);
-    const kind = kindOf(resolved);
+    const resolved = resolve(node, schema);
+    const kind = kindOf(resolved, schema);
     const numeric =
       (kind === "choice" || kind === "choice-inline") &&
       (resolved.type === "integer" || resolved.type === "number");

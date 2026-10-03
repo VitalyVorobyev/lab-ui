@@ -1,0 +1,347 @@
+{
+  "$defs": {
+    "DistortionFixMask": {
+      "description": "Mask for fixing distortion parameters during optimization.\n\nSupports Brown-Conrady distortion model with:\n- Radial coefficients: k1, k2, k3\n- Tangential coefficients: p1, p2\n\nSet a field to `true` to keep that parameter fixed during optimization.\n\n# Default\n\nBy default, `k3` is fixed because it often causes overfitting with\ntypical calibration data. Only enable k3 optimization for wide-angle\nlenses or with high-quality calibration data.\n\n# Example\n\n```\nuse vision_calibration_core::DistortionFixMask;\n\n// Default: k3 fixed, others free\nlet mask = DistortionFixMask::default();\nassert!(!mask.k1);\nassert!(mask.k3); // k3 fixed by default\n\n// Fix tangential distortion\nlet mask = DistortionFixMask {\n    p1: true,\n    p2: true,\n    ..Default::default()\n};\n```",
+      "properties": {
+        "k1": {
+          "description": "Fix first radial distortion coefficient.",
+          "type": "boolean"
+        },
+        "k2": {
+          "description": "Fix second radial distortion coefficient.",
+          "type": "boolean"
+        },
+        "k3": {
+          "description": "Fix third radial distortion coefficient (fixed by default).",
+          "type": "boolean"
+        },
+        "p1": {
+          "description": "Fix first tangential distortion coefficient.",
+          "type": "boolean"
+        },
+        "p2": {
+          "description": "Fix second tangential distortion coefficient.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "k1",
+        "k2",
+        "k3",
+        "p1",
+        "p2"
+      ],
+      "type": "object"
+    },
+    "DistortionKind": {
+      "description": "Which distortion model a camera carries.\n\n`dim() == 0` means the factor takes no distortion parameter block.",
+      "oneOf": [
+        {
+          "const": "none",
+          "description": "No distortion; no parameter block.",
+          "type": "string"
+        },
+        {
+          "const": "brown_conrady5",
+          "description": "Brown-Conrady `[k1, k2, k3, p1, p2]`.",
+          "type": "string"
+        },
+        {
+          "const": "rational8",
+          "description": "Rational polynomial `[k1, k2, k3, k4, k5, k6, p1, p2]`.",
+          "type": "string"
+        },
+        {
+          "const": "thin_prism9",
+          "description": "Brown-Conrady + thin-prism `[k1, k2, k3, p1, p2, s1, s2, s3, s4]`.",
+          "type": "string"
+        },
+        {
+          "const": "division1",
+          "description": "Fitzgibbon division model `[lambda]`.",
+          "type": "string"
+        }
+      ]
+    },
+    "IntrinsicsInitConfig": {
+      "additionalProperties": false,
+      "description": "Per-camera linear-initialization stage (Zhang's method + iterative\nBrown-Conrady distortion fit).\n\nShared by every intrinsics-bearing problem's `init` config group.",
+      "properties": {
+        "fix_k3": {
+          "description": "Fix k3 during initialization (recommended for typical lenses).",
+          "type": "boolean"
+        },
+        "fix_tangential": {
+          "description": "Fix tangential distortion (p1, p2) during initialization.\n\nDefaults to `false` here; the Scheimpflug intrinsics problem\noverrides its own `init` default to `true` (was hard-coded before\nADR 0024 — the tilt/tangential-distortion coupling makes a free\ntangential term ill-posed during the linear stage).",
+          "type": "boolean"
+        },
+        "init_iterations": {
+          "description": "Number of iterations for iterative intrinsics estimation.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "zero_skew": {
+          "description": "Enforce zero skew during initialization.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "init_iterations",
+        "fix_k3",
+        "fix_tangential",
+        "zero_skew"
+      ],
+      "type": "object"
+    },
+    "RigConfig": {
+      "additionalProperties": false,
+      "description": "Multi-camera rig frame options: reference-camera gauge and rig-BA scope.\n\nShared by every rig problem's `rig` config group (`RigExtrinsicsConfig`\ntoday; `RigHandeyeConfig` follows in a later ADR 0024 wave).",
+      "properties": {
+        "reference_camera_idx": {
+          "description": "Reference camera index for the rig frame (identity extrinsics).",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "refine_intrinsics_in_rig_ba": {
+          "description": "Re-refine per-camera intrinsics jointly during rig bundle adjustment.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "reference_camera_idx",
+        "refine_intrinsics_in_rig_ba"
+      ],
+      "type": "object"
+    },
+    "RobustLoss": {
+      "description": "Robust loss applied to a residual block.\n\nEach residual block has its own loss; per-point robustification is achieved\nby using one residual block per observation.",
+      "oneOf": [
+        {
+          "const": "None",
+          "description": "No robustification (plain squared residual).",
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Huber loss with transition scale.",
+          "properties": {
+            "Huber": {
+              "properties": {
+                "scale": {
+                  "description": "Scale parameter controlling quadratic-to-linear transition.",
+                  "format": "double",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "scale"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "Huber"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Cauchy loss with scale parameter.",
+          "properties": {
+            "Cauchy": {
+              "properties": {
+                "scale": {
+                  "description": "Scale parameter controlling outlier down-weighting.",
+                  "format": "double",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "scale"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "Cauchy"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Arctangent loss with bounded influence.",
+          "properties": {
+            "Arctan": {
+              "properties": {
+                "scale": {
+                  "description": "Scale parameter controlling curvature.",
+                  "format": "double",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "scale"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "Arctan"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ScheimpflugFixMask": {
+      "description": "Mask for Scheimpflug tilt parameters.",
+      "properties": {
+        "tilt_x": {
+          "description": "Keep `tilt_x` fixed during optimization.",
+          "type": "boolean"
+        },
+        "tilt_y": {
+          "description": "Keep `tilt_y` fixed during optimization.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "tilt_x",
+        "tilt_y"
+      ],
+      "type": "object"
+    },
+    "SensorMode": {
+      "description": "Sensor flavour for rig calibration workflows.\n\n`Pinhole` is the default and matches a standard multi-camera rig with\npure pinhole + Brown-Conrady distortion projection. `Scheimpflug` adds\nper-camera tilt parameters; per-camera intrinsics share the pinhole core\nbut include a tilted sensor plane in projection.\n\nThe `Scheimpflug` variant carries its own bootstrap defaults and BA-stage\nfix masks so the rest of the workflow config stays shared between flavours.\n\nRe-exported by [`crate::rig_extrinsics::SensorMode`] and\n[`crate::rig_handeye::SensorMode`] (single source of truth in `rig_family`).",
+      "oneOf": [
+        {
+          "description": "Pinhole + Brown-Conrady projection (no sensor tilt).",
+          "properties": {
+            "kind": {
+              "const": "Pinhole",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Pinhole + Brown-Conrady + Scheimpflug-tilted sensor.",
+          "properties": {
+            "distortion_mask_in_percam_ba": {
+              "$ref": "#/$defs/DistortionFixMask",
+              "default": {
+                "k1": false,
+                "k2": false,
+                "k3": true,
+                "p1": true,
+                "p2": true
+              },
+              "description": "Distortion mask applied during per-camera Scheimpflug intrinsics\nrefinement. Defaults to [`DistortionFixMask::radial_only`]\n(k1, k2 free; k3, p1, p2 fixed) — a safe choice for typical\nScheimpflug rigs where tangential distortion can absorb tilt-like\nsignal. Narrow-FOV rigs that overfit k2 may want\n`(k1, p1, p2) free, (k2, k3) fixed` instead."
+            },
+            "distortion_model": {
+              "$ref": "#/$defs/DistortionKind",
+              "default": "brown_conrady5",
+              "description": "Distortion model for the per-camera Scheimpflug intrinsics.\n\nOnly [`DistortionKind::BrownConrady5`] (the default) is supported:\nthe joint rig bundle adjustment is Brown-Conrady-typed. Non-BC5\nmodels are rejected up front by the rig `validate_config` (ADR 0019)\nrather than deep in the solver. The field exists for schema\nsymmetry with the single-camera Scheimpflug path."
+            },
+            "fix_scheimpflug": {
+              "$ref": "#/$defs/ScheimpflugFixMask",
+              "default": {
+                "tilt_x": false,
+                "tilt_y": false
+              },
+              "description": "Mask for Scheimpflug parameters during per-camera intrinsics refinement."
+            },
+            "init_tilt_x": {
+              "default": 0.0,
+              "description": "Initial Scheimpflug tilt around X (radians) — used only when no\nper-camera sensor seed is supplied via the workflow's manual init.",
+              "format": "double",
+              "type": "number"
+            },
+            "init_tilt_y": {
+              "default": 0.0,
+              "description": "Initial Scheimpflug tilt around Y (radians) — same convention.",
+              "format": "double",
+              "type": "number"
+            },
+            "kind": {
+              "const": "Scheimpflug",
+              "type": "string"
+            },
+            "refine_scheimpflug_in_rig_ba": {
+              "default": false,
+              "description": "Re-refine Scheimpflug parameters in rig BA (default: false).",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "SolverConfig": {
+      "additionalProperties": false,
+      "description": "Non-linear solve stage options shared across problem types.\n\n`max_iters` has no single workspace-wide default — problems override it\nper solve-stage cost. Documented per-problem defaults: 50 standard; 120\nfor the Scheimpflug single-cam tilt valley; 30 for a warm-started joint\nrig+hand-eye+laser polish; 200 for the rig-laserline frozen-geometry\nstage (cheap 1-DOF-per-view problem). This struct's own [`Default`] is\n50 — the plain value used by problems with no reason to deviate.",
+      "properties": {
+        "max_iters": {
+          "description": "Maximum iterations for the non-linear optimizer.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "robust_loss": {
+          "$ref": "#/$defs/RobustLoss",
+          "description": "Robust loss function for outlier handling."
+        },
+        "verbosity": {
+          "description": "Verbosity level (0 = silent, 1 = summary, 2+ = detailed).",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_iters",
+        "verbosity",
+        "robust_loss"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Configuration for multi-camera rig extrinsics calibration.\n\nGrouped per ADR 0024. Shared between pinhole and Scheimpflug rigs; the\n[`SensorMode`] field `sensor` selects the sensor flavour.\n\nThe reference-camera gauge fix (`rig.reference_camera_idx`) alone removes\nthe full 6-DOF rig gauge; an extra per-view pose constraint would be\nredundant and mildly pessimizing (see `docs/notes/rig-extrinsics.md`\n§Gauge). View-0's rig-from-target pose is always free in the rig BA.",
+  "properties": {
+    "intrinsics": {
+      "$ref": "#/$defs/IntrinsicsInitConfig",
+      "description": "Per-camera linear-initialization stage settings."
+    },
+    "rig": {
+      "$ref": "#/$defs/RigConfig",
+      "description": "Rig frame options (reference camera, rig-BA scope)."
+    },
+    "sensor": {
+      "$ref": "#/$defs/SensorMode",
+      "default": {
+        "kind": "Pinhole"
+      },
+      "description": "Sensor flavour (pinhole or Scheimpflug)."
+    },
+    "solver": {
+      "$ref": "#/$defs/SolverConfig",
+      "description": "Non-linear solve stage settings."
+    }
+  },
+  "required": [
+    "intrinsics",
+    "rig",
+    "solver"
+  ],
+  "title": "RigExtrinsicsConfig",
+  "type": "object"
+}

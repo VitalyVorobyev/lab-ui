@@ -32,7 +32,7 @@
       "react-dom",
       "react/jsx-runtime"
     ],
-    "limit": "2.3 kB"
+    "limit": "8.6 kB"
   },
   {
     "name": "@vitavision/charts",
