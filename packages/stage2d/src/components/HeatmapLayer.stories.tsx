@@ -10,6 +10,11 @@ import { ImageStage } from "./stage/ImageStage";
 import type { StageView } from "./stage/view";
 
 const IMAGE = { width: 400, height: 300 };
+/**
+ * Rasterising goes through `canvas.toBlob`, which encodes off the main thread; on a CI runner
+ * under coverage instrumentation that can take longer than `waitFor`'s 1 s default.
+ */
+const RASTER_WAIT = { timeout: 5000 };
 const VIEW: StageView = { scale: 1, tx: 0, ty: 0 };
 
 /** A dark-blue to yellow sequential map through five anchor colours. */
@@ -118,9 +123,9 @@ const heatmap = (root: Element) => root.querySelector<HTMLImageElement>("img[dat
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     ready.mockClear();
-    await waitFor(() => expect(heatmap(canvasElement)).not.toBeNull());
+    await waitFor(() => expect(heatmap(canvasElement)).not.toBeNull(), RASTER_WAIT);
     const img = heatmap(canvasElement)!;
-    await waitFor(() => expect(img).toHaveAttribute("data-ready"));
+    await waitFor(() => expect(img).toHaveAttribute("data-ready"), RASTER_WAIT);
     await expect(ready).toHaveBeenCalled();
     // It covers the image 1:1: the image's top-left edge is (-0.5, -0.5) in image coordinates, CSS 0.
     await expect(img.style.left).toBe("0px");
@@ -142,7 +147,7 @@ export const FromRgba: Story = {
     </Frame>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"));
+    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"), RASTER_WAIT);
   },
 };
 
@@ -158,7 +163,7 @@ export const FromUint8ArrayView: Story = {
     );
   },
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"));
+    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"), RASTER_WAIT);
   },
 };
 
@@ -169,7 +174,7 @@ export const Placed: Story = {
     </Frame>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(heatmap(canvasElement)).not.toBeNull());
+    await waitFor(() => expect(heatmap(canvasElement)).not.toBeNull(), RASTER_WAIT);
     const img = heatmap(canvasElement)!;
     await expect([img.style.left, img.style.top, img.style.width, img.style.height]).toEqual(["100px", "60px", "200px", "150px"]);
   },
@@ -182,7 +187,7 @@ export const FixedRangeAndChannel: Story = {
     </Frame>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"));
+    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"), RASTER_WAIT);
   },
 };
 
@@ -194,7 +199,7 @@ export const PixelatedWhenZoomedIn: Story = {
     </Frame>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(heatmap(canvasElement)).not.toBeNull());
+    await waitFor(() => expect(heatmap(canvasElement)).not.toBeNull(), RASTER_WAIT);
     const img = heatmap(canvasElement)!;
     // 400 image px over 8 heatmap px, at 5x: 250 CSS px per cell.
     await expect(img).toHaveAttribute("data-pixelated");
@@ -222,7 +227,7 @@ export const BufferTooShort: Story = {
     </Frame>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(tooShort).toHaveBeenCalled());
+    await waitFor(() => expect(tooShort).toHaveBeenCalled(), RASTER_WAIT);
     await expect(heatmap(canvasElement)).toBeNull();
   },
 };
@@ -236,7 +241,7 @@ export const UnderOverlays: Story = {
     </Frame>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"));
+    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"), RASTER_WAIT);
     await expect(heatmap(canvasElement)!.compareDocumentPosition(canvasElement.querySelector("svg[role=img]")!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     await expect(getComputedStyle(heatmap(canvasElement)!).pointerEvents).toBe("none");
   },
@@ -268,11 +273,11 @@ export const ReplacedMapRevokesItsUrl: Story = {
   render: () => <Swap />,
   play: async ({ canvas, canvasElement }) => {
     const revoke = spyOn(URL, "revokeObjectURL");
-    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"));
+    await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"), RASTER_WAIT);
     const first = heatmap(canvasElement)!.src;
     await fireEvent.click(canvas.getByRole("button", { name: "Next frame" }));
-    await waitFor(() => expect(heatmap(canvasElement)!.src).not.toBe(first));
-    await waitFor(() => expect(revoke).toHaveBeenCalledWith(first));
+    await waitFor(() => expect(heatmap(canvasElement)!.src).not.toBe(first), RASTER_WAIT);
+    await waitFor(() => expect(revoke).toHaveBeenCalledWith(first), RASTER_WAIT);
     revoke.mockRestore();
   },
 };
