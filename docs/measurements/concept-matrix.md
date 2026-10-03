@@ -44,7 +44,7 @@ Cells: **n** = files in that repo implementing the concept locally · ◆ = uses
 | [Studio app shell (header, side panels, status)](#app-shell) | workbench | 1 | **2** |  |  |  |  |  | ◆ | · |  |  |  |
 | [Thumbnail strip / sequence navigator](#sequence-navigator) | workbench | 3 | **1** |  |  |  |  |  | **2** | **1** |  |  |  |
 | [File drop / open files](#file-drop) | workbench | 2 | **1** |  |  |  |  |  | **1** |  |  |  |  |
-| [Calibration-target / feature overlay](#target-overlay) | overlays | 6 |  |  | **6** | **1** | **2** | **1** |  |  | **1** | **1** |  |
+| [Calibration-target / feature overlay](#target-overlay) | overlays | 7 | **1** |  | **9** | **1** | **2** | **1** |  |  | **1** | **1** |  |
 | [Heatmap / colour-scale layer](#heatmap) | overlays | 2 |  | **1** | **2** |  |  |  |  |  |  |  |  |
 | [3D scene / camera frustum / target board](#3d-frustum) | three | 1 | **3** |  |  | ◆ |  |  |  |  |  |  |  |
 | [3D point cloud](#point-cloud) | three | 1 |  |  |  | **1** |  |  |  |  |  |  |  |
@@ -60,7 +60,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 | charts | 6 | 14 | 5 |
 | stage2d | 10 | 39 | 10 |
 | workbench | 3 | 6 | 2 |
-| overlays | 2 | 8 | 2 |
+| overlays | 2 | 10 | 2 |
 | three | 2 | 2 | 0 |
 
 ## Concepts
@@ -456,7 +456,8 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 ### Calibration-target / feature overlay
 
-- **vitavision**: `src/components/editor/canvas/overlays/CharucoOverlay.tsx`, `src/components/editor/canvas/overlays/ChessboardOverlay.tsx`, `src/components/editor/canvas/overlays/MarkerboardOverlay.tsx`, `src/components/editor/canvas/overlays/GridEdgesGroup.tsx`, `src/components/editor/algorithms/puzzleboard/PuzzleboardOverlay.tsx`, `src/components/editor/algorithms/radsym/RadsymOverlay.tsx`
+- **lab-ui**: `packages/overlays/src/TargetOverlay.tsx`
+- **vitavision**: `src/components/editor/canvas/overlays/CharucoOverlay.tsx`, `src/components/editor/canvas/overlays/ChessboardOverlay.tsx`, `src/components/editor/canvas/overlays/MarkerboardOverlay.tsx`, `src/components/editor/canvas/overlays/GridEdgesGroup.tsx`, `src/components/editor/algorithms/puzzleboard/PuzzleboardOverlay.tsx`, `src/components/editor/canvas/primitives/ArUcoMarkerGlyph.tsx`, `src/components/editor/canvas/primitives/CircleGlyph.tsx`, `src/components/editor/canvas/primitives/DirectedPointGlyph.tsx`, `src/components/editor/canvas/primitives/RingMarkerGlyph.tsx` · _vitavision has no radsym overlay_
 - **calibration-rs**: `src/workspaces/EpipolarWorkspace/EpipolarOverlay.tsx` · _residual arrows drawn inside FrameCanvas.tsx_
 - **calib-targets-rs/studio**: `src/components/overlays.ts`, `src/components/diagnoseOverlays.ts`
 - **calib-targets-rs/demo**: `src/components/overlays.ts`

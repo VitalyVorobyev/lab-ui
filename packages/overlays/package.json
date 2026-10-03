@@ -1,0 +1,55 @@
+{
+  "name": "@vitavision/overlays",
+  "version": "0.0.0",
+  "description": "Calibration-target overlays for the vitavision lab apps: one TargetOverlay for chessboard, ChArUco, marker board, PuzzleBoard and ring-grid detections on the stage2d image stage.",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VitalyVorobyev/lab-ui.git",
+    "directory": "packages/overlays"
+  },
+  "homepage": "https://github.com/VitalyVorobyev/lab-ui/tree/main/packages/overlays#readme",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.*",
+    "!src/**/*.stories.*",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
+  "exports": {
+    ".": {
+      "@vitavision/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./src/styles.css",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "api": "api-extractor run --local",
+    "coverage": "vitest run --coverage",
+    "api:check": "api-extractor run"
+  },
+  "peerDependencies": {
+    "@vitavision/stage2d": ">=0.9.0 <1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "10.6.0",
+    "@vitavision/stage2d": "workspace:^",
+    "@vitavision/ui": "workspace:^",
+    "storybook": "10.6.0"
+  }
+}

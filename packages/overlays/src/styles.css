@@ -1,0 +1,8 @@
+/*
+ * `@source` makes Tailwind v4 find this package's class names: it resolves against the
+ * stylesheet that declares it, and this file is exported from `src/` (which ships), so it scans
+ * the package's sources. Import it after `@vitavision/stage2d/styles.css`, which defines the
+ * overlay role colours (`--stage-feature`, …) every mark here is painted in. This package adds
+ * no colours of its own: overlay colours are roles, never hexes (visual-language §5).
+ */
+@source "./";

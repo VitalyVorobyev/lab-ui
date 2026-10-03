@@ -73,6 +73,18 @@
     ]
   },
   {
+    "name": "@vitavision/overlays",
+    "path": "packages/overlays/dist/index.js",
+    "import": "*",
+    "limit": "4.1 kB",
+    "ignore": [
+      "@vitavision/stage2d",
+      "react",
+      "react-dom",
+      "react/jsx-runtime"
+    ]
+  },
+  {
     "name": "@vitavision/three",
     "path": "packages/three/dist/index.js",
     "import": "*",
