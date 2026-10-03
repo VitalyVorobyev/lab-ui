@@ -17,8 +17,20 @@
 
 import { useId } from "react";
 
+import type { ButtonSize } from "./Button";
 import { useFieldDescription } from "./Field";
 import { cn } from "./cn";
+
+/**
+ * The segment's own box, by size. `sm` is the toolbar size and the default. `md` sets the
+ * height explicitly rather than leaving it to padding plus line-height: the strip around it
+ * is `h-8` with a 1px border and `p-0.5`, which leaves 26px of content box, and `h-full`
+ * fills exactly that whatever the font's line height turns out to be.
+ */
+const SEGMENT_SIZE_CLASSES: Record<ButtonSize, string> = {
+  sm: "px-2.5 py-1 text-xs",
+  md: "flex h-full items-center px-3.5 text-sm",
+};
 
 /**
  * A choice among two or three, shown as a strip of segments (native radios in one group, so
@@ -28,6 +40,9 @@ import { cn } from "./cn";
  * or `defaultValue` while `value` is `""` — and choosing the segment that matches
  * `defaultValue` reports `""`, so the default stays defined in one place. Each segment
  * carries `data-state="checked"` or `"unchecked"`; the group carries `data-disabled`.
+ *
+ * Toolbar-sized by default. In a row with a comfortable-density `Input`, `Select` or
+ * `Button`, pass `size="md"` and the strip's outer height matches theirs.
  */
 export function SegmentedControl({
   value,
@@ -36,6 +51,7 @@ export function SegmentedControl({
   onValueChange,
   disabled = false,
   "aria-label": ariaLabel,
+  size = "sm",
   className,
 }: {
   /** `""` when the field is untouched. */
@@ -50,6 +66,13 @@ export function SegmentedControl({
   disabled?: boolean | undefined;
   /** Names the radio group. */
   "aria-label"?: string | undefined;
+  /**
+   * The strip's height: `sm` (the default) is the toolbar size, about 30px with `text-xs`
+   * labels; `md` is exactly 32px (`h-8`) outside, border included, with `text-sm` labels, the
+   * height of a comfortable-density `Input` or `Button`. Not derived from the density in
+   * force, so a consumer that never passes it renders as it always did.
+   */
+  size?: ButtonSize | undefined;
   /** Merged with the strip's own classes through `cn`. */
   className?: string | undefined;
 }) {
@@ -68,6 +91,7 @@ export function SegmentedControl({
         // its default `1 1 auto` gives up width first, and the segment labels are what pay for
         // it. Let the row scroll instead of squeezing the choice.
         "inline-flex w-fit max-w-full shrink-0 items-center gap-0.5 rounded-control border border-line-strong bg-raised p-0.5",
+        size === "md" && "h-8",
         disabled && "opacity-50",
         className,
       )}
@@ -82,7 +106,9 @@ export function SegmentedControl({
               // `whitespace-nowrap` or a two-word label's min-content width is its longest
               // *word*, and "Side by side" is free to stack onto three lines inside a
               // fixed-height strip that then clips it.
-              "relative cursor-pointer whitespace-nowrap rounded-[0.3rem] px-2.5 py-1 text-xs font-medium transition-colors",
+              "relative cursor-pointer whitespace-nowrap rounded-[0.3rem]",
+              SEGMENT_SIZE_CLASSES[size],
+              "font-medium transition-colors",
               "has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-signal",
               checked
                 ? "bg-surface text-fg shadow-sm"

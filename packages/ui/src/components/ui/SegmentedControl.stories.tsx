@@ -2,6 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ComponentProps, useState } from "react";
 import { expect, fn, userEvent } from "storybook/test";
 
+import { Button } from "./Button";
+import { DensityProvider } from "./Density";
+import { Input } from "./Input";
 import { SegmentedControl } from "./SegmentedControl";
 
 /** Holds the value, so the story behaves like the form field it stands in for. */
@@ -30,6 +33,8 @@ const meta = {
 **Use** it for a small closed set the app knows up front (a model size, an axis). \`""\` means
 unset: the highlighted segment is the *effective* value (\`defaultValue\` while unset), and choosing
 the segment that matches the default stores \`""\` again, so the default lives in one place.
+
+\`size\` is \`"sm"\` (the toolbar size, the default) or \`"md"\` (exactly 32px outside, to sit in a row with a comfortable-density \`Input\` or \`Button\`).
 
 **Don't** use it for more than about three options or labels that don't fit on one line (that is
 \`Select\`), or for an on/off setting (that is \`Switch\`).
@@ -110,4 +115,24 @@ export const Disabled: Story = {
     await userEvent.click(canvas.getByRole("radio", { name: "Large" }), { pointerEventsCheck: 0 });
     await expect(args.onValueChange).not.toHaveBeenCalled();
   },
+};
+
+export const Sizes: Story = {
+  args: { value: "small" },
+  render: (args) => (
+    <div className="flex flex-col gap-4">
+      <DensityProvider value="compact">
+        <div data-row="sm" className="flex items-center gap-2">
+          <Controlled {...args} size="sm" />
+          <Input aria-label="Name (sm)" defaultValue="sm" className="w-24" />
+          <Button size="sm">Apply</Button>
+        </div>
+      </DensityProvider>
+      <div data-row="md" className="flex items-center gap-2">
+        <Controlled {...args} size="md" />
+        <Input aria-label="Name (md)" defaultValue="md" className="w-24" />
+        <Button size="md">Apply</Button>
+      </div>
+    </div>
+  ),
 };

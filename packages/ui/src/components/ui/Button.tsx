@@ -12,7 +12,10 @@ import { cn, focusRing } from "./cn";
  */
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
-/** A button's height and padding. `md` is the comfortable density's size, `sm` the compact one's. */
+/**
+ * A control's height and padding, shared by `Button`, `SegmentedControl` and `ToggleChip`. For a
+ * button, `md` is the comfortable density's size and `sm` the compact one's.
+ */
 export type ButtonSize = "sm" | "md";
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
