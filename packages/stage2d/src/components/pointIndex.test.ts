@@ -179,23 +179,29 @@ describe("properties against an exhaustive search", () => {
   });
 
   it("thinPoints is a maximal selection with every pair at least minDist apart", () => {
+    // Accumulate and assert once: an `expect` per pair makes this O(k²) assertions, which
+    // times out on a CI runner.
     for (const minDist of [3, 24, 90]) {
       const kept = thinPoints(xy, minDist);
       const keptSet = new Set(kept);
+      let closest = Infinity;
       for (let a = 0; a < kept.length; a++) {
         for (let b = a + 1; b < kept.length; b++) {
           const d = Math.hypot(xy[2 * kept[a]!]! - xy[2 * kept[b]!]!, xy[2 * kept[a]! + 1]! - xy[2 * kept[b]! + 1]!);
-          expect(d).toBeGreaterThanOrEqual(minDist);
+          if (d < closest) closest = d;
         }
       }
+      expect(closest).toBeGreaterThanOrEqual(minDist);
       // Every dropped point is within minDist of a point kept before it.
+      const orphans: number[] = [];
       for (let i = 0; i < n; i++) {
         if (keptSet.has(i)) continue;
         const close = kept.some(
           (k) => k < i && Math.hypot(xy[2 * k]! - xy[2 * i]!, xy[2 * k + 1]! - xy[2 * i + 1]!) < minDist,
         );
-        expect(close).toBe(true);
+        if (!close) orphans.push(i);
       }
+      expect(orphans).toEqual([]);
     }
   });
 });
