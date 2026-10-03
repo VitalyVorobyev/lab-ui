@@ -127,7 +127,8 @@ keep independent preferences.
 `SkeletonRows` · `Field` · `Input`, `NumberInput` (with an optional `unit` written in the
 field), `Textarea` · `VectorInput`, `PoseInput` · `PageHeader`, `Panel`,
 `ReadoutStrip`, `Section` · `SegmentedControl` · `Select` · `Slider` · `Table` ·
-`Checkbox`, `Switch` · `ToggleChip` · `InfoHint`, `Tooltip`, `TooltipProvider` ·
+`Checkbox`, `Switch` · `ToggleChip` · `Toaster`, `toast()` (notifications from anywhere; mount one `<Toaster />` near the root) ·
+`InfoHint`, `Tooltip`, `TooltipProvider` ·
 `ThemeToggle` · plus `cn`, `focusRing`, `focusRingInset`.
 
 `PoseInput` edits an SE(3) pose in the wire form `{ rotation: [qx, qy, qz, qw], translation:

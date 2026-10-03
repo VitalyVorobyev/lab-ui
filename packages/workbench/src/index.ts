@@ -1,7 +1,7 @@
 /**
  * `@vitavision/workbench` — the building blocks of a studio app on `@vitavision/ui`: the
  * shell and its split panes, a tree navigator, a playback transport over a sampled timeline,
- * file opening, and notifications.
+ * file opening, and (re-exported from `@vitavision/ui`) notifications.
  *
  * Import `@vitavision/workbench/styles.css` after `@vitavision/ui/styles.css`.
  *
@@ -55,13 +55,16 @@ export {
 export { FileDrop, type FileDropProps } from "./components/FileDrop";
 export { acceptsFile, collectDroppedFiles, type DropEntry } from "./components/dropFiles";
 
-export { Toaster, type ToasterProps } from "./components/Toaster";
+// Notifications moved to `@vitavision/ui` (a second app needed them). These are re-exports of
+// the same bindings, so there is still one default store; prefer importing from `@vitavision/ui`.
 export {
   createToastStore,
   defaultToastStore,
+  Toaster,
   toast,
+  type ToasterProps,
   type ToastOptions,
   type ToastRecord,
   type ToastStore,
   type ToastTone,
-} from "./components/toastStore";
+} from "@vitavision/ui";

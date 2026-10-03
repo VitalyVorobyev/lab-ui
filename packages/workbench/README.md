@@ -25,12 +25,12 @@ bun add @vitavision/workbench @vitavision/ui
 | `PlaybackBar` | Transport for a sampled timeline: step, play/pause, markers, scrubber, `t = k · dt`, speed, loop. |
 | `createPlayhead`, `usePlayhead`, `usePlaybackClock` | The playback position as an external store, and the real-time clock that drives it. |
 | `FileDrop` | Drop zone (or full-window `overlay`) plus an "Open files…" button; `accept` applied to both routes; dropped folders walked. |
-| `Toaster`, `toast()` | Notifications from anywhere; one `<Toaster />` near the root. |
+| `Toaster`, `toast()` | Notifications from anywhere; one `<Toaster />` near the root. **Now lives in `@vitavision/ui`**; re-exported here (same bindings, one default store) so existing imports keep working. Prefer `import { toast } from "@vitavision/ui"`. |
 
 The pure logic behind them is exported too and tested without a DOM: `splitSize.ts`
 (`resolveSize`, `resolveLimits`, `clampSize`), `treeModel.ts` (`visibleRows`, `treeKeyAction`,
 `ancestorIds`, `parentIds`), `playhead.ts` (`advance`, `clampIndex`, `formatSeconds`),
-`dropFiles.ts` (`acceptsFile`, `collectDroppedFiles`), `toastStore.ts` (`createToastStore`).
+`dropFiles.ts` (`acceptsFile`, `collectDroppedFiles`).
 
 ### Playback without re-rendering the app
 

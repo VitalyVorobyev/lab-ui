@@ -2,8 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
-import { Button } from "@vitavision/ui";
-
+import { Button } from "./Button";
 import { Toaster, type ToasterProps } from "./Toaster";
 import { createToastStore, type ToastStore } from "./toastStore";
 
@@ -44,7 +43,7 @@ function Demo(args: ToasterProps) {
 }
 
 const meta = {
-  title: "workbench/Toaster",
+  title: "ui/Toaster",
   component: Toaster,
   parameters: {
     docs: {

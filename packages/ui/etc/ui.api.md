@@ -124,7 +124,13 @@ export function CountRun(input: {
 }): JSX.Element;
 
 // @public
+export function createToastStore(): ToastStore;
+
+// @public
 export const DEFAULT_THEME_STORAGE_KEY = "vitavision-theme";
+
+// @public
+export const defaultToastStore: ToastStore;
 
 // @public
 export type Density = "comfortable" | "compact";
@@ -431,6 +437,50 @@ export function ThemeToggle(input: {
     storageKey?: string | undefined;
     className?: string | undefined;
 }): JSX.Element;
+
+// @public
+export const toast: ((options: ToastOptions) => string) & {
+    dismiss: (id?: string) => void;
+};
+
+// @public
+export function Toaster(input: ToasterProps): JSX.Element;
+
+// @public
+export interface ToasterProps {
+    className?: string | undefined;
+    limit?: number | undefined;
+    store?: ToastStore | undefined;
+}
+
+// @public
+export interface ToastOptions {
+    description?: string | undefined;
+    duration?: number | undefined;
+    id?: string | undefined;
+    title: string;
+    tone?: ToastTone | undefined;
+}
+
+// @public
+export interface ToastRecord {
+    description: string | undefined;
+    duration: number;
+    id: string;
+    title: string;
+    tone: ToastTone;
+}
+
+// @public
+export interface ToastStore {
+    readonly dismiss: (id?: string) => void;
+    readonly getSnapshot: () => readonly ToastRecord[];
+    readonly subscribe: (listener: () => void) => () => void;
+    readonly toast: (options: ToastOptions) => string;
+}
+
+// @public
+export type ToastTone = "info" | "success" | "warn" | "error";
 
 // @public
 export function ToggleChip(input: {
