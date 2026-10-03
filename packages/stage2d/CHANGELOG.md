@@ -1,5 +1,12 @@
 # @vitavision/stage2d
 
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies [c2d73ad]
+  - @vitavision/ui@0.10.0
+
 ## 0.7.1
 
 ### Patch Changes
