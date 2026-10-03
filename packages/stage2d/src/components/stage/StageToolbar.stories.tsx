@@ -4,14 +4,14 @@ import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { ImageStage } from "./ImageStage";
-import { StageButton, StageLayersMenu, StageToolbar, type StageLayer } from "./StageToolbar";
+import { StageButton, StageLayersMenu, StageReadout, StageToolbar, type StageLayer } from "./StageToolbar";
 import type { StageView } from "./view";
 
 const IMAGE = { width: 1280, height: 1024 };
 const layerChange = fn();
 
 /** An app's toolbar groups: tools with hints and keys, and a layers menu. */
-function Workbench() {
+function Workbench({ width }: { width?: number }) {
   const [view, setView] = useState<StageView | null>(null);
   const [tool, setTool] = useState<"select" | "region">("select");
   const [layers, setLayers] = useState<StageLayer[]>([
@@ -20,11 +20,12 @@ function Workbench() {
     { id: "points", label: "Edge points", visible: false, disabled: true },
   ]);
   return (
-    <div style={{ height: 360 }}>
+    <div style={{ height: 360, width }}>
       <ImageStage
         image={IMAGE}
         view={view}
         onView={setView}
+        readout={<StageReadout cursor={{ x: 1023.4, y: 511.9 }} />}
         toolbar={
           <StageToolbar>
             <StageButton
@@ -112,5 +113,25 @@ export const LayersMenu: Story = {
     await expect(body.getByRole("menuitemcheckbox", { name: "Edge points" })).toHaveAttribute("aria-disabled", "true");
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(trigger).toHaveAttribute("aria-pressed", "true"));
+  },
+};
+
+/**
+ * A canvas narrower than 30rem: zoom out, zoom in and 100% collapse, and the readout wraps
+ * onto its own line instead of being clipped.
+ */
+export const NarrowCanvas: Story = {
+  render: () => <Workbench width={420} />,
+  play: async ({ canvas, canvasElement }) => {
+    const viewport = canvas.getByRole("application");
+    // The collapse is CSS (a container query); check it only where the stylesheet is loaded.
+    if (getComputedStyle(viewport).containerType === "inline-size") {
+      const zoomIn = canvasElement.querySelector<HTMLElement>('button[aria-label="Zoom in"]')!;
+      await expect(getComputedStyle(zoomIn).display).toBe("none");
+      await expect(canvas.getByRole("button", { name: "Fit to window" })).toBeVisible();
+    }
+    const readout = canvasElement.querySelector("[data-readout-slot]")!;
+    await expect(readout).toHaveTextContent("1023.4, 511.9 px");
+    await expect((readout as HTMLElement).getBoundingClientRect().width).toBeGreaterThan(80);
   },
 };
