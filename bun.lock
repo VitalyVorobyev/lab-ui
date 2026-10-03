@@ -148,7 +148,7 @@
         "storybook": "10.6.0",
       },
       "peerDependencies": {
-        "@vitavision/stage2d": ">=0.9.0 <1",
+        "@vitavision/stage2d": ">=0.10.0 <1",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
       },
