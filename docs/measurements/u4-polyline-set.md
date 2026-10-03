@@ -13,14 +13,15 @@ L0-3 scene's polyline layer and on a 20k-polyline stress scene.
 | Test | `packages/stage2d/src/components/polylineIndex.browser.test.ts` (runs in CI with the package's browser project; skipped under coverage, whose instrumentation slows it about 50×) |
 | Image | 5472×3648, the L0-3 frame size |
 | Query | `nearestPolyline` within 24 image px, about 7 screen px at fit on a 1600 px viewport; 4000 seeded points over the whole image |
-| Timing | Batches of 50 queries per sample. One query is below the coarsened timer (100 µs without cross-origin isolation), so per-query times have 2 µs resolution. |
+| Timing | Batches of 50 queries per sample. One query is below the coarsened timer (100 µs without cross-origin isolation), so per-query times have 2 µs resolution. A band is the median of nine calls after one warm-up call. |
 
 | Scene | Segments | Index build | Hit p50 | Hit p95 | Band (1500×1000 px) | G6.1 hit-test |
 |---|---|---|---|---|---|---|
-| L0-3 polyline layer: 250 polylines × 20 segments | 5,000 | 1.9–2.0 ms | ≤ 2 µs | 2 µs | 0.2 ms | pass |
-| Stress: 20,000 polylines × 5 segments | 100,000 | 10.7–11.1 ms | 2 µs | 6 µs | 0.3–0.6 ms | pass |
+| L0-3 polyline layer: 250 polylines × 20 segments | 5,000 | 1.9–2.0 ms | ≤ 2 µs | 2 µs | 0.1 ms | pass |
+| Stress: 20,000 polylines × 5 segments | 100,000 | 10.7–11.1 ms | 2 µs | 6 µs | 0.3 ms | pass |
 
-The table gives the range over three runs.
+The table gives the range over three runs. The band column was re-measured after the switch to
+a warmed median: a single cold call took 18.7 ms on a busy CI runner.
 
 **Reading.**
 - The hit-test sits about 300× under the 2 ms gate even at 20k polylines.

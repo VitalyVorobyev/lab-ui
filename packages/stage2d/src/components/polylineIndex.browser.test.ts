@@ -65,9 +65,18 @@ function measure(items: Polyline[], label: string) {
     for (const q of queries) if (nearestPolyline(index, q, radius)) found++;
     times.push((performance.now() - start) / BATCH);
   }
-  const bandStart = performance.now();
-  polylinesInRect(index, { x: 1000, y: 800, width: 1500, height: 1000 });
-  const band = performance.now() - bandStart;
+  // A band is one call, so a single timing is at the mercy of a cold JIT or a busy runner
+  // (CI tests every package at once; one cold band took 18.7 ms there). Warm it once and
+  // take the median of nine.
+  const rect = { x: 1000, y: 800, width: 1500, height: 1000 };
+  polylinesInRect(index, rect);
+  const bands: number[] = [];
+  for (let k = 0; k < 9; k++) {
+    const start = performance.now();
+    polylinesInRect(index, rect);
+    bands.push(performance.now() - start);
+  }
+  const band = percentile(bands, 0.5);
   const p50 = percentile(times, 0.5);
   const p95 = percentile(times, 0.95);
   console.info(
