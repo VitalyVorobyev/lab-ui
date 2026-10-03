@@ -10,7 +10,9 @@ import { defineConfig } from "vitest/config";
  *   - `browser`: rendered in Chromium (Vitest browser mode) with the real Tailwind CSS, its
  *     `play` function run, then axe in the light and the dark theme — 0 serious/critical;
  *   - `ssr`: `renderToString` in Node with 0 console errors or warnings (vitavision renders
- *     on the server, so every package must).
+ *     on the server, so every package must);
+ *   - `motion`: Chromium started with `prefers-reduced-motion: reduce`, for the tests that
+ *     need the media query to be genuinely in effect (the `browser` project leaves it off).
  */
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -26,6 +28,20 @@ export default defineConfig({
             enabled: true,
             headless: true,
             provider: playwright(),
+            instances: [{ browser: "chromium" }],
+            viewport: { width: 1280, height: 800 },
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "motion",
+          include: ["test/**/*.motion.test.tsx"],
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({ contextOptions: { reducedMotion: "reduce" } }),
             instances: [{ browser: "chromium" }],
             viewport: { width: 1280, height: 800 },
           },
