@@ -89,6 +89,18 @@ export {
 } from "./components/MeasureOverlay";
 
 export { ContourEditor, nearestContourSegment, type ContourEditorProps } from "./components/ContourEditor";
+export { RectRoiEditor, type RectRoiEditorProps } from "./components/RectRoiEditor";
+export {
+  ROI_HANDLES,
+  ROI_HANDLE_CURSOR,
+  clampRect,
+  moveRect,
+  rectFromCorners,
+  resizeRect,
+  roiHandlePoint,
+  sameRect,
+  type RoiHandle,
+} from "./components/roiEdit";
 export { MaskEditor, paintMask, type MaskEditorProps } from "./components/MaskEditor";
 
 export {
