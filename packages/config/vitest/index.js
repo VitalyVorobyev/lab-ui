@@ -4,6 +4,8 @@
  *
  * `dom()` — component and logic tests in happy-dom: React plugin, Testing Library cleanup,
  * and the `@vitavision/source` condition so workspace siblings resolve to their sources.
+ * Also at `@vitavision/config-vitest/dom`, which never loads Playwright: an app with only
+ * happy-dom tests imports that and needs no browser provider installed.
  *
  * `library()` — a package's full suite as three projects sharing one coverage report:
  * `unit` (happy-dom, `src/**\/*.test.{ts,tsx}`), `stories` (Chromium via Vitest browser
@@ -17,32 +19,11 @@
 import react from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
 import { defaultClientConditions } from "vite";
-import { defineConfig, mergeConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
+
+export { dom } from "./dom.js";
 
 const setup = new URL("./setup.js", import.meta.url).pathname;
-
-/** @param {import("vitest/config").ViteUserConfig} [overrides] */
-export function dom(overrides = {}) {
-  return mergeConfig(
-    defineConfig({
-      plugins: [react()],
-      resolve: { conditions: ["@vitavision/source", ...defaultClientConditions] },
-      test: {
-        environment: "happy-dom",
-        globals: false,
-        setupFiles: [setup],
-        include: ["src/**/*.test.{ts,tsx}"],
-        coverage: {
-          provider: "v8",
-          include: ["src/**/*.{ts,tsx}"],
-          exclude: ["src/**/*.{test,stories}.{ts,tsx}", "src/index.ts"],
-          reporter: ["text-summary", "json-summary"],
-        },
-      },
-    }),
-    overrides,
-  );
-}
 
 /**
  * PLAN §4.3: at least 90 % of lines for `*.ts` logic, 80 % for components — per file, so one
