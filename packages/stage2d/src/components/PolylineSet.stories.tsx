@@ -32,7 +32,7 @@ function applySelect(current: Set<PolylineId>, ids: PolylineId[], mode: Polyline
 }
 
 function Harness(props: Partial<PolylineSetProps>) {
-  const [selected, setSelected] = useState<Set<PolylineId>>(new Set());
+  const [selected, setSelected] = useState<Set<PolylineId>>(() => new Set());
   return (
     <div>
       <ImageStage image={IMAGE} view={VIEW} onView={() => {}} style={{ width: IMAGE.width + 2, height: IMAGE.height + 2 }}>
@@ -55,11 +55,11 @@ function Harness(props: Partial<PolylineSetProps>) {
 
 /** A pointer event at image coordinates (the view is 1:1 at the origin). */
 function at(target: Element, p: { x: number; y: number }, extra: Record<string, unknown> = {}) {
-  const viewport = target.closest("[role=application]") as HTMLElement;
-  const rect = viewport.getBoundingClientRect();
+  // From the transformed stage itself (1:1), so a border or a centring offset cannot shift it.
+  const stage = target.closest("[role=application]")!.querySelector("[data-stage]")!.getBoundingClientRect();
   return {
-    clientX: rect.left + viewport.clientLeft + p.x + 0.5,
-    clientY: rect.top + viewport.clientTop + p.y + 0.5,
+    clientX: stage.left + p.x + 0.5,
+    clientY: stage.top + p.y + 0.5,
     pointerId: 1,
     button: 0,
     ...extra,
@@ -122,10 +122,12 @@ export const Hover: Story = {
   play: async ({ canvasElement }) => {
     hover.mockClear();
     const hit = canvasElement.querySelector("[data-hit]")!;
-    await fireEvent.pointerMove(hit, at(hit, { x: 340, y: 79 }));
-    await expect(hover).toHaveBeenLastCalledWith(4 === 4 ? 2 : 0);
+    // Just below the bottom edge of square 2, far from every other line.
+    await fireEvent.pointerMove(hit, at(hit, { x: 280, y: 202 }));
+    await expect(hover).toHaveBeenLastCalledWith(2);
     await waitFor(() => expect(canvasElement.querySelector("svg[data-hovered='2']")).not.toBeNull());
-    await fireEvent.pointerLeave(hit);
+    // React's onPointerLeave is driven by `pointerout`.
+    await fireEvent.pointerOut(hit, { relatedTarget: document.body });
     await expect(hover).toHaveBeenLastCalledWith(null);
   },
 };
@@ -134,11 +136,12 @@ export const ShiftSweep: Story = {
   play: async ({ canvas, canvasElement }) => {
     select.mockClear();
     const hit = canvasElement.querySelector("[data-hit]")!;
-    // Shift-press on line 1, drag a band that crosses lines 1 and 3 but not 2 or 4.
+    // Shift-press on line 1, drag a band down past line 3 (which crosses x = 100 at y = 242.5)
+    // that stays clear of lines 2 and 4.
     await fireEvent.pointerDown(hit, at(hit, { x: 100, y: 60 }, { shiftKey: true }));
     await waitFor(() => expect(canvasElement.querySelector("svg[data-sweeping]")).not.toBeNull());
-    await fireEvent.pointerMove(window, at(hit, { x: 150, y: 240 }));
-    await fireEvent.pointerUp(window, at(hit, { x: 150, y: 240 }));
+    await fireEvent.pointerMove(window, at(hit, { x: 150, y: 260 }));
+    await fireEvent.pointerUp(window, at(hit, { x: 150, y: 260 }));
     await expect(select).toHaveBeenLastCalledWith([1, 3], "replace");
     await waitFor(() => expect(canvas.getByTestId("selected")).toHaveTextContent("1,3"));
   },
@@ -176,6 +179,7 @@ export const DimmedAndVertices: Story = {
     await expect(canvas.getByRole("img", { name: "Lines: 4 lines, 1 selected" })).toBeInTheDocument();
     // Controlled hover is drawn; points show at 4×.
     await expect(canvasElement.querySelector("[data-hovered-line]")).not.toBeNull();
+    await expect(canvasElement.querySelector("[data-points]")).not.toBeNull();
     await expect(canvasElement.querySelector("path[opacity='0.35']")).not.toBeNull();
   },
 };

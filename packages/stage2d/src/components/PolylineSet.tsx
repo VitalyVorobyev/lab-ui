@@ -264,7 +264,7 @@ export function PolylineSet({
             />
           </>
         )}
-        {dots && <path d={dots} stroke="#e8ebed" strokeWidth={px(3)} opacity={0.9} />}
+        {dots && <path data-points="" d={dots} stroke={selectionStroke} strokeWidth={px(3)} />}
         {/* The one hit target: every line, transparent, wide. Which line it was is the
             index's answer, not the DOM's. */}
         <path

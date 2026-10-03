@@ -42,17 +42,23 @@ function measure(items: Polyline[], label: string) {
   const build = performance.now() - t0;
   // At fit on a 1600 px wide viewport, 7 screen px is about 24 image px.
   const radius = 24;
+  // One query is far below the browser's coarsened timer (100 µs without cross-origin
+  // isolation), so time batches of 50 and take each batch's mean as a sample.
+  const BATCH = 50;
   const times: number[] = [];
   let found = 0;
   let s = 7;
-  for (let q = 0; q < 4000; q++) {
-    s = (s * 1103515245 + 12345) % 2 ** 31;
-    const x = (s / 2 ** 31) * WIDTH;
-    s = (s * 1103515245 + 12345) % 2 ** 31;
-    const y = (s / 2 ** 31) * HEIGHT;
+  for (let b = 0; b < 4000 / BATCH; b++) {
+    const queries: { x: number; y: number }[] = [];
+    for (let q = 0; q < BATCH; q++) {
+      s = (s * 1103515245 + 12345) % 2 ** 31;
+      const x = (s / 2 ** 31) * WIDTH;
+      s = (s * 1103515245 + 12345) % 2 ** 31;
+      queries.push({ x, y: (s / 2 ** 31) * HEIGHT });
+    }
     const start = performance.now();
-    if (nearestPolyline(index, { x, y }, radius)) found++;
-    times.push(performance.now() - start);
+    for (const q of queries) if (nearestPolyline(index, q, radius)) found++;
+    times.push((performance.now() - start) / BATCH);
   }
   const bandStart = performance.now();
   polylinesInRect(index, { x: 1000, y: 800, width: 1500, height: 1000 });
@@ -60,7 +66,7 @@ function measure(items: Polyline[], label: string) {
   const p50 = percentile(times, 0.5);
   const p95 = percentile(times, 0.95);
   console.info(
-    `${label}: build ${build.toFixed(1)} ms · hit p50 ${(p50 * 1000).toFixed(0)} µs · p95 ${(p95 * 1000).toFixed(0)} µs · ` +
+    `${label}: build ${build.toFixed(1)} ms · hit p50 ${(p50 * 1000).toFixed(1)} µs · p95 ${(p95 * 1000).toFixed(1)} µs · ` +
       `${found}/4000 hits · band ${band.toFixed(2)} ms`,
   );
   return { p95, band };

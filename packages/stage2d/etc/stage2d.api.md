@@ -36,6 +36,9 @@ export interface Box {
 }
 
 // @public
+export function buildPolylineIndex(items: readonly Polyline[], cell?: number): PolylineIndex;
+
+// @public
 export function caliperArrow(cx: number, cy: number, width: number, angle: number): {
     from: Point;
     to: Point;
@@ -272,6 +275,9 @@ export function nativeZoomFor(sourceWidth: number, boxWidth: number): number;
 export function nearestContourSegment(points: Point[], point: Point): number;
 
 // @public
+export function nearestPolyline(index: PolylineIndex, p: Point, radius: number): PolylineHit | null;
+
+// @public
 export function paintMask(mask: Uint8Array, width: number, height: number, from: Point, to: Point, radius: number, value: 0 | 1): Uint8Array;
 
 // @public
@@ -299,6 +305,72 @@ export interface PointPrimitive {
 
 // @public
 export function polygonPath(points: readonly Point[]): string;
+
+// @public
+export interface Polyline {
+    closed?: boolean | undefined;
+    id: PolylineId;
+    points: ArrayLike<number>;
+}
+
+// @public
+export function polylineBounds(points: ArrayLike<number>): Rect | null;
+
+// @public
+export interface PolylineHit {
+    distance: number;
+    id: PolylineId;
+    point: Point;
+}
+
+// @public
+export type PolylineId = string | number;
+
+// @public
+export interface PolylineIndex {
+    readonly cell: number;
+    readonly cols: number;
+    readonly items: readonly Polyline[];
+    readonly rows: number;
+    readonly segs: Uint32Array;
+    readonly starts: Uint32Array;
+    readonly x0: number;
+    readonly y0: number;
+}
+
+// @public
+export function polylinePath(points: ArrayLike<number>, closed?: boolean): string;
+
+// @public
+export type PolylineSelectMode = "replace" | "toggle" | "add";
+
+// @public
+export function PolylineSet(input: PolylineSetProps): JSX.Element;
+
+// @public
+export interface PolylineSetItem extends Polyline {
+    dashed?: boolean | undefined;
+    stroke?: string | undefined;
+}
+
+// @public
+export interface PolylineSetProps {
+    dimmed?: Iterable<PolylineId> | undefined;
+    hitWidth?: number | undefined;
+    hovered?: PolylineId | null | undefined;
+    items: readonly PolylineSetItem[];
+    label?: string | undefined;
+    marquee?: boolean | undefined;
+    onHover?: ((id: PolylineId | null) => void) | undefined;
+    onSelect?: ((ids: PolylineId[], mode: PolylineSelectMode) => void) | undefined;
+    selected?: Iterable<PolylineId> | undefined;
+    selectionStroke?: string | undefined;
+    stroke?: string | undefined;
+    vertexScale?: number | undefined;
+}
+
+// @public
+export function polylinesInRect(index: PolylineIndex, rect: Rect): PolylineId[];
 
 // @public
 export function preserveCenter(view: StageView, from: Box, to: Box, image: Box, options?: ClampOptions): StageView;
@@ -399,6 +471,13 @@ export interface StageContext {
 }
 
 // @public
+export interface StageDrag {
+    onCancel?: (() => void) | undefined;
+    onEnd?: ((point: Point, event: PointerEvent, moved: boolean) => void) | undefined;
+    onMove?: ((point: Point, event: PointerEvent) => void) | undefined;
+}
+
+// @public
 export interface StageHandle {
     fit: () => void;
     frame: (rect: Rect, pad?: number) => void;
@@ -425,6 +504,14 @@ export interface StageLayersMenuProps {
 }
 
 // @public
+export interface StagePress {
+    altKey: boolean;
+    metaKey: boolean;
+    point: Point;
+    shiftKey: boolean;
+}
+
+// @public
 export function StageReadout(input: StageReadoutProps): JSX.Element;
 
 // @public
@@ -435,6 +522,16 @@ export interface StageReadoutProps {
         y: number;
     } | null;
     extra?: ReactNode;
+}
+
+// @public
+export function StageSurface(input: StageSurfaceProps): JSX.Element;
+
+// @public
+export interface StageSurfaceProps {
+    cursor?: string | undefined;
+    onHover?: ((point: Point) => void) | undefined;
+    onPress: (press: StagePress) => StageDrag | null | undefined | void;
 }
 
 // @public
@@ -475,6 +572,9 @@ export function toScreen(view: StageView, p: Point): Point;
 
 // @public
 export function useStage(): StageContext;
+
+// @public
+export function useStageDrag(): (event: PointerEvent_2<Element>, drag: StageDrag) => void;
 
 // @public
 export function valueAt(plane: ValuePlane, u: number, v: number, channel?: number): number | null;
