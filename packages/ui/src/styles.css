@@ -159,13 +159,30 @@
     list-style: none;
   }
 
+  /*
+   * Reduced motion makes motion synchronous, not merely short.
+   *
+   * A transition of any non-zero duration -- 0.01ms included -- is still a transition: the
+   * computed style keeps its old value until the next frame, so code that sets a style and
+   * measures in the same tick (mermaid's layout) reads stale numbers wherever an element
+   * has `transition-property: all`. A 0s transition is never started, so the new value is
+   * visible at once. Nothing in this repo waits for `transitionend`.
+   *
+   * Animations keep a name with a 0s duration rather than `animation: none`: the animation
+   * still runs to its end state and fires `animationend` immediately, which is what Radix
+   * `Presence` waits for before unmounting an overlay whose consumer gave it an exit
+   * animation (`data-[state=closed]:animate-out`). `animation: none` would unmount it at
+   * once too, but would also freeze `animate-spin` / `animate-pulse` in their first frame.
+   */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
-      animation-duration: 0.01ms !important;
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
     }
   }
 }
