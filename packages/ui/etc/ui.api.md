@@ -433,6 +433,7 @@ export function SegmentedControl(input: {
     onValueChange: (value: string) => void;
     disabled?: boolean | undefined;
     "aria-label"?: string | undefined;
+    size?: ButtonSize | undefined;
     className?: string | undefined;
 }): JSX.Element;
 
@@ -599,6 +600,7 @@ export function ToggleChip(input: {
     swatch?: string;
     disabled?: boolean | undefined;
     title?: string | undefined;
+    size?: ButtonSize | undefined;
     className?: string | undefined;
 }): JSX.Element;
 

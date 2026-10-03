@@ -2,6 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ComponentProps, useState } from "react";
 import { expect, fn, userEvent } from "storybook/test";
 
+import { Button } from "./Button";
+import { DensityProvider } from "./Density";
+import { Input } from "./Input";
 import { ToggleChip } from "./ToggleChip";
 
 /** Holds the checked state, so the story behaves like the layer toggle it stands in for. */
@@ -29,6 +32,8 @@ const meta = {
 
 **Use** it in a row over a canvas or chart. \`swatch\` shows the colour the layer is drawn in, so the
 control is also the legend. \`title\` can say why it is disabled or what the layer is.
+
+\`size\` is \`"sm"\` (the toolbar size, the default) or \`"md"\` (exactly 32px outside, to sit in a row with a comfortable-density \`Input\` or \`Button\`).
 
 **Don't** use it for a setting with a description (that is \`Switch\`) or for a statement in a form
 (that is \`Checkbox\`).
@@ -83,4 +88,24 @@ export const Disabled: Story = {
     await userEvent.click(chip, { pointerEventsCheck: 0 });
     await expect(args.onCheckedChange).not.toHaveBeenCalled();
   },
+};
+
+export const Sizes: Story = {
+  args: { swatch: "#f59e0b" },
+  render: (args) => (
+    <div className="flex flex-col gap-4">
+      <DensityProvider value="compact">
+        <div data-row="sm" className="flex items-center gap-2">
+          <Controlled {...args} size="sm" />
+          <Input aria-label="Name (sm)" defaultValue="sm" className="w-24" />
+          <Button size="sm">Apply</Button>
+        </div>
+      </DensityProvider>
+      <div data-row="md" className="flex items-center gap-2">
+        <Controlled {...args} size="md" />
+        <Input aria-label="Name (md)" defaultValue="md" className="w-24" />
+        <Button size="md">Apply</Button>
+      </div>
+    </div>
+  ),
 };
