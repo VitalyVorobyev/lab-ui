@@ -187,7 +187,12 @@ Specimen: *Foundations / Data-vis palette*.
 ## 5. Overlay grammar
 
 Geometry drawn over an image, in `stage2d`, `overlays` and `three`. Specimen:
-*Foundations / Overlay grammar*. The tokens land in `stage2d` with L6-2.
+*Foundations / Overlay grammar*.
+- **Tokens.** The roles are `--stage-feature`, `--stage-model`, `--stage-structure`,
+  `--stage-selection`, `--stage-label` and `--stage-halo`, in `@vitavision/stage2d/styles.css`.
+  They are also Tailwind colours (`stroke-stage-feature`).
+- **In code.** `overlayRole(role)` gives an SVG paint. `OverlayState` and the state widths and
+  opacity are exported beside it, and `useScreenPx` sizes strokes in screen pixels.
 
 **Screen pixels.**
 - **Must:** stroke widths, marker sizes and label sizes are screen pixels at every zoom.
@@ -279,4 +284,4 @@ both themes.
 | text contrast ≥ 4.5:1, UI boundaries ≥ 3:1, signal vs verdicts under dichromacy | `ui/src/contrast.test.ts` |
 | axe, light and dark | the story harness, today (Foundations included) |
 | series palette ≥ 3:1 and CVD separation | `charts/src/palette.test.ts`; `tools/visual-language/colours.py` prints the numbers |
-| overlay strokes in screen px | `stage2d` view-math unit tests, today; the overlay tokens in L6-2 |
+| overlay strokes in screen px | `stage2d` view-math unit tests; the role tokens and `useScreenPx` (U-5) |

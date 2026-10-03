@@ -21,7 +21,9 @@ import {
   roiHandlePoint,
   type RoiHandle,
 } from "./roiEdit";
+import { overlayRole } from "./overlayRole";
 import { useStage } from "./stage/ImageStage";
+import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox, type Rect } from "./stage/view";
 
 /** Handle square side, in screen pixels. */
@@ -30,7 +32,7 @@ const HANDLE_PX = 9;
 const STROKE_PX = 1.5;
 /** The halo under the outline (visual-language §5), in screen pixels on each side. */
 const HALO_PX = 1;
-const HALO = "rgba(8, 10, 11, 0.72)";
+const HALO = overlayRole("halo");
 
 /** Props of `RectRoiEditor`. */
 export interface RectRoiEditorProps {
@@ -56,7 +58,7 @@ export interface RectRoiEditorProps {
   minSize?: number | undefined;
   /** The region's accessible name. Defaults to "Region". */
   label?: string | undefined;
-  /** CSS colour of the outline and handles. Defaults to the `signal` token. */
+  /** CSS colour of the outline and handles. Defaults to the overlay `selection` role. */
   stroke?: string | undefined;
 }
 
@@ -88,7 +90,7 @@ export function RectRoiEditor({
   bounds,
   minSize = 4,
   label = "Region",
-  stroke = "var(--signal)",
+  stroke = overlayRole("selection"),
 }: RectRoiEditorProps) {
   const stage = useStage();
   const area = bounds ?? { x: 0, y: 0, width: stage.image.width, height: stage.image.height };
@@ -96,7 +98,7 @@ export function RectRoiEditor({
   const lastRef = useRef<Rect | null>(null);
   const [drawing, setDrawing] = useState<Rect | null>(null);
 
-  const px = (css: number) => stage.imageLength(css);
+  const px = useScreenPx();
   const shown = drawing ?? value;
 
   const report = (next: Rect) => {
