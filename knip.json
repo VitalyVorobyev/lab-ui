@@ -34,11 +34,6 @@
         "src/**/*.ts"
       ]
     },
-    "packages/lab-ui": {
-      "project": [
-        "src/**/*.{ts,tsx}"
-      ]
-    },
     "packages/config/eslint": {
       "entry": [
         "rules/*.js"

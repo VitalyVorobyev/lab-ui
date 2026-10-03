@@ -6,7 +6,7 @@
  *
  * Packs every publishable package, installs the tarballs into a fresh app in a temp
  * directory (so nothing resolves back into the workspace), then
- *   1. server-renders a component from each package and from the deprecated compat package;
+ *   1. server-renders a component from each package;
  *   2. builds the app with Vite + Tailwind v4 from `@import "@vitavision/*\/styles.css"`
  *      alone — no `@source` of its own — and checks the packages' classes were generated.
  */
@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const PACKAGES = ["ui", "forms", "charts", "stage2d", "workbench", "three", "three-react", "lab-ui"];
+const PACKAGES = ["ui", "forms", "charts", "stage2d", "workbench", "three", "three-react"];
 const root = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { devDependencies: Record<string, string> };
 // The 3D peers at the versions the 3D packages are built and tested against (ADR-0002 pins three exactly).
 const threeReact = JSON.parse(readFileSync(join(ROOT, "packages/three-react/package.json"), "utf8")) as {
@@ -74,7 +74,6 @@ import { LineChart } from "@vitavision/charts";
 import { MeasureOverlay } from "@vitavision/stage2d";
 import { PlaybackBar, SplitPane, createPlayhead } from "@vitavision/workbench";
 import { FrameTreeRuntime, GIZMO_LAYER, normalizeColor } from "@vitavision/three";
-import * as compat from "@vitavision/lab-ui";
 const I = { rotation: [0, 0, 0, 1], translation: [0, 0, 0] };
 const runtime = new FrameTreeRuntime({ dt: 0.1, frames: ["world", "cam"], samples: [{ t: 0, world_se3_frame: [I, I] }] });
 if (runtime.frame("cam")?.name !== "cam") throw new Error("three: frame tree failed");
@@ -92,7 +91,7 @@ const html = renderToString(
     <SplitPane><div>a</div><PlaybackBar playhead={createPlayhead(10, 0.1)} playing={false} onPlayingChange={() => {}} /></SplitPane>
   </TooltipProvider>,
 );
-if (!html.includes("Go") || !html.includes("data-unit") || !html.includes('role="separator"') || typeof compat.ImageStage !== "function") throw new Error("render failed");
+if (!html.includes("Go") || !html.includes("data-unit") || !html.includes('role="separator"')) throw new Error("render failed");
 console.log("ssr ok", html.length);
 `,
   );
@@ -102,7 +101,7 @@ console.log("ssr ok", html.length);
   writeFileSync(join(app, "index.html"), `<!doctype html><div id="root"></div><script type="module" src="/src/main.tsx"></script>`);
   writeFileSync(
     join(app, "src", "styles.css"),
-    `@import "tailwindcss";\n@import "@vitavision/ui/fonts.css";\n@import "@vitavision/lab-ui/styles.css";\n@import "@vitavision/workbench/styles.css";\n`,
+    `@import "tailwindcss";\n@import "@vitavision/ui/fonts.css";\n@import "@vitavision/ui/styles.css";\n@import "@vitavision/forms/styles.css";\n@import "@vitavision/charts/styles.css";\n@import "@vitavision/stage2d/styles.css";\n@import "@vitavision/workbench/styles.css";\n`,
   );
   // `three-react` is checked here, in the bundler, not in the Bun server render above:
   // @react-three/fiber 9 ships no `exports` map, so Bun's runtime takes its CommonJS build,

@@ -29,7 +29,6 @@ manifests = [
   "packages/forms/package.json",
   "packages/charts/package.json",
   "packages/stage2d/package.json",
-  "packages/lab-ui/package.json",
   "package.json",
 ]
 
@@ -109,7 +108,7 @@ impl.lab-ui = ["packages/ui/src/components/ui/Button.tsx"]
 uses.calibration-rs = "@vitavision/ui"
 impl.operator-ui = ["src/components/ui/Button.tsx"]
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.caliperbench = "@vitavision/ui"
 uses.vitavision = "@vitavision/ui"
 note.vitavision = "editorial pages keep their own navigation buttons (visual-language §7)"
@@ -126,7 +125,7 @@ uses.vitavision = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
 impl.operator-ui = ["src/components/ui/Panel.tsx"]
 impl.viva-studio = ["src/components/ImageViewer/SidebarSection.tsx"]
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.val = "@vitavision/ui"
 uses.ct-studio = "@vitavision/ui"
 
@@ -139,7 +138,7 @@ impl.operator-ui = ["src/components/ui/StatusPill.tsx"]
 uses.val = "@vitavision/ui"
 note.vitavision = "editorial badges only (blog/atlas/papers): outside the interactive boundary"
 uses.ct-studio = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.caliperbench = "@vitavision/ui"
 
 [concepts.table]
@@ -149,7 +148,7 @@ impl.lab-ui = ["packages/ui/src/components/ui/Table.tsx"]
 uses.calibration-rs = "@vitavision/ui"
 uses.ct-studio = "@vitavision/ui"
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 note.val = "plus raw <table>s tracked by uiRules.test.ts"
 
 [concepts.select]
@@ -162,7 +161,7 @@ impl.operator-ui = ["src/components/ui/Select.tsx"]
 impl.viva-studio = ["src/components/FeatureBrowser/editors/EnumEditor.tsx"]
 uses.val = "@vitavision/ui"
 uses.ct-studio = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.caliperbench = "@vitavision/ui"
 note.ct-demo = "raw <select>"
 
@@ -173,7 +172,7 @@ impl.lab-ui = ["packages/ui/src/components/ui/Dialog.tsx"]
 uses.vitavision = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 
 [concepts.tooltip]
 label = "Tooltip / info hint"
@@ -184,7 +183,7 @@ uses.ct-studio = "@vitavision/ui"
 impl.ct-demo = ["src/components/InfoTip.tsx"]
 impl.chess-demo = ["src/components/InfoTip.tsx"]
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
 uses.caliperbench = "@vitavision/ui"
 
@@ -193,7 +192,7 @@ label = "Slider"
 layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Slider.tsx"]
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.vitavision = "@vitavision/ui"
 note.viva-studio = "raw range <input> in ImageViewer sections"
 
@@ -209,7 +208,7 @@ impl.viva-studio = ["src/components/FeatureBrowser/editors/BoolEditor.tsx"]
 uses.val = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
 note.calibration-rs = "ToggleChip for toolbar toggles; lib/configForm.tsx keeps an inline checkbox until L4"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.caliperbench = "@vitavision/ui"
 
 [concepts.segmented-control]
@@ -218,7 +217,7 @@ layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/SegmentedControl.tsx"]
 impl.operator-ui = ["src/components/ui/SegmentedControl.tsx"]
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.vitavision = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
 uses.ct-studio = "@vitavision/ui"
@@ -240,7 +239,7 @@ impl.lab-ui = ["packages/ui/src/components/ui/Input.tsx", "packages/ui/src/compo
 uses.vitavision = "@vitavision/ui"
 impl.viva-studio = ["src/components/FeatureBrowser/editors/FloatEditor.tsx", "src/components/FeatureBrowser/editors/IntegerEditor.tsx"]
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
 note.calibration-rs = "Input in the ask-user dialog; lib/configForm.tsx keeps inline inputs until L4"
 uses.ct-studio = "@vitavision/ui"
@@ -252,7 +251,7 @@ layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Disclosure.tsx"]
 uses.vitavision = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 
 [concepts.feedback]
 label = "Feedback: empty / error / callout / progress"
@@ -260,7 +259,7 @@ layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ui/Feedback.tsx"]
 uses.calibration-rs = "@vitavision/ui"
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.vitavision = "@vitavision/ui"
 note.vitavision = "plus sonner toasts, themed with the ui tokens (ui has no toast)"
 note.viva-studio = "src/components/Layout/ToastContainer.tsx (toast)"
@@ -272,28 +271,30 @@ layer = "ui"
 impl.lab-ui = ["packages/ui/src/components/ThemeToggle.tsx", "packages/ui/src/theme.ts"]
 uses.calibration-rs = "@vitavision/ui"
 uses.val = "@vitavision/ui"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/ui"
 uses.vitavision = "@vitavision/ui"
 uses.ct-studio = "@vitavision/ui"
 
 [concepts.numeric-field]
 label = "Numeric field that keeps typed text while editing"
 layer = "ui"
-impl.lab-ui = ["packages/ui/src/components/ui/VectorInput.tsx", "packages/ui/src/components/ui/numberText.ts"]
-impl.vm-lab = ["src/routes/teach/RoiSection.tsx", "src/routes/teach/DatumSection.tsx", "src/routes/teach/ExtractSection.tsx", "src/tabs/MeasureTab.tsx"]
-note.vm-lab = "each section guards a cleared field by hand; MeasureTab's NumberField still reads a cleared field as 0"
+impl.lab-ui = ["packages/ui/src/components/ui/Input.tsx", "packages/ui/src/components/ui/VectorInput.tsx", "packages/ui/src/components/ui/numberText.ts"]
+uses.vm-lab = "@vitavision/ui"
+note.vm-lab = "value-typed NumberInput and VectorInput (vision-metrology#44)"
 note.caliperbench = "NumberInput with string state"
 
 [concepts.popover]
 label = "Popover / dropdown menu / listbox"
 layer = "ui"
-impl.vm-lab = ["src/shell/FrameSwitcher.tsx", "src/canvas/CanvasControls.tsx"]
+impl.lab-ui = ["packages/ui/src/components/ui/Popover.tsx", "packages/ui/src/components/ui/DropdownMenu.tsx", "packages/ui/src/components/ui/Listbox.tsx"]
+uses.vm-lab = "@vitavision/ui"
 impl.caliperbench = ["src/canvas/ViewBar.tsx"]
-note.vm-lab = "hand-rolled role=listbox with outside-click handling"
+note.vm-lab = "FrameSwitcher on Popover + Listbox, the layers menu on DropdownMenu (vision-metrology#44)"
 
 [concepts.kbd-hint]
 label = "Keyboard shortcut hint"
 layer = "ui"
+impl.lab-ui = ["packages/ui/src/components/ui/Kbd.tsx"]
 impl.caliperbench = ["src/canvas/ToolRail.tsx"]
 note.vm-lab = "shortcuts written into tooltip text"
 
@@ -327,7 +328,7 @@ impl.lab-ui = ["packages/charts/src/Histogram.tsx"]
 impl.calibration-rs = ["src/components/Histogram.tsx"]
 impl.viva-studio = ["src/components/ImageViewer/HistogramOverlay.tsx", "src/components/ImageViewer/histogramUtils.ts"]
 uses.val = "@vitavision/charts"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/charts"
 note.vm-lab = "ScoreHistogram with an empty defect series, i.e. a single-series histogram"
 
 [concepts.line-chart]
@@ -336,7 +337,7 @@ layer = "charts"
 impl.lab-ui = ["packages/charts/src/LineChart.tsx", "packages/charts/src/Frame.tsx", "packages/charts/src/scale.ts"]
 impl.val = ["src/components/charts/CurveChart.tsx", "src/routes/compare/CompareCurves.tsx"]
 note.val = "wrappers over lab-ui LineChart"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/charts"
 impl.caliperbench = ["src/AlongChart.tsx"]
 note.caliperbench = "own responsive SVG over charts' linePath/linearScale, for hover, pick and bands"
 
@@ -351,18 +352,20 @@ label = "Line profile"
 layer = "charts"
 impl.lab-ui = ["packages/charts/src/LineProfile.tsx"]
 impl.viva-studio = ["src/components/ImageViewer/LineProfilePanel.tsx", "src/components/ImageViewer/lineProfileUtils.ts"]
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/charts"
 uses.caliperbench = "@vitavision/charts"
 
 [concepts.chart-interaction]
 label = "Chart interaction: hover readout, pick, bands, markers"
 layer = "charts"
+impl.lab-ui = ["packages/charts/src/interaction.tsx"]
 impl.caliperbench = ["src/AlongChart.tsx"]
 note.vm-lab = "caliper profiles drawn with LineProfile, no interaction yet"
 
 [concepts.sequential-colormap]
 label = "Sequential colour map for a magnitude"
 layer = "charts"
+impl.lab-ui = ["packages/charts/src/colormap.ts", "packages/charts/src/ColormapLegend.tsx"]
 impl.caliperbench = ["src/lab.tsx"]
 impl.vm-lab = ["src/tabs/AlignTab.tsx"]
 note.caliperbench = "errorTone steps a continuous error onto verdict tones"
@@ -382,12 +385,12 @@ impl.ct-demo = ["src/components/CanvasViewport.tsx"]
 impl.chess-demo = ["src/components/CanvasViewport.tsx"]
 impl.operator-ui = ["src/components/live/FrameCanvas.tsx", "src/components/live/LiveViewport.tsx"]
 impl.viva-studio = ["src/components/ImageViewer/ViewerCanvas.tsx", "src/components/ImageViewer/useZoomPan.ts"]
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/stage2d"
 note.val = "Konva annotation editor; sample/result viewers already use lab-ui ImageStage (viewer/SampleStage.tsx)"
 note.vitavision = "Konva"
 note.calibration-rs = "raw Canvas2D"
 note.ct-studio = "raw Canvas2D"
-note.vm-lab = "canvas/CanvasStage.tsx composes lab-ui ImageStage; Align and Bird's-eye still use the deprecated ZoomPanCanvas"
+note.vm-lab = "canvas/CanvasStage.tsx, AlignTab and BirdsEyeTab compose ImageStage"
 uses.caliperbench = "@vitavision/stage2d"
 
 [concepts.stage-toolbar]
@@ -398,7 +401,7 @@ impl.vitavision = ["src/components/shared/ZoomControls.tsx"]
 impl.calibration-rs = ["src/components/ZoomControls.tsx"]
 impl.operator-ui = ["src/components/live/ViewportToolbar.tsx"]
 impl.viva-studio = ["src/components/ImageViewer/ViewerToolbar.tsx"]
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/stage2d"
 impl.caliperbench = ["src/canvas/ToolRail.tsx", "src/canvas/ViewBar.tsx"]
 note.caliperbench = "own tool rail and view bar with tooltip'd buttons and key hints"
 
@@ -408,7 +411,7 @@ layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/MeasureOverlay.tsx", "packages/stage2d/src/components/measureGeometry.ts"]
 impl.viva-studio = ["src/components/ImageViewer/LineOverlay.tsx", "src/components/ImageViewer/RoiOverlay.tsx"]
 uses.val = "@vitavision/stage2d"
-uses.vm-lab = "@vitavision/lab-ui"
+uses.vm-lab = "@vitavision/stage2d"
 
 [concepts.pixel-readout]
 label = "Pixel value readout"
@@ -421,6 +424,7 @@ impl.viva-studio = ["src/components/ImageViewer/pixelInspectorUtils.ts"]
 [concepts.stage-handle]
 label = "Imperative stage handle (frame / fit from outside the stage)"
 layer = "stage2d"
+impl.lab-ui = ["packages/stage2d/src/components/stage/ImageStage.tsx"]
 impl.vm-lab = ["src/canvas/CanvasStage.tsx", "src/state/LabContext.tsx"]
 impl.caliperbench = ["src/lab.tsx", "src/SegmentReview.tsx"]
 note.caliperbench = "FrameRequest / FitOnOpen helper components that call useStage()"
@@ -428,31 +432,35 @@ note.caliperbench = "FrameRequest / FitOnOpen helper components that call useSta
 [concepts.image-layer]
 label = "Image layer: pixelated zoom, resolution tiers"
 layer = "stage2d"
+impl.lab-ui = ["packages/stage2d/src/components/stage/ImageLayer.tsx"]
 impl.vm-lab = ["src/canvas/ImageLayer.tsx"]
 impl.caliperbench = ["src/SegmentReview.tsx"]
 
 [concepts.layers-menu]
 label = "Stage layers menu"
 layer = "stage2d"
+impl.lab-ui = ["packages/stage2d/src/components/stage/StageToolbar.tsx"]
 impl.vm-lab = ["src/canvas/CanvasControls.tsx"]
 impl.caliperbench = ["src/canvas/ViewBar.tsx"]
 
 [concepts.roi-editor]
 label = "Rectangle ROI editor"
 layer = "stage2d"
+impl.lab-ui = ["packages/stage2d/src/components/RectRoiEditor.tsx", "packages/stage2d/src/components/roiEdit.ts"]
 impl.vm-lab = ["src/canvas/RoiLayer.tsx", "src/canvas/roiEdit.ts"]
 impl.viva-studio = ["src/components/ImageViewer/RoiOverlay.tsx"]
 
 [concepts.polyline-set]
 label = "Selectable polyline set (hover, select, marquee)"
 layer = "stage2d"
-note.lab-ui = "ContourEditor (stage2d) edits one closed polygon's vertices; it is not a selectable set"
+impl.lab-ui = ["packages/stage2d/src/components/PolylineSet.tsx", "packages/stage2d/src/components/polylineIndex.ts"]
 impl.vm-lab = ["src/canvas/ContourLayer.tsx", "src/canvas/contourSelection.ts"]
 impl.caliperbench = ["src/SegmentLayer.tsx", "src/StationLayer.tsx"]
 
 [concepts.stage-tool-model]
 label = "Stage tool model (what a press on the stage means)"
 layer = "stage2d"
+impl.lab-ui = ["packages/stage2d/src/components/stage/StageSurface.tsx"]
 impl.vm-lab = ["src/canvas/useCanvasInteraction.ts"]
 impl.caliperbench = ["src/SegmentLayer.tsx", "src/SketchLayer.tsx"]
 note.caliperbench = "tools chosen in canvas/ToolRail.tsx; each layer handles its own presses"
@@ -463,12 +471,14 @@ note.caliperbench = "tools chosen in canvas/ToolRail.tsx; each layer handles its
 label = "Studio app shell (header, side panels, status)"
 layer = "workbench"
 impl.lab-ui = ["packages/workbench/src/components/AppShell.tsx", "packages/workbench/src/components/SplitPane.tsx"]
-impl.vm-lab = ["src/shell/AppShell.tsx", "src/shell/InspectorColumn.tsx"]
+uses.vm-lab = "@vitavision/workbench"
+note.vm-lab = "shell/AppShell.tsx fills AppShell's slots; its workspace rail still sits inside main"
 note.caliperbench = "CSS-grid shell in styles.css (.cb-shell)"
 
 [concepts.sequence-navigator]
 label = "Thumbnail strip / sequence navigator"
 layer = "workbench"
+impl.lab-ui = ["packages/workbench/src/components/SequenceNavigator.tsx"]
 impl.vm-lab = ["src/components/ImageGrid.tsx", "src/shell/FrameSwitcher.tsx"]
 impl.caliperbench = ["src/SegmentReview.tsx"]
 
@@ -477,7 +487,7 @@ label = "File drop / open files"
 layer = "workbench"
 impl.lab-ui = ["packages/workbench/src/components/FileDrop.tsx"]
 impl.vm-lab = ["src/routes/LibraryPage.tsx"]
-note.vm-lab = "Tauri dialogs yield paths, which FileDrop's File[] route cannot carry"
+note.vm-lab = "Tauri dialogs yield paths; FileDrop's path route (workbench 0.2) is not adopted yet"
 
 # ── overlays ────────────────────────────────────────────────────────────────────────────
 

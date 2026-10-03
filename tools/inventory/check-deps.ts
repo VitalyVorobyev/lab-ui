@@ -32,7 +32,6 @@ const ALLOWED: Record<string, (string | RegExp)[]> = {
   "@vitavision/stage2d": ["@vitavision/ui", "lucide-react"],
   // App-shell building blocks (ADR-0003); lucide-react for the transport's icons, as in stage2d.
   "@vitavision/workbench": ["@vitavision/ui", "lucide-react"],
-  "@vitavision/lab-ui": ["@vitavision/ui", "@vitavision/forms", "@vitavision/charts", "@vitavision/stage2d"],
   // The 3D layer (PLAN L8-1). `three` itself is a peer of both, never a dependency: three
   // breaks on minor releases, so the app picks the one copy (ADR-0002 pins it exactly).
   "@vitavision/three": [],

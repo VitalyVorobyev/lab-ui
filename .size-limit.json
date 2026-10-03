@@ -94,20 +94,5 @@
       "react/jsx-runtime",
       "three"
     ]
-  },
-  {
-    "name": "@vitavision/lab-ui",
-    "path": "packages/lab-ui/dist/index.js",
-    "import": "*",
-    "ignore": [
-      "@vitavision/charts",
-      "@vitavision/forms",
-      "@vitavision/stage2d",
-      "@vitavision/ui",
-      "react",
-      "react-dom",
-      "react/jsx-runtime"
-    ],
-    "limit": "1 kB"
   }
 ]

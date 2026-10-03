@@ -14,8 +14,11 @@ The design direction is an *instrument*: the chrome is grey so the data can be l
 | [`@vitavision/workbench`](packages/workbench) | Studio-app shell: app frame, split panes, tree view, playback bar and playhead store, file drop, toasts | depends on `ui` |
 | [`@vitavision/three`](packages/three) | Framework-agnostic three.js for robot-cell scenes: conventions, frame-tree runtime, robots, frusta, laser fans, targets | no React; peers `three` |
 | [`@vitavision/three-react`](packages/three-react) | React Three Fiber components over `three` | depends on `three`; peers `@react-three/fiber` |
-| [`@vitavision/lab-ui`](packages/lab-ui) | **Deprecated** re-export of the four, for 0.x consumers | |
 | [`@vitavision/config-ts`](packages/config/ts), [`config-eslint`](packages/config/eslint), [`config-vitest`](packages/config/vitest) | Shared toolchain presets for the apps | |
+
+`@vitavision/lab-ui`, the 0.x single package these were split from, is deprecated on npm and
+no longer in this repository (PLAN L9-1). Its published versions stay installable; its last
+README, with the migration table, is in the git history under `packages/lab-ui`.
 
 `docs/plan/PLAN.md` is the roadmap; `docs/adrs/` holds the decisions (ADR-0002 is the toolchain
 baseline); `docs/measurements/` holds every gate result (concept matrix, dependency matrix,
@@ -52,8 +55,7 @@ provenance.
 Publishing is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) — no npm
 token in the repo. **Each package name needs its trusted publisher registered on npmjs.com**
 (repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`) before its
-first release from CI. After the first release of the split, mark the compat package
-deprecated: `npm deprecate @vitavision/lab-ui "Split into @vitavision/ui, /forms, /charts and /stage2d — see its README"`.
+first release from CI.
 
 The Storybook docs site deploys from `main` to GitHub Pages (`.github/workflows/storybook.yml`).
 
