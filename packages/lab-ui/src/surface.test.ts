@@ -149,11 +149,22 @@ const SURFACE_0_5 = [
  * exact check: a value that appears or disappears unannounced still fails it.
  */
 const ADDED_AFTER_FREEZE = [
+  "DropdownMenu",
+  "Kbd",
+  "Listbox",
+  "MenuCheckboxItem",
+  "MenuItem",
+  "MenuLabel",
+  "MenuSeparator",
+  "Popover",
+  "PopoverClose",
   "PoseInput",
   "Toaster",
   "VectorInput",
   "createToastStore",
   "defaultToastStore",
+  "formatNumber",
+  "parseNumber",
   "toast",
 ];
 

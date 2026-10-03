@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 
@@ -67,4 +67,37 @@ describe("NumberInput", () => {
     expect(input?.style.paddingInlineEnd).toBe("3rem");
     expect(input?.style.color).toBe("red");
   });
+
+  it("passes a null text value as an empty field", () => {
+    const { container } = render(<NumberInput value={null} onChange={() => {}} />);
+    expect(container.querySelector("input")?.value).toBe("");
+  });
+
+  it("shows a number without precision as JavaScript prints it, and composes the caller's handlers", () => {
+    const calls: string[] = [];
+    const { container } = render(
+      <NumberInput
+        value={0.25}
+        onValueChange={() => calls.push("value")}
+        onFocus={() => calls.push("focus")}
+        onBlur={() => calls.push("blur")}
+        onChange={() => calls.push("change")}
+        onKeyDown={() => calls.push("key")}
+      />,
+    );
+    const input = container.querySelector("input")!;
+    expect(input.value).toBe("0.25");
+    expect(input.getAttribute("step")).toBe("any");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "0.5" } });
+    fireEvent.keyDown(input, { key: "a" });
+    fireEvent.blur(input);
+    expect(calls).toEqual(["focus", "value", "change", "key", "blur"]);
+  });
+
+  it("ignores a text value in number-valued mode", () => {
+    const { container } = render(<NumberInput value="3" onValueChange={() => {}} />);
+    expect(container.querySelector("input")?.value).toBe("");
+  });
 });
+
