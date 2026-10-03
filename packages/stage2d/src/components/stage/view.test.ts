@@ -252,6 +252,31 @@ describe("steppedScale", () => {
     expect(steppedScale(0.05, -1, 0.05, MAX_SCALE)).toBeCloseTo(0.05, 9);
   });
 
+  it("steps onto the floor or the ceiling when they lie between ladder steps", () => {
+    // Floor 0.1: below the 0.125 step there is no ladder entry, but the floor is still a
+    // step — otherwise "zoom out" stays enabled and does nothing.
+    expect(steppedScale(0.125, -1, 0.1, MAX_SCALE)).toBeCloseTo(0.1, 12);
+    expect(steppedScale(0.1, -1, 0.1, MAX_SCALE)).toBeCloseTo(0.1, 12);
+    // Ceiling 40, above the last 32 step.
+    expect(steppedScale(32, 1, 0.05, 40)).toBe(40);
+    expect(steppedScale(40, 1, 0.05, 40)).toBe(40);
+  });
+
+  it("reaches the floor and the ceiling in finitely many steps from anywhere", () => {
+    for (const [min, max] of [
+      [0.01, 48],
+      [0.1, 40],
+      [0.0123, 0.9],
+    ] as const) {
+      let down = 7;
+      for (let i = 0; i < 64 && down > min; i += 1) down = steppedScale(down, -1, min, max);
+      expect(down).toBeCloseTo(min, 12);
+      let up = 0.2;
+      for (let i = 0; i < 64 && up < max; i += 1) up = steppedScale(up, 1, min, max);
+      expect(up).toBeCloseTo(max, 12);
+    }
+  });
+
   it("still returns something usable when the range admits no ladder entry", () => {
     const value = steppedScale(0.07, 1, 0.071, 0.072);
     expect(value).toBeGreaterThanOrEqual(0.071);

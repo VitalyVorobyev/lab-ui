@@ -5,7 +5,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 
 import type { Point } from "../measureGeometry";
-import { ImageStage, useStage, type ImageStageProps } from "./ImageStage";
+import { ImageStage, useStage, type ImageStageProps, type StageHandle } from "./ImageStage";
 import { StageButton, StageReadout, StageToolbar, StageToolbarDivider } from "./StageToolbar";
 import { clampView, type Rect, type StageView } from "./view";
 
@@ -458,5 +458,83 @@ export const PanTool: Story = {
     await fireEvent.pointerMove(stage, { pointerId: 1, clientX: from.clientX - 80, clientY: from.clientY - 40 });
     await fireEvent.pointerUp(stage, { button: 0, pointerId: 1, clientX: from.clientX - 80, clientY: from.clientY - 40 });
     await waitFor(() => expect(stageTransform(canvasElement)).not.toBe(before));
+  },
+};
+
+/**
+ * An inspector beside the stage drives it through the stage's `ref`: "frame this finding" and
+ * "fit" without reaching into the stage's context.
+ */
+function InspectorDriven(args: ImageStageProps) {
+  const stageRef = useRef<StageHandle>(null);
+  const [view, setView] = useState<StageView | null>(null);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-2">
+        <button type="button" className="rounded-control border border-line-strong px-2 text-sm" onClick={() => stageRef.current?.frame(DEFECT)}>
+          Frame the scratch
+        </button>
+        <button type="button" className="rounded-control border border-line-strong px-2 text-sm" onClick={() => stageRef.current?.fit()}>
+          Fit
+        </button>
+        <button type="button" className="rounded-control border border-line-strong px-2 text-sm" onClick={() => stageRef.current?.zoomTo(2)}>
+          200%
+        </button>
+      </div>
+      <div style={{ height: 420 }}>
+        <ImageStage
+          {...args}
+          ref={stageRef}
+          view={view}
+          onView={(next) => {
+            setView(next);
+            args.onView(next);
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export const HandleFromOutside: Story = {
+  render: (args) => <InspectorDriven {...args} />,
+  play: async ({ canvas, canvasElement }) => {
+    const viewport = canvas.getByRole("application", { name: "Image canvas" });
+    await waitFor(() => expect(viewport).toHaveAttribute("data-fit"));
+    await userEvent.click(canvas.getByRole("button", { name: "Frame the scratch" }));
+    await waitFor(() => expect(viewport).not.toHaveAttribute("data-fit"));
+    // The scratch's centre is on screen, near the viewport centre.
+    const { scale, tx, ty } = stageView(canvasElement);
+    const box = viewport.getBoundingClientRect();
+    const cx = tx + scale * (DEFECT.x + DEFECT.width / 2);
+    const cy = ty + scale * (DEFECT.y + DEFECT.height / 2);
+    await expect(Math.abs(cx - box.width / 2)).toBeLessThan(box.width * 0.1);
+    await expect(Math.abs(cy - box.height / 2)).toBeLessThan(box.height * 0.1);
+    await userEvent.click(canvas.getByRole("button", { name: "200%" }));
+    await waitFor(() => expect(stageView(canvasElement).scale).toBeCloseTo(2, 6));
+    await userEvent.click(canvas.getByRole("button", { name: "Fit" }));
+    await waitFor(() => expect(viewport).toHaveAttribute("data-fit"));
+  },
+};
+
+/** A small image: "auto" would open it at 1:1, "fit" fills the frame. */
+const SMALL = { width: 120, height: 96 };
+
+// Sized inline, so the frame is the same with or without the stylesheet.
+const SIZED = { width: 480, height: 360 };
+
+export const InitialViewFit: Story = {
+  args: { image: SMALL, initialView: "fit", style: SIZED },
+  play: async ({ canvas, canvasElement }) => {
+    const viewport = canvas.getByRole("application", { name: "Image canvas" });
+    await waitFor(() => expect(viewport).toHaveAttribute("data-fit"));
+    await expect(stageView(canvasElement).scale).toBeGreaterThan(1);
+  },
+};
+
+export const InitialViewAuto: Story = {
+  args: { image: SMALL, style: SIZED },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(stageView(canvasElement).scale).toBe(1));
   },
 };

@@ -300,10 +300,15 @@ export function steppedScale(scale: number, direction: 1 | -1, min: number, max:
   const candidates = ladder.length > 0 ? ladder : [clamp(scale, min, max)];
   if (direction > 0) {
     const next = candidates.find((s) => s > scale * (1 + SCALE_EPSILON));
-    return next ?? Math.min(max, Math.max(scale, candidates[candidates.length - 1]!));
+    // Past the last step but short of the ceiling: the ceiling is the step, or "zoom in"
+    // would stay enabled and do nothing.
+    if (next === undefined) return scale < max * (1 - SCALE_EPSILON) ? max : Math.min(max, scale);
+    return next;
   }
   const previous = [...candidates].reverse().find((s) => s < scale * (1 - SCALE_EPSILON));
-  return previous ?? Math.max(min, Math.min(scale, candidates[0]!));
+  // Below the first step but above the floor: likewise, the floor is the step.
+  if (previous === undefined) return scale > min * (1 + SCALE_EPSILON) ? min : Math.max(min, scale);
+  return previous;
 }
 
 /** `0.5` → `"50%"`, `1` → `"100%"`, `0.0833` → `"8%"`. */

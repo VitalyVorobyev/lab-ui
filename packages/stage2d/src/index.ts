@@ -8,14 +8,20 @@ export {
   useStage,
   type ImageStageProps,
   type StageContext,
+  type StageHandle,
 } from "./components/stage/ImageStage";
+
+export { ImageLayer, type ImageLayerProps, type ImageTier } from "./components/stage/ImageLayer";
 
 export {
   StageButton,
+  StageLayersMenu,
   StageReadout,
   StageToolbar,
   StageToolbarDivider,
   type StageButtonProps,
+  type StageLayer,
+  type StageLayersMenuProps,
   type StageReadoutProps,
   type StageToolbarDividerProps,
   type StageToolbarProps,
