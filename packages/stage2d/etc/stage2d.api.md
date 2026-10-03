@@ -74,6 +74,9 @@ export interface ClampOptions {
 }
 
 // @public
+export function clampRect(rect: Rect, bounds: Rect, minSize: number): Rect;
+
+// @public
 export function clampView(view: StageView, box: Box, image: Box, options?: ClampOptions): StageView;
 
 // @public
@@ -260,6 +263,9 @@ export const MIN_SCALE_VS_FIT = 0.25;
 export const MIN_ZOOM = 1;
 
 // @public
+export function moveRect(rect: Rect, dx: number, dy: number, bounds: Rect): Rect;
+
+// @public
 export function nativeZoomFor(sourceWidth: number, boxWidth: number): number;
 
 // @public
@@ -306,10 +312,47 @@ export interface Rect {
 }
 
 // @public
+export function rectFromCorners(a: Point, b: Point): Rect;
+
+// @public
+export function RectRoiEditor(input: RectRoiEditorProps): JSX.Element;
+
+// @public
+export interface RectRoiEditorProps {
+    bounds?: Rect | undefined;
+    draw?: boolean | undefined;
+    editable?: boolean | undefined;
+    label?: string | undefined;
+    minSize?: number | undefined;
+    onCommit?: ((value: Rect) => void) | undefined;
+    onValueChange: (value: Rect) => void;
+    stroke?: string | undefined;
+    value: Rect | null;
+}
+
+// @public
 export const RESET_VIEW: View;
 
 // @public
+export function resizeRect(rect: Rect, handle: RoiHandle, to: Point, bounds: Rect, minSize: number): Rect;
+
+// @public
+export const ROI_HANDLE_CURSOR: Readonly<Record<RoiHandle, string>>;
+
+// @public
+export const ROI_HANDLES: readonly RoiHandle[];
+
+// @public
+export type RoiHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
+
+// @public
+export function roiHandlePoint(rect: Rect, handle: RoiHandle): Point;
+
+// @public
 export function rotatePoint(x: number, y: number, angle: number): Point;
+
+// @public
+export function sameRect(a: Rect | null, b: Rect | null, epsilon?: number): boolean;
 
 // @public
 export function scaleRange(box: Box, image: Box, options?: ClampOptions): [number, number];

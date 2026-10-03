@@ -30,6 +30,16 @@ at 1:1.
 (`decodePlane`, `valueAt`, `valuesAt`, `fractionOf`, `fetchPlane`) — it never draws;
 colour range and colormap stay the caller's decision.
 
+**Region of interest**: `RectRoiEditor` is an editable axis-aligned region.
+- Eight handles resize it and the interior moves it; with `draw`, a drag on the image draws a
+  new one.
+- It stays inside `bounds` (the image by default) and is never smaller than `minSize`.
+- `onValueChange` follows the drag, and `onCommit` fires once the gesture ends.
+- Arrow keys move it, and Alt + arrows resize it.
+
+Its arithmetic (`resizeRect`, `moveRect`, `clampRect`, `rectFromCorners`, `sameRect`) is
+exported and tested without a DOM.
+
 **Annotation layers** — `ContourEditor` edits ordered source-image pixel-center
 vertices; `MaskEditor` paints or erases a row-major binary mask with a bounded
 source-pixel brush. Both are controlled layers for `ImageStage`: the caller owns
