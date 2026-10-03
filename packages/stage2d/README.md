@@ -49,6 +49,20 @@ batched paths and picks through a spatial index, not the DOM.
   `polylinePath` are pure; hit-testing is microseconds at 100k segments
   (`docs/measurements/u4-polyline-set.md`).
 
+**Points**: `PointSet` draws many points (corners, ring centres, keypoints, labelled landmarks) as
+a few batched paths, with a marker per kind (`dot`, `plus`, `cross`, `square`, `hollow`,
+`directed`, or your own path generator) and the same states as `PolylineSet`, plus a ring on the
+selected. Labels appear where points are 24 screen px apart.
+- **Pointer:** `onHoverChange` and `onItemPress` come from the stage's pointer handling and the
+  layer's index, not from per-point elements.
+- **Pure functions:** `buildPointIndex`, `nearestPoint`, `pointsInRect` and `thinPoints`
+  (`docs/measurements/l6-2a-points-hit-test.md`).
+
+**Hit-test**: `useStageHitTest()` answers "what is under the pointer" across layers, ranked by
+`STAGE_HIT_PRIORITY` (points above lines above areas above images). `PointSet` and `PolylineSet`
+answer it; `useStageHitLayer` registers any other layer. `ImageStage` also takes `panButton`,
+`doubleClickFit` and `touchPan`, and handles two-finger pinch.
+
 **Tool model**: `StageSurface` is the one full-frame press target per stage.
 - **Claiming:** its `onPress` returns a drag to claim a press, or nothing to let the stage pan.
 - **Drags:** `useStageDrag` starts a window-level drag from any element, e.g. a handle.

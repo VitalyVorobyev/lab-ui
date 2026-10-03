@@ -23,6 +23,8 @@ import {
 import { overlayRole } from "./overlayRole";
 import { useStage } from "./stage/ImageStage";
 import { useStageDrag } from "./stage/StageSurface";
+import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
+import { useStageHitLayer, useStageHitTest } from "./stage/useStageHitTest";
 import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox, type Rect } from "./stage/view";
 
@@ -50,6 +52,17 @@ export interface PolylineSetProps {
   /** Called when the line under the pointer changes. */
   onHover?: ((id: PolylineId | null) => void) | undefined;
   /**
+   * Called when the line under the pointer changes: the same as `onHover`, under the name
+   * `PointSet` uses, so an app handles every layer's hover alike.
+   */
+  onHoverChange?: ((id: PolylineId | null) => void) | undefined;
+  /**
+   * Called when a press lands on a line, with the `pointerdown`, before `onSelect`. It does
+   * not fire for a rubber band, nor when a point of a `PointSet` over the line takes the
+   * press instead.
+   */
+  onItemPress?: ((id: PolylineId, event: ReactPointerEvent<SVGPathElement>) => void) | undefined;
+  /**
    * Called on a selection gesture.
    * - A click on a line → `[id]`, "replace".
    * - ⌘/Ctrl-click → `[id]`, "toggle".
@@ -73,6 +86,10 @@ export interface PolylineSetProps {
   vertexScale?: number | undefined;
   /** The layer's accessible name. Defaults to "Lines". */
   label?: string | undefined;
+  /** The id hit-tests report for this layer. Defaults to a generated one. */
+  layerId?: string | undefined;
+  /** Rank against other layers in hit-tests. Defaults to `STAGE_HIT_PRIORITY.line`. */
+  priority?: number | undefined;
 }
 
 const HALO = overlayRole("halo");
@@ -99,6 +116,8 @@ export function PolylineSet({
   dimmed,
   hovered,
   onHover,
+  onHoverChange,
+  onItemPress,
   onSelect,
   marquee = false,
   stroke = overlayRole("feature"),
@@ -106,15 +125,29 @@ export function PolylineSet({
   hitWidth = 14,
   vertexScale = 3,
   label = "Lines",
+  layerId,
+  priority = STAGE_HIT_PRIORITY.line,
 }: PolylineSetProps) {
   const stage = useStage();
   const startDrag = useStageDrag();
   const px = useScreenPx();
+  const { hitTestAll } = useStageHitTest();
 
   const index = useMemo(() => buildPolylineIndex(items), [items]);
   const selectedSet = useMemo(() => new Set(selected ?? []), [selected]);
   const dimmedSet = useMemo(() => new Set(dimmed ?? []), [dimmed]);
   const byId = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
+
+  // Answers the stage's hit-test, so an app can ask one question across layers. The line's
+  // own hover and press stay on its hit path, which gives the pointer cursor and the claim.
+  const ownId = useStageHitLayer({
+    layerId,
+    priority,
+    pick: (point, radius) => {
+      const hit = nearestPolyline(index, point, radius);
+      return hit ? { id: hit.id, dist: hit.distance } : null;
+    },
+  });
 
   const [ownHover, setOwnHover] = useState<PolylineId | null>(null);
   const hoverId = hovered !== undefined ? hovered : ownHover;
@@ -178,6 +211,7 @@ export function PolylineSet({
     if (id === hoverId) return;
     setOwnHover(id);
     onHover?.(id);
+    onHoverChange?.(id);
   };
 
   const sweep = (event: ReactPointerEvent<SVGElement>) => {
@@ -206,9 +240,14 @@ export function PolylineSet({
     }
     const id = pickAt(event);
     if (id === null) return;
+    // A marker over the line is what the pointer is on: leave the press to the stage, which
+    // hands it to the point layer.
+    const point = stage.toImage({ x: event.clientX, y: event.clientY });
+    if (hitTestAll(point, hitWidth / 2, { pressable: true }).some((hit) => hit.layerId !== ownId && hit.priority > priority)) return;
     // Claimed, and selected on the press: a selection that waits for the release feels like
     // lag on a canvas where every other gesture is immediate.
     event.stopPropagation();
+    onItemPress?.(id, event);
     onSelect?.([id], event.metaKey || event.ctrlKey ? "toggle" : "replace");
   };
 

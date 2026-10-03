@@ -10,6 +10,9 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ImageStage, useStage, type ImageStageProps, type StageContext } from "./ImageStage";
+import type { StagePointerEvent } from "./hitContext";
+import type { HitId } from "./hitTest";
+import { useStageHitLayer } from "./useStageHitTest";
 import { MAX_SCALE, PIXEL_CENTRE, clampView, fitView, initialView, toImage, type Box, type StageView } from "./view";
 
 const IMAGE = { width: 1280, height: 1024 };
@@ -623,3 +626,344 @@ describe("ImageStage — before the viewport is measured", () => {
     expect(onView).toHaveBeenLastCalledWith({ scale: 2, tx: 3, ty: 4 });
   });
 });
+
+describe("ImageStage — pan buttons and double-click", () => {
+  /** Zoom to 1:1 first: at fit the clamp absorbs a drag, and a pan has nowhere to go. */
+  function zoomed(props: Parameters<typeof Harness>[0] = {}) {
+    const rendered = renderWithStage(props);
+    fireEvent.keyDown(rendered.viewport, { key: "1" });
+    return rendered;
+  }
+  const drag = (viewport: HTMLElement, button: number, id = 1) => {
+    fireEvent.pointerDown(viewport, { button, clientX: 400, clientY: 300, pointerId: id });
+    fireEvent.pointerMove(viewport, { clientX: 340, clientY: 260, pointerId: id });
+    fireEvent.pointerUp(viewport, { button, clientX: 340, clientY: 260, pointerId: id });
+  };
+
+  it("pans with the right button only, when asked, and suppresses the context menu", () => {
+    withLayout();
+    const { viewport, stage } = zoomed({ panButton: "right" });
+    const before = stage().view;
+
+    drag(viewport, 0);
+    expect(stage().view).toEqual(before);
+    drag(viewport, 1, 2);
+    expect(stage().view).toEqual(before);
+
+    drag(viewport, 2, 3);
+    expect(stage().view.tx).toBeCloseTo(before.tx - 60, 6);
+    expect(stage().view.ty).toBeCloseTo(before.ty - 40, 6);
+    expect(fireEvent.contextMenu(viewport)).toBe(false);
+  });
+
+  it("leaves the context menu alone when the right button does not pan", () => {
+    withLayout();
+    const { viewport } = zoomed();
+    expect(fireEvent.contextMenu(viewport)).toBe(true);
+  });
+
+  it("takes a list of buttons", () => {
+    withLayout();
+    const { viewport, stage } = zoomed({ panButton: ["middle", "right"] });
+    const before = stage().view;
+    drag(viewport, 0);
+    expect(stage().view).toEqual(before);
+    drag(viewport, 1, 2);
+    expect(stage().view.tx).toBeCloseTo(before.tx - 60, 6);
+  });
+
+  it("still reports a left click on the background when the left button does not pan", () => {
+    withLayout();
+    const onBackgroundClick = vi.fn();
+    const { viewport, stage } = zoomed({ panButton: "right", onBackgroundClick });
+    const before = stage().view;
+    fireEvent.pointerDown(viewport, { button: 0, clientX: 400, clientY: 300, pointerId: 1 });
+    expect(viewport.hasAttribute("data-panning")).toBe(false);
+    fireEvent.pointerUp(viewport, { button: 0, clientX: 400, clientY: 300, pointerId: 1 });
+    expect(onBackgroundClick).toHaveBeenCalledTimes(1);
+
+    // A left drag is not a click, and not a pan either.
+    fireEvent.pointerDown(viewport, { button: 0, clientX: 400, clientY: 300, pointerId: 2 });
+    fireEvent.pointerMove(viewport, { clientX: 460, clientY: 340, pointerId: 2 });
+    fireEvent.pointerUp(viewport, { button: 0, clientX: 460, clientY: 340, pointerId: 2 });
+    expect(onBackgroundClick).toHaveBeenCalledTimes(1);
+    expect(stage().view).toEqual(before);
+  });
+
+  it("lets the hand tool pan with the left button whatever panButton says", () => {
+    withLayout();
+    const { viewport, stage } = zoomed({ panButton: "right", panTool: true });
+    const before = stage().view;
+    drag(viewport, 0);
+    expect(stage().view.tx).toBeCloseTo(before.tx - 60, 6);
+  });
+
+  it("keeps the fit toggle unless doubleClickFit is off", () => {
+    withLayout();
+    const on = zoomed();
+    fireEvent.doubleClick(on.viewport, { clientX: 400, clientY: 300 });
+    expect(on.stage().isFit).toBe(true);
+    on.unmount();
+
+    const off = zoomed({ doubleClickFit: false });
+    const before = off.stage().view;
+    fireEvent.doubleClick(off.viewport, { clientX: 400, clientY: 300 });
+    expect(off.stage().view).toEqual(before);
+  });
+});
+
+/** Registers one pickable point at image `(x, y)` and reports what the stage routes to it. */
+function PointLayer({
+  x,
+  y,
+  priority = 300,
+  onHover,
+  onPress,
+}: {
+  x: number;
+  y: number;
+  priority?: number;
+  onHover?: (id: HitId | null) => void;
+  onPress?: (id: HitId, event: StagePointerEvent) => boolean | void;
+}) {
+  useStageHitLayer({
+    layerId: "pt",
+    priority,
+    pick: (p, radius) => {
+      const dist = Math.hypot(p.x - x, p.y - y);
+      return dist <= radius ? { id: "p", dist } : null;
+    },
+    onHover,
+    onPress,
+  });
+  return null;
+}
+
+describe("ImageStage — routing hover and presses to registered layers", () => {
+  /** A zoomed-in stage with a point at the image position under client (400, 300). */
+  function withPoint(layerProps: Partial<Parameters<typeof PointLayer>[0]>, stageProps: Parameters<typeof Harness>[0] = {}) {
+    const rendered = renderWithStage({ ...stageProps, layer: <Probe2 layerProps={layerProps} /> });
+    fireEvent.keyDown(rendered.viewport, { key: "1" });
+    return rendered;
+  }
+  function Probe2({ layerProps }: { layerProps: Partial<Parameters<typeof PointLayer>[0]> }) {
+    const { toImage: toImg } = useStage();
+    const p = toImg({ x: 400, y: 300 });
+    return <PointLayer x={p.x} y={p.y} {...layerProps} />;
+  }
+
+  it("tells a layer which item is hovered, and when the pointer leaves it", () => {
+    withLayout();
+    const onHover = vi.fn();
+    const { viewport } = withPoint({ onHover });
+    fireEvent.pointerMove(viewport, { clientX: 403, clientY: 300 });
+    expect(onHover).toHaveBeenLastCalledWith("p");
+    fireEvent.pointerMove(viewport, { clientX: 500, clientY: 300 });
+    expect(onHover).toHaveBeenLastCalledWith(null);
+    fireEvent.pointerMove(viewport, { clientX: 400, clientY: 300 });
+    fireEvent.pointerLeave(viewport);
+    expect(onHover).toHaveBeenLastCalledWith(null);
+  });
+
+  it("clears hover when a pan begins, and does not route hover from a touch", () => {
+    withLayout();
+    const onHover = vi.fn();
+    const { viewport } = withPoint({ onHover }, { panButton: ["middle"] });
+    fireEvent.pointerMove(viewport, { clientX: 400, clientY: 300 });
+    expect(onHover).toHaveBeenLastCalledWith("p");
+    fireEvent.pointerDown(viewport, { button: 1, clientX: 600, clientY: 500, pointerId: 1 });
+    fireEvent.pointerMove(viewport, { clientX: 640, clientY: 500, pointerId: 1 });
+    expect(onHover).toHaveBeenLastCalledWith(null);
+    fireEvent.pointerUp(viewport, { button: 1, clientX: 640, clientY: 500, pointerId: 1 });
+
+    onHover.mockClear();
+    fireEvent.pointerMove(viewport, { clientX: 400, clientY: 300, pointerType: "touch", pointerId: 9 });
+    expect(onHover).not.toHaveBeenCalled();
+  });
+
+  it("gives a press on an item to its layer instead of panning", () => {
+    withLayout();
+    const onPress = vi.fn();
+    const { viewport, stage } = withPoint({ onPress });
+    const before = stage().view;
+    fireEvent.pointerDown(viewport, { button: 0, clientX: 402, clientY: 301, pointerId: 1 });
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(onPress.mock.calls[0]![0]).toBe("p");
+    expect(viewport.hasAttribute("data-panning")).toBe(false);
+    fireEvent.pointerMove(viewport, { clientX: 500, clientY: 400, pointerId: 1 });
+    expect(stage().view).toEqual(before);
+  });
+
+  it("pans from a press the layer declines, or that misses every item", () => {
+    withLayout();
+    const onPress = vi.fn(() => false);
+    const { viewport } = withPoint({ onPress });
+    fireEvent.pointerDown(viewport, { button: 0, clientX: 400, clientY: 300, pointerId: 1 });
+    expect(onPress).toHaveBeenCalled();
+    expect(viewport.hasAttribute("data-panning")).toBe(true);
+    fireEvent.pointerUp(viewport, { button: 0, clientX: 400, clientY: 300, pointerId: 1 });
+
+    onPress.mockClear();
+    fireEvent.pointerDown(viewport, { button: 0, clientX: 700, clientY: 500, pointerId: 2 });
+    expect(onPress).not.toHaveBeenCalled();
+    expect(viewport.hasAttribute("data-panning")).toBe(true);
+  });
+
+  it("does not offer a press to layers when the hand tool is on or for a non-primary button", () => {
+    withLayout();
+    const onPress = vi.fn();
+    const hand = withPoint({ onPress }, { panTool: true });
+    fireEvent.pointerDown(hand.viewport, { button: 0, clientX: 400, clientY: 300, pointerId: 1 });
+    expect(onPress).not.toHaveBeenCalled();
+    hand.unmount();
+
+    const middle = withPoint({ onPress });
+    fireEvent.pointerDown(middle.viewport, { button: 1, clientX: 400, clientY: 300, pointerId: 1 });
+    expect(onPress).not.toHaveBeenCalled();
+    expect(middle.viewport.hasAttribute("data-panning")).toBe(true);
+  });
+});
+
+describe("ImageStage — touch", () => {
+  const touch = (pointerId: number, clientX: number, clientY: number) => ({
+    pointerType: "touch",
+    pointerId,
+    clientX,
+    clientY,
+    button: 0,
+  });
+
+  function zoomed(props: Parameters<typeof Harness>[0] = {}) {
+    const rendered = renderWithStage(props);
+    fireEvent.keyDown(rendered.viewport, { key: "1" });
+    return rendered;
+  }
+
+  it("pans with one finger by default, and stops when it lifts", () => {
+    withLayout();
+    const { viewport, stage } = zoomed();
+    const before = stage().view;
+    fireEvent.pointerDown(viewport, touch(1, 400, 300));
+    fireEvent.pointerMove(viewport, touch(1, 340, 260));
+    expect(viewport.hasAttribute("data-panning")).toBe(true);
+    fireEvent.pointerUp(viewport, touch(1, 340, 260));
+    expect(viewport.hasAttribute("data-panning")).toBe(false);
+    expect(stage().view.tx).toBeCloseTo(before.tx - 60, 6);
+    expect(stage().view.ty).toBeCloseTo(before.ty - 40, 6);
+    // The lost capture that follows a release is not a second release.
+    fireEvent.lostPointerCapture(viewport, touch(1, 340, 260));
+    expect(viewport.hasAttribute("data-panning")).toBe(false);
+  });
+
+  it("leaves one finger to the app when touchPan is two-finger", () => {
+    withLayout();
+    const { viewport, stage } = zoomed({ touchPan: "two-finger" });
+    const before = stage().view;
+    fireEvent.pointerDown(viewport, touch(1, 400, 300));
+    fireEvent.pointerMove(viewport, touch(1, 340, 260));
+    fireEvent.pointerUp(viewport, touch(1, 340, 260));
+    expect(stage().view).toEqual(before);
+  });
+
+  it("pinch-zooms about the fingers' midpoint and pans with it", () => {
+    withLayout();
+    const { viewport, stage } = zoomed({ clamp: { maxScale: 16 } });
+    // Zoom out a step so there is room to zoom in, away from the clamp.
+    fireEvent.keyDown(viewport, { key: "-" });
+    const before = stage().view;
+    const held = stage().toImage({ x: 400, y: 300 });
+
+    fireEvent.pointerDown(viewport, touch(1, 300, 300));
+    fireEvent.pointerDown(viewport, touch(2, 500, 300));
+    expect(viewport.hasAttribute("data-panning")).toBe(true);
+    // Spread to twice the distance with the midpoint unchanged, then drag the midpoint.
+    fireEvent.pointerMove(viewport, touch(2, 700, 300));
+    expect(stage().view.scale).toBeCloseTo(before.scale * 2, 6);
+    const after = stage().toImage({ x: 500, y: 300 });
+    // The midpoint moved from (400, 300) to (500, 300): the point held is under it now.
+    expect(after.x).toBeCloseTo(held.x, 5);
+    expect(after.y).toBeCloseTo(held.y, 5);
+
+    fireEvent.pointerUp(viewport, touch(2, 700, 300));
+    fireEvent.pointerUp(viewport, touch(1, 300, 300));
+    expect(viewport.hasAttribute("data-panning")).toBe(false);
+  });
+
+  it("carries on as a one-finger pan when one of two fingers lifts, never as a tap", () => {
+    withLayout();
+    const onBackgroundClick = vi.fn();
+    const { viewport, stage } = zoomed({ onBackgroundClick });
+    fireEvent.pointerDown(viewport, touch(1, 300, 300));
+    fireEvent.pointerDown(viewport, touch(2, 500, 300));
+    fireEvent.pointerUp(viewport, touch(1, 300, 300));
+    expect(viewport.hasAttribute("data-panning")).toBe(true);
+    const before = stage().view;
+    fireEvent.pointerMove(viewport, touch(2, 560, 300));
+    expect(stage().view.tx).toBeCloseTo(before.tx + 60, 6);
+    fireEvent.pointerUp(viewport, touch(2, 560, 300));
+    expect(onBackgroundClick).not.toHaveBeenCalled();
+  });
+
+  it("ignores a third finger and pointermoves from fingers it does not know", () => {
+    withLayout();
+    const { viewport, stage } = zoomed();
+    fireEvent.pointerMove(viewport, touch(5, 10, 10));
+    fireEvent.pointerDown(viewport, touch(1, 300, 300));
+    fireEvent.pointerDown(viewport, touch(2, 500, 300));
+    fireEvent.pointerDown(viewport, touch(3, 400, 100));
+    const before = stage().view;
+    fireEvent.pointerMove(viewport, touch(3, 400, 50));
+    expect(stage().view).toEqual(before);
+    fireEvent.pointerUp(viewport, touch(3, 400, 50));
+    fireEvent.pointerCancel(viewport, touch(2, 500, 300));
+    fireEvent.pointerCancel(viewport, touch(1, 300, 300));
+    expect(viewport.hasAttribute("data-panning")).toBe(false);
+  });
+
+  it("reports a tap as a background click, and a drag or a long press as neither", () => {
+    withLayout();
+    const onBackgroundClick = vi.fn();
+    const { viewport } = zoomed({ onBackgroundClick });
+    fireEvent.pointerDown(viewport, touch(1, 400, 300));
+    fireEvent.pointerUp(viewport, touch(1, 401, 300));
+    expect(onBackgroundClick).toHaveBeenCalledTimes(1);
+
+    fireEvent.pointerDown(viewport, touch(2, 400, 300));
+    fireEvent.pointerMove(viewport, touch(2, 460, 300));
+    fireEvent.pointerUp(viewport, touch(2, 460, 300));
+    expect(onBackgroundClick).toHaveBeenCalledTimes(1);
+
+    // A long press: the same touch, a second later.
+    const at = (type: string, timeStamp: number) => {
+      const event = new PointerEvent(type, { ...touch(3, 400, 300), bubbles: true });
+      Object.defineProperty(event, "timeStamp", { value: timeStamp });
+      fireEvent(viewport, event);
+    };
+    at("pointerdown", 1000);
+    at("pointerup", 2000);
+    expect(onBackgroundClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives a tap on an item to its layer, with a fingertip's tolerance, instead of the background", () => {
+    withLayout();
+    const onPress = vi.fn();
+    const onBackgroundClick = vi.fn();
+    const { viewport } = renderWithStage({
+      onBackgroundClick,
+      layer: <TouchPoint onPress={onPress} />,
+    });
+    fireEvent.keyDown(viewport, { key: "1" });
+    // 10 px away: outside a mouse's 6 px, inside a fingertip's 12.
+    fireEvent.pointerDown(viewport, touch(1, 410, 300));
+    expect(onPress).not.toHaveBeenCalled();
+    fireEvent.pointerUp(viewport, touch(1, 410, 300));
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(onBackgroundClick).not.toHaveBeenCalled();
+  });
+});
+
+function TouchPoint({ onPress }: { onPress: () => void }) {
+  const { toImage: toImg } = useStage();
+  const p = toImg({ x: 400, y: 300 });
+  return <PointLayer x={p.x} y={p.y} onPress={onPress} />;
+}

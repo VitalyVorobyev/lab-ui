@@ -13,6 +13,7 @@ import "./styles.css";
 
 import { canvas2d } from "./candidates/canvas2d";
 import { konva } from "./candidates/konva";
+import { packageLayers } from "./candidates/package";
 import { svg } from "./candidates/svg";
 import type { Candidate } from "./candidates/types";
 import { IMAGE, imageUrl, makeImage, makeScene } from "./scene";
@@ -24,6 +25,8 @@ const CANDIDATES: Record<string, () => Candidate> = {
   b: () => konva({ cache: true }),
   "b-nocache": () => konva({ cache: false }),
   c: () => canvas2d(),
+  package: () => packageLayers(),
+  "package-plus": () => packageLayers({ kind: "plus" }),
 };
 
 export interface Stats {
