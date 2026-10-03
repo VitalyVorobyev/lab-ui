@@ -30,6 +30,7 @@ import {
   use,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -40,6 +41,7 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
   ReactNode,
+  Ref,
 } from "react";
 
 import { cn } from "@vitavision/ui";
@@ -106,6 +108,20 @@ export interface StageContext {
   panMode: boolean;
 }
 
+/**
+ * The stage's controls for code outside it — an inspector's "frame this contour", a
+ * "fit on open" — through `ImageStage`'s `ref`. Each is a no-op until the viewport has been
+ * measured. Layers inside the stage use `useStage` instead.
+ */
+export interface StageHandle {
+  /** Put a rect (image coordinates) on screen with a margin (CSS pixels, default 24). */
+  frame: (rect: Rect, pad?: number) => void;
+  /** Fit the whole image. */
+  fit: () => void;
+  /** Set a scale about the viewport centre, or about `anchor` in client coordinates. */
+  zoomTo: (scale: number, anchor?: Point) => void;
+}
+
 const ImageStageContext = createContext<StageContext | null>(null);
 
 /**
@@ -162,6 +178,14 @@ export interface ImageStageProps {
   panKeys?: boolean;
   /** The viewport's accessible name. Defaults to "Image canvas". */
   label?: string;
+  /**
+   * How a `null` view opens: `"auto"` (the default) at 1:1 when the image fits the viewport
+   * and fit otherwise; `"fit"` always fit, for a viewer that should show the whole frame
+   * whatever its size.
+   */
+  initialView?: "auto" | "fit" | undefined;
+  /** The stage's controls for code outside it; see `StageHandle`. */
+  ref?: Ref<StageHandle> | undefined;
 }
 
 /**
@@ -190,6 +214,8 @@ export function ImageStage({
   shortcuts = true,
   panKeys = true,
   label = "Image canvas",
+  initialView: opening = "auto",
+  ref,
 }: ImageStageProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const [box, setBox] = useState<Box>({ width: 0, height: 0 });
@@ -202,17 +228,17 @@ export function ImageStage({
 
   // What the handlers attached once (and the stable callbacks below) read: the props and
   // box of the last commit, so none of them closes over stale values.
-  const latestRef = useRef({ view, box, image, clamp, onView });
+  const latestRef = useRef({ view, box, image, clamp, onView, opening });
   useLayoutEffect(() => {
-    latestRef.current = { view, box, image, clamp, onView };
+    latestRef.current = { view, box, image, clamp, onView, opening };
   });
   /** The view to come back to when a double-click leaves fit. */
   const previousRef = useRef<StageView | null>(null);
   const dragRef = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
 
   const effective = useMemo(
-    () => view ?? (box.width > 0 ? initialView(box, image) : UNMEASURED_VIEW),
-    [view, box, image],
+    () => view ?? (box.width > 0 ? openingView(opening, box, image) : UNMEASURED_VIEW),
+    [view, box, image, opening],
   );
 
   const commit = useCallback((next: StageView) => {
@@ -244,8 +270,8 @@ export function ImageStage({
       const next = { width, height };
       measuredRef.current = next;
       setBox(next);
-      const { view: v, image: i, clamp: c, onView: report } = latestRef.current;
-      if (v === null) report(initialView(next, i));
+      const { view: v, image: i, clamp: c, onView: report, opening: o } = latestRef.current;
+      if (v === null) report(openingView(o, next, i));
       // The first measurement: there is no previous viewport to re-anchor against, so the
       // caller's view is kept — only made legal for this one.
       else if (!(current.width > 0)) report(clampView(v, next, i, c));
@@ -344,6 +370,8 @@ export function ImageStage({
     if (!(b.width > 0)) return;
     report(frameRect(b, i, rect, pad));
   }, []);
+
+  useImperativeHandle(ref, () => ({ frame, fit, zoomTo }), [frame, fit, zoomTo]);
 
   const atFit = box.width > 0 && isFit(effective, box, image);
 
@@ -541,6 +569,11 @@ export function ImageStage({
       </div>
     </ImageStageContext>
   );
+}
+
+/** The view a `null` view opens at, by the `initialView` policy. */
+function openingView(opening: "auto" | "fit", box: Box, image: Box): StageView {
+  return opening === "fit" ? fitView(box, image) : initialView(box, image);
 }
 
 function hoverPoint(

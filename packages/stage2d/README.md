@@ -18,6 +18,14 @@ as the way a layer reads the transform. The arithmetic behind it is pure and exp
 `fitScale`, `fitView`, `toImage`, `toScreen`, `zoomAbout`, `clampView`, `frameRect`,
 `preserveCenter`, `steppedScale`. See "The image stage" below. `ZoomPanCanvas` is its
 deprecated predecessor, still exported unchanged.
+
+`ImageLayer` draws the photograph at its natural size. It can show a `preview` tier until
+the stage would magnify it, then load the full image and keep it, and it turns pixelated past
+`pixelatedAbove`. `StageButton` takes a `hint` and a `shortcut` for a richer tooltip, and
+`StageLayersMenu` is a layers button for `StageToolbar`. Code outside the stage, such as an
+inspector's "frame this", drives it through `ImageStage`'s `ref` (`StageHandle`: `frame`,
+`fit`, `zoomTo`). `initialView="fit"` opens a `null` view at fit even when the image would fit
+at 1:1.
 `api/mapValues.ts` decodes the `VAM1` float32-plane wire format into indexable values
 (`decodePlane`, `valueAt`, `valuesAt`, `fractionOf`, `fetchPlane`) — it never draws;
 colour range and colormap stay the caller's decision.
@@ -54,7 +62,7 @@ const [view, setView] = useState<StageView | null>(null); // null = "open at a s
   readout={<StageReadout cursor={cursor} />}
   onHover={setCursor}
 >
-  <img src={url} className="h-full w-full" />
+  <ImageLayer src={fullUrl} preview={{ src: previewUrl, width: 1024 }} alt={filename} />
   <MeasureOverlay nativeWidth={1280} nativeHeight={1024} primitives={overlay} strokeScale={view?.scale ?? 1} />
   <MyInteractiveLayer />
 </ImageStage>

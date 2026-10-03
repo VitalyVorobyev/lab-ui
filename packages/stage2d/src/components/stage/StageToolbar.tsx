@@ -11,11 +11,11 @@
  * until aimed at.
  */
 
-import { Maximize2, Minus, Plus, Scan } from "lucide-react";
+import { Layers, Maximize2, Minus, Plus, Scan } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 
-import { cn, focusRing } from "@vitavision/ui";
+import { DropdownMenu, Kbd, MenuCheckboxItem, MenuLabel, Tooltip, cn, focusRing } from "@vitavision/ui";
 import { useStage } from "./ImageStage";
 import { MAX_SCALE, formatScale, scaleRange, steppedScale } from "./view";
 
@@ -152,6 +152,14 @@ export interface StageButtonProps
   label: string;
   /** A toggle's state; omit for a plain action button. */
   pressed?: boolean;
+  /**
+   * A longer explanation for the tooltip, after the label. Giving `hint` or `shortcut`
+   * switches the native `title` for the ui `Tooltip`, which needs a `TooltipProvider` above
+   * the stage.
+   */
+  hint?: ReactNode;
+  /** The key that does the same, shown in the tooltip as a `Kbd`. Display only. */
+  shortcut?: string | undefined;
   /** The icon (mark it `aria-hidden`). */
   children: ReactNode;
 }
@@ -160,14 +168,19 @@ export interface StageButtonProps
  * The bar's own button shape, exported so app groups match it exactly. An icon button
  * named by `label`; a toggle when `pressed` is given, exposed as `aria-pressed` and
  * `data-state="on"` or `"off"`. Other button props (and `ref`) are passed through.
+ *
+ * Its tooltip is the native `title` (the label), or with `hint` / `shortcut` the ui
+ * `Tooltip`: the label, the hint, and the shortcut as a key cap.
  */
-export function StageButton({ label, pressed, className, children, ...props }: StageButtonProps) {
-  return (
+export function StageButton({ label, pressed, hint, shortcut, className, children, ...props }: StageButtonProps) {
+  const rich = hint !== undefined || shortcut !== undefined;
+  const button = (
     <button
       {...props}
       type="button"
-      title={label}
+      title={rich ? undefined : label}
       aria-label={label}
+      aria-keyshortcuts={shortcut}
       aria-pressed={pressed}
       data-state={pressed === undefined ? undefined : pressed ? "on" : "off"}
       className={cn(
@@ -180,6 +193,79 @@ export function StageButton({ label, pressed, className, children, ...props }: S
     >
       {children}
     </button>
+  );
+  if (!rich) return button;
+  return (
+    <Tooltip
+      content={
+        <span className="flex items-center gap-2">
+          <span>
+            <span className="font-medium">{label}</span>
+            {hint !== undefined && <span className="block text-fg-muted">{hint}</span>}
+          </span>
+          {shortcut && <Kbd>{shortcut}</Kbd>}
+        </span>
+      }
+    >
+      {button}
+    </Tooltip>
+  );
+}
+
+/** One layer in a `StageLayersMenu`. */
+export interface StageLayer {
+  /** Its identity, passed back to `onVisibleChange`. */
+  id: string;
+  /** Its name in the menu. */
+  label: string;
+  /** Whether it is shown. */
+  visible: boolean;
+  /** Shown but not switchable, e.g. a layer that has nothing to draw yet. */
+  disabled?: boolean | undefined;
+  /** A key that toggles it, shown as a `Kbd`. Display only: binding it is the app's. */
+  shortcut?: string | undefined;
+}
+
+/** Props of `StageLayersMenu`. */
+export interface StageLayersMenuProps {
+  /** The layers, in menu order. */
+  layers: readonly StageLayer[];
+  /** Called with a layer's id and its new visibility. */
+  onVisibleChange: (id: string, visible: boolean) => void;
+  /** The trigger's accessible name and the menu's heading. Defaults to "Layers". */
+  label?: string | undefined;
+}
+
+/**
+ * A `StageButton`-shaped trigger opening a menu of layer toggles, for `StageToolbar`'s
+ * children. Each layer is a `menuitemcheckbox`; toggling one keeps the menu open for the
+ * next. The trigger shows as pressed while any layer is hidden, so a canvas missing a layer
+ * says so before the menu is opened.
+ */
+export function StageLayersMenu({ layers, onVisibleChange, label = "Layers" }: StageLayersMenuProps) {
+  const hidden = layers.some((layer) => !layer.visible && !layer.disabled);
+  return (
+    <DropdownMenu
+      side="top"
+      trigger={
+        <StageButton label={label} pressed={hidden}>
+          <Layers className="size-4" aria-hidden />
+        </StageButton>
+      }
+    >
+      <MenuLabel>{label}</MenuLabel>
+      {layers.map((layer) => (
+        <MenuCheckboxItem
+          key={layer.id}
+          checked={layer.visible}
+          onCheckedChange={(visible) => onVisibleChange(layer.id, visible)}
+          disabled={layer.disabled}
+          shortcut={layer.shortcut}
+        >
+          {layer.label}
+        </MenuCheckboxItem>
+      ))}
+    </DropdownMenu>
   );
 }
 

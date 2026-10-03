@@ -10,6 +10,7 @@ import { JSX } from 'react';
 import { MeasureTone } from '@vitavision/ui';
 import { PointerEvent as PointerEvent_2 } from 'react';
 import { ReactNode } from 'react';
+import { Ref } from 'react';
 
 // @public
 export function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string;
@@ -157,6 +158,20 @@ export function frameRect(box: Box, image: Box, rect: Rect, pad?: number): Stage
 export const FULL_TIER_ZOOM = 2;
 
 // @public
+export function ImageLayer(input: ImageLayerProps): JSX.Element;
+
+// @public
+export interface ImageLayerProps {
+    alt: string;
+    className?: string | undefined;
+    onError?: (() => void) | undefined;
+    onLoad?: (() => void) | undefined;
+    pixelatedAbove?: number | undefined;
+    preview?: ImageTier | undefined;
+    src: string;
+}
+
+// @public
 export function imageLengthFor(view: StageView, css: number): number;
 
 // @public
@@ -169,6 +184,7 @@ export interface ImageStageProps {
     clamp?: ClampOptions;
     className?: string;
     image: Box;
+    initialView?: "auto" | "fit" | undefined;
     label?: string;
     onBackgroundClick?: (event: PointerEvent_2<HTMLDivElement>) => void;
     onHover?: (point: Point | null) => void;
@@ -176,10 +192,17 @@ export interface ImageStageProps {
     panKeys?: boolean;
     panTool?: boolean;
     readout?: ReactNode;
+    ref?: Ref<StageHandle> | undefined;
     shortcuts?: boolean;
     style?: CSSProperties;
     toolbar?: ReactNode;
     view: StageView | null;
+}
+
+// @public
+export interface ImageTier {
+    src: string;
+    width: number;
 }
 
 // @public
@@ -308,8 +331,10 @@ export function StageButton(input: StageButtonProps): JSX.Element;
 // @public
 export interface StageButtonProps extends Omit<ComponentPropsWithRef<"button">, "type" | "title" | "aria-label" | "aria-pressed" | "children"> {
     children: ReactNode;
+    hint?: ReactNode;
     label: string;
     pressed?: boolean;
+    shortcut?: string | undefined;
 }
 
 // @public
@@ -328,6 +353,32 @@ export interface StageContext {
     toViewport: (image: Point) => Point;
     view: StageView;
     zoomTo: (scale: number, anchor?: Point) => void;
+}
+
+// @public
+export interface StageHandle {
+    fit: () => void;
+    frame: (rect: Rect, pad?: number) => void;
+    zoomTo: (scale: number, anchor?: Point) => void;
+}
+
+// @public
+export interface StageLayer {
+    disabled?: boolean | undefined;
+    id: string;
+    label: string;
+    shortcut?: string | undefined;
+    visible: boolean;
+}
+
+// @public
+export function StageLayersMenu(input: StageLayersMenuProps): JSX.Element;
+
+// @public
+export interface StageLayersMenuProps {
+    label?: string | undefined;
+    layers: readonly StageLayer[];
+    onVisibleChange: (id: string, visible: boolean) => void;
 }
 
 // @public
