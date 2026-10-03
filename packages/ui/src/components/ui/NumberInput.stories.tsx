@@ -41,10 +41,10 @@ with each number instead of carried from a label.
 
 **Don't** put the unit in the value, and don't use it for a unitless count (omit \`unit\`).
 
-**Number-valued**: pass \`onValueChange\` and \`value\` becomes a number (\`null\` is empty). The field keeps the text
-being typed while it has focus and reports only parsed numbers, so clearing a field to retype it never passes
-through 0; leaving it empty reports \`null\`, Escape restores the value it had on focus, and \`precision\` sets the
-decimals shown at rest.
+**Number-valued**: pass \`onValueChange\` and \`value\` becomes a number (\`null\` shows empty). The field keeps the
+text being typed while it has focus and reports only finite numbers inside \`[min, max]\`, so clearing a field to
+retype it never passes through 0; Escape restores the value it had on focus, \`precision\` sets the decimals shown at
+rest, and \`onClear\` (optional) hears a field committed empty.
 
 **Accessibility**: the unit is the field's description (\`aria-describedby\`), after the caller's own
 \`aria-describedby\` and before a surrounding \`Field\`'s description; it is \`aria-hidden\` so a wrapping \`<label>\` does not fold it into the
@@ -116,7 +116,7 @@ export const Compact: Story = {
   },
 };
 
-/** A number-valued field, as an ROI or datum editor keeps it. */
+/** A number-valued field, as an ROI or datum editor keeps it: at least 10 px wide. */
 function NumberValued({ initial, nullable }: { initial: number | null; nullable: boolean }) {
   const [value, setValue] = useState<number | null>(initial);
   return (
@@ -125,11 +125,20 @@ function NumberValued({ initial, nullable }: { initial: number | null; nullable:
         <NumberInput
           unit="px"
           precision={1}
+          min={10}
           value={value}
           onValueChange={(next) => {
             reported(next);
-            if (next !== null || nullable) setValue(next);
+            setValue(next);
           }}
+          onClear={
+            nullable
+              ? () => {
+                  cleared();
+                  setValue(null);
+                }
+              : undefined
+          }
         />
       </Field>
       <output className="font-mono text-xs text-fg-muted">value: {value === null ? "none" : value}</output>
@@ -138,6 +147,7 @@ function NumberValued({ initial, nullable }: { initial: number | null; nullable:
 }
 
 const reported = fn();
+const cleared = fn();
 
 /*
  * Edit as a person does, through plain DOM events: user-event rewrites a number field's value
@@ -159,8 +169,10 @@ export const NumberValuedEditing: Story = {
     await edit(input, "");
     await expect(reported).not.toHaveBeenCalled();
     await expect(canvas.getByText("value: 320")).toBeVisible();
-    // Each parsed keystroke is reported.
+    // Each keystroke that parses to a number inside [min, max] is reported; "4" on the way to
+    // "48" is below the minimum, so it is not.
     await fireEvent.change(input, { target: { value: "4" } });
+    await expect(reported).not.toHaveBeenCalled();
     await fireEvent.change(input, { target: { value: "48" } });
     await expect(reported).toHaveBeenLastCalledWith(48);
     // Enter shows the value at `precision`, still editing.
@@ -179,20 +191,19 @@ export const NumberValuedEmpty: Story = {
   play: async ({ canvas }) => {
     reported.mockClear();
     const input = canvas.getByRole("spinbutton", { name: "Width" });
-    // Leaving the field empty reports `null`; a caller with no empty value ignores it, and the
-    // field shows the value it still has.
+    // Without `onClear` an emptied field is not a value: leaving it shows the value again.
     await edit(input, "");
     await fireEvent.focusOut(input);
-    await expect(reported).toHaveBeenCalledTimes(1);
-    await expect(reported).toHaveBeenCalledWith(null);
+    await expect(reported).not.toHaveBeenCalled();
     await waitFor(() => expect(input).toHaveDisplayValue("12.5"));
-    // Enter on an empty field reports it too.
+    // Enter on an empty field shows the value too, and out-of-range text reverts on leaving.
     await edit(input, "");
     await fireEvent.keyDown(input, { key: "Enter" });
-    await expect(reported).toHaveBeenLastCalledWith(null);
+    await waitFor(() => expect(input).toHaveDisplayValue("12.5"));
+    await fireEvent.change(input, { target: { value: "3" } });
     await fireEvent.focusOut(input);
+    await waitFor(() => expect(input).toHaveDisplayValue("12.5"));
     // Keys while not editing do nothing.
-    reported.mockClear();
     await fireEvent.keyDown(input, { key: "Escape" });
     await fireEvent.keyDown(input, { key: "Enter" });
     await expect(reported).not.toHaveBeenCalled();
@@ -203,15 +214,27 @@ export const NumberValuedNullable: Story = {
   render: () => <NumberValued initial={null} nullable />,
   play: async ({ canvas }) => {
     reported.mockClear();
+    cleared.mockClear();
     const input = canvas.getByRole("spinbutton", { name: "Width" });
     await expect(input).toHaveDisplayValue("");
     await expect(canvas.getByText("value: none")).toBeVisible();
-    await edit(input, "7");
+    await edit(input, "70");
     await fireEvent.focusOut(input);
-    await waitFor(() => expect(input).toHaveDisplayValue("7.0"));
+    await waitFor(() => expect(input).toHaveDisplayValue("70.0"));
+    // With `onClear`, an emptied field is committed as unset.
     await edit(input, "");
     await fireEvent.focusOut(input);
-    await expect(reported).toHaveBeenLastCalledWith(null);
+    await expect(cleared).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(canvas.getByText("value: none")).toBeVisible());
+    // Escape back to an unset value clears it again.
+    await edit(input, "25");
+    await fireEvent.keyDown(input, { key: "Escape" });
+    await expect(cleared).toHaveBeenCalledTimes(2);
+    await fireEvent.focusOut(input);
+    // Enter on an emptied, cleared field keeps it empty.
+    await edit(input, "40");
+    await fireEvent.change(input, { target: { value: "" } });
+    await fireEvent.keyDown(input, { key: "Enter" });
+    await waitFor(() => expect(input).toHaveDisplayValue(""));
   },
 };

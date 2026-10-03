@@ -72,7 +72,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole("group", { name: "Position" })).toBeInTheDocument();
-    const y = canvas.getByRole("spinbutton", { name: "y" });
+    const y = canvas.getByRole("spinbutton", { name: "Position y" });
     await expect(y).toHaveValue(-0.25);
     await expect(y).toHaveDisplayValue("-0.250");
     await expect(y).toHaveAccessibleDescription("m");
@@ -92,7 +92,7 @@ export const Default: Story = {
 
 export const Typing: Story = {
   play: async ({ canvas, args }) => {
-    const z = canvas.getByRole("spinbutton", { name: "z" });
+    const z = canvas.getByRole("spinbutton", { name: "Position z" });
     await userEvent.clear(z);
     await userEvent.type(z, "-3.25");
     await expect(args.onValueChange).toHaveBeenLastCalledWith([0.1, -0.25, -3.25]);
@@ -101,7 +101,7 @@ export const Typing: Story = {
 
 export const EnterAndEscape: Story = {
   play: async ({ canvas, args }) => {
-    const x = canvas.getByRole("spinbutton", { name: "x" });
+    const x = canvas.getByRole("spinbutton", { name: "Position x" });
     await edit(x, "2");
     await fireEvent.keyDown(x, { key: "Enter" });
     await waitFor(() => expect(x).toHaveDisplayValue("2.000"));
@@ -143,7 +143,7 @@ export const Quaternion: Story = {
   args: { value: [0, 0, 0.7071, 0.7071], labels: ["qx", "qy", "qz", "qw"], unit: undefined, precision: 4, "aria-label": "Rotation" },
   play: async ({ canvas }) => {
     await expect(canvas.getAllByRole("spinbutton")).toHaveLength(4);
-    await expect(canvas.getByRole("spinbutton", { name: "qw" })).toHaveDisplayValue("0.7071");
+    await expect(canvas.getByRole("spinbutton", { name: "Rotation qw" })).toHaveDisplayValue("0.7071");
   },
 };
 
@@ -158,7 +158,7 @@ export const Disabled: Story = {
 export const FallbackLabels: Story = {
   args: { value: [1, 2, 3, 4, 5], unit: undefined, precision: 0 },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("spinbutton", { name: "w" })).toHaveDisplayValue("4");
-    await expect(canvas.getByRole("spinbutton", { name: "4" })).toHaveDisplayValue("5");
+    await expect(canvas.getByRole("spinbutton", { name: "Position w" })).toHaveDisplayValue("4");
+    await expect(canvas.getByRole("spinbutton", { name: "Position 4" })).toHaveDisplayValue("5");
   },
 };

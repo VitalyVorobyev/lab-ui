@@ -135,11 +135,12 @@ keep independent preferences.
 `ThemeToggle` · plus `cn`, `focusRing`, `focusRingInset`, and `formatNumber` / `parseNumber`
 (the text ↔ number helpers behind the number fields).
 
-A number-valued `NumberInput` keeps what is being typed and reports only parsed numbers, so
-clearing a field to retype it never passes through 0:
+A number-valued `NumberInput` keeps what is being typed and reports only finite numbers inside
+`[min, max]`, so clearing a field to retype it never passes through 0. `onClear` is for a
+quantity that may be unset:
 
 ```tsx
-<NumberInput unit="px" precision={1} value={roi.width} onValueChange={(w) => w !== null && setWidth(w)} />
+<NumberInput unit="px" precision={1} min={4} value={roi.width} onValueChange={setWidth} />
 ```
 
 `PoseInput` edits an SE(3) pose in the wire form `{ rotation: [qx, qy, qz, qw], translation:

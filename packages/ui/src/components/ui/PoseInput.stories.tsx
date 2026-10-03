@@ -100,10 +100,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole("group", { name: "Pose" })).toBeInTheDocument();
-    const x = canvas.getByRole("spinbutton", { name: "x" });
+    const x = canvas.getByRole("spinbutton", { name: "Translation x" });
     await expect(x).toHaveDisplayValue("0.1000");
     await expect(x).toHaveAccessibleDescription("m");
-    const yaw = canvas.getByRole("spinbutton", { name: "yaw" });
+    const yaw = canvas.getByRole("spinbutton", { name: "Rotation yaw" });
     await expect(yaw).toHaveDisplayValue("90.00");
     await expect(yaw).toHaveAccessibleDescription("°");
 
@@ -135,7 +135,7 @@ function lastPose(spy: PoseInputProps["onValueChange"]): PoseValue {
 export const Millimetres: Story = {
   args: { translationUnit: "mm" },
   play: async ({ canvas, args }) => {
-    const z = canvas.getByRole("spinbutton", { name: "z" });
+    const z = canvas.getByRole("spinbutton", { name: "Translation z" });
     await expect(z).toHaveDisplayValue("300.0");
     await expect(z).toHaveAccessibleDescription("mm");
     await userEvent.clear(z);
@@ -161,13 +161,13 @@ export const ExternalChange: Story = {
     return <Harness />;
   },
   play: async ({ canvas }) => {
-    const yaw = canvas.getByRole("spinbutton", { name: "yaw" });
+    const yaw = canvas.getByRole("spinbutton", { name: "Rotation yaw" });
     await edit(yaw, "45");
     await leave(yaw);
     await waitFor(() => expect(yaw).toHaveDisplayValue("45.00"));
     // A rotation set elsewhere replaces the typed angles.
     await userEvent.click(canvas.getByRole("button", { name: "Tilt from the viewport" }));
-    await waitFor(() => expect(canvas.getByRole("spinbutton", { name: "pitch" })).toHaveDisplayValue("30.00"));
+    await waitFor(() => expect(canvas.getByRole("spinbutton", { name: "Rotation pitch" })).toHaveDisplayValue("30.00"));
     await expect(yaw).toHaveDisplayValue("0.00");
   },
 };
@@ -191,8 +191,8 @@ export const CustomAngles: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("group", { name: "Camera mount" })).toBeInTheDocument();
-    await expect(canvas.getByRole("spinbutton", { name: "rz" })).toHaveDisplayValue("90");
-    await expect(canvas.getByRole("spinbutton", { name: "x" })).toHaveDisplayValue("0.10");
+    await expect(canvas.getByRole("spinbutton", { name: "Rotation rz" })).toHaveDisplayValue("90");
+    await expect(canvas.getByRole("spinbutton", { name: "Translation x" })).toHaveDisplayValue("0.10");
   },
 };
 
@@ -211,6 +211,6 @@ export const Compact: Story = {
     </DensityProvider>
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("spinbutton", { name: "roll" }).className).toContain("h-7");
+    await expect(canvas.getByRole("spinbutton", { name: "Rotation roll" }).className).toContain("h-7");
   },
 };

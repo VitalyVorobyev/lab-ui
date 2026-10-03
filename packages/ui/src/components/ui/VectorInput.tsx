@@ -52,8 +52,8 @@ export interface VectorInputProps {
  * A row of number fields editing one small vector, with the axis labels before the fields
  * and the unit once after them.
  *
- * Controlled. A `role="group"` named by `aria-label`, each field named by its label and
- * described by the unit. While a field has focus it shows what is typed; on blur or Enter it
+ * Controlled. A `role="group"` named by `aria-label`. Each field is named by the group and its
+ * label ("Translation x"), so two vectors on one screen stay apart, and is described by the unit. While a field has focus it shows what is typed; on blur or Enter it
  * shows the value at `precision`; Escape restores the value it had on focus. With `readOnly`
  * it renders a `ReadoutStrip` (`x 0.100 m · y …`) instead. The row carries `data-readonly`
  * and `data-disabled`.
@@ -106,6 +106,7 @@ export function VectorInput({
         <label key={index} className="flex min-w-0 flex-1 items-center gap-1">
           <span className="shrink-0 font-mono text-[11px] text-fg-subtle">{labelOf(index)}</span>
           <ComponentField
+            name={`${ariaLabel} ${labelOf(index)}`}
             value={component}
             precision={precision}
             step={step}
@@ -128,6 +129,7 @@ export function VectorInput({
 
 /** One component: formatted at rest, the typed text while focused. */
 function ComponentField({
+  name,
   value,
   precision,
   step,
@@ -137,6 +139,7 @@ function ComponentField({
   describedBy,
   onCommit,
 }: {
+  name: string;
   value: number;
   precision: number;
   step: number | undefined;
@@ -167,6 +170,7 @@ function ComponentField({
       min={min}
       max={max}
       disabled={disabled}
+      aria-label={name}
       aria-describedby={describedBy}
       onFocus={() => setDraft({ text: formatted, initial: value })}
       onBlur={() => setDraft(null)}

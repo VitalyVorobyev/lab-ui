@@ -301,7 +301,8 @@ export function NumberInput(input: NumberInputProps): JSX.Element;
 // @public
 export type NumberInputProps = Omit<ComponentProps<"input">, "min" | "max" | "value"> & {
     value?: string | number | readonly string[] | null | undefined;
-    onValueChange?: ((value: number | null) => void) | undefined;
+    onValueChange?: ((value: number) => void) | undefined;
+    onClear?: (() => void) | undefined;
     precision?: number | undefined;
     min?: number | undefined;
     max?: number | undefined;

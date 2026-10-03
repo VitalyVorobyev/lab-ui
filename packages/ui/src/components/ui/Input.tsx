@@ -62,21 +62,28 @@ export function Input({ className, "aria-describedby": describedBy, ...rest }: C
 export type NumberInputProps = Omit<ComponentProps<"input">, "min" | "max" | "value"> & {
   /**
    * The value. As text, it is the native input's `value`. With `onValueChange` it is a
-   * number, and `null` is an empty field.
+   * number, and `null` shows an empty field.
    */
   value?: string | number | readonly string[] | null | undefined;
   /**
    * Makes the field number-valued.
    *
-   * - **While focused** it keeps the text as typed, and reports every keystroke that parses to
-   *   a new number. Empty or partial text (`""`, `-`, `1e`) is never reported mid-edit, so
-   *   clearing a field to retype it does not pass through 0.
+   * - **While focused** it keeps the text as typed. A keystroke is reported only when the
+   *   text is a finite number inside `[min, max]` and differs from `value`. Empty, partial
+   *   (`-`, `1e`) and out-of-range text is never reported, so clearing a field to retype it
+   *   does not pass through 0, and typing `5` on the way to `50` does not report a value under
+   *   `min`.
    * - **Enter** shows the value at `precision`. **Escape** restores the value the field had
    *   on focus.
-   * - **Leaving** the field, or pressing Enter, with the text empty reports `null`. A caller
-   *   that has no empty value ignores it, and the field shows the value it was given again.
+   * - **On leaving**, the field shows `value` again.
    */
-  onValueChange?: ((value: number | null) => void) | undefined;
+  onValueChange?: ((value: number) => void) | undefined;
+  /**
+   * Called when a number-valued field is committed empty (left, or Enter pressed, with no
+   * text), for a quantity that may be unset. Without it, emptying the field and leaving it
+   * restores `value`.
+   */
+  onClear?: (() => void) | undefined;
   /**
    * Decimals shown when a number-valued field is not being edited. Without it the number is
    * shown as JavaScript prints it.
@@ -107,13 +114,14 @@ export type NumberInputProps = Omit<ComponentProps<"input">, "min" | "max" | "va
  * room on its right for the unit, and is described by it; size such a field through its
  * container. Without one — or with `""` — the markup is exactly the plain input.
  *
- * With `onValueChange` the field is number-valued: `value` is a number (or `null`), the typed
- * text survives while the field has focus, and only parsed numbers are reported (see
- * `onValueChange`). Without it the field is the native text-valued input.
+ * With `onValueChange` the field is number-valued: `value` is a number (`null` shows empty), the
+ * typed text survives while the field has focus, and only finite numbers inside `[min, max]`
+ * are reported (see `onValueChange`; `onClear` reports an emptied field). Without it the field
+ * is the native text-valued input.
  */
-export function NumberInput({ onValueChange, precision, ...props }: NumberInputProps) {
+export function NumberInput({ onValueChange, onClear, precision, ...props }: NumberInputProps) {
   if (onValueChange) {
-    return <ValueNumberInput {...props} onValueChange={onValueChange} precision={precision} />;
+    return <ValueNumberInput {...props} onValueChange={onValueChange} onClear={onClear} precision={precision} />;
   }
   const { unit, ...rest } = props;
   // A `null` text value is an empty field, not a switch to uncontrolled.
@@ -125,7 +133,7 @@ export function NumberInput({ onValueChange, precision, ...props }: NumberInputP
   );
 }
 
-type TextNumberInputProps = Omit<NumberInputProps, "unit" | "value" | "onValueChange" | "precision"> & {
+type TextNumberInputProps = Omit<NumberInputProps, "unit" | "value" | "onValueChange" | "onClear" | "precision"> & {
   value?: string | number | readonly string[] | undefined;
 };
 
@@ -133,32 +141,46 @@ type TextNumberInputProps = Omit<NumberInputProps, "unit" | "value" | "onValueCh
 function ValueNumberInput({
   value,
   onValueChange,
+  onClear,
   precision,
   step,
+  min,
+  max,
   onFocus,
   onBlur,
   onChange,
   onKeyDown,
   ...rest
-}: Omit<NumberInputProps, "onValueChange"> & { onValueChange: (value: number | null) => void }) {
+}: Omit<NumberInputProps, "onValueChange"> & { onValueChange: (value: number) => void }) {
   const numeric = typeof value === "number" ? value : null;
   const show = (v: number | null) =>
     v === null ? "" : precision === undefined ? String(v) : formatNumber(v, precision);
   // Non-null while the field is being edited: the text as typed, and the value on focus.
   const [draft, setDraft] = useState<{ text: string; initial: number | null } | null>(null);
 
-  /** Reports an emptied field once, on commit, and only if it was not already empty. */
+  /** The number `text` commits, or `null` while it is empty, partial or out of range. */
+  const parse = (text: string) => {
+    const parsed = parseNumber(text);
+    if (parsed === null) return null;
+    if ((min !== undefined && parsed < min) || (max !== undefined && parsed > max)) return null;
+    return parsed;
+  };
+
+  /** An emptied field, committed: cleared if the caller allows it and it was not already empty. */
   const commitEmpty = (text: string) => {
-    if (text.trim() === "" && numeric !== null) onValueChange(null);
+    if (text.trim() === "" && numeric !== null) onClear?.();
   };
 
   const keyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (draft && event.key === "Enter") {
       commitEmpty(draft.text);
-      setDraft({ ...draft, text: draft.text.trim() === "" ? "" : show(numeric) });
+      setDraft({ ...draft, text: draft.text.trim() === "" && onClear ? "" : show(numeric) });
     } else if (draft && event.key === "Escape") {
       event.preventDefault();
-      if (draft.initial !== numeric) onValueChange(draft.initial);
+      if (draft.initial !== numeric) {
+        if (draft.initial === null) onClear?.();
+        else onValueChange(draft.initial);
+      }
       setDraft({ ...draft, text: show(draft.initial) });
     }
     onKeyDown?.(event);
@@ -169,6 +191,8 @@ function ValueNumberInput({
       {...rest}
       value={draft?.text ?? show(numeric)}
       step={step ?? "any"}
+      min={min}
+      max={max}
       onFocus={(event) => {
         setDraft({ text: show(numeric), initial: numeric });
         onFocus?.(event);
@@ -182,7 +206,7 @@ function ValueNumberInput({
       onChange={(event) => {
         const text = event.currentTarget.value;
         setDraft((current) => ({ text, initial: current?.initial ?? numeric }));
-        const parsed = parseNumber(text);
+        const parsed = parse(text);
         if (parsed !== null && parsed !== numeric) onValueChange(parsed);
         onChange?.(event);
       }}
