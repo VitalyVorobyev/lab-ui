@@ -1,7 +1,7 @@
 {
   "name": "@vitavision/workbench",
   "version": "0.1.0",
-  "description": "Studio-app building blocks on @vitavision/ui: app shell, split panes, tree view, playback bar and playhead store, file drop, toasts.",
+  "description": "Studio-app building blocks on @vitavision/ui: app shell, split panes, tree view, playback bar and playhead store, file drop (toasts re-exported from @vitavision/ui).",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",

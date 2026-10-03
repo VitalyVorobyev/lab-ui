@@ -148,7 +148,14 @@ const SURFACE_0_5 = [
  * published, so no consumer of the frozen 0.6.0 sees them. Listed so this test stays an
  * exact check: a value that appears or disappears unannounced still fails it.
  */
-const ADDED_AFTER_FREEZE = ["PoseInput", "VectorInput"];
+const ADDED_AFTER_FREEZE = [
+  "PoseInput",
+  "Toaster",
+  "VectorInput",
+  "createToastStore",
+  "defaultToastStore",
+  "toast",
+];
 
 describe("@vitavision/lab-ui compatibility surface", () => {
   it("exports exactly the 0.5.0 runtime values, plus those added after the freeze", () => {

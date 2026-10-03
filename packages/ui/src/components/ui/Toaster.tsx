@@ -16,8 +16,7 @@ import { CircleCheck, CircleX, Info, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { FocusEvent } from "react";
 
-import { cn, focusRing } from "@vitavision/ui";
-
+import { cn, focusRing } from "./cn";
 import { defaultToastStore, type ToastRecord, type ToastStore, type ToastTone } from "./toastStore";
 
 const TONE: Record<ToastTone, { border: string; icon: string; Icon: typeof Info }> = {
