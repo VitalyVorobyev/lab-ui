@@ -52,8 +52,15 @@ export {
   usePlayheadTimeline,
 } from "./components/usePlayback";
 
-export { FileDrop, type FileDropProps } from "./components/FileDrop";
-export { acceptsFile, collectDroppedFiles, type DropEntry } from "./components/dropFiles";
+export { FileDrop, type FileDropProps, type PathSource } from "./components/FileDrop";
+export { acceptsFile, acceptsPath, collectDroppedFiles, type DropEntry } from "./components/dropFiles";
+
+export {
+  SequenceNavigator,
+  type SequenceItem,
+  type SequenceNavigatorProps,
+} from "./components/SequenceNavigator";
+export { stepIndex } from "./components/sequence";
 
 // Notifications moved to `@vitavision/ui` (a second app needed them). These are re-exports of
 // the same bindings, so there is still one default store; prefer importing from `@vitavision/ui`.

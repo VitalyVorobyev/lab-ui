@@ -1,0 +1,128 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
+
+import { SequenceNavigator, type SequenceItem, type SequenceNavigatorProps } from "./SequenceNavigator";
+
+/** A synthetic frame thumbnail, as a data URL, so no network is involved. */
+function thumb(i: number): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="40"><rect width="56" height="40" fill="rgb(${30 + i * 4} 34 38)"/><circle cx="${10 + i * 3}" cy="20" r="8" fill="rgb(180 184 190)"/></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+const FRAMES: SequenceItem[] = Array.from({ length: 12 }, (_, i) => ({
+  id: `f${i + 1}`,
+  label: `dome_${String(i + 1).padStart(4, "0")}.bmp`,
+  thumbnail: thumb(i),
+}));
+
+const change = fn();
+
+function Stateful(args: SequenceNavigatorProps) {
+  const [value, setValue] = useState(args.value);
+  return (
+    <div style={{ width: 560 }}>
+      <SequenceNavigator
+        {...args}
+        value={value}
+        onValueChange={(id) => {
+          setValue(id);
+          change(id);
+        }}
+      />
+    </div>
+  );
+}
+
+const meta = {
+  title: "workbench/SequenceNavigator",
+  component: SequenceNavigator,
+  parameters: {
+    docs: {
+      description: {
+        component: `The current item of an ordered set — a frame of a capture — as a strip of lazily loaded thumbnails between
+previous and next, with the position and \`[\` / \`]\` from anywhere outside a text field. \`renderThumbnail\` draws a
+thumbnail whose URL must be fetched first.
+
+**Use** it where a person steps through a capture one frame at a time: a header, under a canvas.
+
+**Don't** use it for an unordered collection (that is a grid) or for choosing among a handful of options (that is
+\`SegmentedControl\` or \`Select\`).
+
+**Accessibility**: the strip is a named list of buttons, each named by its item; the current one has
+\`aria-current="true"\`. Previous and next declare \`aria-keyshortcuts\`.`,
+      },
+    },
+  },
+  args: { items: FRAMES, value: "f3", onValueChange: change, "aria-label": "Frames" },
+  render: (args) => <Stateful {...args} />,
+} satisfies Meta<typeof SequenceNavigator>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("button", { name: "dome_0003.bmp" })).toHaveAttribute("aria-current", "true");
+    await expect(canvas.getByText("3 / 12")).toBeVisible();
+  },
+};
+
+export const Stepping: Story = {
+  play: async ({ canvas }) => {
+    change.mockClear();
+    await userEvent.click(canvas.getByRole("button", { name: "Next" }));
+    await expect(change).toHaveBeenLastCalledWith("f4");
+    await userEvent.click(canvas.getByRole("button", { name: "Previous" }));
+    await expect(change).toHaveBeenLastCalledWith("f3");
+    // `[` / `]` from anywhere outside a text field.
+    await userEvent.keyboard("]]");
+    await waitFor(() => expect(canvas.getByText("5 / 12")).toBeVisible());
+    // user-event reads `[` as a key descriptor; `[[` types one.
+    await userEvent.keyboard("[[");
+    await expect(change).toHaveBeenLastCalledWith("f4");
+    // A click picks directly.
+    await userEvent.click(canvas.getByRole("button", { name: "dome_0010.bmp" }));
+    await expect(change).toHaveBeenLastCalledWith("f10");
+  },
+};
+
+export const AtTheEnds: Story = {
+  args: { value: "f12" },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole("button", { name: "Next" })).toBeDisabled();
+    await userEvent.click(canvas.getByRole("button", { name: "Previous" }));
+    await expect(change).toHaveBeenLastCalledWith("f11");
+  },
+};
+
+export const Wrapping: Story = {
+  args: { value: "f12", wrap: true },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Next" }));
+    await expect(change).toHaveBeenLastCalledWith("f1");
+  },
+};
+
+export const CustomThumbnails: Story = {
+  args: {
+    value: null,
+    keys: false,
+    items: FRAMES.slice(0, 4).map(({ id, label }) => ({ id, label })),
+    renderThumbnail: (item: SequenceItem) => <span className="block p-1 font-mono text-[10px]">{item.id}</span>,
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("– / 4")).toBeVisible();
+    await expect(canvas.getByText("f2")).toBeVisible();
+    change.mockClear();
+    await userEvent.keyboard("]");
+    await expect(change).not.toHaveBeenCalled();
+  },
+};
+
+export const LabelsWithoutThumbnails: Story = {
+  args: { items: FRAMES.slice(0, 3).map(({ id, label }) => ({ id, label })), value: "f1" },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("dome_0002.bmp")).toBeVisible();
+  },
+};

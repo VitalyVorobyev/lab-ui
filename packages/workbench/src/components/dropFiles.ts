@@ -32,6 +32,38 @@ export function acceptsFile(file: { name: string; type: string }, accept: string
   });
 }
 
+/** MIME types by extension, for matching a bare path against `type/*` and MIME tokens. */
+const MIME_BY_EXTENSION: Readonly<Record<string, string>> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  bmp: "image/bmp",
+  gif: "image/gif",
+  webp: "image/webp",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+  pgm: "image/x-portable-graymap",
+  json: "application/json",
+  csv: "text/csv",
+  txt: "text/plain",
+};
+
+/**
+ * Whether a path matches an `accept` string, for desktop shells whose native drops and
+ * dialogs yield paths rather than `File`s. Extensions match the path's ending; MIME types and
+ * wildcards match through the extension of common image, JSON and text formats.
+ *
+ * @param path - A file path, with either separator.
+ * @param accept - The accept string; empty or absent accepts everything.
+ * @returns Whether the path is accepted.
+ */
+export function acceptsPath(path: string, accept: string | undefined): boolean {
+  const name = path.split(/[\\/]/).pop() ?? path;
+  const dot = name.lastIndexOf(".");
+  const type = dot >= 0 ? (MIME_BY_EXTENSION[name.slice(dot + 1).toLowerCase()] ?? "") : "";
+  return acceptsFile({ name, type }, accept);
+}
+
 /**
  * Split files by `accept`.
  *

@@ -63,7 +63,7 @@
     "name": "@vitavision/workbench",
     "path": "packages/workbench/dist/index.js",
     "import": "*",
-    "limit": "7.61 kB",
+    "limit": "8.76 kB",
     "ignore": [
       "@vitavision/ui",
       "lucide-react",

@@ -24,6 +24,9 @@ export function acceptsFile(file: {
 }, accept: string | undefined): boolean;
 
 // @public
+export function acceptsPath(path: string, accept: string | undefined): boolean;
+
+// @public
 export function advance(position: number, delta: number, count: number, loop: boolean): AdvanceResult;
 
 // @public
@@ -47,6 +50,8 @@ export interface AppShellProps {
     leftLabel?: string | undefined;
     leftSize?: SidePanelSize | undefined;
     main: ReactNode;
+    rail?: ReactNode;
+    railLabel?: string | undefined;
     right?: ReactNode;
     rightLabel?: string | undefined;
     rightSize?: SidePanelSize | undefined;
@@ -96,10 +101,13 @@ export interface FileDropProps {
     directory?: boolean | undefined;
     disabled?: boolean | undefined;
     multiple?: boolean | undefined;
-    onFiles: (files: File[]) => void;
+    onFiles?: ((files: File[]) => void) | undefined;
+    onPaths?: ((paths: string[]) => void) | undefined;
     onReject?: ((files: File[]) => void) | undefined;
+    onRejectPaths?: ((paths: string[]) => void) | undefined;
     overlay?: boolean | undefined;
     overlayMessage?: ReactNode;
+    pathSource?: PathSource | undefined;
 }
 
 // @public
@@ -110,6 +118,20 @@ export type PaneSize = number | `${number}%`;
 
 // @public
 export function parentIds(nodes: readonly TreeNode[]): string[];
+
+// @public
+export interface PathSource {
+    pick: (options: {
+        multiple: boolean;
+        directory: boolean;
+        accept?: string | undefined;
+    }) => Promise<string[]>;
+    subscribe?: (handlers: {
+        onEnter: () => void;
+        onLeave: () => void;
+        onDrop: (paths: string[]) => void;
+    }) => () => void;
+}
 
 // @public
 export function PlaybackBar(input: PlaybackBarProps): JSX.Element;
@@ -165,6 +187,28 @@ export function resolveLimits(length: number, minSize?: PaneSize, maxSize?: Pane
 export function resolveSize(size: PaneSize, length: number): number;
 
 // @public
+export interface SequenceItem {
+    id: string;
+    label: string;
+    thumbnail?: string | undefined;
+}
+
+// @public
+export function SequenceNavigator(input: SequenceNavigatorProps): JSX.Element;
+
+// @public
+export interface SequenceNavigatorProps {
+    "aria-label": string;
+    className?: string | undefined;
+    items: readonly SequenceItem[];
+    keys?: boolean | undefined;
+    onValueChange: (id: string) => void;
+    renderThumbnail?: ((item: SequenceItem) => ReactNode) | undefined;
+    value: string | null;
+    wrap?: boolean | undefined;
+}
+
+// @public
 export interface SidePanelSize {
     collapsible?: boolean | undefined;
     defaultSize?: PaneSize | undefined;
@@ -204,6 +248,9 @@ export interface SplitPaneProps {
     step?: number | undefined;
     storageKey?: string | undefined;
 }
+
+// @public
+export function stepIndex(length: number, index: number, delta: 1 | -1, wrap?: boolean): number | null;
 
 export { toast }
 

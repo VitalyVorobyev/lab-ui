@@ -13,12 +13,38 @@ import type { ChangeEvent, DragEvent, ReactNode } from "react";
 
 import { Button, cn } from "@vitavision/ui";
 
-import { carriesFiles, collectDroppedFiles, partitionFiles } from "./dropFiles";
+import { acceptsPath, carriesFiles, collectDroppedFiles, partitionFiles } from "./dropFiles";
+
+/**
+ * Where paths come from in a desktop shell whose native drops and dialogs yield paths, not
+ * `File`s (Tauri, Electron). The app implements it over its shell's APIs; the package stays
+ * shell-agnostic. See the README for a Tauri implementation.
+ */
+export interface PathSource {
+  /** Opens the native picker; resolves with the chosen paths, `[]` if cancelled. */
+  pick: (options: { multiple: boolean; directory: boolean; accept?: string | undefined }) => Promise<string[]>;
+  /**
+   * Subscribes to native drags of files over the window: `onEnter` and `onLeave` while a drag
+   * hovers, `onDrop` with its paths. Returns the unsubscribe. Optional: without it, only the
+   * picker offers paths.
+   */
+  subscribe?: (handlers: { onEnter: () => void; onLeave: () => void; onDrop: (paths: string[]) => void }) => () => void;
+}
 
 /** Props of `FileDrop`. */
 export interface FileDropProps {
   /** Called with the accepted files of a drop or a pick (never with an empty list). */
-  onFiles: (files: File[]) => void;
+  onFiles?: ((files: File[]) => void) | undefined;
+  /**
+   * The desktop route: paths from `pathSource`'s picker and native drops, filtered by
+   * `accept` on their extensions. With a `pathSource`, the picker and drops go through it
+   * instead of the browser's `File` route.
+   */
+  pathSource?: PathSource | undefined;
+  /** Called with the accepted paths of a native drop or pick (never with an empty list). */
+  onPaths?: ((paths: string[]) => void) | undefined;
+  /** Called with the paths `accept` turned away. */
+  onRejectPaths?: ((paths: string[]) => void) | undefined;
   /** Called with the files a drop or a pick brought that `accept` turned away. */
   onReject?: ((files: File[]) => void) | undefined;
   /**
@@ -62,9 +88,15 @@ export interface FileDropProps {
  *
  * Files are filtered by `accept` on both routes (the browser applies it to neither drops nor,
  * reliably, the picker); the rest go to `onReject`. A dropped folder is walked recursively.
+ *
+ * In a desktop shell, pass a `pathSource`: the picker and native drops then yield paths to
+ * `onPaths`, filtered by `accept` on their extensions, and the browser `File` route is off.
  */
 export function FileDrop({
   onFiles,
+  pathSource,
+  onPaths,
+  onRejectPaths,
   onReject,
   accept,
   multiple = true,
@@ -83,18 +115,40 @@ export function FileDrop({
 
   const deliver = (files: readonly File[]) => {
     const { accepted, rejected } = partitionFiles(files, accept);
-    if (accepted.length > 0) onFiles(multiple ? accepted : accepted.slice(0, 1));
+    if (accepted.length > 0) onFiles?.(multiple ? accepted : accepted.slice(0, 1));
     if (rejected.length > 0) onReject?.(rejected);
   };
+  const deliverPaths = (paths: readonly string[]) => {
+    const accepted = paths.filter((path) => acceptsPath(path, accept));
+    const rejected = paths.filter((path) => !acceptsPath(path, accept));
+    if (accepted.length > 0) onPaths?.(multiple ? accepted : accepted.slice(0, 1));
+    if (rejected.length > 0) onRejectPaths?.(rejected);
+  };
   const deliverRef = useRef(deliver);
+  const deliverPathsRef = useRef(deliverPaths);
   useEffect(() => {
     deliverRef.current = deliver;
+    deliverPathsRef.current = deliverPaths;
   });
+
+  // The desktop route: native drags report paths through the source, for the overlay and the
+  // inline zone alike (a webview with native drag-drop on fires no DOM drop with files).
+  useEffect(() => {
+    if (!pathSource?.subscribe || disabled) return;
+    return pathSource.subscribe({
+      onEnter: () => setDragging(true),
+      onLeave: () => setDragging(false),
+      onDrop: (paths) => {
+        setDragging(false);
+        deliverPathsRef.current(paths);
+      },
+    });
+  }, [pathSource, disabled]);
 
   // The window-wide target. `dragenter`/`dragleave` fire for every element crossed, so the
   // overlay's visibility is a depth count rather than the last event seen.
   useEffect(() => {
-    if (!overlay || disabled) return;
+    if (!overlay || disabled || pathSource) return;
     const onEnter = (event: globalThis.DragEvent) => {
       if (!carriesFiles(event.dataTransfer)) return;
       depthRef.current += 1;
@@ -128,7 +182,7 @@ export function FileDrop({
       window.removeEventListener("drop", onDrop);
       depthRef.current = 0;
     };
-  }, [overlay, disabled]);
+  }, [overlay, disabled, pathSource]);
 
   const onPick = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.currentTarget.files ?? []);
@@ -155,7 +209,15 @@ export function FileDrop({
       <Button
         icon={<FolderOpen />}
         disabled={disabled}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => {
+          if (pathSource) {
+            void pathSource.pick({ multiple: multiple || directory, directory, accept }).then((paths) => {
+              if (paths.length > 0) deliverPathsRef.current(paths);
+            });
+            return;
+          }
+          inputRef.current?.click();
+        }}
         className={overlay ? className : undefined}
       >
         {label}

@@ -177,3 +177,53 @@ export const Disabled: Story = {
     await expect(args.onFiles).not.toHaveBeenCalled();
   },
 };
+
+/**
+ * A fake desktop shell: its picker resolves with fixed paths, and `dropPaths` plays a native
+ * drag of paths over the window (as Tauri's `onDragDropEvent` would).
+ */
+function fakeShell() {
+  let handlers: { onEnter: () => void; onLeave: () => void; onDrop: (paths: string[]) => void } | null = null;
+  return {
+    source: {
+      pick: fn(() => Promise.resolve(["/captures/0001.png", "/captures/notes.txt"])),
+      subscribe: (next: NonNullable<typeof handlers>) => {
+        handlers = next;
+        return () => {
+          handlers = null;
+        };
+      },
+    },
+    hover: () => handlers?.onEnter(),
+    leave: () => handlers?.onLeave(),
+    dropPaths: (paths: string[]) => handlers?.onDrop(paths),
+  };
+}
+
+const desktop = fakeShell();
+const onPaths = fn();
+const onRejectPaths = fn();
+
+export const DesktopPaths: Story = {
+  args: { accept: "image/*" },
+  render: (args) => (
+    <div style={{ width: 420 }}>
+      <FileDrop {...args} pathSource={desktop.source} onPaths={onPaths} onRejectPaths={onRejectPaths} />
+    </div>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    onPaths.mockClear();
+    onRejectPaths.mockClear();
+    // The picker goes through the shell, and accept filters by extension.
+    await fireEvent.click(canvas.getByRole("button", { name: "Open files…" }));
+    await waitFor(() => expect(onPaths).toHaveBeenCalledWith(["/captures/0001.png"]));
+    await expect(onRejectPaths).toHaveBeenCalledWith(["/captures/notes.txt"]);
+    // A native drag shows on the zone, and a drop delivers its paths.
+    desktop.hover();
+    await waitFor(() => expect(canvasElement.querySelector("[data-dragging]")).not.toBeNull());
+    desktop.leave();
+    await waitFor(() => expect(canvasElement.querySelector("[data-dragging]")).toBeNull());
+    desktop.dropPaths(["/captures/0002.bmp", "/captures/0003.tif"]);
+    await waitFor(() => expect(onPaths).toHaveBeenLastCalledWith(["/captures/0002.bmp", "/captures/0003.tif"]));
+  },
+};

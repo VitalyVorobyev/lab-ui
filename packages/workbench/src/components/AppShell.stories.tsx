@@ -199,3 +199,33 @@ export const Minimal: Story = {
     await expect(canvas.getByRole("complementary", { name: "Navigator" })).toHaveTextContent("Left");
   },
 };
+
+/** A workspace rail at the far left: fixed width, outside the resizable panels. */
+export const WithRail: Story = {
+  render: () => (
+    <div style={{ width: 900, height: 360 }} className="overflow-hidden rounded-panel border border-line">
+      <AppShell
+        className="h-full"
+        rail={
+          <ul className="flex w-12 flex-col items-center gap-2 py-2">
+            {["Library", "Recognize", "Gauge"].map((name) => (
+              <li key={name}>
+                <a href={`#${name}`} aria-label={name} className="grid size-9 place-items-center rounded-control text-xs text-fg-muted hover:bg-raised">
+                  {name[0]}
+                </a>
+              </li>
+            ))}
+          </ul>
+        }
+        left={<div className="p-3 text-sm">Navigator</div>}
+        main={<div className="grid h-full place-items-center text-sm text-fg-muted">Canvas</div>}
+      />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const rail = canvas.getByRole("navigation", { name: "Workspaces" });
+    await expect(rail).toHaveTextContent("L");
+    // The rail is not a resizable panel: one divider, for the navigator.
+    await expect(canvas.getAllByRole("separator")).toHaveLength(1);
+  },
+};

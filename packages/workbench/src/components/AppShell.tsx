@@ -32,6 +32,13 @@ export interface SidePanelSize {
 export interface AppShellProps {
   /** The top bar: the app's name, the file actions, the theme toggle. */
   header?: ReactNode;
+  /**
+   * A fixed-width column at the far left, outside the resizable panels: an icon rail of
+   * workspaces. It takes its content's width and is a `<nav>` named by `railLabel`.
+   */
+  rail?: ReactNode;
+  /** Names the rail's landmark (`<nav>`). Defaults to "Workspaces". */
+  railLabel?: string | undefined;
   /** The panel left of the main surface — a navigator such as a `TreeView`. */
   left?: ReactNode;
   /** The main surface — the viewport. Always present. */
@@ -61,17 +68,19 @@ const LEFT_DEFAULTS = { defaultSize: 280, minSize: 180, maxSize: "50%" } as cons
 const RIGHT_DEFAULTS = { defaultSize: 320, minSize: 220, maxSize: "50%" } as const;
 
 /**
- * The full-viewport frame of a studio app: `header` across the top, `left` | `main` |
- * `right` in the middle with resizable side panels, `bottom` across the foot. Every slot but
- * `main` is optional, and an absent slot takes no space.
+ * The full-viewport frame of a studio app: `header` across the top, then `rail` | `left` |
+ * `main` | `right` with resizable side panels and a fixed-width rail, and `bottom` across the
+ * foot. Every slot but `main` is optional, and an absent slot takes no space.
  *
- * Landmarks: the header is a `<header>`, the main surface a `<main>`, the side panels
- * `<aside>`s named by `leftLabel` and `rightLabel`. Each side panel is divided from the main
+ * Landmarks: the header is a `<header>`, the rail a `<nav>` named by `railLabel`, the main
+ * surface a `<main>`, the side panels `<aside>`s named by `leftLabel` and `rightLabel`. Each side panel is divided from the main
  * surface by a `SplitPane` divider (drag, or focus it and use the arrow keys). Only the
  * insides of the panels scroll; the shell itself is fixed to the viewport (`h-dvh`).
  */
 export function AppShell({
   header,
+  rail,
+  railLabel = "Workspaces",
   left,
   main,
   right,
@@ -87,6 +96,7 @@ export function AppShell({
   const rightSizing = { ...RIGHT_DEFAULTS, ...rightSize };
   const hasLeft = left !== undefined && left !== null && left !== false;
   const hasRight = right !== undefined && right !== null && right !== false;
+  const hasRail = rail !== undefined && rail !== null && rail !== false;
 
   const mainSurface = <main className="relative h-full min-h-0 min-w-0 overflow-hidden">{main}</main>;
 
@@ -134,7 +144,16 @@ export function AppShell({
       ) : (
         <div aria-hidden />
       )}
-      <div className="min-h-0 min-w-0">{middle}</div>
+      {hasRail ? (
+        <div className="flex min-h-0 min-w-0">
+          <nav aria-label={railLabel} className="h-full shrink-0 overflow-y-auto border-r border-line bg-surface">
+            {rail}
+          </nav>
+          <div className="min-h-0 min-w-0 flex-1">{middle}</div>
+        </div>
+      ) : (
+        <div className="min-h-0 min-w-0">{middle}</div>
+      )}
       {bottom ? <div className="min-w-0 border-t border-line bg-surface">{bottom}</div> : <div aria-hidden />}
     </div>
   );
