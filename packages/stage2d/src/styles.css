@@ -1,7 +1,31 @@
 /*
- * Nothing to style: this file exists so Tailwind v4 finds this package's class names.
- * `@source` resolves against the stylesheet that declares it, and this file is exported from
- * `src/` (which ships), so it scans the package's sources. Import it after
+ * Tailwind v4 finds this package's class names through this file: `@source` resolves against
+ * the stylesheet that declares it, and this file ships from `src/`. Import it after
  * `@vitavision/ui/styles.css`.
  */
 @source "./";
+
+/*
+ * Overlay role colours (docs/visual-language.md §5). Overlays sit on the image, not on the
+ * chrome, so there is one set for both themes. The values come from the OKLCH search in
+ * tools/visual-language/colours.py: feature and model stay ≥ 7.3 OKLab ΔE×100 apart from each
+ * other, from selection, from the label white and from every verdict colour, under typical
+ * vision and each simulated dichromacy.
+ */
+:root {
+  --stage-feature: #ed9d43;
+  --stage-model: #9dbdff;
+  --stage-structure: rgb(255 255 255 / 0.55);
+  --stage-selection: #2db2d4;
+  --stage-label: #e8ebed;
+  --stage-halo: rgb(8 10 11 / 0.72);
+}
+
+@theme inline {
+  --color-stage-feature: var(--stage-feature);
+  --color-stage-model: var(--stage-model);
+  --color-stage-structure: var(--stage-structure);
+  --color-stage-selection: var(--stage-selection);
+  --color-stage-label: var(--stage-label);
+  --color-stage-halo: var(--stage-halo);
+}

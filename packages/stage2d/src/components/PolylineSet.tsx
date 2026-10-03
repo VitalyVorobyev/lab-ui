@@ -20,8 +20,10 @@ import {
   type Polyline,
   type PolylineId,
 } from "./polylineIndex";
+import { overlayRole } from "./overlayRole";
 import { useStage } from "./stage/ImageStage";
 import { useStageDrag } from "./stage/StageSurface";
+import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox, type Rect } from "./stage/view";
 
 /** One polyline of a `PolylineSet`, with optional styling. */
@@ -61,9 +63,9 @@ export interface PolylineSetProps {
    * and to the layers below.
    */
   marquee?: boolean | undefined;
-  /** CSS colour of the lines. Defaults to the `signal` token. */
+  /** CSS colour of the lines. Defaults to the overlay `feature` role: they are detected lines. */
   stroke?: string | undefined;
-  /** CSS colour of a selected line. Defaults to the `signal` token. */
+  /** CSS colour of a selected line. Defaults to the overlay `selection` role. */
   selectionStroke?: string | undefined;
   /** How close the pointer must be to pick a line, in screen pixels (the hit band's full width). Defaults to 14. */
   hitWidth?: number | undefined;
@@ -73,7 +75,7 @@ export interface PolylineSetProps {
   label?: string | undefined;
 }
 
-const HALO = "rgba(8, 10, 11, 0.72)";
+const HALO = overlayRole("halo");
 /** The most points drawn as dots at once; past this the dots are noise and a cost. */
 const MAX_VERTEX_DOTS = 5000;
 
@@ -99,15 +101,15 @@ export function PolylineSet({
   onHover,
   onSelect,
   marquee = false,
-  stroke = "var(--signal)",
-  selectionStroke = "var(--signal)",
+  stroke = overlayRole("feature"),
+  selectionStroke = overlayRole("selection"),
   hitWidth = 14,
   vertexScale = 3,
   label = "Lines",
 }: PolylineSetProps) {
   const stage = useStage();
   const startDrag = useStageDrag();
-  const px = (css: number) => stage.imageLength(css);
+  const px = useScreenPx();
 
   const index = useMemo(() => buildPolylineIndex(items), [items]);
   const selectedSet = useMemo(() => new Set(selected ?? []), [selected]);

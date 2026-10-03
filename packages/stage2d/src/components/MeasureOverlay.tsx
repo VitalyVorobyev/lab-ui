@@ -2,12 +2,11 @@
  * A vector overlay layer for measurement primitives, drawn in source-image pixel
  * coordinates.
  *
- * Meant to sit as one of the transformed children inside `ZoomPanCanvas`, alongside the
- * image itself and any raster layers (a mask, a false-colour value plane). Because the
- * whole stack is transformed together (see `ZoomPanCanvas`'s own docs), a caliper box
- * drawn here stays registered with the pixel it measures at any zoom or pan — the overlay
- * never touches the DOM to find out where it is; it is told, in `nativeWidth` ×
- * `nativeHeight` pixel coordinates, via `primitives`.
+ * Meant to sit as one of the layers inside `ImageStage`, alongside the image itself and any
+ * raster layers (a mask, a false-colour value plane). Because the whole stack is transformed
+ * together, a caliper box drawn here stays registered with the pixel it measures at any zoom
+ * or pan. The overlay never touches the DOM to find out where it is; it is told, in
+ * `nativeWidth` × `nativeHeight` pixel coordinates, via `primitives`.
  *
  * This component holds **no app state**: no fetch, no selection, no hover tracking. It is a
  * pure function of its props, on purpose — the app decides what a "caliper box" or a
@@ -19,12 +18,27 @@
 
 import { imageViewBox } from "./stage/view";
 import { arcPath, arrowHeadPoints, caliperArrow, caliperCorners, crossSegments, dimensionGeometry, polygonPath, strokeWidthFor } from "./measureGeometry";
+import { OVERLAY_STATE_OPACITY, overlayRole, type OverlayRole, type OverlayState } from "./overlayRole";
+import { polylinePath } from "./polylineIndex";
 import { cn, toneColor, type MeasureTone } from "@vitavision/ui";
 
 export type { MeasureTone };
 
+/**
+ * Optional fields every primitive takes. All are additive: a primitive without them draws
+ * exactly as before.
+ */
+export interface PrimitiveCommon {
+  /** An identity, written to the primitive's `data-id`, for linking a mark to a row in a list. */
+  id?: string | undefined;
+  /** Interaction state: hover thickens, selected adds a ring, dimmed fades (overlay grammar). */
+  state?: OverlayState | undefined;
+  /** An overlay role colour, instead of `tone`: `feature`, `model`, `structure`. */
+  role?: OverlayRole | undefined;
+}
+
 /** A marked location: a dot, or a cross for a subpixel edge. */
-export interface PointPrimitive {
+export interface PointPrimitive extends PrimitiveCommon {
   /** Discriminant. */
   kind: "point";
   /** Image x of the point. */
@@ -42,7 +56,7 @@ export interface PointPrimitive {
 }
 
 /** A straight line between two image points. */
-export interface SegmentPrimitive {
+export interface SegmentPrimitive extends PrimitiveCommon {
   /** Discriminant. */
   kind: "segment";
   /** Image x of the first end. */
@@ -60,7 +74,7 @@ export interface SegmentPrimitive {
 }
 
 /** A circle — a fitted bore, a tolerance ring. */
-export interface CirclePrimitive {
+export interface CirclePrimitive extends PrimitiveCommon {
   /** Discriminant. */
   kind: "circle";
   /** Image x of the centre. */
@@ -76,7 +90,7 @@ export interface CirclePrimitive {
 }
 
 /** A circular arc, swept forward (clockwise on screen) from `startAngle` to `endAngle`. */
-export interface ArcPrimitive {
+export interface ArcPrimitive extends PrimitiveCommon {
   /** Discriminant. */
   kind: "arc";
   /** Image x of the centre. */
@@ -94,7 +108,7 @@ export interface ArcPrimitive {
 }
 
 /** A caliper search box: a rotated rectangle with an arrow along its scan direction. */
-export interface CaliperPrimitive {
+export interface CaliperPrimitive extends PrimitiveCommon {
   /** Discriminant. */
   kind: "caliper";
   /** Image x of the box centre. */
@@ -116,7 +130,7 @@ export interface CaliperPrimitive {
 }
 
 /** A dimension annotation: extension lines, an offset dimension line, and its value as text. */
-export interface DimensionPrimitive {
+export interface DimensionPrimitive extends PrimitiveCommon {
   /** Discriminant. */
   kind: "dimension";
   /** Image x of the first measured point. */
@@ -135,6 +149,25 @@ export interface DimensionPrimitive {
   offset?: number;
 }
 
+/**
+ * A polyline through image points, e.g. a model's contour. It replaces one `segment` per
+ * edge, which runs to thousands of elements for a model outline.
+ */
+export interface PolylinePrimitive extends PrimitiveCommon {
+  /** Discriminant. */
+  kind: "polyline";
+  /** `[x0, y0, x1, y1, …]` in image coordinates. */
+  points: number[];
+  /** Join the last point to the first. */
+  closed?: boolean;
+  /** Verdict colour. Defaults to the neutral tone. */
+  tone?: MeasureTone;
+  /** A short dash pattern. */
+  dashed?: boolean;
+  /** Text drawn just above the first point. */
+  label?: string;
+}
+
 /** Anything `MeasureOverlay` can draw, discriminated by `kind`. */
 export type MeasurePrimitive =
   | PointPrimitive
@@ -142,7 +175,8 @@ export type MeasurePrimitive =
   | CirclePrimitive
   | ArcPrimitive
   | CaliperPrimitive
-  | DimensionPrimitive;
+  | DimensionPrimitive
+  | PolylinePrimitive;
 
 const DEFAULT_LABEL_SIZE = 11;
 const DEFAULT_POINT_RADIUS = 3;
@@ -169,12 +203,17 @@ export interface MeasureOverlayProps {
 }
 
 /**
- * A vector overlay of measurement primitives — points, segments, circles, arcs, caliper
- * boxes, dimensions — drawn in source-image pixel coordinates.
+ * A vector overlay of measurement primitives — points, segments, polylines, circles, arcs,
+ * caliper boxes, dimensions — drawn in source-image pixel coordinates.
  *
  * Place it as a layer inside `ImageStage` so it moves with the image. It is a pure function
  * of its props and decorative to assistive technology (`aria-hidden`), so a result drawn
  * only here must also be stated in text.
+ *
+ * A primitive's colour is its `role` (overlay grammar) if given, else its verdict `tone`.
+ * Its `state` follows the overlay grammar: `hover` thickens it, `selected` thickens it and
+ * rings it in the selection colour, and `dimmed` fades it. Each primitive is a `<g>` carrying
+ * `data-kind`, plus `data-id` and `data-state` when given.
  */
 export function MeasureOverlay({
   nativeWidth,
@@ -195,36 +234,68 @@ export function MeasureOverlay({
       preserveAspectRatio="none"
       className={cn("pointer-events-none absolute inset-0 h-full w-full overflow-visible", className)}
     >
-      {primitives.map((primitive, index) => (
-        <Primitive
-          // Primitives carry no identity and hold no state; a position is the only key.
-          // eslint-disable-next-line @eslint-react/no-array-index-key
-          key={index}
-          primitive={primitive}
-          hairline={hairline}
-          thick={thick}
-          labelSize={labelSize}
-          strokeScale={strokeScale}
-        />
-      ))}
+      {primitives.map((primitive, index) => {
+        const state = primitive.state ?? "default";
+        const colour = primitive.role ? overlayRole(primitive.role) : toneColor(primitive.tone);
+        // Hover and selected widen the strokes by the overlay grammar's ratios (2 and 2.5 to the
+        // default's 1.5).
+        const widen = state === "hover" ? 2 / 1.5 : state === "selected" ? 2.5 / 1.5 : 1;
+        return (
+          <g
+            // Primitives carry no required identity; a position is the only stable key.
+            // eslint-disable-next-line @eslint-react/no-array-index-key
+            key={index}
+            data-kind={primitive.kind}
+            data-id={primitive.id}
+            data-state={primitive.state}
+            opacity={OVERLAY_STATE_OPACITY[state] === 1 ? undefined : OVERLAY_STATE_OPACITY[state]}
+          >
+            {state === "selected" && (
+              <g opacity={0.6}>
+                <Primitive
+                  primitive={primitive}
+                  colour={overlayRole("selection")}
+                  hairline={hairline * widen + strokeWidthFor(strokeScale, 3)}
+                  thick={thick * widen + strokeWidthFor(strokeScale, 3)}
+                  labelSize={0}
+                  strokeScale={strokeScale}
+                  ring
+                />
+              </g>
+            )}
+            <Primitive
+              primitive={primitive}
+              colour={colour}
+              hairline={hairline * widen}
+              thick={thick * widen}
+              labelSize={labelSize}
+              strokeScale={strokeScale}
+            />
+          </g>
+        );
+      })}
     </svg>
   );
 }
 
 function Primitive({
   primitive,
+  colour,
   hairline,
   thick,
   labelSize,
   strokeScale,
+  ring = false,
 }: {
   primitive: MeasurePrimitive;
+  colour: string;
   hairline: number;
   thick: number;
   labelSize: number;
   strokeScale: number;
+  /** Drawn as the selection ring under the mark: no fill on a filled circle, a larger dot. */
+  ring?: boolean;
 }) {
-  const colour = toneColor(primitive.tone);
 
   switch (primitive.kind) {
     case "point": {
@@ -239,7 +310,8 @@ function Primitive({
           </g>
         );
       }
-      const radius = strokeWidthFor(strokeScale, primitive.radius ?? DEFAULT_POINT_RADIUS);
+      // The ring under a selected dot is the dot grown by 2 screen px.
+      const radius = strokeWidthFor(strokeScale, (primitive.radius ?? DEFAULT_POINT_RADIUS) + (ring ? 2 : 0));
       return (
         <g>
           <circle cx={primitive.x} cy={primitive.y} r={radius} fill={colour} />
@@ -267,8 +339,8 @@ function Primitive({
           cx={primitive.cx}
           cy={primitive.cy}
           r={primitive.r}
-          fill={primitive.filled ? colour : "none"}
-          stroke={primitive.filled ? "none" : colour}
+          fill={primitive.filled && !ring ? colour : "none"}
+          stroke={primitive.filled && !ring ? "none" : colour}
           strokeWidth={hairline}
         />
       );
@@ -301,6 +373,30 @@ function Primitive({
         </g>
       );
     }
+
+    case "polyline":
+      return (
+        <g>
+          <path
+            d={polylinePath(primitive.points, primitive.closed === true)}
+            fill="none"
+            stroke={colour}
+            strokeWidth={hairline}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray={primitive.dashed ? `${hairline * 4} ${hairline * 3}` : undefined}
+          />
+          {primitive.points.length >= 2 && (
+            <Label
+              x={primitive.points[0]!}
+              y={primitive.points[1]! - strokeWidthFor(strokeScale, 4)}
+              text={primitive.label}
+              colour={colour}
+              size={labelSize}
+            />
+          )}
+        </g>
+      );
 
     case "dimension": {
       const offset = primitive.offset ?? DEFAULT_DIMENSION_OFFSET;
@@ -344,7 +440,7 @@ function Label({
   colour: string;
   size: number;
 }) {
-  if (!text) return null;
+  if (!text || !(size > 0)) return null;
   return (
     <text x={x} y={y} fontSize={size} fill={colour} textAnchor="middle" dominantBaseline="text-after-edge">
       {text}

@@ -16,7 +16,7 @@ import { Ref } from 'react';
 export function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string;
 
 // @public
-export interface ArcPrimitive {
+export interface ArcPrimitive extends PrimitiveCommon {
     cx: number;
     cy: number;
     endAngle: number;
@@ -48,7 +48,7 @@ export function caliperArrow(cx: number, cy: number, width: number, angle: numbe
 export function caliperCorners(cx: number, cy: number, width: number, height: number, angle: number): [Point, Point, Point, Point];
 
 // @public
-export interface CaliperPrimitive {
+export interface CaliperPrimitive extends PrimitiveCommon {
     angle: number;
     cx: number;
     cy: number;
@@ -61,7 +61,7 @@ export interface CaliperPrimitive {
 }
 
 // @public
-export interface CirclePrimitive {
+export interface CirclePrimitive extends PrimitiveCommon {
     cx: number;
     cy: number;
     filled?: boolean;
@@ -128,7 +128,7 @@ export interface DimensionGeometry {
 export function dimensionGeometry(x1: number, y1: number, x2: number, y2: number, offset: number): DimensionGeometry;
 
 // @public
-export interface DimensionPrimitive {
+export interface DimensionPrimitive extends PrimitiveCommon {
     kind: "dimension";
     label: string;
     offset?: number;
@@ -257,7 +257,7 @@ export interface MeasureOverlayProps {
 }
 
 // @public
-export type MeasurePrimitive = PointPrimitive | SegmentPrimitive | CirclePrimitive | ArcPrimitive | CaliperPrimitive | DimensionPrimitive;
+export type MeasurePrimitive = PointPrimitive | SegmentPrimitive | CirclePrimitive | ArcPrimitive | CaliperPrimitive | DimensionPrimitive | PolylinePrimitive;
 
 // @public
 export const MIN_SCALE_VS_FIT = 0.25;
@@ -278,6 +278,24 @@ export function nearestContourSegment(points: Point[], point: Point): number;
 export function nearestPolyline(index: PolylineIndex, p: Point, radius: number): PolylineHit | null;
 
 // @public
+export const OVERLAY_ROLES: readonly OverlayRole[];
+
+// @public
+export const OVERLAY_STATE_OPACITY: Readonly<Record<OverlayState, number>>;
+
+// @public
+export const OVERLAY_STATE_WIDTH: Readonly<Record<OverlayState, number>>;
+
+// @public
+export type OverlayRole = "feature" | "model" | "structure" | "selection" | "label" | "halo";
+
+// @public
+export function overlayRole(role: OverlayRole): string;
+
+// @public
+export type OverlayState = "default" | "hover" | "selected" | "dimmed";
+
+// @public
 export function paintMask(mask: Uint8Array, width: number, height: number, from: Point, to: Point, radius: number, value: 0 | 1): Uint8Array;
 
 // @public
@@ -293,7 +311,7 @@ export interface Point {
 }
 
 // @public
-export interface PointPrimitive {
+export interface PointPrimitive extends PrimitiveCommon {
     cross?: boolean;
     kind: "point";
     label?: string;
@@ -342,6 +360,16 @@ export interface PolylineIndex {
 export function polylinePath(points: ArrayLike<number>, closed?: boolean): string;
 
 // @public
+export interface PolylinePrimitive extends PrimitiveCommon {
+    closed?: boolean;
+    dashed?: boolean;
+    kind: "polyline";
+    label?: string;
+    points: number[];
+    tone?: MeasureTone;
+}
+
+// @public
 export type PolylineSelectMode = "replace" | "toggle" | "add";
 
 // @public
@@ -374,6 +402,13 @@ export function polylinesInRect(index: PolylineIndex, rect: Rect): PolylineId[];
 
 // @public
 export function preserveCenter(view: StageView, from: Box, to: Box, image: Box, options?: ClampOptions): StageView;
+
+// @public
+export interface PrimitiveCommon {
+    id?: string | undefined;
+    role?: OverlayRole | undefined;
+    state?: OverlayState | undefined;
+}
 
 // @public
 export interface Rect {
@@ -430,7 +465,7 @@ export function sameRect(a: Rect | null, b: Rect | null, epsilon?: number): bool
 export function scaleRange(box: Box, image: Box, options?: ClampOptions): [number, number];
 
 // @public
-export interface SegmentPrimitive {
+export interface SegmentPrimitive extends PrimitiveCommon {
     dashed?: boolean;
     kind: "segment";
     tone?: MeasureTone;
@@ -569,6 +604,9 @@ export function toImage(view: StageView, p: Point): Point;
 
 // @public
 export function toScreen(view: StageView, p: Point): Point;
+
+// @public
+export function useScreenPx(): (css: number) => number;
 
 // @public
 export function useStage(): StageContext;

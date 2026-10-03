@@ -93,8 +93,20 @@ export {
   type MeasureOverlayProps,
   type MeasurePrimitive,
   type PointPrimitive,
+  type PolylinePrimitive,
+  type PrimitiveCommon,
   type SegmentPrimitive,
 } from "./components/MeasureOverlay";
+
+export {
+  OVERLAY_ROLES,
+  OVERLAY_STATE_OPACITY,
+  OVERLAY_STATE_WIDTH,
+  overlayRole,
+  type OverlayRole,
+  type OverlayState,
+} from "./components/overlayRole";
+export { useScreenPx } from "./components/stage/useScreenPx";
 
 export { ContourEditor, nearestContourSegment, type ContourEditorProps } from "./components/ContourEditor";
 export { RectRoiEditor, type RectRoiEditorProps } from "./components/RectRoiEditor";

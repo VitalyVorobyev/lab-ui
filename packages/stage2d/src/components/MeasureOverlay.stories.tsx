@@ -263,3 +263,60 @@ export const LabelledResult: Story = {
     await waitFor(() => expect(hairline()).toBeLessThan(atFit));
   },
 };
+
+/** A model outline as one polyline, in the `model` role, over the detected bore edge. */
+export const Polylines: Story = {
+  args: {
+    primitives: [
+      {
+        kind: "polyline",
+        role: "model",
+        closed: true,
+        points: Array.from({ length: 48 }, (_, i) => {
+          const a = (i / 48) * 2 * Math.PI;
+          return [440 + 92 * Math.cos(a), 400 + 92 * Math.sin(a)];
+        }).flat(),
+        label: "model",
+      },
+      { kind: "polyline", role: "feature", points: [700, 250, 735, 268, 782, 302], label: "scratch" },
+      { kind: "polyline", tone: "muted", dashed: true, points: [240, 860, 1040, 860] },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const svg = overlay(canvasElement);
+    const lines = svg.querySelectorAll("g[data-kind='polyline'] path");
+    await expect(lines).toHaveLength(3);
+    await expect(lines[0]!.getAttribute("d")).toMatch(/Z$/);
+    await expect(lines[0]).toHaveAttribute("stroke", "var(--stage-model)");
+    await expect(lines[1]).toHaveAttribute("stroke", "var(--stage-feature)");
+    await expect(lines[2]).toHaveAttribute("stroke-dasharray");
+  },
+};
+
+/** Per-primitive id and state, as an inventory beside the stage links rows to marks. */
+export const States: Story = {
+  args: {
+    primitives: [
+      { kind: "caliper", id: "c1", cx: 330, cy: 400, width: 40, height: 16, angle: 0, tone: "normal", label: "c1" },
+      { kind: "caliper", id: "c2", cx: 550, cy: 400, width: 40, height: 16, angle: Math.PI, tone: "normal", state: "hover" },
+      { kind: "caliper", id: "c3", cx: 440, cy: 290, width: 40, height: 16, angle: Math.PI / 2, tone: "defect", state: "selected", label: "c3" },
+      { kind: "caliper", id: "c4", cx: 440, cy: 510, width: 40, height: 16, angle: -Math.PI / 2, tone: "normal", state: "dimmed" },
+      { kind: "point", id: "p1", x: 840, y: 400, state: "selected" },
+      { kind: "circle", id: "f1", cx: 640, cy: 660, r: 60, filled: true, state: "selected", tone: "warn" },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const svg = overlay(canvasElement);
+    await expect(svg.querySelector("g[data-id='c2']")).toHaveAttribute("data-state", "hover");
+    await expect(svg.querySelector("g[data-id='c4']")).toHaveAttribute("opacity", "0.35");
+    // A selected mark draws a ring under itself, in the selection colour.
+    const selected = svg.querySelector("g[data-id='c3']")!;
+    await expect(selected.querySelector("[stroke='var(--stage-selection)']")).not.toBeNull();
+    // The ring under a filled circle is an outline, not a second fill.
+    const ring = svg.querySelector("g[data-id='f1'] circle")!;
+    await expect(ring).toHaveAttribute("fill", "none");
+    // Without state or id, a primitive renders as before: no data-state, no opacity.
+    await expect(svg.querySelector("g[data-id='c1']")).not.toHaveAttribute("data-state");
+    await expect(svg.querySelector("g[data-id='c1']")).not.toHaveAttribute("opacity");
+  },
+};
