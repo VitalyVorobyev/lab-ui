@@ -324,6 +324,11 @@ vitavision. The last is last because of SSR and the router.
   Done when:
   - the jscpd intra-repo clone count in `vitavision/src/components/editor/**` drops to 0;
   - screenshot parity on the demo pages is ≤ 0.001.
+  *Progress 2026-10-03 (not done until vitavision adopts it):* `packages/overlays` is built to §4: `TargetOverlay`
+  over a normalised `TargetDetection`, the lattice builders, the `directed` / `circle-*` glyph generators and
+  `EllipseSet` for image-sized ellipses, on stage2d's `GridLayer`, `AreaSet` and `PointSet`. vitavision has no
+  radsym overlay (its radsym results are circles and a heatmap), so the clones to remove are the four board overlays
+  and the four glyph components. The adoption PR maps the detector results to `TargetDetection` and deletes them.
 
 ### L8 — 3D
 

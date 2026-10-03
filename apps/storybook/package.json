@@ -13,6 +13,7 @@
   "dependencies": {
     "@vitavision/charts": "workspace:*",
     "@vitavision/forms": "workspace:*",
+    "@vitavision/overlays": "workspace:*",
     "@vitavision/stage2d": "workspace:*",
     "@vitavision/ui": "workspace:*",
     "@vitavision/workbench": "workspace:*",

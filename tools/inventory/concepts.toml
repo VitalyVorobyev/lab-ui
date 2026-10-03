@@ -494,14 +494,19 @@ note.vm-lab = "Tauri dialogs yield paths; FileDrop's path route (workbench 0.2) 
 [concepts.target-overlay]
 label = "Calibration-target / feature overlay"
 layer = "overlays"
+impl.lab-ui = ["packages/overlays/src/TargetOverlay.tsx"]
 impl.vitavision = [
   "src/components/editor/canvas/overlays/CharucoOverlay.tsx",
   "src/components/editor/canvas/overlays/ChessboardOverlay.tsx",
   "src/components/editor/canvas/overlays/MarkerboardOverlay.tsx",
   "src/components/editor/canvas/overlays/GridEdgesGroup.tsx",
   "src/components/editor/algorithms/puzzleboard/PuzzleboardOverlay.tsx",
-  "src/components/editor/algorithms/radsym/RadsymOverlay.tsx",
+  "src/components/editor/canvas/primitives/ArUcoMarkerGlyph.tsx",
+  "src/components/editor/canvas/primitives/CircleGlyph.tsx",
+  "src/components/editor/canvas/primitives/DirectedPointGlyph.tsx",
+  "src/components/editor/canvas/primitives/RingMarkerGlyph.tsx",
 ]
+note.vitavision = "vitavision has no radsym overlay (FeatureLayer draws its circles and a heatmap); the primitives are the per-kind glyphs FeatureLayer renders"
 impl.calibration-rs = ["src/workspaces/EpipolarWorkspace/EpipolarOverlay.tsx"]
 impl.ct-studio = ["src/components/overlays.ts", "src/components/diagnoseOverlays.ts"]
 impl.ct-demo = ["src/components/overlays.ts"]

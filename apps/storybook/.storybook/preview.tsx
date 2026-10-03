@@ -41,6 +41,7 @@ const preview: Preview = {
           "forms",
           "charts",
           "stage2d",
+          "overlays",
         ],
       },
     },

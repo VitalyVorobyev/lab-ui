@@ -42,6 +42,7 @@
       "dependencies": {
         "@vitavision/charts": "workspace:*",
         "@vitavision/forms": "workspace:*",
+        "@vitavision/overlays": "workspace:*",
         "@vitavision/stage2d": "workspace:*",
         "@vitavision/ui": "workspace:*",
         "@vitavision/workbench": "workspace:*",
@@ -133,6 +134,21 @@
         "storybook": "10.6.0",
       },
       "peerDependencies": {
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+    },
+    "packages/overlays": {
+      "name": "@vitavision/overlays",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@storybook/react-vite": "10.6.0",
+        "@vitavision/stage2d": "workspace:^",
+        "@vitavision/ui": "workspace:^",
+        "storybook": "10.6.0",
+      },
+      "peerDependencies": {
+        "@vitavision/stage2d": ">=0.10.0 <1",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
       },
@@ -838,6 +854,8 @@
     "@vitavision/config-vitest": ["@vitavision/config-vitest@workspace:packages/config/vitest"],
 
     "@vitavision/forms": ["@vitavision/forms@workspace:packages/forms"],
+
+    "@vitavision/overlays": ["@vitavision/overlays@workspace:packages/overlays"],
 
     "@vitavision/stage2d": ["@vitavision/stage2d@workspace:packages/stage2d"],
 

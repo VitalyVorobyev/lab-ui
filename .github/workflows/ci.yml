@@ -48,12 +48,12 @@ jobs:
 
       - name: Verify each package's entry points exist
         run: |
-          for p in ui forms charts stage2d workbench three three-react; do
+          for p in ui forms charts stage2d workbench overlays three three-react; do
             test -f "packages/$p/dist/index.js"
             test -f "packages/$p/dist/index.d.ts"
           done
           # The 3D packages ship no CSS: nothing in them is a Tailwind class.
-          for p in ui forms charts stage2d; do
+          for p in ui forms charts stage2d overlays; do
             test -f "packages/$p/src/styles.css"
           done
 
