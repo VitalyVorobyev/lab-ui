@@ -40,6 +40,21 @@ colour range and colormap stay the caller's decision.
 Its arithmetic (`resizeRect`, `moveRect`, `clampRect`, `rectFromCorners`, `sameRect`) is
 exported and tested without a DOM.
 
+**Selectable lines**: `PolylineSet` draws many polylines (contours, segments, matches) as a few
+batched paths and picks through a spatial index, not the DOM.
+- **States:** hover, selection and dimming follow the visual-language states.
+- **Selecting:** click selects, ⌘/Ctrl-click toggles, and Shift-drag or `marquee` draws a
+  rubber band.
+- **Pure functions:** `buildPolylineIndex`, `nearestPolyline`, `polylinesInRect` and
+  `polylinePath` are pure; hit-testing is microseconds at 100k segments
+  (`docs/measurements/u4-polyline-set.md`).
+
+**Tool model**: `StageSurface` is the one full-frame press target per stage.
+- **Claiming:** its `onPress` returns a drag to claim a press, or nothing to let the stage pan.
+- **Drags:** `useStageDrag` starts a window-level drag from any element, e.g. a handle.
+- **Why window-level:** two full-frame layers would be one that always wins, and pointer
+  capture routes moves to the pressed element.
+
 **Annotation layers** — `ContourEditor` edits ordered source-image pixel-center
 vertices; `MaskEditor` paints or erases a row-major binary mask with a bounded
 source-pixel brush. Both are controlled layers for `ImageStage`: the caller owns
