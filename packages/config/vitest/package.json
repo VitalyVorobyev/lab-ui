@@ -1,6 +1,6 @@
 {
   "name": "@vitavision/config-vitest",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Shared Vitest presets for vitavision frontends.",
   "license": "MIT OR Apache-2.0",
   "repository": {
