@@ -24,7 +24,7 @@ const REPO_ROOT = resolve(HERE, "../..");
 const OUT = join(REPO_ROOT, "docs/measurements/concept-matrix.md");
 const SURVEY = join(HERE, "github-react-repos.txt");
 
-const LAYERS = ["ui", "forms", "charts", "stage2d", "overlays", "three"] as const;
+const LAYERS = ["ui", "forms", "charts", "stage2d", "workbench", "overlays", "three"] as const;
 
 function expandHome(path: string): string {
   return path.startsWith("~/") ? join(homedir(), path.slice(2)) : path;

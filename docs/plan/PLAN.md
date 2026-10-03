@@ -27,6 +27,8 @@
 | calibration-rs | `app/` | Tauri; R3F 9.7 + three 0.185.1; own `components/ui`, `FrameCanvas`, `configForm`; react-router-dom 7; Inter/Geist Mono |
 | calib-targets-rs | `studio/`, `demo/` | TS ~5.8; react-router-dom 7; no design system |
 | etendue | `web/` (future) | consumes `@vitavision/three*` (see the etendue PLAN update) |
+| vision-metrology | `lab/frontend/` (added 2026-10-03) | Tauri + browser; consumes `@vitavision/lab-ui` 0.3, the **last consumer** of the compat package; own ROI, contour-set, datum, image and frame-switcher layers over `ImageStage` |
+| caliperbench | `frontend/` (added 2026-10-03) | consumes `ui` 0.8, `stage2d` 0.7, `charts` 0.6; own chain/segment editor, caliper strips, along-centerline chart, tool rail |
 
 **Out of scope:** Rust dependency upgrades. Those are a separate plan, because
 nalgebra is pinned through tiny-solver. The only Rust-side change allowed here is
@@ -342,11 +344,61 @@ vitavision. The last is last because of SSR and the router.
   npm trusted publisher registered first, ADR-0001), and etendue studio consumes the
   published version.
 
+### U — Second consumers: the vision-metrology lab and CaliperBench
+
+Added 2026-10-03. Both apps re-implement the same canvas and inspector pieces on top of
+`ImageStage`, which is the second consumer the promotion rule asks for. Evidence paths are in
+`tools/inventory/concepts.toml` (`vm-lab`, `caliperbench`). One PR per ticket; each ships to
+the §4 DoD with a changeset.
+
+- **U-0 — Inventory and tickets.** Map both frontends in `concepts.toml` (`vm-lab` moves into
+  scope) and file the single-consumer proposals as issues. Done when `matrix.ts --check`
+  passes with both repos mapped.
+- **U-1 — `ui`: value-typed `NumberInput`, `Popover`, `DropdownMenu`, `Listbox`, `Kbd`.**
+  `NumberInput` gains `value: number | null` / `onValueChange` that keeps the typed text while
+  focused, on the `numberText` helpers `VectorInput` already uses. Evidence: vm-lab's
+  clear-to-zero fixes in the Teach sections, `FrameSwitcher`'s and `LayersMenu`'s hand-rolled
+  listbox; caliperbench's layers popover and `.cb-kbd` hints.
+- **U-2 — `stage2d`: stage handle, `ImageLayer`, toolbar hints, layers menu.** An imperative
+  handle (`frame`, `fit`, `zoomTo`) and an `initialView` policy; an image layer with a
+  pixelated threshold and a preview → full resolution swap; `StageButton` hints with a
+  shortcut; a layers menu for `StageToolbar`. Also fixes the `steppedScale` floor (zoom out
+  stays enabled below 0.125 and does nothing).
+- **U-3 — `stage2d`: `RectRoiEditor`.** Draw, move and resize an axis-aligned region with
+  eight handles, clamped to the image. Evidence: vm-lab `RoiLayer`/`roiEdit.ts`; viva-studio
+  `RoiOverlay.tsx`.
+- **U-4 — `stage2d`: tool model and `PolylineSet`.** One place that decides what a press on the
+  stage means (pan, a tool's drag, a layer's click), and a layer of many selectable open or
+  closed polylines with hover, selected and dimmed states and marquee selection. Rendered as
+  batched paths with geometric hit-testing, which the L0-3 benchmark shows passes G6.1 on
+  either candidate engine, so it does not pre-empt L6-1.
+- **U-5 — `stage2d`: overlay role tokens and `MeasureOverlay` additions.** The §5 role
+  colours (feature, model, structure, selection, label, halo) as tokens, a `useScreenPx`
+  helper, and additive `MeasureOverlay` changes: a `polyline` primitive and an optional
+  per-primitive `id` and `state`. Additive, because vision-metrology's backend mirrors
+  `MeasurePrimitive` field for field.
+- **U-6 — `charts`: responsive frame and interaction.** Container-sized `Frame`, hover
+  readout, click-to-pick, an external cursor, `bands` and `markers`, and the §4 sequential
+  maps (`viridis`, `cividis`). Evidence: caliperbench `AlongChart.tsx`; vm-lab's caliper
+  profiles and `AlignTab`'s validity tones.
+- **U-7 — `workbench`: sequence navigator and Tauri paths for `FileDrop`.** A lazy thumbnail
+  strip with `[`/`]` stepping, and a path-based route through `FileDrop` for desktop shells
+  whose native drop and dialogs yield paths, not `File`s.
+
+Single-consumer proposals wait as issues under the promotion rule:
+- a datum / frame handle layer (#54);
+- a nav rail and stepper (#55);
+- a status bar (#56);
+- a checker / wipe / difference comparison (#57);
+- a single-series histogram (#58);
+- `ContourEditor` support for open polylines with brush editing (#59).
+
 ### L9 — Close-out
 
 - **L9-1 — Final state.** Done when:
   - the concept matrix has exactly one implementation per concept across all repos;
-  - `@vitavision/lab-ui` is marked deprecated on npm with 0 remaining consumers;
+  - `@vitavision/lab-ui` is marked deprecated on npm with 0 remaining consumers. The last
+    one is vision-metrology's lab, which migrates in its own roadmap (track L, step L2);
   - the dependency matrix shows 0 undocumented deviations.
 
 ### Promotion rule (standing)

@@ -8,133 +8,66 @@ Declared `dependencies`/`devDependencies`, read from the range's lower bound. �
 
 | Repo | Commit | Undocumented deviations | Documented exceptions |
 |---|---|---|---|
-| lab-ui | `c7aae695b0` | 10 | 0 |
-| visual-anomaly-lab | `63e83f27bf` | 12 | 0 |
-| vitavision | `c230570d96` | 13 | 0 |
-| calibration-rs | `9896a99052` | 14 | 0 |
-| calib-targets-rs/studio | `d8ba43f3b5` | 8 | 0 |
-| calib-targets-rs/demo | `d8ba43f3b5` | 7 | 0 |
+| lab-ui | `55323c8509` | 0 | 0 |
+| visual-anomaly-lab | `d41cd6347b` | 0 | 0 |
+| vitavision | `fe598a6bc1` | 0 | 0 |
+| calibration-rs | `0c623a3be7` | 3 | 0 |
+| calib-targets-rs/studio | `1381645516` | 0 | 0 |
+| calib-targets-rs/demo | `1381645516` | 0 | 0 |
 | chess-corners-rs/demo | `5400b8661a` | 7 | 0 |
-| vision-metrology/lab | `db8a38c03d` | 11 | 0 |
+| vision-metrology/lab | `a92e69ebb5` | 11 | 0 |
+| caliperbench | `9330728239` | 11 | 0 |
 | vision-lab/operator-ui | `28fe0c3a1b` | 9 | 0 |
-| viva-genicam/studio | `f2f59ccf77` | 10 | 0 |
+| viva-genicam/studio | `4e70c4b3e4` | 10 | 0 |
 
 ## Matrix
 
-| Package | Baseline | lab-ui | visual-anomaly-lab | vitavision | calibration-rs | calib-targets-rs/studio | calib-targets-rs/demo | chess-corners-rs/demo | vision-metrology/lab | vision-lab/operator-ui | viva-genicam/studio |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| `react` | 19.3.0 | `^19.2.8` ↓ | `^19.2.8` ↓ | `^19.2.8` ↓ | `^19.2.8` ↓ | `^19.2.7` ↓ | `^19.2.6` ↓ | `^19.2.6` ↓ | `^19.2.8` ↓ | `^19.2.7` ↓ | `^19.2.4` ↓ |
-| `react-dom` | 19.3.0 | `^19.2.8` ↓ | `^19.2.8` ↓ | `^19.2.8` ↓ | `^19.2.8` ↓ | `^19.2.7` ↓ | `^19.2.6` ↓ | `^19.2.6` ↓ | `^19.2.8` ↓ | `^19.2.7` ↓ | `^19.2.4` ↓ |
-| `@types/react` | 19.3.0 | `^19.2.18` ↓ | `^19.2.18` ↓ | `^19.2.18` ↓ | `^19.2.18` ↓ | `^19.2.17` ↓ | `^19.2.15` ↓ | `^19.2.15` ↓ | `^19.2.18` ↓ | `^19.2.17` ↓ | `^19.2.14` ↓ |
-| `@types/react-dom` | 19.3.0 | `^19.2.4` ↓ | `^19.2.4` ↓ | `^19.2.4` ↓ | `^19.2.4` ↓ | `^19.2.3` ↓ | `^19.2.3` ↓ | `^19.2.3` ↓ | `^19.2.4` ↓ | `^19.2.3` ↓ | `^19.2.3` ↓ |
-| `react-router` | 8.4.0 | `^8.3.0` ↓ | `^8.3.0` ↓ |  |  |  |  |  | `^8.3.0` ↓ |  |  |
-| `typescript` | 6.0.3 | `^7` ↑ | `^7` ↑ | `~6.0.3` ✓ | `6.0.3` ✓ | `~5.8.3` ↓ | `~5.8.3` ↓ | `~5.8.3` ↓ | `^5.7` ↓ | `^6.0.3` ✓ | `^5.9.3` ↓ |
-| `vite` | 8.3.1 |  | `^8.2.1` ↓ | `^8.2.1` ↓ | `^8.2.1` ↓ | `^8.0.16` ↓ | `^8.0.14` ↓ | `^8.0.14` ↓ | `^8.2.1` ↓ | `^8.1.3` ↓ | `^8.0.0` ↓ |
-| `@vitejs/plugin-react` | 6.1.1 | `^6.0.5` ↓ | `^6.0.5` ↓ | `^6.0.5` ↓ | `^6.0.5` ↓ | `^6.0.2` ↓ | `^6.0.2` ↓ | `^6.0.2` ↓ | `^6.0.5` ↓ | `^6.0.3` ↓ | `^5.2.0` ↓ |
-| `vitest` | 5.0.2 | `^4.1.10` ↓ | `^4.1.10` ↓ | `^5.0.0` ✓ | `^4.1.10` ↓ |  |  |  | `^4.1.10` ↓ |  | `^4.1.2` ↓ |
-| `tailwindcss` | 4.3.3 |  | `^4.3.3` ✓ | `^4.3.3` ✓ | `^4.3.3` ✓ |  |  |  | `^4.3.3` ✓ | `^4.3.2` ✓ |  |
-| `@tailwindcss/vite` | 4.3.3 |  | `^4.3.3` ✓ |  | `^4.3.3` ✓ |  |  |  | `^4.3.3` ✓ | `^4.3.2` ✓ |  |
-| `@tailwindcss/postcss` | 4.3.3 |  |  | `^4.3.3` ✓ |  |  |  |  |  |  |  |
-| `eslint` | 10.11.0 |  |  | `^10.8.1` ↓ | `10.8.1` ↓ |  |  |  |  | `^10.6.0` ↓ |  |
-| `typescript-eslint` | 8.70.1 |  |  | `^8.66.0` ↓ | `^8.67.0` ↓ |  |  |  |  | `^8.62.1` ↓ |  |
-| `eslint-plugin-react-hooks` | 7.1.1 |  |  | `^7.1.1` ✓ | `7.1.1` ✓ |  |  |  |  | `^7.1.1` ✓ |  |
-| `three` | =0.186.1 |  |  |  | `0.185.1` ≠ |  |  |  |  |  |  |
-| `@types/three` | =0.186.0 |  |  |  | `0.185.4` ≠ |  |  |  |  |  |  |
-| `@react-three/fiber` | 9.8.1 |  |  |  | `^9.7.0` ↓ |  |  |  |  |  |  |
-| `@react-three/drei` | 10.7.9 |  |  |  | `^10.7.8` ✓ |  |  |  |  |  |  |
-| `konva` | 10.7.0 |  | `^10.3.0` ↓ | `^10.3.0` ↓ |  |  |  |  |  |  |  |
-| `react-konva` | 19.3.0 |  | `^19.2.5` ↓ | `^19.2.5` ↓ |  |  |  |  |  |  |  |
-| `lucide-react` | 1.48.0 | `^1.30.0` ↓ | `^1.30.0` ↓ | `^1.31.0` ↓ |  |  |  |  |  | `^1.23.0` ↓ | `^1.7.0` ↓ |
-| `@playwright/test` | 1.63.0 |  |  |  | `^1.62.1` ↓ |  |  |  |  |  |  |
-| `@tauri-apps/api` | 2.11.1 |  |  |  | `^2.11.1` ✓ |  |  |  | `^2` ↓ | `^2.11.1` ✓ | `^2.10.1` ↓ |
-| `@tauri-apps/cli` | 2.11.5 |  | `^2.11.4` ✓ |  | `^2.11.4` ✓ |  |  |  | `^2` ↓ |  |  |
-| `react-router-dom` | ✗ → react-router 8 (there is no 8.x react-router-dom) |  |  | `^7.18.2` ✗ | `^7.18.2` ✗ | `^7.18.0` ✗ |  |  |  |  |  |
-| `framer-motion` | ✗ → motion |  |  | `^13.0.0` ✗ |  |  |  |  |  |  |  |
-| `tsup` | ✗ → tsdown (tsup is unmaintained) | `^8.5.0` ✗ |  |  |  |  |  |  |  |  |  |
+| Package | Baseline | lab-ui | visual-anomaly-lab | vitavision | calibration-rs | calib-targets-rs/studio | calib-targets-rs/demo | chess-corners-rs/demo | vision-metrology/lab | caliperbench | vision-lab/operator-ui | viva-genicam/studio |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `react` | 19.3.0 | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.2.6` ↓ | `^19.2.8` ↓ | `^19.2.0` ↓ | `^19.2.7` ↓ | `^19.2.4` ↓ |
+| `react-dom` | 19.3.0 | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.2.6` ↓ | `^19.2.8` ↓ | `^19.2.0` ↓ | `^19.2.7` ↓ | `^19.2.4` ↓ |
+| `@types/react` | 19.3.0 | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.2.15` ↓ | `^19.2.18` ↓ | `^19.2.0` ↓ | `^19.2.17` ↓ | `^19.2.14` ↓ |
+| `@types/react-dom` | 19.3.0 | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.3.0` ✓ | `^19.2.3` ↓ | `^19.2.4` ↓ | `^19.2.0` ↓ | `^19.2.3` ↓ | `^19.2.3` ↓ |
+| `react-router` | 8.4.0 |  | `^8.4.0` ✓ | `^8.4.0` ✓ | `^8.4.0` ✓ | `^8.4.0` ✓ |  |  | `^8.3.0` ↓ |  |  |  |
+| `typescript` | 6.0.3 | `6.0.3` ✓ | `^6.0.3` ✓ | `^6.0.3` ✓ | `6.0.3` ✓ | `^6.0.3` ✓ | `^6.0.3` ✓ | `~5.8.3` ↓ | `^5.7` ↓ | `^5.9.0` ↓ | `^6.0.3` ✓ | `^5.9.3` ↓ |
+| `vite` | 8.3.1 | `^8.3.1` ✓ | `^8.3.1` ✓ | `^8.3.1` ✓ | `^8.3.1` ✓ | `^8.3.1` ✓ | `^8.3.1` ✓ | `^8.0.14` ↓ | `^8.2.1` ↓ | `^7.3.0` ↓ | `^8.1.3` ↓ | `^8.0.0` ↓ |
+| `@vitejs/plugin-react` | 6.1.1 | `^6.1.1` ✓ | `^6.1.1` ✓ | `^6.1.1` ✓ | `^6.1.1` ✓ | `^6.1.1` ✓ | `^6.1.1` ✓ | `^6.0.2` ↓ | `^6.0.5` ↓ | `^5.1.0` ↓ | `^6.0.3` ↓ | `^5.2.0` ↓ |
+| `vitest` | 5.0.2 | `^5.0.2` ✓ | `^5.0.2` ✓ | `^5.0.2` ✓ | `^5.0.2` ✓ |  |  |  | `^4.1.10` ↓ | `^4.0.0` ↓ |  | `^4.1.2` ↓ |
+| `@vitest/browser-playwright` | 5.0.2 | `5.0.2` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `tailwindcss` | 4.3.3 |  | `^4.3.3` ✓ | `^4.3.3` ✓ | `^4.3.3` ✓ | `^4.3.3` ✓ |  |  | `^4.3.3` ✓ | `^4.1.0` ↓ | `^4.3.2` ✓ |  |
+| `@tailwindcss/vite` | 4.3.3 |  | `^4.3.3` ✓ |  | `^4.3.3` ✓ | `^4.3.3` ✓ |  |  | `^4.3.3` ✓ | `^4.1.0` ↓ | `^4.3.2` ✓ |  |
+| `@tailwindcss/postcss` | 4.3.3 |  |  | `^4.3.3` ✓ |  |  |  |  |  |  |  |  |
+| `eslint` | 10.11.0 | `^10.11.0` ✓ | `^10.11.0` ✓ | `^10.11.0` ✓ | `^10.11.0` ✓ | `^10.11.0` ✓ | `^10.11.0` ✓ |  |  |  | `^10.6.0` ↓ |  |
+| `typescript-eslint` | 8.70.1 |  | `^8.70.1` ✓ | `^8.70.1` ✓ | `^8.71.0` ↑ | `^8.70.1` ✓ | `^8.70.1` ✓ |  |  |  | `^8.62.1` ↓ |  |
+| `eslint-plugin-react-hooks` | 7.1.1 |  |  | `^7.1.1` ✓ | `7.1.1` ✓ |  |  |  |  |  | `^7.1.1` ✓ |  |
+| `storybook` | 10.6.0 | `10.6.0` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `@storybook/react-vite` | 10.6.0 | `10.6.0` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `tsdown` | =0.23.0 | `0.23.0` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `three` | =0.186.1 |  |  |  | `0.186.1` ✓ |  |  |  |  |  |  |  |
+| `@types/three` | =0.186.0 |  |  |  | `0.186.0` ✓ |  |  |  |  |  |  |  |
+| `@react-three/fiber` | 9.8.1 |  |  |  | `^9.8.1` ✓ |  |  |  |  |  |  |  |
+| `@react-three/drei` | 10.7.9 |  |  |  | `^10.7.9` ✓ |  |  |  |  |  |  |  |
+| `konva` | 10.7.0 |  | `^10.7.0` ✓ | `^10.7.0` ✓ |  |  |  |  |  |  |  |  |
+| `react-konva` | 19.3.0 |  | `^19.3.0` ✓ | `^19.3.0` ✓ |  |  |  |  |  |  |  |  |
+| `motion` | 13.4.4 |  |  | `^13.4.4` ✓ |  |  |  |  |  |  |  |  |
+| `lucide-react` | 1.48.0 | `^1.48.0` ✓ | `^1.48.0` ✓ | `^1.48.0` ✓ |  |  |  |  |  | `^0.468.0` ↓ | `^1.23.0` ↓ | `^1.7.0` ↓ |
+| `@playwright/test` | 1.63.0 |  | `^1.63.0` ✓ | `^1.63.0` ✓ | `^1.63.0` ✓ | `^1.63.0` ✓ | `^1.63.0` ✓ |  |  |  |  |  |
+| `@changesets/cli` | 3.0.3 | `3.0.3` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `size-limit` | 14.0.1 | `14.0.1` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `@microsoft/api-extractor` | 7.59.2 | `7.59.2` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `publint` | 0.3.24 | `0.3.24` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `@arethetypeswrong/cli` | 0.18.5 | `0.18.5` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `knip` | 6.38.0 | `6.38.0` ✓ |  |  |  |  |  |  |  |  |  |  |
+| `@tauri-apps/api` | 2.11.1 |  |  |  | `^2.12.0` ↑ |  |  |  | `^2` ↓ |  | `^2.11.1` ✓ | `^2.10.1` ↓ |
+| `@tauri-apps/cli` | 2.11.5 |  | `^2.11.5` ✓ |  | `^2.12.0` ↑ |  |  |  | `^2` ↓ |  |  |  |
 
 ## Deviation details
 
-### lab-ui
-
-- `@types/react` `^19.2.18` — **behind**; baseline 19.3.0
-- `@types/react-dom` `^19.2.4` — **behind**; baseline 19.3.0
-- `@vitejs/plugin-react` `^6.0.5` — **behind**; baseline 6.1.1
-- `react` `^19.2.8` — **behind**; baseline 19.3.0 — R3F 9.8.1 peers <19.4
-- `react-dom` `^19.2.8` — **behind**; baseline 19.3.0
-- `react-router` `^8.3.0` — **behind**; baseline 8.4.0
-- `tsup` `^8.5.0` — **replaced**; replace with tsdown (tsup is unmaintained)
-- `typescript` `^7` — **ahead**; baseline 6.0.3 — typescript-eslint 8.70.1 peers <6.1.0
-- `vitest` `^4.1.10` — **behind**; baseline 5.0.2
-- `lucide-react` `^1.30.0` — **behind**; baseline 1.48.0
-
-### visual-anomaly-lab
-
-- `@types/react` `^19.2.18` — **behind**; baseline 19.3.0
-- `@types/react-dom` `^19.2.4` — **behind**; baseline 19.3.0
-- `@vitejs/plugin-react` `^6.0.5` — **behind**; baseline 6.1.1
-- `typescript` `^7` — **ahead**; baseline 6.0.3 — typescript-eslint 8.70.1 peers <6.1.0
-- `vite` `^8.2.1` — **behind**; baseline 8.3.1
-- `vitest` `^4.1.10` — **behind**; baseline 5.0.2
-- `konva` `^10.3.0` — **behind**; baseline 10.7.0 — only until the L6 stage decision
-- `lucide-react` `^1.30.0` — **behind**; baseline 1.48.0
-- `react` `^19.2.8` — **behind**; baseline 19.3.0 — R3F 9.8.1 peers <19.4
-- `react-dom` `^19.2.8` — **behind**; baseline 19.3.0
-- `react-konva` `^19.2.5` — **behind**; baseline 19.3.0 — only until the L6 stage decision
-- `react-router` `^8.3.0` — **behind**; baseline 8.4.0
-
-### vitavision
-
-- `@types/react` `^19.2.18` — **behind**; baseline 19.3.0
-- `@types/react-dom` `^19.2.4` — **behind**; baseline 19.3.0
-- `@vitejs/plugin-react` `^6.0.5` — **behind**; baseline 6.1.1
-- `eslint` `^10.8.1` — **behind**; baseline 10.11.0
-- `typescript-eslint` `^8.66.0` — **behind**; baseline 8.70.1
-- `vite` `^8.2.1` — **behind**; baseline 8.3.1
-- `framer-motion` `^13.0.0` — **replaced**; replace with motion
-- `konva` `^10.3.0` — **behind**; baseline 10.7.0 — only until the L6 stage decision
-- `lucide-react` `^1.31.0` — **behind**; baseline 1.48.0
-- `react` `^19.2.8` — **behind**; baseline 19.3.0 — R3F 9.8.1 peers <19.4
-- `react-dom` `^19.2.8` — **behind**; baseline 19.3.0
-- `react-konva` `^19.2.5` — **behind**; baseline 19.3.0 — only until the L6 stage decision
-- `react-router-dom` `^7.18.2` — **replaced**; replace with react-router 8 (there is no 8.x react-router-dom)
-
 ### calibration-rs
 
-- `@playwright/test` `^1.62.1` — **behind**; baseline 1.63.0
-- `@types/react` `^19.2.18` — **behind**; baseline 19.3.0
-- `@types/react-dom` `^19.2.4` — **behind**; baseline 19.3.0
-- `@types/three` `0.185.4` — **not-exact**; baseline exactly 0.186.0
-- `@vitejs/plugin-react` `^6.0.5` — **behind**; baseline 6.1.1
-- `eslint` `10.8.1` — **behind**; baseline 10.11.0
-- `typescript-eslint` `^8.67.0` — **behind**; baseline 8.70.1
-- `vite` `^8.2.1` — **behind**; baseline 8.3.1
-- `vitest` `^4.1.10` — **behind**; baseline 5.0.2
-- `@react-three/fiber` `^9.7.0` — **behind**; baseline 9.8.1
-- `react` `^19.2.8` — **behind**; baseline 19.3.0 — R3F 9.8.1 peers <19.4
-- `react-dom` `^19.2.8` — **behind**; baseline 19.3.0
-- `react-router-dom` `^7.18.2` — **replaced**; replace with react-router 8 (there is no 8.x react-router-dom)
-- `three` `0.185.1` — **not-exact**; baseline exactly 0.186.1 — three breaks on minor releases
-
-### calib-targets-rs/studio
-
-- `@types/react` `^19.2.17` — **behind**; baseline 19.3.0
-- `@types/react-dom` `^19.2.3` — **behind**; baseline 19.3.0
-- `@vitejs/plugin-react` `^6.0.2` — **behind**; baseline 6.1.1
-- `typescript` `~5.8.3` — **behind**; baseline 6.0.3 — typescript-eslint 8.70.1 peers <6.1.0
-- `vite` `^8.0.16` — **behind**; baseline 8.3.1
-- `react` `^19.2.7` — **behind**; baseline 19.3.0 — R3F 9.8.1 peers <19.4
-- `react-dom` `^19.2.7` — **behind**; baseline 19.3.0
-- `react-router-dom` `^7.18.0` — **replaced**; replace with react-router 8 (there is no 8.x react-router-dom)
-
-### calib-targets-rs/demo
-
-- `@types/react` `^19.2.15` — **behind**; baseline 19.3.0
-- `@types/react-dom` `^19.2.3` — **behind**; baseline 19.3.0
-- `@vitejs/plugin-react` `^6.0.2` — **behind**; baseline 6.1.1
-- `typescript` `~5.8.3` — **behind**; baseline 6.0.3 — typescript-eslint 8.70.1 peers <6.1.0
-- `vite` `^8.0.14` — **behind**; baseline 8.3.1
-- `react` `^19.2.6` — **behind**; baseline 19.3.0 — R3F 9.8.1 peers <19.4
-- `react-dom` `^19.2.6` — **behind**; baseline 19.3.0
+- `@tauri-apps/cli` `^2.12.0` — **ahead**; baseline 2.11.5
+- `typescript-eslint` `^8.71.0` — **ahead**; baseline 8.70.1
+- `@tauri-apps/api` `^2.12.0` — **ahead**; baseline 2.11.1
 
 ### chess-corners-rs/demo
 
@@ -159,6 +92,20 @@ Declared `dependencies`/`devDependencies`, read from the range's lower bound. �
 - `react` `^19.2.8` — **behind**; baseline 19.3.0 — R3F 9.8.1 peers <19.4
 - `react-dom` `^19.2.8` — **behind**; baseline 19.3.0
 - `react-router` `^8.3.0` — **behind**; baseline 8.4.0
+
+### caliperbench
+
+- `@tailwindcss/vite` `^4.1.0` — **behind**; baseline 4.3.3
+- `@types/react` `^19.2.0` — **behind**; baseline 19.3.0
+- `@types/react-dom` `^19.2.0` — **behind**; baseline 19.3.0
+- `@vitejs/plugin-react` `^5.1.0` — **behind**; baseline 6.1.1
+- `tailwindcss` `^4.1.0` — **behind**; baseline 4.3.3
+- `typescript` `^5.9.0` — **behind**; baseline 6.0.3 — typescript-eslint 8.70.1 peers <6.1.0
+- `vite` `^7.3.0` — **behind**; baseline 8.3.1
+- `vitest` `^4.0.0` — **behind**; baseline 5.0.2
+- `lucide-react` `^0.468.0` — **behind**; baseline 1.48.0
+- `react` `^19.2.0` — **behind**; baseline 19.3.0 — R3F 9.8.1 peers <19.4
+- `react-dom` `^19.2.0` — **behind**; baseline 19.3.0
 
 ### vision-lab/operator-ui
 
