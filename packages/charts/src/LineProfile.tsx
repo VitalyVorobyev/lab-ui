@@ -11,7 +11,8 @@
 
 import type { ReactNode } from "react";
 
-import { Frame, Legend, areaFor, seriesColour } from "./Frame";
+import { FLUID_DEFAULT_HEIGHT, Frame, Legend, areaFor, seriesColour, useFluidSize } from "./Frame";
+import { Bands, Markers, PlotInteraction, type InteractionProps } from "./interaction";
 import type { Variant } from "./Frame";
 import { extent, linePath, linearScale } from "./scale";
 import { toneColor, type MeasureTone } from "@vitavision/ui";
@@ -37,7 +38,7 @@ export interface EdgeMark {
 }
 
 /** Props for {@link LineProfile}. */
-export interface LineProfileProps {
+export interface LineProfileProps extends InteractionProps {
   /** The profiles, drawn in order. */
   series: ProfileSeries[];
   /** Detected edge positions, drawn as vertical rules over the series. */
@@ -60,6 +61,8 @@ export interface LineProfileProps {
   variant?: Variant;
   /** Extra classes for the outer `<figure>`, merged with `cn`. */
   className?: string | undefined;
+  /** For `variant="fluid"`: the chart's height in CSS pixels. Default 200. */
+  height?: number | undefined;
 }
 
 /**
@@ -68,7 +71,9 @@ export interface LineProfileProps {
  *
  * @remarks
  * An SVG `role="img"` named by `label`. The legend appears only for two or more series — a
- * single profile is named by the chart's label.
+ * single profile is named by the chart's label. `bands`, `markers`, `cursor`, `onHover` and
+ * `onPick` work as on `LineChart`: a caliper's profile can follow the canvas, and a click
+ * can pick a position along it.
  */
 export function LineProfile({
   series,
@@ -82,10 +87,18 @@ export function LineProfile({
   showLegend = true,
   variant = "wide",
   className,
+  height = FLUID_DEFAULT_HEIGHT,
+  bands,
+  markers,
+  cursor,
+  onHover,
+  onPick,
 }: LineProfileProps) {
   const allX = [...series.flatMap((entry) => entry.points.map((point) => point.x)), ...edges.map((edge) => edge.position)];
   const allY = series.flatMap((entry) => entry.points.map((point) => point.y));
-  const plotArea = areaFor(variant);
+  const [fluidRef, fluidSize] = useFluidSize(height);
+  const size = variant === "fluid" ? fluidSize : undefined;
+  const plotArea = areaFor(variant, size);
 
   const xScale = linearScale(xDomain ?? extent(allX), plotArea.x0, plotArea.x1);
   const yScale = linearScale(yDomain ?? extent(allY), plotArea.y0, plotArea.y1);
@@ -104,6 +117,8 @@ export function LineProfile({
       label={label}
       variant={variant}
       className={className}
+      size={size}
+      figureRef={variant === "fluid" ? fluidRef : undefined}
       footer={
         <div className="flex flex-col gap-1">
           {showLegend && series.length > 1 && (
@@ -115,6 +130,7 @@ export function LineProfile({
         </div>
       }
     >
+      {bands && bands.length > 0 && <Bands bands={bands} xScale={xScale} area={plotArea} />}
       {coloured.map((entry) =>
         entry.points.length === 1 ? (
           <circle
@@ -159,6 +175,18 @@ export function LineProfile({
           </g>
         );
       })}
+      {markers && markers.length > 0 && <Markers markers={markers} xScale={xScale} area={plotArea} />}
+      {(onHover || onPick || cursor !== undefined) && (
+        <PlotInteraction
+          xScale={xScale}
+          yScale={yScale}
+          area={plotArea}
+          series={coloured}
+          cursor={cursor}
+          onHover={onHover}
+          onPick={onPick}
+        />
+      )}
     </Frame>
   );
 }

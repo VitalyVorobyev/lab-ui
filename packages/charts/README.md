@@ -24,6 +24,19 @@ is accepted.
 with a threshold rule), and `LineProfile` (one or more series against arc length in pixels
 along a scan line or caliper axis, with detected edges drawn as labelled vertical rules).
 
+**Fitting a chart to its container**: `variant="fluid"` takes the container's width at a fixed
+`height`, for a chart in a resizable inspector.
+
+**Interaction** on `LineChart` and `LineProfile`:
+- `onHover` draws a crosshair with a value readout, and `onPick` reports a click's x.
+- `cursor` draws an x chosen elsewhere, such as the pointer on the canvas a profile came from.
+- `bands` shade x ranges, and `markers` tick positions on the x axis.
+
+**Sequential colour maps**: `colormap("viridis" | "cividis", t)` and
+`colormapValue(map, value, domain)`, for a magnitude such as an error, a validity or a
+confidence. `ColormapLegend` shows the scale with its units; a map is never shown without one
+(visual-language §4).
+
 ## License
 
 Licensed under either of

@@ -9,7 +9,8 @@
 
 import type { ReactNode } from "react";
 
-import { Frame, Legend, areaFor, seriesColour } from "./Frame";
+import { FLUID_DEFAULT_HEIGHT, Frame, Legend, areaFor, seriesColour, useFluidSize } from "./Frame";
+import { Bands, Markers, PlotInteraction, type InteractionProps } from "./interaction";
 import type { Variant } from "./Frame";
 import type { Scale } from "./scale";
 import { extent, linePath, linearScale, logScale } from "./scale";
@@ -28,7 +29,7 @@ export interface Series {
 }
 
 /** Props for {@link LineChart}. */
-export interface LineChartProps {
+export interface LineChartProps extends InteractionProps {
   /** The lines, drawn in order — a later series paints over an earlier one. */
   series: Series[];
   /** Accessible name of the chart (the SVG's `aria-label`). Required. */
@@ -53,6 +54,8 @@ export interface LineChartProps {
   variant?: Variant;
   /** Extra classes for the outer `<figure>`, merged with `cn`. */
   className?: string | undefined;
+  /** For `variant="fluid"`: the chart's height in CSS pixels. Default 200. */
+  height?: number | undefined;
 }
 
 /**
@@ -60,7 +63,9 @@ export interface LineChartProps {
  *
  * @remarks
  * An SVG `role="img"` named by `label`, with the legend as real text under it. Series are
- * told apart by the legend's names, never by colour alone.
+ * told apart by the legend's names, never by colour alone. `bands` and `markers` mark x
+ * ranges and positions; `onHover` adds a crosshair and a value readout, `onPick` makes a
+ * click report its x, and `cursor` draws an x chosen elsewhere.
  */
 export function LineChart({
   series,
@@ -75,10 +80,18 @@ export function LineChart({
   showLegend = true,
   variant = "panel",
   className,
+  height = FLUID_DEFAULT_HEIGHT,
+  bands,
+  markers,
+  cursor,
+  onHover,
+  onPick,
 }: LineChartProps) {
   const allX = series.flatMap((entry) => entry.points.map((point) => point.x));
   const allY = series.flatMap((entry) => entry.points.map((point) => point.y));
-  const plotArea = areaFor(variant);
+  const [fluidRef, fluidSize] = useFluidSize(height);
+  const size = variant === "fluid" ? fluidSize : undefined;
+  const plotArea = areaFor(variant, size);
 
   const xScale = linearScale(xDomain ?? extent(allX), plotArea.x0, plotArea.x1);
   const makeY = logY ? logScale : linearScale;
@@ -98,6 +111,8 @@ export function LineChart({
       label={label}
       variant={variant}
       className={className}
+      size={size}
+      figureRef={variant === "fluid" ? fluidRef : undefined}
       footer={
         <div className="flex flex-col gap-1">
           {showLegend && (
@@ -109,6 +124,7 @@ export function LineChart({
         </div>
       }
     >
+      {bands && bands.length > 0 && <Bands bands={bands} xScale={xScale} area={plotArea} />}
       {underlay?.(xScale, yScale)}
       {coloured.map((entry) =>
         entry.points.length === 1 ? (
@@ -130,6 +146,18 @@ export function LineChart({
             vectorEffect="non-scaling-stroke"
           />
         ),
+      )}
+      {markers && markers.length > 0 && <Markers markers={markers} xScale={xScale} area={plotArea} />}
+      {(onHover || onPick || cursor !== undefined) && (
+        <PlotInteraction
+          xScale={xScale}
+          yScale={yScale}
+          area={plotArea}
+          series={coloured}
+          cursor={cursor}
+          onHover={onHover}
+          onPick={onPick}
+        />
       )}
     </Frame>
   );

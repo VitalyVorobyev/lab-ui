@@ -3,11 +3,13 @@
  */
 
 export {
+  FLUID_DEFAULT_HEIGHT,
   Frame,
   Legend,
   areaFor,
   plotArea,
   seriesColour,
+  useFluidSize,
   DEFECT_COLOUR,
   NORMAL_COLOUR,
   SERIES_COLOURS,
@@ -42,3 +44,26 @@ export {
   type LineProfileProps,
   type ProfileSeries,
 } from "./LineProfile";
+
+export {
+  Bands,
+  Markers,
+  PlotInteraction,
+  seriesValueAt,
+  type Band,
+  type InteractionProps,
+  type Marker,
+  type PlotArea,
+  type ReadoutSeries,
+} from "./interaction";
+
+export {
+  COLORMAPS,
+  colormap,
+  colormapGradient,
+  colormapRgb,
+  colormapValue,
+  type ColormapName,
+} from "./colormap";
+
+export { ColormapLegend, type ColormapLegendProps } from "./ColormapLegend";

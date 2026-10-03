@@ -149,6 +149,18 @@ const SURFACE_0_5 = [
  * exact check: a value that appears or disappears unannounced still fails it.
  */
 const ADDED_AFTER_FREEZE = [
+  "Bands",
+  "COLORMAPS",
+  "ColormapLegend",
+  "FLUID_DEFAULT_HEIGHT",
+  "Markers",
+  "PlotInteraction",
+  "colormap",
+  "colormapGradient",
+  "colormapRgb",
+  "colormapValue",
+  "seriesValueAt",
+  "useFluidSize",
   "DropdownMenu",
   "Kbd",
   "Listbox",

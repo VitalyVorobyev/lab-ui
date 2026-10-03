@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect } from "storybook/test";
+import { useState } from "react";
+import { expect, fireEvent, fn, waitFor } from "storybook/test";
 
 import { LineProfile, type ProfileSeries } from "./LineProfile";
 
@@ -110,5 +111,72 @@ export const Empty: Story = {
   args: { series: [] },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("arc length (px)")).toBeInTheDocument();
+  },
+};
+
+/**
+ * A caliper profile as an inspector shows it: fluid width, the canvas's pointer as a cursor,
+ * the gap between two edges as a band, sample positions ticked, hover and click reading back.
+ */
+function LinkedProfile() {
+  const [picked, setPicked] = useState<number | null>(null);
+  const [hovered, setHovered] = useState<number | null>(null);
+  return (
+    <div style={{ width: 520 }}>
+      <LineProfile
+        series={[ROW_40]}
+        label="Caliper 3 profile"
+        variant="fluid"
+        height={180}
+        edges={[
+          { position: 18.2, label: "rise", tone: "normal" },
+          { position: 41.6, label: "fall", tone: "normal" },
+        ]}
+        bands={[{ from: 18.2, to: 41.6, label: "width 23.4 px", tone: "signal" }]}
+        markers={[10, 20, 30, 40, 50].map((position) => ({ position, label: `sample ${position}` }))}
+        cursor={picked ?? 30}
+        onHover={(x) => {
+          setHovered(x);
+          hover(x);
+        }}
+        onPick={(x) => {
+          setPicked(x);
+          pick(x);
+        }}
+      />
+      <output data-testid="hovered">{hovered === null ? "none" : hovered.toFixed(1)}</output>
+    </div>
+  );
+}
+
+const hover = fn();
+const pick = fn();
+
+export const Interactive: Story = {
+  render: () => <LinkedProfile />,
+  play: async ({ canvasElement }) => {
+    const svg = canvasElement.querySelector("svg[role='img']")!;
+    // Fluid: the viewBox is the container's own width, so text is drawn at its true size.
+    const figure = svg.closest("figure")!;
+    await waitFor(() =>
+      expect(svg.getAttribute("viewBox")).toBe(`0 0 ${Math.round(figure.getBoundingClientRect().width)} 180`),
+    );
+    await expect(svg.querySelectorAll("[data-bands] rect")).toHaveLength(1);
+    await expect(svg.querySelectorAll("[data-markers] line")).toHaveLength(5);
+    // The external cursor is drawn without hovering.
+    await expect(svg.querySelector("[data-crosshair]")).not.toBeNull();
+    const target = svg.querySelector("[data-plot-target]")!;
+    const box = target.getBoundingClientRect();
+    await fireEvent.pointerMove(target, { clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 });
+    await waitFor(() => expect(svg.querySelector("[data-readout]")).not.toBeNull());
+    await expect(svg.querySelector("[data-readout]")!.textContent).toMatch(/row 40/);
+    await expect(hover).toHaveBeenCalled();
+    await fireEvent.click(target, { clientX: box.left + 2, clientY: box.top + 4 });
+    await expect(pick).toHaveBeenCalled();
+    // A pointer outside the domain reads back clamped to it.
+    await expect(pick.mock.lastCall?.[0]).toBeGreaterThanOrEqual(0);
+    await fireEvent.pointerLeave(target);
+    await fireEvent.pointerOut(target, { relatedTarget: document.body });
+    await waitFor(() => expect(hover).toHaveBeenLastCalledWith(null));
   },
 };
