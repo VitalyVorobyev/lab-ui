@@ -37,7 +37,7 @@
   {
     "name": "@vitavision/charts",
     "path": "packages/charts/dist/index.js",
-    "limit": "3.13 kB",
+    "limit": "5.09 kB",
     "import": "*",
     "ignore": [
       "@vitavision/ui",

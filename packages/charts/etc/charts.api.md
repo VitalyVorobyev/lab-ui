@@ -7,16 +7,35 @@
 import { JSX } from 'react';
 import { MeasureTone } from '@vitavision/ui';
 import { ReactNode } from 'react';
+import { Ref } from 'react';
 
 // @public
-export function areaFor(variant: Variant): {
+export function areaFor(variant: Variant, size?: {
+    width: number;
+    height: number;
+}): {
     x0: 56;
     x1: number;
     y0: number;
     y1: 12;
-    width: 480 | 960;
-    height: 280 | 320;
+    width: number;
+    height: number;
 };
+
+// @public
+export interface Band {
+    from: number;
+    label?: string | undefined;
+    to: number;
+    tone?: MeasureTone | undefined;
+}
+
+// @public
+export function Bands(input: {
+    bands: readonly Band[];
+    xScale: Scale;
+    area: PlotArea;
+}): JSX.Element;
 
 // @public
 export interface BarRow {
@@ -27,6 +46,37 @@ export interface BarRow {
         colour: string;
     }[];
 }
+
+// @public
+export function colormap(name: ColormapName, t: number): string;
+
+// @public
+export function colormapGradient(name: ColormapName, direction?: string): string;
+
+// @public
+export function ColormapLegend(input: ColormapLegendProps): JSX.Element;
+
+// @public
+export interface ColormapLegendProps {
+    className?: string | undefined;
+    domain: readonly [number, number];
+    format?: ((value: number) => string) | undefined;
+    label: string;
+    map: ColormapName;
+    unit?: string | undefined;
+}
+
+// @public
+export type ColormapName = "viridis" | "cividis";
+
+// @public
+export function colormapRgb(name: ColormapName, t: number): [number, number, number];
+
+// @public
+export const COLORMAPS: readonly ColormapName[];
+
+// @public
+export function colormapValue(name: ColormapName, value: number, domain: readonly [number, number]): string;
 
 // @public
 export const DEFECT_COLOUR = "var(--defect)";
@@ -42,6 +92,9 @@ export interface EdgeMark {
 export function extent(values: readonly number[]): [number, number];
 
 // @public
+export const FLUID_DEFAULT_HEIGHT = 200;
+
+// @public
 export function formatTick(value: number, step: number): string;
 
 // @public
@@ -51,8 +104,13 @@ export function Frame(input: FrameProps): JSX.Element;
 export interface FrameProps {
     children?: ReactNode;
     className?: string | undefined;
+    figureRef?: Ref<HTMLElement> | undefined;
     footer?: ReactNode;
     label: string;
+    size?: {
+        width: number;
+        height: number;
+    } | undefined;
     variant?: Variant;
     xLabel?: string | undefined;
     xScale: Scale;
@@ -73,6 +131,15 @@ export interface HistogramProps {
     label: string;
     normal: number[];
     threshold?: number;
+}
+
+// @public
+export interface InteractionProps {
+    bands?: readonly Band[] | undefined;
+    cursor?: number | null | undefined;
+    markers?: readonly Marker[] | undefined;
+    onHover?: ((x: number | null) => void) | undefined;
+    onPick?: ((x: number) => void) | undefined;
 }
 
 // @public
@@ -97,9 +164,10 @@ export function linearScale(domain: [number, number], rangeStart: number, rangeE
 export function LineChart(input: LineChartProps): JSX.Element;
 
 // @public
-export interface LineChartProps {
+export interface LineChartProps extends InteractionProps {
     className?: string | undefined;
     footer?: ReactNode;
+    height?: number | undefined;
     label: string;
     logY?: boolean;
     series: Series[];
@@ -122,10 +190,11 @@ export function linePath(points: readonly {
 export function LineProfile(input: LineProfileProps): JSX.Element;
 
 // @public
-export interface LineProfileProps {
+export interface LineProfileProps extends InteractionProps {
     className?: string | undefined;
     edges?: EdgeMark[];
     footer?: ReactNode;
+    height?: number | undefined;
     label: string;
     series: ProfileSeries[];
     showLegend?: boolean;
@@ -140,6 +209,20 @@ export interface LineProfileProps {
 export function logScale(domain: [number, number], rangeStart: number, rangeEnd: number): Scale;
 
 // @public
+export interface Marker {
+    label?: string | undefined;
+    position: number;
+    tone?: MeasureTone | undefined;
+}
+
+// @public
+export function Markers(input: {
+    markers: readonly Marker[];
+    xScale: Scale;
+    area: PlotArea;
+}): JSX.Element;
+
+// @public
 export function niceStep(rough: number): number;
 
 // @public
@@ -149,14 +232,34 @@ export const NORMAL_COLOUR = "var(--normal)";
 export function padDomain(min: number, max: number): [number, number];
 
 // @public
+export interface PlotArea {
+    x0: number;
+    x1: number;
+    y0: number;
+    y1: number;
+}
+
+// @public
 export const plotArea: {
     x0: 56;
     x1: number;
     y0: number;
     y1: 12;
-    width: 480 | 960;
-    height: 280 | 320;
+    width: number;
+    height: number;
 };
+
+// @public
+export function PlotInteraction(input: {
+    xScale: Scale;
+    yScale: Scale;
+    area: PlotArea;
+    series: readonly ReadoutSeries[];
+    cursor?: number | null | undefined;
+    onHover?: ((x: number | null) => void) | undefined;
+    onPick?: ((x: number) => void) | undefined;
+    format?: (value: number) => string;
+}): JSX.Element;
 
 // @public
 export interface ProfileSeries {
@@ -169,8 +272,19 @@ export interface ProfileSeries {
 }
 
 // @public
+export interface ReadoutSeries {
+    colour: string;
+    name: string;
+    points: readonly {
+        x: number;
+        y: number;
+    }[];
+}
+
+// @public
 export interface Scale {
     domain: [number, number];
+    invert: (pixel: number) => number;
     project: (value: number) => number;
     ticks: (count?: number) => Tick[];
 }
@@ -195,6 +309,12 @@ export const SERIES_COLOURS: readonly ["var(--series-1)", "var(--series-2)", "va
 export function seriesColour(index: number): string;
 
 // @public
+export function seriesValueAt(points: readonly {
+    x: number;
+    y: number;
+}[], x: number): number | null;
+
+// @public
 export function StackedBars(input: StackedBarsProps): JSX.Element;
 
 // @public
@@ -211,7 +331,13 @@ export interface Tick {
 }
 
 // @public
-export type Variant = "panel" | "wide";
+export function useFluidSize(height?: number): [(element: HTMLElement | null) => void, {
+    width: number;
+    height: number;
+}];
+
+// @public
+export type Variant = "panel" | "wide" | "fluid";
 
 // (No @packageDocumentation comment for this package)
 

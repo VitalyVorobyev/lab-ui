@@ -30,6 +30,8 @@ export interface Scale {
   domain: [number, number];
   /** Map one domain value onto the pixel range this scale was built for. */
   project: (value: number) => number;
+  /** The inverse of `project`: the domain value at a pixel. Not clamped. */
+  invert: (pixel: number) => number;
   /**
    * Ticks inside the domain, in ascending order.
    *
@@ -136,6 +138,7 @@ export function linearScale(
   return {
     domain: [low, high],
     project: (value) => rangeStart + ((value - low) / span) * (rangeEnd - rangeStart),
+    invert: (pixel) => low + ((pixel - rangeStart) / (rangeEnd - rangeStart)) * span,
     ticks: (count = 5) => {
       const step = niceStep(span / Math.max(1, count));
       const first = Math.ceil(low / step) * step;
@@ -171,6 +174,7 @@ export function logScale(domain: [number, number], rangeStart: number, rangeEnd:
       const transformed = Math.log10(Math.max(value, LOG_FLOOR));
       return rangeStart + ((transformed - paddedLow) / span) * (rangeEnd - rangeStart);
     },
+    invert: (pixel) => 10 ** (paddedLow + ((pixel - rangeStart) / (rangeEnd - rangeStart)) * span),
     ticks: (count = 5) => {
       // One tick per decade, thinned when the range covers more decades than fit.
       const stride = Math.max(1, Math.ceil(span / Math.max(1, count)));

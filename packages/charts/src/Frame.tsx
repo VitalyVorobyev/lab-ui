@@ -13,7 +13,7 @@
  * than a pixel width — the variant says where the chart is going, not how big to draw it.
  */
 
-import type { ReactNode } from "react";
+import { useCallback, useState, type ReactNode, type Ref } from "react";
 
 import { cn } from "@vitavision/ui";
 
@@ -21,13 +21,20 @@ import type { Scale } from "./scale";
 
 /**
  * Where a chart is going: `panel` (a 480×280 viewBox) for one column of a two-column grid,
- * `wide` (960×320) for a chart that spans a panel on its own.
+ * `wide` (960×320) for a chart that spans a panel on its own, or `fluid` to take its
+ * container's width at a fixed height, with text at its true size at any width.
  *
  * @remarks
  * Pick it by placement, not by pixel width — it keeps the chart's text at the same rendered
- * size as its neighbours'.
+ * size as its neighbours'. `fluid` measures its container (a `ResizeObserver`), for a chart
+ * in a resizable inspector or under a canvas.
  */
-export type Variant = "panel" | "wide";
+export type Variant = "panel" | "wide" | "fluid";
+
+/** The width a `fluid` chart assumes before it has been measured, and on the server. */
+const FLUID_INITIAL_WIDTH = 480;
+/** A `fluid` chart's default height, in CSS pixels. */
+export const FLUID_DEFAULT_HEIGHT = 200;
 
 const GEOMETRY = {
   panel: { width: 480, height: 280 },
@@ -40,12 +47,14 @@ const MARGIN = { left: 56, right: 12, top: 12, bottom: 34 } as const;
  * The drawable rectangle for one variant, in that variant's viewBox units.
  *
  * @param variant - Which viewBox the chart is drawn in.
+ * @param size - For `fluid`: the measured size in CSS pixels (see {@link useFluidSize}).
  * @returns The plot area's edges — `x0`/`x1` left to right, `y0` the bottom and `y1` the top
  *   (SVG y grows downwards) — and the whole viewBox's `width`/`height`. Build scales over
  *   `[x0, x1]` and `[y0, y1]`.
  */
-export function areaFor(variant: Variant) {
-  const { width, height } = GEOMETRY[variant];
+export function areaFor(variant: Variant, size?: { width: number; height: number }) {
+  const { width, height } =
+    variant === "fluid" ? (size ?? { width: FLUID_INITIAL_WIDTH, height: FLUID_DEFAULT_HEIGHT }) : GEOMETRY[variant];
   return {
     x0: MARGIN.left,
     x1: width - MARGIN.right,
@@ -58,6 +67,31 @@ export function areaFor(variant: Variant) {
 
 /** The default geometry, for callers that do not care which variant they are in. */
 export const plotArea = areaFor("panel");
+
+/**
+ * The size of a `fluid` chart: its container's width, measured, at `height`.
+ *
+ * @param height - The chart's height in CSS pixels. Defaults to {@link FLUID_DEFAULT_HEIGHT}.
+ * @returns `[ref, size]`. Attach `ref` to the element whose width the chart takes (the
+ *   `Frame`'s `figureRef`). The size is a 480 px-wide default until the first measure.
+ */
+export function useFluidSize(height: number = FLUID_DEFAULT_HEIGHT): [
+  (element: HTMLElement | null) => void,
+  { width: number; height: number },
+] {
+  const [width, setWidth] = useState(FLUID_INITIAL_WIDTH);
+  const ref = useCallback((element: HTMLElement | null) => {
+    if (!element) return;
+    const measure = (w: number) => {
+      if (w > 0) setWidth(Math.round(w));
+    };
+    measure(element.getBoundingClientRect().width);
+    const observer = new ResizeObserver((entries) => measure(entries[0]?.contentRect.width ?? 0));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, { width, height }];
+}
 
 /** Held at the two ends of the neutral ramp, matching the design system's chrome colours. */
 const AXIS = "currentColor";
@@ -86,6 +120,10 @@ export interface FrameProps {
   variant?: Variant;
   /** Extra classes for the outer `<figure>`, merged with `cn`. */
   className?: string | undefined;
+  /** For `fluid`: the measured size (see {@link useFluidSize}). */
+  size?: { width: number; height: number } | undefined;
+  /** A ref to the outer `<figure>`, e.g. {@link useFluidSize}'s measuring ref. */
+  figureRef?: Ref<HTMLElement> | undefined;
 }
 
 /**
@@ -107,14 +145,16 @@ export function Frame({
   footer,
   variant = "panel",
   className,
+  size,
+  figureRef,
 }: FrameProps) {
   const horizontal = xScale.ticks(xTicks);
   const vertical = yScale.ticks(yTicks);
-  const plotArea = areaFor(variant);
-  const PLOT = GEOMETRY[variant];
+  const plotArea = areaFor(variant, size);
+  const PLOT = { width: plotArea.width, height: plotArea.height };
 
   return (
-    <figure className={cn("flex flex-col gap-1 text-fg-muted", className)}>
+    <figure ref={figureRef} className={cn("flex flex-col gap-1 text-fg-muted", className)}>
       <svg
         role="img"
         aria-label={label}
