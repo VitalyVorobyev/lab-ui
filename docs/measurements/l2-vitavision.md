@@ -39,5 +39,5 @@ The vitavision site (SSR-prerendered, deployed to Cloudflare Pages) moved to the
 
 ## Exceptions carried forward
 
-- **Two compiler options are held off.** `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` stay off in `tsconfig.app.json`. Together they report ~665 places in 110 files, a refactor of its own and not part of a version bump. The exception is recorded in vitavision's `README.dev.md`. The other L2 apps took both options.
-- **G5.1 `tokensOnly`** is not enabled yet (L3).
+- **Two compiler options were held off, now closed.** `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` stayed off in `tsconfig.app.json` at L2 (they reported ~665 places in 110 files). *Closed 2026-10-03* by vitavision [#177](https://github.com/VitalyVorobyev/vitavision/pull/177) (merged as `fe598a6b`): both are inherited from `@vitavision/config-ts`, 645 errors fixed with no behaviour change (34/34 route screenshots pixel-identical to the pre-change build), and lint went from 158 to 59 warnings. vitavision now has no L2 exception.
+- **G5.1 `tokensOnly`** was not enabled at L2; it was enabled in L3-3 (vitavision #169).
