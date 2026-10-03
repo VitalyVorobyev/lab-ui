@@ -40,3 +40,4 @@ bun run check:deps   # PLAN §2 layering rules
 - No speculative components: a component enters only when a **second** app needs it now, with its stories and tests (the promotion rule).
 - No router imports in packages. No module-scope DOM access (packages must be SSR-safe: vitavision renders on the server).
 - Version exceptions only through ADR-0002 and `tools/inventory/baseline.toml`.
+- `stage2d` overlay layers batch by appearance (one path per state and style) and pick through a pure spatial index, never the DOM; per-item elements only for handles and the hovered/selected few (ADR-0004).

@@ -300,6 +300,9 @@ vitavision. The last is last because of SSR and the router.
 - **L6-1 — ADR: stage engine.** Choose the simplest candidate from L0-3 that passes
   gate **G6.1**: p95 frame time ≤ 16.7 ms during pan and zoom, and pointer hit-test
   p95 ≤ 2 ms, on the L0-3 scene. If none passes, add the WebGL candidate and re-measure.
+  *Done 2026-10-03: [ADR-0004](../adrs/0004-stage-engine.md).* The stage stays SVG over a DOM
+  image (candidate a′), with batched layers and index-based picking; Konva is ruled out. The
+  ADR lists what L6-2 still has to add: point, grid and heatmap layers and one hit-test API.
 - **L6-2 — Implement `stage2d`** on the chosen engine. The API is layered: an image layer,
   typed overlay layers (points, polylines, polygons, grids, heatmap), a hit-test API, the
   measure tool, and a view-transform core reused from lab-ui `stage/view.ts`.
