@@ -1,6 +1,6 @@
 /*
- * Numbers as a field shows them and as a person types them. Internal to this package (used by
- * `VectorInput` and `PoseInput`); not exported.
+ * Numbers as a field shows them and as a person types them. Used by `NumberInput`'s
+ * number-valued mode, `VectorInput` and `PoseInput`, and exported for an app's own fields.
  *
  * A field bound straight to a number re-formats under the cursor: typing `0.` into a field
  * showing `0.000` becomes `0` before the next digit arrives. So the multi-number fields keep

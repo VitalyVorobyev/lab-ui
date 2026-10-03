@@ -13,6 +13,16 @@ export { DensityProvider, byDensity, useDensity, type Density } from "./Density"
 export { ConfirmDialog, Dialog, DialogClose } from "./Dialog";
 export { Disclosure } from "./Disclosure";
 export {
+  DropdownMenu,
+  MenuCheckboxItem,
+  MenuItem,
+  MenuLabel,
+  MenuSeparator,
+  type DropdownMenuProps,
+  type MenuCheckboxItemProps,
+  type MenuItemProps,
+} from "./DropdownMenu";
+export {
   Callout,
   type CalloutTone,
   Empty,
@@ -31,6 +41,14 @@ export {
   useControlHeight,
   type NumberInputProps,
 } from "./Input";
+export { Kbd } from "./Kbd";
+export {
+  Listbox,
+  type ListboxOption,
+  type ListboxOptionState,
+  type ListboxProps,
+} from "./Listbox";
+export { formatNumber, parseNumber } from "./numberText";
 export {
   PageHeader,
   type BackLink,
@@ -39,6 +57,7 @@ export {
   Section,
   type ReadoutItem,
 } from "./Panel";
+export { Popover, PopoverClose, type PopoverProps } from "./Popover";
 export {
   PoseInput,
   type PoseInputProps,

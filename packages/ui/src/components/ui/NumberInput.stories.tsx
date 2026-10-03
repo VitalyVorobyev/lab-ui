@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, fn, userEvent } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 
 import { DensityProvider } from "./Density";
 import { Field } from "./Field";
@@ -40,6 +40,11 @@ unit.)
 with each number instead of carried from a label.
 
 **Don't** put the unit in the value, and don't use it for a unitless count (omit \`unit\`).
+
+**Number-valued**: pass \`onValueChange\` and \`value\` becomes a number (\`null\` is empty). The field keeps the text
+being typed while it has focus and reports only parsed numbers, so clearing a field to retype it never passes
+through 0; leaving it empty reports \`null\`, Escape restores the value it had on focus, and \`precision\` sets the
+decimals shown at rest.
 
 **Accessibility**: the unit is the field's description (\`aria-describedby\`), after the caller's own
 \`aria-describedby\` and before a surrounding \`Field\`'s description; it is \`aria-hidden\` so a wrapping \`<label>\` does not fold it into the
@@ -108,5 +113,105 @@ export const Compact: Story = {
   ),
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("spinbutton").className).toContain("h-7");
+  },
+};
+
+/** A number-valued field, as an ROI or datum editor keeps it. */
+function NumberValued({ initial, nullable }: { initial: number | null; nullable: boolean }) {
+  const [value, setValue] = useState<number | null>(initial);
+  return (
+    <div style={{ width: 240 }} className="flex flex-col gap-1">
+      <Field label="Width">
+        <NumberInput
+          unit="px"
+          precision={1}
+          value={value}
+          onValueChange={(next) => {
+            reported(next);
+            if (next !== null || nullable) setValue(next);
+          }}
+        />
+      </Field>
+      <output className="font-mono text-xs text-fg-muted">value: {value === null ? "none" : value}</output>
+    </div>
+  );
+}
+
+const reported = fn();
+
+/*
+ * Edit as a person does, through plain DOM events: user-event rewrites a number field's value
+ * to its shortest form (see VectorInput's stories), which would hide the formatting under test.
+ */
+async function edit(field: HTMLElement, text: string) {
+  await fireEvent.focusIn(field);
+  await fireEvent.change(field, { target: { value: text } });
+}
+
+export const NumberValuedEditing: Story = {
+  render: () => <NumberValued initial={320} nullable={false} />,
+  play: async ({ canvas }) => {
+    reported.mockClear();
+    const input = canvas.getByRole("spinbutton", { name: "Width" });
+    // At rest: the value at `precision`.
+    await expect(input).toHaveDisplayValue("320.0");
+    // Clearing to retype reports nothing: the value stays 320.
+    await edit(input, "");
+    await expect(reported).not.toHaveBeenCalled();
+    await expect(canvas.getByText("value: 320")).toBeVisible();
+    // Each parsed keystroke is reported.
+    await fireEvent.change(input, { target: { value: "4" } });
+    await fireEvent.change(input, { target: { value: "48" } });
+    await expect(reported).toHaveBeenLastCalledWith(48);
+    // Enter shows the value at `precision`, still editing.
+    await fireEvent.keyDown(input, { key: "Enter" });
+    await waitFor(() => expect(input).toHaveDisplayValue("48.0"));
+    // Escape restores the value on focus.
+    await fireEvent.keyDown(input, { key: "Escape" });
+    await expect(reported).toHaveBeenLastCalledWith(320);
+    await waitFor(() => expect(input).toHaveDisplayValue("320.0"));
+    await fireEvent.focusOut(input);
+  },
+};
+
+export const NumberValuedEmpty: Story = {
+  render: () => <NumberValued initial={12.5} nullable={false} />,
+  play: async ({ canvas }) => {
+    reported.mockClear();
+    const input = canvas.getByRole("spinbutton", { name: "Width" });
+    // Leaving the field empty reports `null`; a caller with no empty value ignores it, and the
+    // field shows the value it still has.
+    await edit(input, "");
+    await fireEvent.focusOut(input);
+    await expect(reported).toHaveBeenCalledTimes(1);
+    await expect(reported).toHaveBeenCalledWith(null);
+    await waitFor(() => expect(input).toHaveDisplayValue("12.5"));
+    // Enter on an empty field reports it too.
+    await edit(input, "");
+    await fireEvent.keyDown(input, { key: "Enter" });
+    await expect(reported).toHaveBeenLastCalledWith(null);
+    await fireEvent.focusOut(input);
+    // Keys while not editing do nothing.
+    reported.mockClear();
+    await fireEvent.keyDown(input, { key: "Escape" });
+    await fireEvent.keyDown(input, { key: "Enter" });
+    await expect(reported).not.toHaveBeenCalled();
+  },
+};
+
+export const NumberValuedNullable: Story = {
+  render: () => <NumberValued initial={null} nullable />,
+  play: async ({ canvas }) => {
+    reported.mockClear();
+    const input = canvas.getByRole("spinbutton", { name: "Width" });
+    await expect(input).toHaveDisplayValue("");
+    await expect(canvas.getByText("value: none")).toBeVisible();
+    await edit(input, "7");
+    await fireEvent.focusOut(input);
+    await waitFor(() => expect(input).toHaveDisplayValue("7.0"));
+    await edit(input, "");
+    await fireEvent.focusOut(input);
+    await expect(reported).toHaveBeenLastCalledWith(null);
+    await waitFor(() => expect(canvas.getByText("value: none")).toBeVisible());
   },
 };

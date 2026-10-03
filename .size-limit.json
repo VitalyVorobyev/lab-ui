@@ -2,11 +2,13 @@
   {
     "name": "@vitavision/ui",
     "path": "packages/ui/dist/index.js",
-    "limit": "9.92 kB",
+    "limit": "11.54 kB",
     "import": "*",
     "ignore": [
       "@radix-ui/react-checkbox",
       "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-popover",
       "@radix-ui/react-select",
       "@radix-ui/react-slider",
       "@radix-ui/react-slot",

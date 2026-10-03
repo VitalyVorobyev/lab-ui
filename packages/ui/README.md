@@ -123,13 +123,24 @@ keep independent preferences.
 ### Components
 
 **Primitives** — `Badge`, `CountRun`, `StatusDot` · `Button`, `ButtonLink` (a navigation styled as a button — never nest a `Button` in a link), `buttonClasses` · `Dialog`, `ConfirmDialog`,
-`DialogClose` · `Disclosure` · `Callout`, `Empty`, `ErrorBox`, `ProgressBar`, `Skeleton`,
-`SkeletonRows` · `Field` · `Input`, `NumberInput` (with an optional `unit` written in the
-field), `Textarea` · `VectorInput`, `PoseInput` · `PageHeader`, `Panel`,
-`ReadoutStrip`, `Section` · `SegmentedControl` · `Select` · `Slider` · `Table` ·
+`DialogClose` · `Disclosure` · `DropdownMenu`, `MenuItem`, `MenuCheckboxItem`, `MenuLabel`,
+`MenuSeparator` (a non-modal command and toggle menu) · `Callout`, `Empty`, `ErrorBox`,
+`ProgressBar`, `Skeleton`, `SkeletonRows` · `Field` · `Input`, `NumberInput` (with an optional
+`unit` written in the field; number-valued with `onValueChange`), `Textarea` · `VectorInput`,
+`PoseInput` · `Kbd` · `Listbox` (single choice among options that render their own content) ·
+`PageHeader`, `Panel`, `ReadoutStrip`, `Section` · `Popover`, `PopoverClose` ·
+`SegmentedControl` · `Select` · `Slider` · `Table` ·
 `Checkbox`, `Switch` · `ToggleChip` · `Toaster`, `toast()` (notifications from anywhere; mount one `<Toaster />` near the root) ·
 `InfoHint`, `Tooltip`, `TooltipProvider` ·
-`ThemeToggle` · plus `cn`, `focusRing`, `focusRingInset`.
+`ThemeToggle` · plus `cn`, `focusRing`, `focusRingInset`, and `formatNumber` / `parseNumber`
+(the text ↔ number helpers behind the number fields).
+
+A number-valued `NumberInput` keeps what is being typed and reports only parsed numbers, so
+clearing a field to retype it never passes through 0:
+
+```tsx
+<NumberInput unit="px" precision={1} value={roi.width} onValueChange={(w) => w !== null && setWidth(w)} />
+```
 
 `PoseInput` edits an SE(3) pose in the wire form `{ rotation: [qx, qy, qz, qw], translation:
 [tx, ty, tz] }` as a translation and roll/pitch/yaw in degrees, but does no rotation

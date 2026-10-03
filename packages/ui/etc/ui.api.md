@@ -165,6 +165,20 @@ export function Disclosure(input: {
 }): JSX.Element;
 
 // @public
+export function DropdownMenu(input: DropdownMenuProps): JSX.Element;
+
+// @public
+export interface DropdownMenuProps {
+    align?: "start" | "center" | "end" | undefined;
+    children: ReactNode;
+    className?: string | undefined;
+    onOpenChange?: ((open: boolean) => void) | undefined;
+    open?: boolean | undefined;
+    side?: "top" | "right" | "bottom" | "left" | undefined;
+    trigger: ReactNode;
+}
+
+// @public
 export function Empty(input: {
     action?: ReactNode;
     className?: string | undefined;
@@ -196,6 +210,9 @@ export const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2
 export const focusRingInset = "focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-signal";
 
 // @public
+export function formatNumber(value: number, precision: number): string;
+
+// @public
 export function InfoHint(input: {
     children: ReactNode;
     label?: string | undefined;
@@ -212,13 +229,80 @@ export function Input(input: ComponentProps<"input">): JSX.Element;
 export const inputClasses: string;
 
 // @public
+export function Kbd(input: ComponentProps<"kbd">): JSX.Element;
+
+// @public
+export function Listbox(input: ListboxProps): JSX.Element;
+
+// @public
+export interface ListboxOption {
+    description?: string | undefined;
+    disabled?: boolean | undefined;
+    label: string;
+    value: string;
+}
+
+// @public
+export interface ListboxOptionState {
+    active: boolean;
+    selected: boolean;
+}
+
+// @public
+export interface ListboxProps {
+    "aria-label": string;
+    autoFocus?: boolean | undefined;
+    className?: string | undefined;
+    onValueChange?: ((value: string) => void) | undefined;
+    options: readonly ListboxOption[];
+    renderOption?: ((option: ListboxOption, state: ListboxOptionState) => ReactNode) | undefined;
+    value: string | null;
+}
+
+// @public
 export type MeasureTone = "signal" | "normal" | "defect" | "warn" | "muted";
+
+// @public
+export function MenuCheckboxItem(input: MenuCheckboxItemProps): JSX.Element;
+
+// @public
+export interface MenuCheckboxItemProps {
+    checked: boolean;
+    children: ReactNode;
+    disabled?: boolean | undefined;
+    onCheckedChange: (checked: boolean) => void;
+    shortcut?: string | undefined;
+}
+
+// @public
+export function MenuItem(input: MenuItemProps): JSX.Element;
+
+// @public
+export interface MenuItemProps {
+    children: ReactNode;
+    disabled?: boolean | undefined;
+    icon?: ReactNode;
+    onSelect?: (() => void) | undefined;
+    shortcut?: string | undefined;
+    tone?: "defect" | undefined;
+}
+
+// @public
+export function MenuLabel(input: {
+    children: ReactNode;
+}): JSX.Element;
+
+// @public
+export function MenuSeparator(): JSX.Element;
 
 // @public
 export function NumberInput(input: NumberInputProps): JSX.Element;
 
 // @public
-export type NumberInputProps = Omit<ComponentProps<"input">, "min" | "max"> & {
+export type NumberInputProps = Omit<ComponentProps<"input">, "min" | "max" | "value"> & {
+    value?: string | number | readonly string[] | null | undefined;
+    onValueChange?: ((value: number | null) => void) | undefined;
+    precision?: number | undefined;
     min?: number | undefined;
     max?: number | undefined;
     unit?: string | undefined;
@@ -241,6 +325,30 @@ export function Panel(input: {
     bodyClassName?: string | undefined;
     children: ReactNode;
 }): JSX.Element;
+
+// @public
+export function parseNumber(text: string): number | null;
+
+// @public
+export function Popover(input: PopoverProps): JSX.Element;
+
+// @public
+export function PopoverClose(input: {
+    children: ReactNode;
+}): JSX.Element;
+
+// @public
+export interface PopoverProps {
+    "aria-label"?: string | undefined;
+    align?: "start" | "center" | "end" | undefined;
+    children: ReactNode;
+    className?: string | undefined;
+    defaultOpen?: boolean | undefined;
+    onOpenChange?: ((open: boolean) => void) | undefined;
+    open?: boolean | undefined;
+    side?: "top" | "right" | "bottom" | "left" | undefined;
+    trigger: ReactNode;
+}
 
 // @public
 export function PoseInput(input: PoseInputProps): JSX.Element;
