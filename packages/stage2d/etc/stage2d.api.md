@@ -27,6 +27,73 @@ export interface ArcPrimitive extends PrimitiveCommon {
 }
 
 // @public
+export interface Area {
+    id: AreaId;
+    points: ArrayLike<number>;
+}
+
+// @public
+export function areaCentre(points: ArrayLike<number>): Point | null;
+
+// @public
+export interface AreaHit {
+    distance: number;
+    id: AreaId;
+    index: number;
+    inside: boolean;
+}
+
+// @public
+export type AreaId = string | number;
+
+// @public
+export interface AreaIndex {
+    readonly bounds: Float64Array;
+    readonly cell: number;
+    readonly cols: number;
+    readonly entries: Uint32Array;
+    readonly items: readonly Area[];
+    readonly rows: number;
+    readonly size: Float64Array;
+    readonly starts: Uint32Array;
+    readonly x0: number;
+    readonly y0: number;
+}
+
+// @public
+export function areaPath(points: ArrayLike<number>): string;
+
+// @public
+export function AreaSet(input: AreaSetProps): JSX.Element;
+
+// @public
+export interface AreaSetItem extends Area {
+    label?: string | undefined;
+    role?: OverlayRole | undefined;
+}
+
+// @public
+export interface AreaSetProps {
+    dimmed?: Iterable<AreaId> | ((id: AreaId) => boolean) | undefined;
+    firstVertexTick?: boolean | undefined;
+    halo?: boolean | undefined;
+    hoveredId?: AreaId | null | undefined;
+    items: readonly AreaSetItem[];
+    label?: string | undefined;
+    labels?: boolean | undefined;
+    layerId?: string | undefined;
+    onHoverChange?: ((id: AreaId | null) => void) | undefined;
+    onItemPress?: ((id: AreaId, event: StagePointerEvent) => void) | undefined;
+    priority?: number | undefined;
+    role?: OverlayRole | undefined;
+    selectedIds?: Iterable<AreaId> | undefined;
+    selectionStroke?: string | undefined;
+}
+
+// @public
+export function areasInRect(index: AreaIndex, rect: Rect): AreaId[];
+
+// @public
 export function arrowHeadPoints(tip: Point, angle: number, size: number): [Point, Point, Point];
 
 // @public
@@ -34,6 +101,9 @@ export interface Box {
     height: number;
     width: number;
 }
+
+// @public
+export function buildAreaIndex(items: readonly Area[], cell?: number): AreaIndex;
 
 // @public
 export function buildPointIndex(xy: ArrayLike<number>, options?: PointIndexOptions): PointIndex;
@@ -95,6 +165,9 @@ export function clampRect(rect: Rect, bounds: Rect, minSize: number): Rect;
 export function clampView(view: StageView, box: Box, image: Box, options?: ClampOptions): StageView;
 
 // @public
+export type Colormap = (t: number) => readonly [number, number, number];
+
+// @public
 export function contentUnder(view: View, pointer: {
     clientX: number;
     clientY: number;
@@ -152,6 +225,43 @@ export interface DimensionPrimitive extends PrimitiveCommon {
 }
 
 // @public
+export function DraftShape(input: DraftShapeProps): JSX.Element;
+
+// @public
+export interface DraftShapeProps {
+    halo?: boolean | undefined;
+    role?: OverlayRole | undefined;
+    shape: DraftShapeSpec | null;
+}
+
+// @public
+export type DraftShapeSpec = {
+    kind: "point";
+    x: number;
+    y: number;
+} | {
+    kind: "line";
+    from: Point;
+    to: Point;
+} | {
+    kind: "polyline";
+    points: ArrayLike<number>;
+    cursor?: Point | undefined;
+} | {
+    kind: "polygon";
+    points: ArrayLike<number>;
+    cursor?: Point | undefined;
+} | {
+    kind: "rect";
+    from: Point;
+    to: Point;
+} | {
+    kind: "ellipse";
+    from: Point;
+    to: Point;
+};
+
+// @public
 export function fetchPlane(url: string): Promise<ValuePlane>;
 
 // @public
@@ -173,7 +283,89 @@ export function fractionOf(value: number, range: {
 export function frameRect(box: Box, image: Box, rect: Rect, pad?: number): StageView;
 
 // @public
+export function fromShapeFrame(shape: RotatedShape, p: Point): Point;
+
+// @public
 export const FULL_TIER_ZOOM = 2;
+
+// @public
+export interface GridEdgeStyle {
+    dashed?: boolean | undefined;
+    role?: OverlayRole | undefined;
+    visible?: boolean | undefined;
+}
+
+// @public
+export function GridLayer(input: GridLayerProps): JSX.Element;
+
+// @public
+export interface GridLayerProps {
+    dimmed?: Iterable<PointId> | ((id: PointId) => boolean) | undefined;
+    edges?: {
+        i?: GridEdgeStyle | undefined;
+        j?: GridEdgeStyle | undefined;
+    } | undefined;
+    halo?: boolean | undefined;
+    hoveredId?: PointId | null | undefined;
+    indexLabels?: boolean | undefined;
+    kind?: string | undefined;
+    label?: string | undefined;
+    labels?: boolean | undefined;
+    layerId?: string | undefined;
+    markers?: Readonly<Record<string, MarkerShape>> | undefined;
+    nodes: readonly GridNode[];
+    onHoverChange?: ((id: PointId | null) => void) | undefined;
+    onItemPress?: ((id: PointId, event: StagePointerEvent) => void) | undefined;
+    priority?: number | undefined;
+    selectedIds?: Iterable<PointId> | undefined;
+    selectionStroke?: string | undefined;
+}
+
+// @public
+export interface GridNode extends PointSetItem {
+    i: number;
+    j: number;
+}
+
+// @public
+export function HeatmapLayer(props: HeatmapLayerProps): JSX.Element | null;
+
+// @public
+export interface HeatmapLayerBaseProps {
+    alt?: string | undefined;
+    className?: string | undefined;
+    onError?: (() => void) | undefined;
+    onReady?: (() => void) | undefined;
+    opacity?: number | undefined;
+    pixelatedAbove?: number | undefined;
+    rect?: Rect | undefined;
+    visible?: boolean | undefined;
+}
+
+// @public
+export type HeatmapLayerProps = HeatmapRgbaProps | HeatmapPlaneProps;
+
+// @public
+export interface HeatmapPlaneProps extends HeatmapLayerBaseProps {
+    channel?: number | undefined;
+    colormap: Colormap;
+    height?: undefined;
+    plane: ValuePlane;
+    range?: ValueRange | undefined;
+    rgba?: undefined;
+    width?: undefined;
+}
+
+// @public
+export interface HeatmapRgbaProps extends HeatmapLayerBaseProps {
+    channel?: undefined;
+    colormap?: undefined;
+    height: number;
+    plane?: undefined;
+    range?: undefined;
+    rgba: Uint8ClampedArray | Uint8Array;
+    width: number;
+}
 
 // @public
 export interface HitCandidate {
@@ -248,6 +440,25 @@ export function insideImage(p: Point, image: Box): boolean;
 export function isFit(view: StageView, box: Box, image: Box): boolean;
 
 // @public
+export type LatticeAxis = "i" | "j";
+
+// @public
+export interface LatticeEdge {
+    a: number;
+    axis: LatticeAxis;
+    b: number;
+}
+
+// @public
+export function latticeEdges(nodes: ArrayLike<LatticeNode>): LatticeEdge[];
+
+// @public
+export interface LatticeNode {
+    i: number;
+    j: number;
+}
+
+// @public
 export const MARKER_SHAPES: Readonly<Record<BuiltinMarkerKind, MarkerShape>>;
 
 // @public
@@ -256,6 +467,15 @@ export interface MarkerShape {
     path: (x: number, y: number, unit: number, angle: number) => string;
     readonly role?: OverlayRole | undefined;
     readonly size: number;
+}
+
+// @public
+export function MarqueeRect(input: MarqueeRectProps): JSX.Element;
+
+// @public
+export interface MarqueeRectProps {
+    rect: Rect | null;
+    stroke?: string | undefined;
 }
 
 // @public
@@ -304,7 +524,13 @@ export const MIN_ZOOM = 1;
 export function moveRect(rect: Rect, dx: number, dy: number, bounds: Rect): Rect;
 
 // @public
+export function moveShape(shape: RotatedShape, dx: number, dy: number): RotatedShape;
+
+// @public
 export function nativeZoomFor(sourceWidth: number, boxWidth: number): number;
+
+// @public
+export function nearestArea(index: AreaIndex, p: Point, radius: number): AreaHit | null;
 
 // @public
 export function nearestContourSegment(points: Point[], point: Point): number;
@@ -314,6 +540,9 @@ export function nearestPoint(index: PointIndex, x: number, y: number, radius: nu
 
 // @public
 export function nearestPolyline(index: PolylineIndex, p: Point, radius: number): PolylineHit | null;
+
+// @public
+export function normalizeAngle(angle: number): number;
 
 // @public
 export const OVERLAY_ROLES: readonly OverlayRole[];
@@ -341,6 +570,9 @@ export const PIXEL_CENTRE = 0.5;
 
 // @public
 export class PlaneFormatError extends Error {}
+
+// @public
+export function planeRange(plane: ValuePlane, channel?: number): ValueRange | null;
 
 // @public
 export interface Point {
@@ -380,6 +612,9 @@ export interface PointIndexOptions {
     ids?: ArrayLike<PointId> | undefined;
     radii?: ArrayLike<number> | undefined;
 }
+
+// @public
+export function pointInPolygon(points: ArrayLike<number>, x: number, y: number): boolean;
 
 // @public
 export interface PointItem {
@@ -526,6 +761,9 @@ export interface PrimitiveCommon {
 }
 
 // @public
+export function rasterizePlane(plane: ValuePlane, colormap: Colormap, range?: ValueRange, channel?: number): Uint8ClampedArray;
+
+// @public
 export interface Rect {
     height: number;
     width: number;
@@ -559,6 +797,9 @@ export const RESET_VIEW: View;
 export function resizeRect(rect: Rect, handle: RoiHandle, to: Point, bounds: Rect, minSize: number): Rect;
 
 // @public
+export function resizeShape(shape: RotatedShape, handle: RoiHandle, to: Point, minSize: number): RotatedShape;
+
+// @public
 export const ROI_HANDLE_CURSOR: Readonly<Record<RoiHandle, string>>;
 
 // @public
@@ -571,10 +812,28 @@ export type RoiHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 export function roiHandlePoint(rect: Rect, handle: RoiHandle): Point;
 
 // @public
+export interface RotatedShape {
+    cx: number;
+    cy: number;
+    height: number;
+    rotation: number;
+    width: number;
+}
+
+// @public
 export function rotatePoint(x: number, y: number, angle: number): Point;
 
 // @public
+export function rotateShape(shape: RotatedShape, to: Point, snap?: number): RotatedShape;
+
+// @public
+export function rotationHandlePoint(shape: RotatedShape, distance: number): Point;
+
+// @public
 export function sameRect(a: Rect | null, b: Rect | null, epsilon?: number): boolean;
+
+// @public
+export function sameShape(a: RotatedShape | null, b: RotatedShape | null, epsilon?: number): boolean;
 
 // @public
 export function scaleRange(box: Box, image: Box, options?: ClampOptions): [number, number];
@@ -589,6 +848,46 @@ export interface SegmentPrimitive extends PrimitiveCommon {
     y1: number;
     y2: number;
 }
+
+// @public
+export function shapeCorner(shape: RotatedShape): Point;
+
+// @public
+export interface ShapeDragHandlers {
+    onCancel?: (() => void) | undefined;
+    onEnd?: ((delta: Point, moved: boolean, event: PointerEvent) => void) | undefined;
+    onMove?: ((delta: Point, event: PointerEvent) => void) | undefined;
+}
+
+// @public
+export interface ShapeDragOptions {
+    slop?: number | undefined;
+}
+
+// @public
+export function ShapeEditor(input: ShapeEditorProps): JSX.Element;
+
+// @public
+export interface ShapeEditorProps {
+    editable?: boolean | undefined;
+    kind: "rect" | "ellipse";
+    label?: string | undefined;
+    minSize?: number | undefined;
+    onCommit?: ((value: RotatedShape) => void) | undefined;
+    onValueChange: (value: RotatedShape) => void;
+    rotatable?: boolean | undefined;
+    stroke?: string | undefined;
+    value: RotatedShape | null;
+}
+
+// @public
+export function shapeFromCorner(corner: Point, width: number, height: number, rotation: number): RotatedShape;
+
+// @public
+export function shapeHandleCursor(handle: RoiHandle, rotation: number): string;
+
+// @public
+export function shapeHandlePoint(shape: RotatedShape, handle: RoiHandle): Point;
 
 // @public
 export const STAGE_HIT_PRIORITY: {
@@ -764,7 +1063,16 @@ export function toImage(view: StageView, p: Point): Point;
 export function toScreen(view: StageView, p: Point): Point;
 
 // @public
+export function toShapeFrame(shape: RotatedShape, p: Point): Point;
+
+// @public
+export function translatePoints(points: ArrayLike<number>, delta: Point): number[];
+
+// @public
 export function useScreenPx(): (css: number) => number;
+
+// @public
+export function useShapeDrag(): (event: StagePointerEvent, handlers: ShapeDragHandlers, options?: ShapeDragOptions) => void;
 
 // @public
 export function useStage(): StageContext;
@@ -788,6 +1096,12 @@ export interface ValuePlane {
     stride: number;
     values: Float32Array;
     width: number;
+}
+
+// @public
+export interface ValueRange {
+    high: number;
+    low: number;
 }
 
 // @public

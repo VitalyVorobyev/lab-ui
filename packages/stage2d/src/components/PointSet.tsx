@@ -12,7 +12,8 @@ import { useMemo, useState } from "react";
 
 import { circlePath, MARKER_SHAPES, type MarkerShape } from "./markerShapes";
 import { overlayRole, OVERLAY_STATE_OPACITY, OVERLAY_STATE_WIDTH, type OverlayRole } from "./overlayRole";
-import { buildPointIndexFrom, nearestPoint, thinPoints, type PointId, type PointItem } from "./pointIndex";
+import { useLabelIndices, visibleRect } from "./labelLod";
+import { buildPointIndexFrom, nearestPoint, type PointId, type PointItem } from "./pointIndex";
 import { useStage } from "./stage/ImageStage";
 import type { StagePointerEvent } from "./stage/hitContext";
 import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
@@ -77,12 +78,6 @@ export interface PointSetProps {
   label?: string | undefined;
 }
 
-/** Labels need this much room between points, in screen pixels (overlay grammar §5). */
-const LABEL_SPACING = 24;
-/** The most label elements drawn at once. */
-const MAX_LABELS = 200;
-/** The most hovered-or-selected labels forced on regardless of spacing. */
-const MAX_FORCED_LABELS = 50;
 /** Past this many points, outlines are generated for the visible part only. */
 const CULL_ABOVE = 3000;
 /** How much bigger than a marker its selection ring is, in screen pixels. */
@@ -232,30 +227,16 @@ export function PointSet({
     });
     return list;
   }, [items]);
-  const spacing = LABEL_SPACING * unit;
-  const spaced = useMemo(
-    () => (labels && labelled.length > 0 ? thinPoints(index.xy, spacing, labelled) : []),
-    [labels, labelled, index, spacing],
-  );
-  const shownLabels = useMemo(() => {
-    if (!labels || (spaced.length === 0 && !hoverItem?.label && selectedSet.size === 0)) return [];
-    const view = visibleRect(stage.view, stage.box);
-    const inView = (i: number) => {
-      const item = items[i]!;
-      return view === null || (item.x >= view.x && item.x <= view.x + view.width && item.y >= view.y && item.y <= view.y + view.height);
-    };
-    const shown = new Set<number>();
-    const forced = [...(hoverItem ? [positionOf.get(hoverItem.id)!] : []), ...[...selectedSet].map((id) => positionOf.get(id) ?? -1)];
-    for (const i of forced) {
-      if (shown.size >= MAX_FORCED_LABELS) break;
-      if (i >= 0 && items[i]!.label && inView(i)) shown.add(i);
+  const forced = useMemo(() => {
+    const list: number[] = [];
+    if (hoverItem?.label) list.push(positionOf.get(hoverItem.id)!);
+    for (const id of selectedSet) {
+      const i = positionOf.get(id);
+      if (i !== undefined && items[i]!.label) list.push(i);
     }
-    for (const i of spaced) {
-      if (shown.size >= MAX_LABELS) break;
-      if (inView(i)) shown.add(i);
-    }
-    return [...shown];
-  }, [labels, spaced, items, hoverItem, selectedSet, positionOf, stage.view, stage.box]);
+    return list;
+  }, [hoverItem, selectedSet, positionOf, items]);
+  const shownLabels = useLabelIndices({ enabled: labels, xy: index.xy, labelled, forced });
 
   const widthOf = (shape: MarkerShape, role: OverlayRole, state: "default" | "hover" | "selected"): number => {
     const thin = role === "model" || role === "structure";
@@ -365,12 +346,6 @@ function batchPath(batch: Batch, items: readonly PointSetItem[], unit: number, c
   }
   batch.cache = { key, d };
   return d;
-}
-
-/** The image-space rectangle on screen, or `null` before the viewport is measured. */
-function visibleRect(view: { scale: number; tx: number; ty: number }, box: { width: number; height: number }): Rect | null {
-  if (!(box.width > 0) || !(view.scale > 0)) return null;
-  return { x: -view.tx / view.scale, y: -view.ty / view.scale, width: box.width / view.scale, height: box.height / view.scale };
 }
 
 /**
