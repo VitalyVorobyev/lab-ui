@@ -58,9 +58,36 @@ selected. Labels appear where points are 24 screen px apart.
 - **Pure functions:** `buildPointIndex`, `nearestPoint`, `pointsInRect` and `thinPoints`
   (`docs/measurements/l6-2a-points-hit-test.md`).
 
+**Areas**: `AreaSet` draws many closed regions (marker quads, drawn polygons, region annotations) as a
+few batched paths, each an outline with its 12 % fill, in a role (`feature`, `model`, `structure`).
+- **Pointer:** a press near an outline picks that region, else the smallest region containing it;
+  `onHoverChange` and `onItemPress` as `PointSet`.
+- **Quads:** `firstVertexTick` ticks corner 0; labels sit at the centre, where regions are 24 screen px apart.
+- **Pure functions:** `buildAreaIndex`, `nearestArea`, `areasInRect`, `pointInPolygon`, `areaPath`
+  (`docs/measurements/l6-2b-areas-grid-heatmap.md`).
+
+**Grids**: `GridLayer` draws a detected lattice: nodes `{ id, i, j, x, y }` as a `PointSet` (`plus` by default)
+and the edges between lattice neighbours as two batched paths, each axis restyled through `edges`.
+`indexLabels` labels nodes with `i,j`. `latticeEdges(nodes)` is the pure neighbour search.
+
+**Heatmaps**: `HeatmapLayer` draws a `ValuePlane` through a `colormap` (`(t) => [r, g, b]`; the
+`@vitavision/charts` maps fit) or an `rgba` buffer as one image, rasterised in an effect, placed over the
+image (or `rect`), pixelated from 4 CSS px per cell. `rasterizePlane` and `planeRange` are pure.
+
+**Rotated shapes**: `ShapeEditor` edits `{ cx, cy, width, height, rotation }` as a rectangle or an ellipse:
+eight handles resize in the shape's own frame (the opposite side stays put), a rotation handle turns it, the
+interior moves it, arrow keys nudge it. **Rotation is radians, clockwise on screen** (Konva's degrees are
+`deg * Math.PI / 180`; `shapeFromCorner` converts Konva's rotate-about-the-corner `Rect`). The arithmetic
+(`resizeShape`, `rotateShape`, `moveShape`, `shapeHandlePoint`, …) is pure.
+
+**Drawing and moving**: `DraftShape` is the dashed preview of a point, line, polyline, polygon, rectangle or
+ellipse being drawn, and `MarqueeRect` the rubber band; `useShapeDrag` turns a press on an item into
+image-space displacements with click slop, for select → drag → commit of manual shapes (`translatePoints`
+shifts flat coordinates).
+
 **Hit-test**: `useStageHitTest()` answers "what is under the pointer" across layers, ranked by
-`STAGE_HIT_PRIORITY` (points above lines above areas above images). `PointSet` and `PolylineSet`
-answer it; `useStageHitLayer` registers any other layer. `ImageStage` also takes `panButton`,
+`STAGE_HIT_PRIORITY` (points above lines above areas above images). `PointSet`, `PolylineSet`,
+`AreaSet` and `GridLayer` answer it; `useStageHitLayer` registers any other layer. `ImageStage` also takes `panButton`,
 `doubleClickFit` and `touchPan`, and handles two-finger pinch.
 
 **Tool model**: `StageSurface` is the one full-frame press target per stage.

@@ -161,6 +161,67 @@ export {
   type PointIndexOptions,
   type PointItem,
 } from "./components/pointIndex";
+export {
+  AreaSet,
+  type AreaSetItem,
+  type AreaSetProps,
+} from "./components/AreaSet";
+export {
+  areaCentre,
+  areaPath,
+  areasInRect,
+  buildAreaIndex,
+  nearestArea,
+  pointInPolygon,
+  type Area,
+  type AreaHit,
+  type AreaId,
+  type AreaIndex,
+} from "./components/areaIndex";
+export {
+  GridLayer,
+  type GridEdgeStyle,
+  type GridLayerProps,
+  type GridNode,
+} from "./components/GridLayer";
+export { latticeEdges, type LatticeAxis, type LatticeEdge, type LatticeNode } from "./components/gridEdges";
+export {
+  HeatmapLayer,
+  type HeatmapLayerBaseProps,
+  type HeatmapLayerProps,
+  type HeatmapPlaneProps,
+  type HeatmapRgbaProps,
+} from "./components/HeatmapLayer";
+export { planeRange, rasterizePlane, type Colormap, type ValueRange } from "./components/heatmapRaster";
+export { ShapeEditor, type ShapeEditorProps } from "./components/ShapeEditor";
+export {
+  fromShapeFrame,
+  moveShape,
+  normalizeAngle,
+  resizeShape,
+  rotateShape,
+  rotationHandlePoint,
+  sameShape,
+  shapeCorner,
+  shapeFromCorner,
+  shapeHandleCursor,
+  shapeHandlePoint,
+  toShapeFrame,
+  type RotatedShape,
+} from "./components/shapeEdit";
+export {
+  DraftShape,
+  MarqueeRect,
+  type DraftShapeProps,
+  type DraftShapeSpec,
+  type MarqueeRectProps,
+} from "./components/DraftShape";
+export {
+  translatePoints,
+  useShapeDrag,
+  type ShapeDragHandlers,
+  type ShapeDragOptions,
+} from "./components/useShapeDrag";
 export { MARKER_SHAPES, circlePath, type BuiltinMarkerKind, type MarkerShape } from "./components/markerShapes";
 export {
   ROI_HANDLES,

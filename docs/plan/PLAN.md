@@ -307,6 +307,11 @@ vitavision. The last is last because of SSR and the router.
   typed overlay layers (points, polylines, polygons, grids, heatmap), a hit-test API, the
   measure tool, and a view-transform core reused from lab-ui `stage/view.ts`.
   Done when §4 holds and G6.1 is re-measured on the package build.
+  *Done 2026-10-03:* part (a) added `PointSet`, the one hit-test (`useStageHitTest`) and touch input
+  ([l6-2a](../measurements/l6-2a-points-hit-test.md)); part (b) added `AreaSet`, `GridLayer`,
+  `HeatmapLayer`, the rotated `ShapeEditor`, `DraftShape` / `MarqueeRect` and `useShapeDrag`
+  ([l6-2b](../measurements/l6-2b-areas-grid-heatmap.md)). Every layer batches by appearance, and the pickable ones resolve the pointer through a pure
+  index (hit-test p95 6 µs on 20k quads, 0.02 ms across layers on the L0-3 scene); §4 holds for all of them.
 - **L6-3..5 — Migrate** calibration-rs `FrameCanvas`, VAL `AnnotationCanvas`/`LiveStage`,
   and the vitavision editor canvas, one PR each. Done when each app's e2e tests pass,
   Konva is removed from that app's dependencies, and the concept matrix is updated.

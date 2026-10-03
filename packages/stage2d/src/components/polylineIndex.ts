@@ -254,7 +254,8 @@ export function polylineBounds(points: ArrayLike<number>): Rect | null {
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
-function closestOnSegment(p: Point, ax: number, ay: number, bx: number, by: number): Point {
+/** The point of segment ab nearest to `p`. Shared with `areaIndex.ts`. */
+export function closestOnSegment(p: Point, ax: number, ay: number, bx: number, by: number): Point {
   const dx = bx - ax;
   const dy = by - ay;
   const len2 = dx * dx + dy * dy;
@@ -262,8 +263,8 @@ function closestOnSegment(p: Point, ax: number, ay: number, bx: number, by: numb
   return { x: ax + t * dx, y: ay + t * dy };
 }
 
-/** Whether segment ab has any point inside the closed rectangle (Liang–Barsky clip). */
-function segmentTouchesRect(ax: number, ay: number, bx: number, by: number, r: Rect): boolean {
+/** Whether segment ab has any point inside the closed rectangle (Liang–Barsky clip). Shared with `areaIndex.ts`. */
+export function segmentTouchesRect(ax: number, ay: number, bx: number, by: number, r: Rect): boolean {
   const xmin = r.x;
   const xmax = r.x + r.width;
   const ymin = r.y;
