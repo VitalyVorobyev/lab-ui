@@ -36,7 +36,16 @@ export interface Box {
 }
 
 // @public
+export function buildPointIndex(xy: ArrayLike<number>, options?: PointIndexOptions): PointIndex;
+
+// @public
+export function buildPointIndexFrom(items: readonly PointItem[], cell?: number): PointIndex;
+
+// @public
 export function buildPolylineIndex(items: readonly Polyline[], cell?: number): PolylineIndex;
+
+// @public
+export type BuiltinMarkerKind = "dot" | "plus" | "cross" | "square" | "hollow" | "directed";
 
 // @public
 export function caliperArrow(cx: number, cy: number, width: number, angle: number): {
@@ -59,6 +68,9 @@ export interface CaliperPrimitive extends PrimitiveCommon {
     tone?: MeasureTone;
     width: number;
 }
+
+// @public
+export function circlePath(x: number, y: number, r: number): string;
 
 // @public
 export interface CirclePrimitive extends PrimitiveCommon {
@@ -164,6 +176,15 @@ export function frameRect(box: Box, image: Box, rect: Rect, pad?: number): Stage
 export const FULL_TIER_ZOOM = 2;
 
 // @public
+export interface HitCandidate {
+    dist: number;
+    id: HitId;
+}
+
+// @public
+export type HitId = string | number;
+
+// @public
 export function ImageLayer(input: ImageLayerProps): JSX.Element;
 
 // @public
@@ -189,12 +210,14 @@ export interface ImageStageProps {
     children: ReactNode;
     clamp?: ClampOptions;
     className?: string;
+    doubleClickFit?: boolean | undefined;
     image: Box;
     initialView?: "auto" | "fit" | undefined;
     label?: string;
     onBackgroundClick?: (event: PointerEvent_2<HTMLDivElement>) => void;
     onHover?: (point: Point | null) => void;
     onView: (view: StageView) => void;
+    panButton?: StageMouseButton | readonly StageMouseButton[] | undefined;
     panKeys?: boolean;
     panTool?: boolean;
     readout?: ReactNode;
@@ -202,6 +225,7 @@ export interface ImageStageProps {
     shortcuts?: boolean;
     style?: CSSProperties;
     toolbar?: ReactNode;
+    touchPan?: "one-finger" | "two-finger" | undefined;
     view: StageView | null;
 }
 
@@ -222,6 +246,17 @@ export function insideImage(p: Point, image: Box): boolean;
 
 // @public
 export function isFit(view: StageView, box: Box, image: Box): boolean;
+
+// @public
+export const MARKER_SHAPES: Readonly<Record<BuiltinMarkerKind, MarkerShape>>;
+
+// @public
+export interface MarkerShape {
+    readonly paint: "disc" | "line";
+    path: (x: number, y: number, unit: number, angle: number) => string;
+    readonly role?: OverlayRole | undefined;
+    readonly size: number;
+}
 
 // @public
 export function MaskEditor(input: MaskEditorProps): JSX.Element;
@@ -275,6 +310,9 @@ export function nativeZoomFor(sourceWidth: number, boxWidth: number): number;
 export function nearestContourSegment(points: Point[], point: Point): number;
 
 // @public
+export function nearestPoint(index: PointIndex, x: number, y: number, radius: number): PointHit | null;
+
+// @public
 export function nearestPolyline(index: PolylineIndex, p: Point, radius: number): PolylineHit | null;
 
 // @public
@@ -311,6 +349,47 @@ export interface Point {
 }
 
 // @public
+export interface PointHit {
+    dist: number;
+    id: PointId;
+    index: number;
+}
+
+// @public
+export type PointId = string | number;
+
+// @public
+export interface PointIndex {
+    readonly cell: number;
+    readonly cols: number;
+    readonly count: number;
+    readonly ids: ArrayLike<PointId> | null;
+    readonly items: Uint32Array;
+    readonly maxRadius: number;
+    readonly radii: ArrayLike<number> | null;
+    readonly rows: number;
+    readonly starts: Uint32Array;
+    readonly x0: number;
+    readonly xy: ArrayLike<number>;
+    readonly y0: number;
+}
+
+// @public
+export interface PointIndexOptions {
+    cell?: number | undefined;
+    ids?: ArrayLike<PointId> | undefined;
+    radii?: ArrayLike<number> | undefined;
+}
+
+// @public
+export interface PointItem {
+    id: PointId;
+    pickRadius?: number | undefined;
+    x: number;
+    y: number;
+}
+
+// @public
 export interface PointPrimitive extends PrimitiveCommon {
     cross?: boolean;
     kind: "point";
@@ -320,6 +399,38 @@ export interface PointPrimitive extends PrimitiveCommon {
     x: number;
     y: number;
 }
+
+// @public
+export function PointSet(input: PointSetProps): JSX.Element;
+
+// @public
+export interface PointSetItem extends PointItem {
+    angle?: number | undefined;
+    kind?: string | undefined;
+    label?: string | undefined;
+    role?: OverlayRole | undefined;
+}
+
+// @public
+export interface PointSetProps {
+    dimmed?: Iterable<PointId> | ((id: PointId) => boolean) | undefined;
+    halo?: boolean | undefined;
+    hoveredId?: PointId | null | undefined;
+    items: readonly PointSetItem[];
+    kind?: string | undefined;
+    label?: string | undefined;
+    labels?: boolean | undefined;
+    layerId?: string | undefined;
+    markers?: Readonly<Record<string, MarkerShape>> | undefined;
+    onHoverChange?: ((id: PointId | null) => void) | undefined;
+    onItemPress?: ((id: PointId, event: StagePointerEvent) => void) | undefined;
+    priority?: number | undefined;
+    selectedIds?: Iterable<PointId> | undefined;
+    selectionStroke?: string | undefined;
+}
+
+// @public
+export function pointsInRect(index: PointIndex, rect: Rect): number[];
 
 // @public
 export function polygonPath(points: readonly Point[]): string;
@@ -388,9 +499,13 @@ export interface PolylineSetProps {
     hovered?: PolylineId | null | undefined;
     items: readonly PolylineSetItem[];
     label?: string | undefined;
+    layerId?: string | undefined;
     marquee?: boolean | undefined;
     onHover?: ((id: PolylineId | null) => void) | undefined;
+    onHoverChange?: ((id: PolylineId | null) => void) | undefined;
+    onItemPress?: ((id: PolylineId, event: PointerEvent_2<SVGPathElement>) => void) | undefined;
     onSelect?: ((ids: PolylineId[], mode: PolylineSelectMode) => void) | undefined;
+    priority?: number | undefined;
     selected?: Iterable<PolylineId> | undefined;
     selectionStroke?: string | undefined;
     stroke?: string | undefined;
@@ -476,6 +591,14 @@ export interface SegmentPrimitive extends PrimitiveCommon {
 }
 
 // @public
+export const STAGE_HIT_PRIORITY: {
+    readonly image: 0;
+    readonly area: 100;
+    readonly line: 200;
+    readonly point: 300;
+};
+
+// @public
 export function StageButton(input: StageButtonProps): JSX.Element;
 
 // @public
@@ -520,6 +643,32 @@ export interface StageHandle {
 }
 
 // @public
+export interface StageHit extends HitCandidate {
+    layerId: string;
+    priority: number;
+}
+
+// @public
+export interface StageHitLayerOptions {
+    layerId?: string | undefined;
+    onHover?: ((id: HitId | null) => void) | undefined;
+    onPress?: ((id: HitId, event: StagePointerEvent) => boolean | void) | undefined;
+    pick: (point: Point, radius: number) => HitCandidate | null;
+    priority: number;
+}
+
+// @public
+export interface StageHitOptions {
+    pressable?: boolean | undefined;
+}
+
+// @public
+export interface StageHitTestApi {
+    hitTest: (point: Point, radiusScreenPx?: number, options?: StageHitOptions) => StageHit | null;
+    hitTestAll: (point: Point, radiusScreenPx?: number, options?: StageHitOptions) => StageHit[];
+}
+
+// @public
 export interface StageLayer {
     disabled?: boolean | undefined;
     id: string;
@@ -537,6 +686,12 @@ export interface StageLayersMenuProps {
     layers: readonly StageLayer[];
     onVisibleChange: (id: string, visible: boolean) => void;
 }
+
+// @public
+export type StageMouseButton = "left" | "middle" | "right";
+
+// @public
+export type StagePointerEvent = PointerEvent_2<Element>;
 
 // @public
 export interface StagePress {
@@ -600,6 +755,9 @@ export function steppedScale(scale: number, direction: 1 | -1, min: number, max:
 export function strokeWidthFor(strokeScale: number, screenPixels?: number): number;
 
 // @public
+export function thinPoints(xy: ArrayLike<number>, minDist: number, order?: Iterable<number>): number[];
+
+// @public
 export function toImage(view: StageView, p: Point): Point;
 
 // @public
@@ -613,6 +771,12 @@ export function useStage(): StageContext;
 
 // @public
 export function useStageDrag(): (event: PointerEvent_2<Element>, drag: StageDrag) => void;
+
+// @public
+export function useStageHitLayer(options: StageHitLayerOptions): string;
+
+// @public
+export function useStageHitTest(): StageHitTestApi;
 
 // @public
 export function valueAt(plane: ValuePlane, u: number, v: number, channel?: number): number | null;

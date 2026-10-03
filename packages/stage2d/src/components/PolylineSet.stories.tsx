@@ -20,6 +20,8 @@ const ITEMS: PolylineSetItem[] = [
 
 const select = fn();
 const hover = fn();
+const hoverChange = fn();
+const itemPress = fn();
 
 function applySelect(current: Set<PolylineId>, ids: PolylineId[], mode: PolylineSelectMode): Set<PolylineId> {
   if (mode === "replace") return new Set(ids);
@@ -42,6 +44,10 @@ function Harness(props: Partial<PolylineSetProps>) {
           {...props}
           selected={selected}
           onHover={hover}
+          onHoverChange={hoverChange}
+          onItemPress={(id) => {
+            itemPress(id);
+          }}
           onSelect={(ids, mode) => {
             select(ids, mode);
             setSelected((current) => applySelect(current, ids, mode));
@@ -81,6 +87,8 @@ stay smooth and a hover costs microseconds.
 - **Rubber band:** Shift-drag from a line, or any drag with \`marquee\`, draws a band. On release it selects every
   line the band touches; with ⌘/Ctrl it adds them; an empty band clears the selection.
 - **Points:** above \`vertexScale\`, the hovered and selected lines show their points.
+- **Callbacks and hit-test:** \`onHoverChange\` and \`onItemPress\` use the names \`PointSet\` uses, and the layer answers
+  \`useStageHitTest\` at \`STAGE_HIT_PRIORITY.line\`. A \`PointSet\` marker over a line takes the press.
 
 **Use** it for any set of lines a person picks from, together with a list of the same items beside the stage. Hover
 can be controlled from that list.
@@ -129,6 +137,24 @@ export const Hover: Story = {
     // React's onPointerLeave is driven by `pointerout`.
     await fireEvent.pointerOut(hit, { relatedTarget: document.body });
     await expect(hover).toHaveBeenLastCalledWith(null);
+  },
+};
+
+/** `onHoverChange` and `onItemPress` are the names `PointSet` uses, so an app handles every layer alike. */
+export const Callbacks: Story = {
+  play: async ({ canvasElement }) => {
+    hoverChange.mockClear();
+    itemPress.mockClear();
+    const hit = canvasElement.querySelector("[data-hit]")!;
+    await fireEvent.pointerMove(hit, at(hit, { x: 280, y: 202 }));
+    await expect(hoverChange).toHaveBeenLastCalledWith(2);
+    await fireEvent.pointerDown(hit, at(hit, { x: 100, y: 61 }));
+    await expect(itemPress).toHaveBeenLastCalledWith(1);
+    // A shift-press starts a band instead of pressing the line.
+    itemPress.mockClear();
+    await fireEvent.pointerDown(hit, at(hit, { x: 100, y: 60 }, { shiftKey: true }));
+    await expect(itemPress).not.toHaveBeenCalled();
+    await fireEvent.pointerUp(window, at(hit, { x: 100, y: 60 }));
   },
 };
 

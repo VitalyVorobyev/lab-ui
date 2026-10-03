@@ -40,6 +40,8 @@ second of the same motion runs first and is discarded, as warm-up.
 | `b` | Konva with one node per feature, as vitavision and VAL build it. The overlay layer is cached while the scale holds still | Konva hit canvas |
 | `b-nocache` | Same as `b`, without the cache | Konva hit canvas |
 | `c` | Canvas2D: one canvas, with each layer a single pre-built `Path2D` stroked once per frame | Uniform grid |
+| `package` | The package itself (L6-2): `ImageStage` with `PolylineSet` and `PointSet` (dot markers), hit-tested through `useStageHitTest`. Not in the default run: `bun run.ts --only package,a-batched --out /tmp/x.md` | Stage hit registry (point and segment grids) |
+| `package-plus` | As `package`, with `plus` corner markers: outlines sized in screen pixels, regenerated at each zoom step | Stage hit registry |
 
 The WebGL candidate (d) is only built if every candidate above fails G6.1. None does.
 

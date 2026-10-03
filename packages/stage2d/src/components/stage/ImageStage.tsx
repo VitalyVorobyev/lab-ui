@@ -46,6 +46,9 @@ import type {
 
 import { cn } from "@vitavision/ui";
 import type { Point } from "../measureGeometry";
+import { centroid, isTap, panButtonCodes, pinchView, type StageMouseButton } from "./gesture";
+import { StageHitContext, type StagePointerEvent } from "./hitContext";
+import { createHitRegistry } from "./hitTest";
 import {
   clampView,
   fitView,
@@ -68,8 +71,29 @@ import {
 const WHEEL_SENSITIVITY = 0.0015;
 /** How far a press may travel and still count as a click rather than a pan. */
 const CLICK_SLOP = 3;
+/** The pointer's tolerance for hover and presses, in screen pixels: a mouse, and a fingertip. */
+const POINTER_RADIUS = 6;
+const TOUCH_RADIUS = 12;
 /** The view before the viewport has been measured — nothing is on screen yet. */
 const UNMEASURED_VIEW: StageView = { scale: 1, tx: 0, ty: 0 };
+
+/** A press that may become a pan, a click or a tap. */
+interface Drag {
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  /** Strayed past the click slop at some point, so it is not a click or a tap. */
+  moved: boolean;
+  /** Whether movement pans the view. */
+  pan: boolean;
+  /** A touch, which reports a tap rather than a click. */
+  touch: boolean;
+  /** `timeStamp` of the press. */
+  at: number;
+  /** The touch's pointer id, or `-1`. */
+  pointerId: number;
+}
 
 /** What `useStage` returns: the transform of the enclosing `ImageStage`, and its controls. */
 export interface StageContext {
@@ -158,6 +182,26 @@ export interface ImageStageProps {
   banner?: ReactNode;
   /** Force panning regardless of where the press lands (a "hand tool"). */
   panTool?: boolean;
+  /**
+   * The mouse buttons that pan on drag, over background no layer claimed. Defaults to
+   * `["left", "middle"]`. An app whose left button belongs to the active drawing tool passes
+   * `"right"`; the context menu is then suppressed on the stage, since the button's job is
+   * to drag. The hand tool and a held space bar still pan with the left button.
+   */
+  panButton?: StageMouseButton | readonly StageMouseButton[] | undefined;
+  /**
+   * Whether a double-click toggles fit and the previous view. On by default; turn it off in
+   * an app whose tools use double-click, such as closing a polygon.
+   */
+  doubleClickFit?: boolean | undefined;
+  /**
+   * What one finger does on background no layer claimed: `"one-finger"` (the default) pans,
+   * as the mouse does; `"two-finger"` leaves it to the app's tools and pans only with two.
+   * Two fingers always pinch-zoom about their midpoint and pan with it. A tap (a touch that
+   * stays put and is short) is a press: a layer's `onItemPress` hears it, or else
+   * `onBackgroundClick`.
+   */
+  touchPan?: "one-finger" | "two-finger" | undefined;
   /** Merged onto the viewport with `cn`. */
   className?: string;
   /** Inline style for the viewport. */
@@ -206,6 +250,9 @@ export function ImageStage({
   readout,
   banner,
   panTool = false,
+  panButton,
+  doubleClickFit = true,
+  touchPan = "one-finger",
   className,
   style,
   onHover,
@@ -234,7 +281,14 @@ export function ImageStage({
   });
   /** The view to come back to when a double-click leaves fit. */
   const previousRef = useRef<StageView | null>(null);
-  const dragRef = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
+  const dragRef = useRef<Drag | null>(null);
+  /** The touches down now, by pointer id, in client coordinates. */
+  const touchesRef = useRef(new Map<number, Point>());
+  /** The two-finger gesture in progress, from the moment the second finger went down. */
+  const pinchRef = useRef<{ distance: number; centre: Point; view: StageView } | null>(null);
+  /** The registry the stage's layers answer hit-tests through. */
+  const [hits] = useState(() => createHitRegistry<StagePointerEvent>());
+  const panButtons = useMemo(() => panButtonCodes(panButton), [panButton]);
 
   const effective = useMemo(
     () => view ?? (box.width > 0 ? openingView(opening, box, image) : UNMEASURED_VIEW),
@@ -408,15 +462,35 @@ export function ImageStage({
     ],
   );
 
+  /** The pointer's tolerance for hover and presses in image pixels: a fingertip is fatter. */
+  const hitRadius = (event: { pointerType: string }) =>
+    imageLengthFor(effective, event.pointerType === "touch" ? TOUCH_RADIUS : POINTER_RADIUS);
+
+  /** Offer a press to the items under it, topmost first; whether one claimed it. */
+  const routePress = (event: ReactPointerEvent<HTMLDivElement>) =>
+    hits.routePress(clientToImage({ x: event.clientX, y: event.clientY }), hitRadius(event), event);
+
   /*
    * Panning is the *default* reading of a press, and a layer opts out of it by handling the
    * event and stopping propagation — so the stage needs to know nothing about ROI handles or
    * clickable contours, and a layer needs no permission to exist. The predecessor inverted
    * this: it captured every `pointerdown` unconditionally, which is why its consumers had to
    * mount interactive layers outside the transform, where they stopped moving with the image.
+   *
+   * Layers that cannot own an element — a marker among thousands — register with the hit
+   * registry instead, and the press reaches them here: after every element-level handler had
+   * its say, before the stage reads the press as a pan.
    */
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 && event.button !== 1) return;
+    if (event.pointerType === "touch") {
+      touchDown(event);
+      return;
+    }
+    const primary = event.button === 0;
+    if (primary && !panMode && routePress(event)) return;
+    // The hand tool and a held space bar pan with the primary button whatever `panButton` says.
+    const pan = panButtons.has(event.button) || (primary && panMode);
+    if (!pan && !primary) return;
     event.preventDefault();
     dragRef.current = {
       x: event.clientX,
@@ -424,15 +498,27 @@ export function ImageStage({
       tx: effective.tx,
       ty: effective.ty,
       moved: false,
+      pan,
+      touch: false,
+      at: event.timeStamp,
+      pointerId: event.pointerId,
     };
-    setPanning(true);
+    if (pan) setPanning(true);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") {
+      touchMove(event);
+      return;
+    }
     const origin = dragRef.current;
-    if (!origin) {
+    if (!origin?.pan) {
       onHover?.(hoverPoint(event, viewportRef.current, effective, image));
+      hits.routeHover(clientToImage({ x: event.clientX, y: event.clientY }), hitRadius(event));
+      if (origin && !origin.moved && Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > CLICK_SLOP) {
+        origin.moved = true;
+      }
       return;
     }
     const dx = event.clientX - origin.x;
@@ -441,14 +527,126 @@ export function ImageStage({
     origin.moved = true;
     // During a pan the pointer is holding the image, not pointing at a pixel.
     onHover?.(null);
+    hits.clearHover();
     commit({ scale: effective.scale, tx: origin.tx + dx, ty: origin.ty + dy });
   };
 
   const endDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
     const origin = dragRef.current;
+    if (origin?.touch) return; // a touch ends through `touchEnd`
     dragRef.current = null;
     setPanning(false);
     if (origin && !origin.moved && event.button === 0) onBackgroundClick?.(event);
+  };
+
+  /*
+   * Touch. The first finger is a pan candidate (if `touchPan` says so) and a tap candidate;
+   * the second turns the gesture into a pinch about the fingers' midpoint, which also
+   * carries the view with it. A tap is a press and is reported on release, because on
+   * `pointerdown` a finger might still be the first of two.
+   */
+  const touchDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const touches = touchesRef.current;
+    if (touches.size >= 2) return; // a third finger has no job
+    event.preventDefault();
+    touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // The touch ended or was taken by the browser before this handler ran. The gesture
+      // still works from the events the viewport receives; capture only keeps a drag that
+      // leaves the viewport.
+    }
+    if (touches.size === 1) {
+      dragRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+        tx: effective.tx,
+        ty: effective.ty,
+        moved: false,
+        pan: touchPan === "one-finger" || panMode,
+        touch: true,
+        at: event.timeStamp,
+        pointerId: event.pointerId,
+      };
+      return;
+    }
+    const [a, b] = [...touches.values()] as [Point, Point];
+    const origin = viewportOrigin(event.currentTarget);
+    const mid = centroid(a, b);
+    pinchRef.current = {
+      distance: Math.hypot(a.x - b.x, a.y - b.y),
+      centre: { x: mid.x - origin.x, y: mid.y - origin.y },
+      view: effective,
+    };
+    if (dragRef.current) dragRef.current.moved = true; // two fingers are never a tap
+    setPanning(true);
+    onHover?.(null);
+    hits.clearHover();
+  };
+
+  const touchMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const touches = touchesRef.current;
+    if (!touches.has(event.pointerId)) return;
+    touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const pinch = pinchRef.current;
+    if (pinch && touches.size === 2) {
+      if (!(box.width > 0)) return;
+      const [a, b] = [...touches.values()] as [Point, Point];
+      const origin = viewportOrigin(event.currentTarget);
+      const mid = centroid(a, b);
+      commit(
+        pinchView(
+          pinch.view,
+          pinch.distance,
+          pinch.centre,
+          Math.hypot(a.x - b.x, a.y - b.y),
+          { x: mid.x - origin.x, y: mid.y - origin.y },
+          scaleRange(box, image, clamp),
+        ),
+      );
+      return;
+    }
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const dx = event.clientX - drag.x;
+    const dy = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) <= CLICK_SLOP) return;
+    drag.moved = true;
+    if (!drag.pan) return;
+    setPanning(true);
+    onHover?.(null);
+    commit({ scale: effective.scale, tx: drag.tx + dx, ty: drag.ty + dy });
+  };
+
+  const touchEnd = (event: ReactPointerEvent<HTMLDivElement>, cancelled: boolean) => {
+    const touches = touchesRef.current;
+    if (!touches.delete(event.pointerId)) return; // already ended (the capture is lost after the release)
+    if (pinchRef.current) {
+      pinchRef.current = null;
+      const rest = [...touches.entries()][0];
+      if (rest) {
+        // One finger is still down: it carries on as a pan from where it is, never as a tap.
+        dragRef.current = {
+          x: rest[1].x,
+          y: rest[1].y,
+          tx: effective.tx,
+          ty: effective.ty,
+          moved: true,
+          pan: touchPan === "one-finger" || panMode,
+          touch: true,
+          at: event.timeStamp,
+          pointerId: rest[0],
+        };
+        return;
+      }
+    }
+    if (touches.size > 0) return;
+    const drag = dragRef.current;
+    dragRef.current = null;
+    setPanning(false);
+    if (!drag || cancelled || drag.moved || !isTap(0, event.timeStamp - drag.at)) return;
+    if (!routePress(event)) onBackgroundClick?.(event);
   };
 
   /*
@@ -457,7 +655,7 @@ export function ImageStage({
    * in. Toggling against 1:1 instead (the predecessor's behaviour) throws that place away.
    */
   const onDoubleClick = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!(box.width > 0)) return;
+    if (!doubleClickFit || !(box.width > 0)) return;
     if (atFit) {
       const restore = previousRef.current;
       if (restore) {
@@ -514,65 +712,72 @@ export function ImageStage({
 
   return (
     <ImageStageContext value={context}>
-      <div
-        ref={attachViewport}
-        role="application"
-        aria-label={label}
-        tabIndex={0}
-        style={style}
-        data-fit={atFit ? "" : undefined}
-        data-panning={panning ? "" : undefined}
-        data-pan-mode={panMode ? "" : undefined}
-        className={cn(
-          // `@container/stage`: the toolbar and readout collapse by the canvas's own width,
-          // not the window's — a canvas beside a wide inspector is narrow on a wide screen.
-          "@container/stage relative h-full w-full overflow-hidden rounded-control border border-line bg-canvas select-none",
-          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-signal",
-          panning ? "cursor-grabbing" : panMode ? "cursor-grab" : "cursor-default",
-          className,
-        )}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        // A drag interrupted by a lost capture — a context menu, a browser gesture, the
-        // pointer leaving the window — used to leave the drag set, so the next hover panned
-        // the image with no button held down.
-        onPointerCancel={endDrag}
-        onLostPointerCapture={endDrag}
-        onPointerLeave={() => onHover?.(null)}
-        onDoubleClick={onDoubleClick}
-        onKeyDown={onKeyDown}
-      >
-        {/* One transformed box holding every layer, laid out at the image's own pixel size. */}
+      <StageHitContext value={hits}>
         <div
-          data-stage
-          className="absolute top-0 left-0 origin-top-left"
-          style={{
-            width: image.width,
-            height: image.height,
-            transform: `translate(${effective.tx}px, ${effective.ty}px) scale(${effective.scale})`,
+          ref={attachViewport}
+          role="application"
+          aria-label={label}
+          tabIndex={0}
+          style={style}
+          data-fit={atFit ? "" : undefined}
+          data-panning={panning ? "" : undefined}
+          data-pan-mode={panMode ? "" : undefined}
+          className={cn(
+            // `@container/stage`: the toolbar and readout collapse by the canvas's own width,
+            // not the window's — a canvas beside a wide inspector is narrow on a wide screen.
+            "@container/stage relative h-full w-full touch-none overflow-hidden rounded-control border border-line bg-canvas select-none",
+            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-signal",
+            panning ? "cursor-grabbing" : panMode ? "cursor-grab" : "cursor-default",
+            className,
+          )}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={(event) => (event.pointerType === "touch" ? touchEnd(event, false) : endDrag(event))}
+          // A drag interrupted by a lost capture — a context menu, a browser gesture, the
+          // pointer leaving the window — used to leave the drag set, so the next hover panned
+          // the image with no button held down.
+          onPointerCancel={(event) => (event.pointerType === "touch" ? touchEnd(event, true) : endDrag(event))}
+          onLostPointerCapture={(event) => (event.pointerType === "touch" ? touchEnd(event, true) : endDrag(event))}
+          onPointerLeave={() => {
+            onHover?.(null);
+            hits.clearHover();
           }}
+          onDoubleClick={onDoubleClick}
+          // The button's job is to drag; a menu opening at the end of every pan would undo it.
+          onContextMenu={panButtons.has(2) ? (event) => event.preventDefault() : undefined}
+          onKeyDown={onKeyDown}
         >
-          {children}
-        </div>
-
-        {banner && <div className="pointer-events-none absolute top-2 left-2 z-10">{banner}</div>}
-
-        {/* One row, not two corners: as separate absolute boxes the toolbar and the readout
-            overlapped as soon as the canvas was narrower than their combined width, which is
-            an ordinary window on a two-column workbench. `justify-between` keeps them apart
-            and lets the readout be the one that gives up room. */}
-        {(toolbar || readout) && (
-          // Wraps rather than clips: on a canvas too narrow for both, the readout moves onto
-          // its own line above the toolbar instead of being truncated to nothing.
-          <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10 flex flex-wrap-reverse items-end justify-between gap-2">
-            <div className="pointer-events-auto max-w-full shrink-0">{toolbar}</div>
-            <div data-readout-slot="" className="max-w-full min-w-0 truncate">
-              {readout}
-            </div>
+          {/* One transformed box holding every layer, laid out at the image's own pixel size. */}
+          <div
+            data-stage
+            className="absolute top-0 left-0 origin-top-left"
+            style={{
+              width: image.width,
+              height: image.height,
+              transform: `translate(${effective.tx}px, ${effective.ty}px) scale(${effective.scale})`,
+            }}
+          >
+            {children}
           </div>
-        )}
-      </div>
+
+          {banner && <div className="pointer-events-none absolute top-2 left-2 z-10">{banner}</div>}
+
+          {/* One row, not two corners: as separate absolute boxes the toolbar and the readout
+              overlapped as soon as the canvas was narrower than their combined width, which is
+              an ordinary window on a two-column workbench. `justify-between` keeps them apart
+              and lets the readout be the one that gives up room. */}
+          {(toolbar || readout) && (
+            // Wraps rather than clips: on a canvas too narrow for both, the readout moves onto
+            // its own line above the toolbar instead of being truncated to nothing.
+            <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10 flex flex-wrap-reverse items-end justify-between gap-2">
+              <div className="pointer-events-auto max-w-full shrink-0">{toolbar}</div>
+              <div data-readout-slot="" className="max-w-full min-w-0 truncate">
+                {readout}
+              </div>
+            </div>
+          )}
+        </div>
+      </StageHitContext>
     </ImageStageContext>
   );
 }

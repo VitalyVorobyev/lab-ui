@@ -153,6 +153,13 @@ is kept, only clamped to what the viewport allows. Layers read the transform thr
 \`StageButton\` and \`StageToolbarDivider\`) and \`StageReadout\` (cursor in image pixels, and scale)
 float over the image, outside the transform.
 
+**Input:** \`panButton\` picks the mouse buttons that pan (\`"right"\` for an app whose left button belongs to a
+drawing tool, which also suppresses the context menu), \`doubleClickFit={false}\` frees double-click, and on touch two
+fingers pinch-zoom and pan about their midpoint while one finger pans unless \`touchPan="two-finger"\` leaves it to
+the app's tools. A tap is a press. Layers that cannot own an element (a marker among thousands) register with the
+stage's hit-test; a press then reaches them (\`PointSet\`'s \`onItemPress\`) before the stage reads it as a pan, and
+\`useStageHitTest\` answers "what is under the pointer" across layers.
+
 **State** is on the viewport as \`data-fit\`, \`data-panning\` and \`data-pan-mode\` (present or absent),
 so styling can follow it without a callback.
 
@@ -458,6 +465,88 @@ export const PanTool: Story = {
     await fireEvent.pointerMove(stage, { pointerId: 1, clientX: from.clientX - 80, clientY: from.clientY - 40 });
     await fireEvent.pointerUp(stage, { button: 0, pointerId: 1, clientX: from.clientX - 80, clientY: from.clientY - 40 });
     await waitFor(() => expect(stageTransform(canvasElement)).not.toBe(before));
+  },
+};
+
+/** An app whose left button belongs to a drawing tool: the right button pans, and no menu opens. */
+export const RightButtonPan: Story = {
+  args: { panButton: "right" },
+  render: (args) => (
+    <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await waitFor(() => expect(readoutText(canvasElement)).toMatch(/· \d+%$/));
+    const stage = canvas.getByRole("application");
+    const before = stageTransform(canvasElement);
+    const s = stage.getBoundingClientRect();
+    const from = { clientX: s.left + s.width / 2, clientY: s.top + s.height / 2 };
+    const to = { clientX: from.clientX - 80, clientY: from.clientY - 40 };
+
+    // The left button is the tool's: dragging with it leaves the view alone.
+    await fireEvent.pointerDown(stage, { button: 0, pointerId: 1, ...from });
+    await fireEvent.pointerMove(stage, { pointerId: 1, ...to });
+    await fireEvent.pointerUp(stage, { button: 0, pointerId: 1, ...to });
+    await expect(stageTransform(canvasElement)).toBe(before);
+
+    await fireEvent.pointerDown(stage, { button: 2, pointerId: 1, ...from });
+    await fireEvent.pointerMove(stage, { pointerId: 1, ...to });
+    await fireEvent.pointerUp(stage, { button: 2, pointerId: 1, ...to });
+    await waitFor(() => expect(stageTransform(canvasElement)).not.toBe(before));
+    // fireEvent returns false when the event was cancelled: no context menu.
+    await expect(fireEvent.contextMenu(stage)).toBe(false);
+  },
+};
+
+/** An app whose tools use double-click: it no longer toggles fit. */
+export const NoDoubleClickFit: Story = {
+  args: { doubleClickFit: false },
+  render: (args) => (
+    <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await waitFor(() => expect(readoutText(canvasElement)).toMatch(/· \d+%$/));
+    const before = stageTransform(canvasElement);
+    await fireEvent.doubleClick(canvas.getByRole("application"));
+    await expect(stageTransform(canvasElement)).toBe(before);
+  },
+};
+
+/** Two fingers pinch-zoom about their midpoint; one finger pans, or is the app's with `touchPan="two-finger"`. */
+export const TouchGestures: Story = {
+  render: (args) => (
+    <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await waitFor(() => expect(readoutText(canvasElement)).toMatch(/· \d+%$/));
+    const stage = canvas.getByRole("application");
+    const s = stage.getBoundingClientRect();
+    const cx = s.left + s.width / 2;
+    const cy = s.top + s.height / 2;
+    const finger = (pointerId: number, dx: number, dy = 0) => ({
+      pointerType: "touch",
+      pointerId,
+      button: 0,
+      clientX: cx + dx,
+      clientY: cy + dy,
+    });
+
+    // One finger pans.
+    const before = stageView(canvasElement);
+    await fireEvent.pointerDown(stage, finger(21, 0));
+    await fireEvent.pointerMove(stage, finger(21, -40, -20));
+    await fireEvent.pointerUp(stage, finger(21, -40, -20));
+    await waitFor(() => expect(stageView(canvasElement).tx).not.toBe(before.tx));
+
+    // Two fingers spreading zoom in about their midpoint.
+    const panned = stageView(canvasElement);
+    await fireEvent.pointerDown(stage, finger(22, -40));
+    await fireEvent.pointerDown(stage, finger(23, 40));
+    await fireEvent.pointerMove(stage, finger(23, 80));
+    await waitFor(() => expect(stageView(canvasElement).scale).toBeGreaterThan(panned.scale));
+    await expect(stage).toHaveAttribute("data-panning");
+    await fireEvent.pointerUp(stage, finger(23, 80));
+    await fireEvent.pointerUp(stage, finger(22, -40));
+    await waitFor(() => expect(stage).not.toHaveAttribute("data-panning"));
   },
 };
 

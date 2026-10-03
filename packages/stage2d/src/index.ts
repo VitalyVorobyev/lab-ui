@@ -11,6 +11,23 @@ export {
   type StageHandle,
 } from "./components/stage/ImageStage";
 
+export type { StageMouseButton } from "./components/stage/gesture";
+
+export {
+  STAGE_HIT_PRIORITY,
+  type HitCandidate,
+  type HitId,
+  type StageHit,
+  type StageHitOptions,
+} from "./components/stage/hitTest";
+export type { StagePointerEvent } from "./components/stage/hitContext";
+export {
+  useStageHitLayer,
+  useStageHitTest,
+  type StageHitLayerOptions,
+  type StageHitTestApi,
+} from "./components/stage/useStageHitTest";
+
 export { ImageLayer, type ImageLayerProps, type ImageTier } from "./components/stage/ImageLayer";
 
 export {
@@ -127,6 +144,24 @@ export {
   type PolylineId,
   type PolylineIndex,
 } from "./components/polylineIndex";
+export {
+  PointSet,
+  type PointSetItem,
+  type PointSetProps,
+} from "./components/PointSet";
+export {
+  buildPointIndex,
+  buildPointIndexFrom,
+  nearestPoint,
+  pointsInRect,
+  thinPoints,
+  type PointHit,
+  type PointId,
+  type PointIndex,
+  type PointIndexOptions,
+  type PointItem,
+} from "./components/pointIndex";
+export { MARKER_SHAPES, circlePath, type BuiltinMarkerKind, type MarkerShape } from "./components/markerShapes";
 export {
   ROI_HANDLES,
   ROI_HANDLE_CURSOR,
