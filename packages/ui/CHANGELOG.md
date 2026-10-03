@@ -1,5 +1,18 @@
 # @vitavision/ui
 
+## 0.9.0
+
+### Minor Changes
+
+- a037a0f: `Toaster` and `toast()` move from `@vitavision/workbench` to `@vitavision/ui`: notifications are a generic primitive, and vitavision (which renders on the server) is the second app that needs them. Moved with their stories and tests; the API is unchanged.
+  
+  - `@vitavision/ui` exports `Toaster`, `ToasterProps`, `toast`, `createToastStore`, `defaultToastStore` and the types `ToastTone`, `ToastOptions`, `ToastRecord`, `ToastStore`. No new dependency and no new styles: the stack uses the existing tokens, and `styles.css` already scans the component sources.
+  - `@vitavision/workbench` re-exports the same names from `@vitavision/ui` (the same bindings, so there is still exactly one default store), and `import { toast } from "@vitavision/workbench"` keeps working. **Deprecated:** import them from `@vitavision/ui`; the re-exports are kept for compatibility.
+
+### Patch Changes
+
+- 5115556: Fix: under `prefers-reduced-motion: reduce`, style changes are applied synchronously again (#48). `styles.css` collapsed motion to `0.01ms`, which is still a transition: an element with `transition-property: all` kept its old computed value until the next frame, so code that sets a style and measures in the same tick read stale numbers (mermaid laid a 1508×201 diagram out as 2146×2079). Transitions and animations are now `0s` (delays too). `animationend` still fires at once, so a Radix `Presence` exit animation added by a consumer still unmounts. Apps that scoped `transition-duration: 0s` to work around this can drop it.
+
 ## 0.8.0
 
 ### Minor Changes
