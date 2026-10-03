@@ -37,6 +37,9 @@ export interface StageToolbarProps {
  *
  * The bar carries `data-fit` while the view is fit; the percentage button carries
  * `data-state="open"` or `"closed"` for its menu.
+ *
+ * On a canvas narrower than 30rem, zoom out, zoom in and 100% collapse: the percentage menu
+ * and the `+` / `-` / `1` keys still reach them, so the app's own groups keep their room.
  */
 export function StageToolbar({ children, className }: StageToolbarProps) {
   const stage = useStage();
@@ -66,7 +69,15 @@ export function StageToolbar({ children, className }: StageToolbarProps) {
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
     >
-      <StageButton label="Zoom out" onClick={() => step(-1)} disabled={stage.view.scale <= min + 1e-9}>
+      {/* Priority collapse on a narrow canvas: zoom out/in and 100% go first (the percentage
+          menu and the + / - / 1 keys still reach them), so the app's own groups keep their
+          room. */}
+      <StageButton
+        label="Zoom out"
+        onClick={() => step(-1)}
+        disabled={stage.view.scale <= min + 1e-9}
+        className="@max-[30rem]/stage:hidden"
+      >
         <Minus className="size-4" aria-hidden />
       </StageButton>
 
@@ -118,6 +129,7 @@ export function StageToolbar({ children, className }: StageToolbarProps) {
         label="Zoom in"
         onClick={() => step(1)}
         disabled={stage.view.scale >= Math.min(max, MAX_SCALE) - 1e-9}
+        className="@max-[30rem]/stage:hidden"
       >
         <Plus className="size-4" aria-hidden />
       </StageButton>
@@ -129,6 +141,7 @@ export function StageToolbar({ children, className }: StageToolbarProps) {
       </StageButton>
       <StageButton
         label="Actual size (100%)"
+        className="@max-[30rem]/stage:hidden"
         onClick={() => stage.zoomTo(1)}
         pressed={!stage.isFit && Math.abs(stage.view.scale - 1) < 1e-6}
       >

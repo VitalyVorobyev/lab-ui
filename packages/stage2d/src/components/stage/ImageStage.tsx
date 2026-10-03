@@ -524,7 +524,9 @@ export function ImageStage({
         data-panning={panning ? "" : undefined}
         data-pan-mode={panMode ? "" : undefined}
         className={cn(
-          "relative h-full w-full overflow-hidden rounded-control border border-line bg-canvas select-none",
+          // `@container/stage`: the toolbar and readout collapse by the canvas's own width,
+          // not the window's — a canvas beside a wide inspector is narrow on a wide screen.
+          "@container/stage relative h-full w-full overflow-hidden rounded-control border border-line bg-canvas select-none",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-signal",
           panning ? "cursor-grabbing" : panMode ? "cursor-grab" : "cursor-default",
           className,
@@ -561,9 +563,13 @@ export function ImageStage({
             an ordinary window on a two-column workbench. `justify-between` keeps them apart
             and lets the readout be the one that gives up room. */}
         {(toolbar || readout) && (
-          <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10 flex items-end justify-between gap-2">
-            <div className="pointer-events-auto shrink-0">{toolbar}</div>
-            <div className="min-w-0 truncate">{readout}</div>
+          // Wraps rather than clips: on a canvas too narrow for both, the readout moves onto
+          // its own line above the toolbar instead of being truncated to nothing.
+          <div className="pointer-events-none absolute inset-x-2 bottom-2 z-10 flex flex-wrap-reverse items-end justify-between gap-2">
+            <div className="pointer-events-auto max-w-full shrink-0">{toolbar}</div>
+            <div data-readout-slot="" className="max-w-full min-w-0 truncate">
+              {readout}
+            </div>
           </div>
         )}
       </div>
