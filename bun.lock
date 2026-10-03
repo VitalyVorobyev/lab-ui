@@ -137,20 +137,6 @@
         "react-dom": "^19.2.0",
       },
     },
-    "packages/lab-ui": {
-      "name": "@vitavision/lab-ui",
-      "version": "0.6.0",
-      "dependencies": {
-        "@vitavision/charts": "workspace:^",
-        "@vitavision/forms": "workspace:^",
-        "@vitavision/stage2d": "workspace:^",
-        "@vitavision/ui": "workspace:^",
-      },
-      "peerDependencies": {
-        "react": "^19.2.0",
-        "react-dom": "^19.2.0",
-      },
-    },
     "packages/stage2d": {
       "name": "@vitavision/stage2d",
       "version": "0.8.0",
@@ -852,8 +838,6 @@
     "@vitavision/config-vitest": ["@vitavision/config-vitest@workspace:packages/config/vitest"],
 
     "@vitavision/forms": ["@vitavision/forms@workspace:packages/forms"],
-
-    "@vitavision/lab-ui": ["@vitavision/lab-ui@workspace:packages/lab-ui"],
 
     "@vitavision/stage2d": ["@vitavision/stage2d@workspace:packages/stage2d"],
 

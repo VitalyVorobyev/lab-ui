@@ -14,15 +14,15 @@ describe("resolveRange", () => {
 describe("resolveAll", () => {
   test("rewrites dependencies and peers, leaves registry ranges alone", () => {
     const ui = { name: "@vitavision/ui", version: "0.6.0", dependencies: { clsx: "^2.1.1" } };
-    const compat = {
-      name: "@vitavision/lab-ui",
+    const forms = {
+      name: "@vitavision/forms",
       version: "0.6.0",
       dependencies: { "@vitavision/ui": "workspace:^" },
       peerDependencies: { react: "^19.2.0" },
     };
-    expect(resolveAll([ui, compat])).toHaveLength(1);
-    expect(compat.dependencies["@vitavision/ui"]).toBe("^0.6.0");
-    expect(compat.peerDependencies.react).toBe("^19.2.0");
+    expect(resolveAll([ui, forms])).toHaveLength(1);
+    expect(forms.dependencies["@vitavision/ui"]).toBe("^0.6.0");
+    expect(forms.peerDependencies.react).toBe("^19.2.0");
     expect(ui.dependencies.clsx).toBe("^2.1.1");
   });
 

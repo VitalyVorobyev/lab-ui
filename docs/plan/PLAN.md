@@ -73,7 +73,6 @@ lab-ui/                                  bun workspace · changesets · one CI
 │   ├── overlays/      @vitavision/overlays     calib-target / feature overlays on stage2d
 │   ├── three/         @vitavision/three        framework-agnostic 3D (spec: etendue PLAN §2–§4, P2-2)
 │   ├── three-react/   @vitavision/three-react  thin R3F bindings (etendue PLAN P2-3)
-│   ├── lab-ui/        @vitavision/lab-ui       DEPRECATED compat re-export of ui+forms+charts+stage2d
 │   └── config/        @vitavision/config-{ts,eslint,vitest}  shared presets (private: false)
 ├── apps/storybook/                             Storybook 10: docs site + story source for tests
 ├── tools/inventory/                            concept matrix + dependency matrix scripts
@@ -385,6 +384,12 @@ the §4 DoD with a changeset.
   strip with `[`/`]` stepping, and a path-based route through `FileDrop` for desktop shells
   whose native drop and dialogs yield paths, not `File`s.
 
+*Done 2026-10-03:* U-1 #61, U-2 #63, U-3 #64, U-4 #66, U-5 #67, U-6 #69, U-7 #70, with two
+fixes from the same evidence: the narrow-canvas toolbar #68 (vm-lab gap 6) and a
+Playwright-free `@vitavision/config-vitest/dom` #71 (vm-lab gap 1). Released as `ui` 0.10.0,
+`stage2d` 0.8.0, `charts` 0.7.0, `workbench` 0.2.0 and `config-vitest` 0.4.0. Neither app has
+adopted the U-2..U-7 components yet; the concept matrix still counts their local versions.
+
 Single-consumer proposals wait as issues under the promotion rule:
 - a datum / frame handle layer (#54);
 - a nav rail and stepper (#55);
@@ -400,6 +405,11 @@ Single-consumer proposals wait as issues under the promotion rule:
   - `@vitavision/lab-ui` is marked deprecated on npm with 0 remaining consumers. The last
     one is vision-metrology's lab, which migrates in its own roadmap (track L, step L2);
   - the dependency matrix shows 0 undocumented deviations.
+
+  *`@vitavision/lab-ui` retired 2026-10-03 (#72):* no in-scope repo depends on it (VAL moved
+  off it in visual-anomaly-lab#165, vm-lab in vision-metrology#43). `packages/lab-ui` and its
+  CI, size-limit, knip, consumer-check and inventory entries are gone; the npm deprecation
+  stays. The concept-matrix and dependency-matrix criteria are still open.
 
 ### Promotion rule (standing)
 
