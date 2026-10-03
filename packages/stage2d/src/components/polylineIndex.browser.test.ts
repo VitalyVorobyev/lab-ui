@@ -3,9 +3,14 @@
  * `PolylineSet` is for. The numbers are recorded in `docs/measurements/u4-polyline-set.md`.
  * The assertion is the gate itself, not a tighter bound, so a slow CI machine does not
  * flake it while a real regression still fails.
+ *
+ * Skipped in the coverage run: V8 precise coverage slows this code by about 50× (a band took
+ * 27.6 ms there against 0.3–0.6 ms uninstrumented), so a timing would measure the
+ * instrumentation, not the index. `bun run test` runs the gate uninstrumented.
  */
 
 import { describe, expect, it } from "vitest";
+import { server } from "vitest/browser";
 
 import { buildPolylineIndex, nearestPolyline, polylinesInRect, type Polyline } from "./polylineIndex";
 
@@ -72,7 +77,7 @@ function measure(items: Polyline[], label: string) {
   return { p95, band };
 }
 
-describe("PolylineSet hit-test gate (G6.1)", () => {
+describe.skipIf(server.config.coverage.enabled)("PolylineSet hit-test gate (G6.1)", () => {
   it("L0-3 polyline layer: 250 polylines × 20 segments", () => {
     const { p95 } = measure(scene(250, 20, 1), "L0-3 5k segments");
     expect(p95).toBeLessThanOrEqual(2);

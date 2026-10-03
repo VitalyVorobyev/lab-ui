@@ -10,7 +10,7 @@ L0-3 scene's polyline layer and on a 20k-polyline stress scene.
 | lab-ui commit | `1c80af5` (branch `feat/stage2d-u4-tool-model-polyline-set`) |
 | Machine | Apple M4 Pro, macOS 26.6.2 |
 | Browser | Chromium (Playwright 1.63, Vitest browser mode, headless) |
-| Test | `packages/stage2d/src/components/polylineIndex.browser.test.ts` (runs in CI with the package's browser project) |
+| Test | `packages/stage2d/src/components/polylineIndex.browser.test.ts` (runs in CI with the package's browser project; skipped under coverage, whose instrumentation slows it about 50×) |
 | Image | 5472×3648, the L0-3 frame size |
 | Query | `nearestPolyline` within 24 image px, about 7 screen px at fit on a 1600 px viewport; 4000 seeded points over the whole image |
 | Timing | Batches of 50 queries per sample. One query is below the coarsened timer (100 µs without cross-origin isolation), so per-query times have 2 µs resolution. |
