@@ -10,9 +10,20 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
-import { Button, Kbd, cn, focusRing } from "@vitavision/ui";
+import { Button, Kbd, StatusDot, cn, focusRing, type Tone } from "@vitavision/ui";
 
 import { stepIndex } from "./sequence";
+
+/**
+ * A per-item status — "not found" in a batch run, "rejected" by a reviewer — drawn as a dot in
+ * the thumbnail's corner and said in words in the item's name.
+ */
+export interface SequenceItemStatus {
+  /** The dot's colour, by meaning; also the item's `data-status`. */
+  tone: Tone;
+  /** The status in words, appended to the item's name and tooltip: `"frame_0003.bmp, not found"`. */
+  label: string;
+}
 
 /** One item of a `SequenceNavigator`. */
 export interface SequenceItem {
@@ -22,6 +33,8 @@ export interface SequenceItem {
   label: string;
   /** A thumbnail URL, loaded lazily. Without it, the default rendering is the label. */
   thumbnail?: string | undefined;
+  /** A status, drawn as a dot in the thumbnail's corner over any thumbnail rendering. */
+  status?: SequenceItemStatus | undefined;
 }
 
 /** Props of `SequenceNavigator`. */
@@ -49,8 +62,11 @@ export interface SequenceNavigatorProps {
  * ("3 / 50").
  *
  * The current thumbnail carries `aria-current="true"` and `data-current`, has an outline,
- * and is scrolled into view when it changes. `[` and `]` step from anywhere outside a text
- * field. Thumbnails load lazily, so a capture of thousands of frames opens at once.
+ * and is scrolled into view when it changes. An item with a `status` shows a dot in its
+ * corner, carries `data-status` (the tone) and is named `"label, status"`. `[` and `]` step
+ * from anywhere outside a text field. Thumbnails load lazily, so a capture of thousands of
+ * frames opens at once. The strip is as wide as its thumbnails, so previous and next stay
+ * beside a short sequence; a long one scrolls.
  */
 export function SequenceNavigator({
   items,
@@ -104,22 +120,25 @@ export function SequenceNavigator({
         disabled={items.length < 2 || atStart}
         onClick={() => step(-1)}
       />
-      <ol ref={listRef} aria-label={ariaLabel} className="flex min-w-0 flex-1 gap-1 overflow-x-auto py-1">
+      <ol ref={listRef} aria-label={ariaLabel} className="flex min-w-0 gap-1 overflow-x-auto py-1">
         {items.map((item) => {
           const current = item.id === value;
+          const { status } = item;
+          const name = status ? `${item.label}, ${status.label}` : item.label;
           return (
             <li key={item.id} className="shrink-0">
               <button
                 type="button"
-                title={item.label}
-                aria-label={item.label}
+                title={name}
+                aria-label={name}
                 aria-current={current ? "true" : undefined}
                 data-current={current ? "" : undefined}
+                data-status={status?.tone}
                 onClick={() => {
                   if (!current) onValueChange(item.id);
                 }}
                 className={cn(
-                  "block h-10 w-14 overflow-hidden rounded-control border border-line bg-raised text-fg",
+                  "relative block h-10 w-14 overflow-hidden rounded-control border border-line bg-raised text-fg",
                   "data-current:ring-2 data-current:ring-signal",
                   focusRing,
                 )}
@@ -129,7 +148,11 @@ export function SequenceNavigator({
                 ) : item.thumbnail ? (
                   <img src={item.thumbnail} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 ) : (
-                  <span className="block truncate px-1 font-mono text-[10px]">{item.label}</span>
+                  <span className={cn("block truncate px-1 font-mono text-[10px]", status && "pr-3")}>{item.label}</span>
+                )}
+                {status && (
+                  // The surface-coloured backing keeps the dot legible over any thumbnail.
+                  <StatusDot tone={status.tone} className="absolute top-0.5 right-0.5 rounded-full bg-surface p-0.5" />
                 )}
               </button>
             </li>

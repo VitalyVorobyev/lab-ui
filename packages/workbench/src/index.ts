@@ -58,6 +58,7 @@ export { acceptsFile, acceptsPath, collectDroppedFiles, type DropEntry } from ".
 export {
   SequenceNavigator,
   type SequenceItem,
+  type SequenceItemStatus,
   type SequenceNavigatorProps,
 } from "./components/SequenceNavigator";
 export { stepIndex } from "./components/sequence";
