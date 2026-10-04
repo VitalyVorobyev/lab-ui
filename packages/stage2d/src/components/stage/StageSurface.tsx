@@ -21,6 +21,8 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 
 import type { Point } from "../measureGeometry";
 import { useStage } from "./ImageStage";
+import { hitRadiusPx } from "./gesture";
+import { watchTouch } from "./touchWatch";
 import { imageViewBox } from "./view";
 
 /** What a drag does as the pointer moves and when it is released, in image coordinates. */
@@ -34,6 +36,13 @@ export interface StageDrag {
   onEnd?: ((point: Point, event: PointerEvent, moved: boolean) => void) | undefined;
   /** The drag was interrupted (`pointercancel`) or the component unmounted mid-drag. */
   onCancel?: (() => void) | undefined;
+  /**
+   * Claim a touch that starts this gesture, as a mouse press is claimed: the stage neither
+   * pans nor pinches from it. Without it a touch is only watched (see `StageSurface`), so
+   * return `true` for a gesture a finger must own, such as moving a selected shape. Ignored for
+   * a mouse or pen.
+   */
+  claimsTouch?: boolean | undefined;
 }
 
 /** How far a press may travel and still be a click, in screen pixels. */
@@ -94,6 +103,12 @@ export function useStageDrag(): (event: ReactPointerEvent<Element>, drag: StageD
 export interface StagePress {
   /** Where, in image coordinates. */
   point: Point;
+  /** Where, in client coordinates, for anchoring a tooltip or a menu. */
+  client: Point;
+  /** The press is a touch: act on its release (see `StageSurface`), and expect a fingertip's tolerance. */
+  touch: boolean;
+  /** The hit-test tolerance for this pointer, in screen pixels: 12 for a touch, 6 otherwise. Pass it to `useStageHitTest`. */
+  radius: number;
   /** Shift was held. */
   shiftKey: boolean;
   /** Alt / Option was held. */
@@ -107,12 +122,21 @@ export interface StageSurfaceProps {
   /**
    * What a press means. Return a `StageDrag` to claim it (a click is a drag that never
    * moved), or nothing to decline it: a declined press reaches the stage, which pans.
+   *
+   * **For a touch, act in `onEnd` when `moved` is `false` (a tap), not here.** The press may
+   * become a pan or the first finger of a pinch, so nothing should happen until the finger
+   * lifts. Return `claimsTouch: true` for a gesture the finger must own.
    */
   onPress: (press: StagePress) => StageDrag | null | undefined | void;
   /** The cursor over the image while no drag is in flight, e.g. `crosshair` for a draw tool. */
   cursor?: string | undefined;
-  /** Where the pointer is over the image while no drag is in flight, for hover feedback. */
+  /** Where the mouse is over the image while no drag is in flight, for hover feedback. Not called for a touch. */
   onHover?: ((point: Point) => void) | undefined;
+  /**
+   * A double click or double tap on the surface. When given, the surface handles it and the
+   * stage's double-click-to-fit does not run; leave it out to keep the fit.
+   */
+  onDoubleClick?: ((point: Point) => void) | undefined;
 }
 
 /**
@@ -120,32 +144,74 @@ export interface StageSurfaceProps {
  * that have their own small targets (handles, strokes). Each press is offered to `onPress`
  * unless the hand tool or a held space bar make it a pan; a declined press pans.
  *
- * The surface draws nothing. It carries `data-dragging` while a drag it started is in
- * flight.
+ * **Mouse and pen.** Only the left button comes here. The press is claimed and followed on
+ * `window`, so the stage does not pan from it.
+ *
+ * **Touch.** A touch is only *watched* unless its `StageDrag` sets `claimsTouch`: the surface
+ * neither stops the press nor captures the pointer, so the stage still pans (one-finger mode)
+ * and a second finger still pinches. The drag then sees:
+ * - `onMove`, only once the finger has left the tap slop;
+ * - `onEnd(point, event, moved)` on release, with `moved` `false` for a tap;
+ * - `onCancel` on `pointercancel`, or when a second finger lands (a pinch).
+ *
+ * A touch gesture that sets `claimsTouch: true` is claimed like a mouse press.
+ *
+ * The surface draws nothing. It carries `data-dragging` while a gesture it started is in flight.
  */
-export function StageSurface({ onPress, cursor, onHover }: StageSurfaceProps) {
+export function StageSurface({ onPress, cursor, onHover, onDoubleClick }: StageSurfaceProps) {
   const stage = useStage();
   const start = useStageDrag();
   const [dragging, setDragging] = useState(false);
+  const watchRef = useRef<(() => void) | null>(null);
+
+  // A touch still being watched when the surface goes away is cancelled, not left listening.
+  useEffect(() => () => watchRef.current?.(), []);
 
   const onPointerDown = (event: ReactPointerEvent<SVGRectElement>) => {
-    if (event.button !== 0 || stage.panMode) return;
+    const touch = event.pointerType === "touch";
+    if (stage.panMode || (!touch && event.button !== 0)) return;
+    // A second finger turns the first one's gesture into a pinch; the watch cancels itself on it.
+    if (touch && watchRef.current) return;
+    const client = { x: event.clientX, y: event.clientY };
     const drag = onPress({
-      point: stage.toImage({ x: event.clientX, y: event.clientY }),
+      point: stage.toImage(client),
+      client,
+      touch,
+      radius: hitRadiusPx(event.pointerType),
       shiftKey: event.shiftKey,
       altKey: event.altKey,
       metaKey: event.metaKey || event.ctrlKey,
     });
     if (!drag) return; // Declined: the stage pans.
+    const finish = () => setDragging(false);
     setDragging(true);
+    if (touch && !drag.claimsTouch) {
+      // Watched, not claimed: the press goes on to the stage.
+      const release = () => {
+        watchRef.current = null;
+        finish();
+      };
+      watchRef.current = watchTouch(event, {
+        onMove: (e) => drag.onMove?.(stage.toImage({ x: e.clientX, y: e.clientY }), e),
+        onEnd: (e, moved) => {
+          release();
+          drag.onEnd?.(stage.toImage({ x: e.clientX, y: e.clientY }), e, moved);
+        },
+        onCancel: () => {
+          release();
+          drag.onCancel?.();
+        },
+      });
+      return;
+    }
     start(event, {
       onMove: drag.onMove,
       onEnd: (point, e, moved) => {
-        setDragging(false);
+        finish();
         drag.onEnd?.(point, e, moved);
       },
       onCancel: () => {
-        setDragging(false);
+        finish();
         drag.onCancel?.();
       },
     });
@@ -169,7 +235,12 @@ export function StageSurface({ onPress, cursor, onHover }: StageSurfaceProps) {
         style={{ cursor: stage.panMode ? undefined : cursor }}
         onPointerDown={onPointerDown}
         onPointerMove={(event) => {
-          if (!dragging) onHover?.(stage.toImage({ x: event.clientX, y: event.clientY }));
+          if (!dragging && event.pointerType !== "touch") onHover?.(stage.toImage({ x: event.clientX, y: event.clientY }));
+        }}
+        onDoubleClick={(event) => {
+          if (!onDoubleClick) return;
+          event.stopPropagation();
+          onDoubleClick(stage.toImage({ x: event.clientX, y: event.clientY }));
         }}
       />
     </svg>

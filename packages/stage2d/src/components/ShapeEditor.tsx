@@ -7,7 +7,7 @@
  * this is the gestures, the handles and the keyboard.
  */
 
-import { useRef, type KeyboardEvent, type PointerEvent, type SVGProps } from "react";
+import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type SVGProps } from "react";
 
 import type { Point } from "./measureGeometry";
 import { overlayRole } from "./overlayRole";
@@ -20,17 +20,18 @@ import {
   rotationHandlePoint,
   shapeHandleCursor,
   shapeHandlePoint,
+  shapePress,
+  SHAPE_HANDLE_PX,
+  SHAPE_ROTATE_OFFSET_PX,
+  SHAPE_ROTATE_RADIUS_PX,
   type RotatedShape,
 } from "./shapeEdit";
+import { POINTER_RADIUS_PX, TOUCH_RADIUS_PX, hitRadiusPx } from "./stage/gesture";
 import { useStage } from "./stage/ImageStage";
+import { useCoarsePointer } from "./stage/useCoarsePointer";
 import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox } from "./stage/view";
 
-/** Handle square side, in screen pixels. */
-const HANDLE_PX = 9;
-/** Rotation handle radius, and its distance past the top side, in screen pixels. */
-const ROTATE_RADIUS_PX = 5;
-const ROTATE_OFFSET_PX = 24;
 /** Outline width, in screen pixels. */
 const STROKE_PX = 1.5;
 /** The halo under the outline (visual-language §5), in screen pixels on each side. */
@@ -66,17 +67,28 @@ export interface ShapeEditorProps {
   stroke?: string | undefined;
 }
 
-type Drag =
-  | { kind: "move"; from: Point; start: RotatedShape; moved: boolean }
-  | { kind: "resize"; handle: RoiHandle; start: RotatedShape; moved: boolean }
-  | { kind: "rotate"; start: RotatedShape; moved: boolean };
+type Drag = (
+  | { kind: "move"; from: Point }
+  | { kind: "resize"; handle: RoiHandle }
+  | { kind: "rotate" }
+) & { start: RotatedShape; moved: boolean; pointerId: number };
 
 /**
  * An editable rotated rectangle or ellipse inside an `ImageStage`.
  *
  * - **Handles.** Eight handles resize the shape in its own frame: the dragged side follows the
  *   pointer and the opposite side stays where it is, whatever the rotation. A shape stops at
- *   `minSize` rather than flipping. The interior moves it.
+ *   `minSize` rather than flipping. The interior moves it, and so does the band along its
+ *   outline (the pointer's tolerance: 6 px for a mouse, 12 px for a finger), which is how a thin
+ *   or rotated shape is grabbed. The band is as wide as the device's primary pointer needs
+ *   (`(pointer: coarse)`), so on a touch laptop whose primary pointer is fine, a touch 6 to
+ *   12 px outside the outline reaches the layers below instead of the editor.
+ * - **Press order.** One decision serves every part of the editor: the nearest handle first,
+ *   then the interior or outline band (move), then nothing. A small shape's interior does not
+ *   steal a press meant for a handle, and a press that hits none of them is not claimed, so
+ *   it reaches whatever is below, or the stage.
+ * - **Touch.** A press that grabs the shape is claimed; a second finger landing during an edit
+ *   cancels it (the shape reverts, nothing is committed) and is left to the stage.
  * - **Rotation.** The handle past the top side turns the shape about its centre; hold Shift to
  *   round to 15°.
  * - **Keyboard.** The shape is focusable: arrow keys move it by one image pixel (ten with Shift),
@@ -104,26 +116,74 @@ export function ShapeEditor({
 }: ShapeEditorProps) {
   const stage = useStage();
   const px = useScreenPx();
+  const coarse = useCoarsePointer();
   const dragRef = useRef<Drag | null>(null);
   const lastRef = useRef<RotatedShape | null>(null);
+  const stopWatchRef = useRef<(() => void) | null>(null);
 
   const report = (next: RotatedShape) => {
     lastRef.current = next;
     onValueChange(next);
   };
 
-  const begin = (event: PointerEvent<SVGElement>, drag: Drag) => {
-    if (stage.panMode || event.button !== 0) return;
+  /** Abandon an edit in flight: the shape reverts and nothing is committed. */
+  const cancelEdit = () => {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    stopWatchRef.current?.();
+    stopWatchRef.current = null;
+    if (drag && lastRef.current) onValueChange(drag.start);
+    lastRef.current = null;
+  };
+
+  // An edit still in flight when the editor goes away is cancelled, not left listening.
+  useEffect(() => () => stopWatchRef.current?.(), []);
+
+  /**
+   * The one press decision for the whole editor: every target (the interior, the outline
+   * band, a handle) comes here, and the nearest handle wins over the interior. A declined
+   * press is not claimed and bubbles to the stage.
+   */
+  const press = (event: PointerEvent<SVGElement>) => {
+    if (!value || stage.panMode) return;
+    const touch = event.pointerType === "touch";
+    if (!touch && event.button !== 0) return;
+    // A second finger while an edit is in flight cancels it (a pinch, not an edit), unclaimed.
+    if (dragRef.current) {
+      if (touch && dragRef.current.pointerId !== event.pointerId) cancelEdit();
+      return;
+    }
+    const at = stage.toImage({ x: event.clientX, y: event.clientY });
+    const decision = shapePress(value, kind, stage.view.scale, at, hitRadiusPx(event.pointerType), rotatable);
+    if (!decision) return;
     event.stopPropagation();
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = drag;
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // The pointer ended before this handler ran; the edit still follows the events the editor receives.
+    }
+    const base = { start: value, moved: false, pointerId: event.pointerId };
+    dragRef.current =
+      decision.kind === "move"
+        ? { ...base, kind: "move", from: at }
+        : decision.kind === "resize"
+          ? { ...base, kind: "resize", handle: decision.handle }
+          : { ...base, kind: "rotate" };
     lastRef.current = null;
+    if (touch) {
+      const id = event.pointerId;
+      const other = (e: globalThis.PointerEvent) => {
+        if (e.pointerId !== id && e.pointerType === "touch") cancelEdit();
+      };
+      window.addEventListener("pointerdown", other);
+      stopWatchRef.current = () => window.removeEventListener("pointerdown", other);
+    }
   };
 
   const onMove = (event: PointerEvent<SVGElement>) => {
     const drag = dragRef.current;
-    if (!drag) return;
+    if (!drag || drag.pointerId !== event.pointerId) return;
     event.stopPropagation();
     const p = stage.toImage({ x: event.clientX, y: event.clientY });
     drag.moved = true;
@@ -134,10 +194,24 @@ export function ShapeEditor({
 
   const onEnd = (event: PointerEvent<SVGElement>) => {
     const drag = dragRef.current;
-    if (!drag) return;
+    if (!drag || drag.pointerId !== event.pointerId) return;
     event.stopPropagation();
     dragRef.current = null;
+    stopWatchRef.current?.();
+    stopWatchRef.current = null;
     if (drag.moved && lastRef.current) onCommit?.(lastRef.current);
+  };
+
+  /** The handlers every target of the editor shares. */
+  const gesture = {
+    onPointerDown: press,
+    onPointerMove: onMove,
+    onPointerUp: onEnd,
+    onPointerCancel: (event: PointerEvent<SVGElement>) => {
+      if (dragRef.current?.pointerId === event.pointerId) cancelEdit();
+    },
+    onLostPointerCapture: onEnd,
+    onDoubleClick: (event: { stopPropagation: () => void }) => event.stopPropagation(),
   };
 
   const onKeyDown = (event: KeyboardEvent<SVGElement>) => {
@@ -171,8 +245,8 @@ export function ShapeEditor({
     onCommit?.(next);
   };
 
-  const stem = value ? { from: shapeHandlePoint(value, "n"), to: rotationHandlePoint(value, px(ROTATE_OFFSET_PX)) } : null;
-  const handleSize = px(HANDLE_PX);
+  const stem = value ? { from: shapeHandlePoint(value, "n"), to: rotationHandlePoint(value, px(SHAPE_ROTATE_OFFSET_PX)) } : null;
+  const handleSize = px(SHAPE_HANDLE_PX);
 
   return (
     <svg
@@ -197,6 +271,25 @@ export function ShapeEditor({
         />
       )}
       {editable && value && (
+        // The outline band: a wide transparent stroke, so a press a few pixels outside the
+        // outline still reaches the editor. Sized for the device's primary pointer (a finger's
+        // 12 px on a touch-first device, a mouse's 6 px otherwise) so a mouse press just
+        // outside the outline reaches the layers below. `press` decides with the event's own pointer.
+        <Outline
+          kind={kind}
+          shape={value}
+          data-shape-band=""
+          fill="none"
+          stroke="transparent"
+          strokeWidth={px(2 * (coarse ? TOUCH_RADIUS_PX : POINTER_RADIUS_PX))}
+          strokeLinejoin="round"
+          aria-hidden
+          className="pointer-events-auto cursor-move"
+          style={{ pointerEvents: "stroke" }}
+          {...gesture}
+        />
+      )}
+      {editable && value && (
         <Outline
           kind={kind}
           shape={value}
@@ -206,14 +299,9 @@ export function ShapeEditor({
           aria-label={`${label}: centre ${fmt(value.cx)}, ${fmt(value.cy)}, ${fmt(value.width)} × ${fmt(value.height)} px, rotated ${fmt((value.rotation * 180) / Math.PI)}°`}
           aria-roledescription={kind === "rect" ? "rotated rectangle" : "ellipse"}
           className="pointer-events-auto cursor-move outline-none focus-visible:stroke-signal"
-          onPointerDown={(event) =>
-            begin(event, { kind: "move", from: stage.toImage({ x: event.clientX, y: event.clientY }), start: value, moved: false })
-          }
-          onPointerMove={onMove}
-          onPointerUp={onEnd}
-          onLostPointerCapture={onEnd}
+          strokeWidth={px(2)}
+          {...gesture}
           onKeyDown={onKeyDown}
-          onDoubleClick={(event) => event.stopPropagation()}
         />
       )}
       {editable && value && rotatable && stem && (
@@ -224,17 +312,13 @@ export function ShapeEditor({
             data-handle="rotate"
             cx={stem.to.x}
             cy={stem.to.y}
-            r={px(ROTATE_RADIUS_PX)}
+            r={px(SHAPE_ROTATE_RADIUS_PX)}
             fill={stroke}
             stroke={HALO}
             strokeWidth={px(1)}
             className="pointer-events-auto"
             style={{ cursor: "grab" }}
-            onPointerDown={(event) => begin(event, { kind: "rotate", start: value, moved: false })}
-            onPointerMove={onMove}
-            onPointerUp={onEnd}
-            onLostPointerCapture={onEnd}
-            onDoubleClick={(event) => event.stopPropagation()}
+            {...gesture}
           />
         </>
       )}
@@ -255,11 +339,7 @@ export function ShapeEditor({
               strokeWidth={px(1)}
               className="pointer-events-auto"
               style={{ cursor: shapeHandleCursor(handle, value.rotation) }}
-              onPointerDown={(event) => begin(event, { kind: "resize", handle, start: value, moved: false })}
-              onPointerMove={onMove}
-              onPointerUp={onEnd}
-              onLostPointerCapture={onEnd}
-              onDoubleClick={(event) => event.stopPropagation()}
+              {...gesture}
             />
           );
         })}

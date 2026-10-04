@@ -12,6 +12,7 @@ import {
   shapeFromCorner,
   shapeHandleCursor,
   shapeHandlePoint,
+  shapePress,
   toShapeFrame,
   type RotatedShape,
 } from "./shapeEdit";
@@ -146,5 +147,69 @@ describe("Konva-style corner origin", () => {
     near({ x: shape.cx, y: shape.cy }, { x: 5, y: 35 });
     near(shapeCorner(shape), { x: 10, y: 20 });
     near(shapeHandlePoint(shape, "se"), { x: 0, y: 50 });
+  });
+});
+
+describe("shapePress", () => {
+  it("resizes from the nearest handle, within the radius plus the handle's half size", () => {
+    expect(shapePress(FLAT, "rect", 1, { x: 80, y: 40 }, 6)).toEqual({ kind: "resize", handle: "nw" });
+    // 10 px from the corner: inside 6 + 4.5, so still the handle.
+    expect(shapePress(FLAT, "rect", 1, { x: 70, y: 40 }, 6)).toEqual({ kind: "resize", handle: "nw" });
+    expect(shapePress(FLAT, "rect", 1, { x: 100, y: 62 }, 6)).toEqual({ kind: "resize", handle: "s" });
+  });
+
+  it("lets a handle win over the interior of a small shape", () => {
+    const small: RotatedShape = { cx: 100, cy: 50, width: 12, height: 8, rotation: 0 };
+    // Well inside the shape, but nearer the east handle than the centre is to anything.
+    expect(shapePress(small, "rect", 1, { x: 104, y: 50 }, 6)).toEqual({ kind: "resize", handle: "e" });
+    // A finger's radius reaches further: the same press at a larger tolerance still resolves to the nearest.
+    expect(shapePress(small, "rect", 1, { x: 96, y: 54 }, 12)).toEqual({ kind: "resize", handle: "sw" });
+  });
+
+  it("picks the rotation handle, and not when the shape is not rotatable", () => {
+    const at = rotationHandlePoint(FLAT, 24);
+    expect(shapePress(FLAT, "rect", 1, at, 6)).toEqual({ kind: "rotate" });
+    expect(shapePress(FLAT, "rect", 1, at, 6, false)).toBeNull();
+  });
+
+  it("scales the handle distance with the view", () => {
+    // 10 image px at 4x is 40 screen px: not a handle press any more.
+    expect(shapePress(FLAT, "rect", 4, { x: 70, y: 40 }, 6)).toBeNull();
+    // At 0.25x the rotation handle is 24 screen px past the top, i.e. 96 image px.
+    expect(shapePress(FLAT, "rect", 0.25, rotationHandlePoint(FLAT, 96), 6)).toEqual({ kind: "rotate" });
+  });
+
+  const BIG: RotatedShape = { cx: 200, cy: 150, width: 200, height: 100, rotation: 0 };
+
+  it("moves from the interior and from the outline band, and declines beyond it", () => {
+    expect(shapePress(BIG, "rect", 1, { x: 200, y: 150 }, 6)).toEqual({ kind: "move" });
+    // 5 px above the top side, away from every handle.
+    expect(shapePress(BIG, "rect", 1, { x: 150, y: 95 }, 6)).toEqual({ kind: "move" });
+    // 10 px above it: past a mouse's band, inside a finger's.
+    expect(shapePress(BIG, "rect", 1, { x: 150, y: 90 }, 6)).toBeNull();
+    expect(shapePress(BIG, "rect", 1, { x: 150, y: 90 }, 12)).toEqual({ kind: "move" });
+    // The band is measured in screen pixels: at 2x, 5 image px is 10.
+    expect(shapePress(BIG, "rect", 2, { x: 150, y: 95 }, 6)).toBeNull();
+  });
+
+  it("follows the rotation of a rectangle", () => {
+    // Quarter turn: the 200-long side runs along y, so the shape spans y 50..250 and x 150..250.
+    const turned: RotatedShape = { ...BIG, rotation: Math.PI / 2 };
+    expect(shapePress(turned, "rect", 1, { x: 160, y: 256 }, 6)).toEqual({ kind: "move" });
+    expect(shapePress(turned, "rect", 1, { x: 160, y: 262 }, 6)).toBeNull();
+    expect(shapePress(turned, "rect", 1, { x: 270, y: 100 }, 6)).toBeNull();
+  });
+
+  it("measures an ellipse's outline, not its bounding box", () => {
+    const ellipse: RotatedShape = { ...BIG };
+    // The bounding box corner area is inside the box and far outside the ellipse.
+    expect(shapePress(ellipse, "ellipse", 1, { x: 290, y: 195 }, 1)).toBeNull();
+    expect(shapePress(ellipse, "rect", 1, { x: 290, y: 195 }, 1)).toEqual({ kind: "move" });
+    // Off the axes: about 4.7 px outside the outline, then about 9 px.
+    expect(shapePress(ellipse, "ellipse", 1, { x: 270, y: 191 }, 6)).toEqual({ kind: "move" });
+    expect(shapePress(ellipse, "ellipse", 1, { x: 270, y: 196 }, 6)).toBeNull();
+    expect(shapePress(ellipse, "ellipse", 1, { x: 200, y: 150 }, 6)).toEqual({ kind: "move" });
+    // A handle on the bounding box wins over the outline.
+    expect(shapePress(ellipse, "ellipse", 1, { x: 300, y: 150 }, 6)).toEqual({ kind: "resize", handle: "e" });
   });
 });

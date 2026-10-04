@@ -15,7 +15,13 @@
  */
 
 import type { Point } from "./measureGeometry";
-import type { RoiHandle } from "./roiEdit";
+import { ROI_HANDLES, type RoiHandle } from "./roiEdit";
+
+/** Handle square side, in screen pixels. */
+export const SHAPE_HANDLE_PX = 9;
+/** Rotation handle radius, and its distance past the top side, in screen pixels. */
+export const SHAPE_ROTATE_RADIUS_PX = 5;
+export const SHAPE_ROTATE_OFFSET_PX = 24;
 
 /** A rotated rectangle, or the ellipse inscribed in one. */
 export interface RotatedShape {
@@ -229,4 +235,64 @@ export function sameShape(a: RotatedShape | null, b: RotatedShape | null, epsilo
     Math.abs(a.height - b.height) < epsilon &&
     Math.abs(normalizeAngle(a.rotation - b.rotation)) < epsilon
   );
+}
+
+/** What a press on an editable shape does. */
+export type ShapePress = { kind: "resize"; handle: RoiHandle } | { kind: "rotate" } | { kind: "move" };
+
+/**
+ * How far a point is outside a shape, in image pixels; zero inside it. For an ellipse this is
+ * a first-order estimate, which is exact on the axes and good to a few percent elsewhere.
+ */
+function distanceOutside(shape: RotatedShape, kind: "rect" | "ellipse", p: Point): number {
+  const u = toShapeFrame(shape, p);
+  const a = Math.max(shape.width / 2, 1e-9);
+  const b = Math.max(shape.height / 2, 1e-9);
+  if (kind === "rect") return Math.hypot(Math.max(Math.abs(u.x) - a, 0), Math.max(Math.abs(u.y) - b, 0));
+  const f = (u.x / a) ** 2 + (u.y / b) ** 2;
+  if (f <= 1) return 0;
+  const g = Math.hypot(u.x / (a * a), u.y / (b * b));
+  return (f - Math.sqrt(f)) / g;
+}
+
+/**
+ * What a press on an editable shape means, decided once for the whole editor so that a small
+ * shape's interior never steals a press meant for its handle.
+ *
+ * In order:
+ * 1. The nearest handle (the eight, and the rotation handle when `rotatable`) whose screen
+ *    distance from the press is within `radius` plus the handle's half size: resize or rotate.
+ * 2. Inside the shape, or within `radius` screen pixels of its outline: move.
+ * 3. Otherwise `null`: the press is declined and belongs to whatever is below.
+ *
+ * @param shape - The shape.
+ * @param kind - `"rect"` or `"ellipse"` (the outline differs).
+ * @param scale - The view scale: screen pixels per image pixel.
+ * @param point - The press, in image coordinates.
+ * @param radius - The pointer's tolerance in screen pixels: 12 for a touch, 6 for a mouse.
+ * @param rotatable - Whether the rotation handle exists. Defaults to `true`.
+ * @returns The decision, or `null`.
+ */
+export function shapePress(
+  shape: RotatedShape,
+  kind: "rect" | "ellipse",
+  scale: number,
+  point: Point,
+  radius: number,
+  rotatable = true,
+): ShapePress | null {
+  const best: { press: ShapePress | null; distance: number } = { press: null, distance: Infinity };
+  const consider = (candidate: ShapePress, at: Point, half: number) => {
+    const d = Math.hypot(at.x - point.x, at.y - point.y) * scale;
+    if (d <= radius + half && d < best.distance) {
+      best.press = candidate;
+      best.distance = d;
+    }
+  };
+  for (const handle of ROI_HANDLES) consider({ kind: "resize", handle }, shapeHandlePoint(shape, handle), SHAPE_HANDLE_PX / 2);
+  if (rotatable) {
+    consider({ kind: "rotate" }, rotationHandlePoint(shape, SHAPE_ROTATE_OFFSET_PX / scale), SHAPE_ROTATE_RADIUS_PX);
+  }
+  if (best.press) return best.press;
+  return distanceOutside(shape, kind, point) * scale <= radius ? { kind: "move" } : null;
 }

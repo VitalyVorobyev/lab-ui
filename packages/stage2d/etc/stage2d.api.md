@@ -732,6 +732,7 @@ export interface PolylineSetProps {
     dimmed?: Iterable<PolylineId> | undefined;
     hitWidth?: number | undefined;
     hovered?: PolylineId | null | undefined;
+    interactive?: boolean | undefined;
     items: readonly PolylineSetItem[];
     label?: string | undefined;
     layerId?: string | undefined;
@@ -929,6 +930,7 @@ export interface StageContext {
 
 // @public
 export interface StageDrag {
+    claimsTouch?: boolean | undefined;
     onCancel?: (() => void) | undefined;
     onEnd?: ((point: Point, event: PointerEvent, moved: boolean) => void) | undefined;
     onMove?: ((point: Point, event: PointerEvent) => void) | undefined;
@@ -995,9 +997,12 @@ export type StagePointerEvent = PointerEvent_2<Element>;
 // @public
 export interface StagePress {
     altKey: boolean;
+    client: Point;
     metaKey: boolean;
     point: Point;
+    radius: number;
     shiftKey: boolean;
+    touch: boolean;
 }
 
 // @public
@@ -1019,6 +1024,7 @@ export function StageSurface(input: StageSurfaceProps): JSX.Element;
 // @public
 export interface StageSurfaceProps {
     cursor?: string | undefined;
+    onDoubleClick?: ((point: Point) => void) | undefined;
     onHover?: ((point: Point) => void) | undefined;
     onPress: (press: StagePress) => StageDrag | null | undefined | void;
 }

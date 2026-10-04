@@ -16,6 +16,21 @@ export const TAP_SLOP = 3;
 /** The longest a touch may last and still be a tap, in milliseconds. */
 export const TAP_MS = 500;
 
+/** The pointer's tolerance for hover and presses, in screen pixels: a mouse or pen. */
+export const POINTER_RADIUS_PX = 6;
+/** The pointer's tolerance for a touch, in screen pixels: a fingertip is fatter. */
+export const TOUCH_RADIUS_PX = 12;
+
+/**
+ * The hit-test tolerance for a pointer, in screen pixels.
+ *
+ * @param pointerType - `PointerEvent.pointerType`.
+ * @returns 12 for `"touch"`, 6 otherwise.
+ */
+export function hitRadiusPx(pointerType: string): number {
+  return pointerType === "touch" ? TOUCH_RADIUS_PX : POINTER_RADIUS_PX;
+}
+
 const BUTTON_CODE: Record<StageMouseButton, number> = { left: 0, middle: 1, right: 2 };
 
 /**

@@ -5,6 +5,7 @@ import { expect, fireEvent, fn, waitFor } from "storybook/test";
 import { rotationHandlePoint, shapeHandlePoint, type RotatedShape } from "./shapeEdit";
 import { ShapeEditor, type ShapeEditorProps } from "./ShapeEditor";
 import { ImageStage } from "./stage/ImageStage";
+import { StageSurface } from "./stage/StageSurface";
 import type { StageView } from "./stage/view";
 
 const IMAGE = { width: 400, height: 300 };
@@ -57,6 +58,17 @@ async function drag(target: Element, from: { x: number; y: number }, to: { x: nu
   await fireEvent.pointerUp(target, at(to));
 }
 
+/** A pointer position at image coordinates (the view is 1:1 at the origin). */
+function pointerAt(target: Element, p: { x: number; y: number }) {
+  const viewport = target.closest("[role=application]")!;
+  const origin = viewport.getBoundingClientRect();
+  return {
+    clientX: origin.left + (viewport as HTMLElement).clientLeft + p.x + 0.5,
+    clientY: origin.top + (viewport as HTMLElement).clientTop + p.y + 0.5,
+    button: 0,
+  };
+}
+
 /** The centre of a handle element, in image coordinates. */
 function handleAt(root: Element, name: string): { x: number; y: number } {
   const el = root.querySelector(`[data-handle=${name}]`)!;
@@ -77,6 +89,11 @@ detector's fitted ellipse.
   runs along x. A value in degrees (Konva's \`rotation\`) is \`degrees * Math.PI / 180\`. Konva rotates a \`Rect\` about its
   top-left corner and an \`Ellipse\` about its centre; \`shapeFromCorner\` and \`shapeCorner\` convert the former. An ellipse's
   \`width\` and \`height\` are its full axes, \`2 · radiusX\` and \`2 · radiusY\`.
+- **Press order:** one decision serves every part of the editor: the nearest handle first (so a small shape's interior
+  never steals a corner), then the interior or the band along the outline (6 px for a mouse, 12 px for a touch), which is
+  how a thin or rotated shape is grabbed. A press beyond that is declined and reaches the stage.
+- **Touch:** a press that grabs the shape is claimed; a second finger during an edit cancels it (the shape reverts, nothing
+  is committed) and is left to the stage.
 - **Editing:** eight handles resize the shape in its own frame (the opposite side stays where it is, whatever the
   rotation), the handle past the top side turns it about its centre (Shift rounds to 15°), the interior moves it. A shape
   stops at \`minSize\` (5 px by default) rather than flipping.
@@ -228,5 +245,147 @@ export const HandlesFollowTheShape: Story = {
     await expect(Math.hypot(e.x - expected.x, e.y - expected.y)).toBeLessThan(0.01);
     // A quarter turn: the east handle faces south, so it is a vertical-resize cursor.
     await expect((canvasElement.querySelector("[data-handle=e]") as SVGElement).style.cursor).toBe("ns-resize");
+  },
+};
+
+/** 30 × 20 around (200, 150): small enough that its interior covers its own corner handles. */
+const SMALL: RotatedShape = { cx: 200, cy: 150, width: 30, height: 20, rotation: 0 };
+/** 160 × 80 around (200, 150), level: its top side is at y = 110. */
+const LEVEL: RotatedShape = { cx: 200, cy: 150, width: 160, height: 80, rotation: 0 };
+
+export const CornerOfASmallShapeResizes: Story = {
+  render: () => <Harness initial={SMALL} />,
+  play: async ({ canvas }) => {
+    commit.mockClear();
+    // Pressed on the interior element, 4 px in from the nw corner at (185, 140): a handle press, not a move.
+    await drag(canvas.getByRole("button", { name: /Shape/ }), { x: 188, y: 143 }, { x: 170, y: 130 });
+    await waitFor(() => expect(canvas.getByTestId("shape")).toHaveTextContent("193,145,45,30,0"));
+    await expect(commit).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const OutlineBandMoves: Story = {
+  render: () => <Harness initial={LEVEL} />,
+  play: async ({ canvas, canvasElement }) => {
+    commit.mockClear();
+    const band = canvasElement.querySelector("[data-shape-band]")!;
+    // 4 px outside the top side, away from every handle: the band counts as the shape.
+    await drag(band, { x: 150, y: 106 }, { x: 180, y: 86 });
+    await waitFor(() => expect(canvas.getByTestId("shape")).toHaveTextContent("230,130,160,80,0"));
+    await expect(commit).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const FarOutsideDeclines: Story = {
+  render: () => <Harness initial={LEVEL} />,
+  play: async ({ canvas, canvasElement }) => {
+    commit.mockClear();
+    const band = canvasElement.querySelector("[data-shape-band]")!;
+    const viewport = band.closest("[role=application]")!;
+    // 10 px outside: past a mouse's 6 px, so the editor declines and the stage reads the press as a pan.
+    await fireEvent.pointerDown(band, { ...pointerAt(band, { x: 150, y: 100 }), pointerId: 1 });
+    await expect(viewport).toHaveAttribute("data-panning");
+    await fireEvent.pointerUp(viewport, { ...pointerAt(band, { x: 150, y: 100 }), pointerId: 1 });
+    await expect(canvas.getByTestId("shape")).toHaveTextContent("200,150,160,80,0");
+    await expect(commit).not.toHaveBeenCalled();
+  },
+};
+
+/** Make the primary pointer coarse for one story, as a phone's is. */
+function coarsePointer() {
+  const original = Object.getOwnPropertyDescriptor(window, "matchMedia");
+  window.matchMedia = (query: string) =>
+    ({ matches: query.includes("coarse"), media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList;
+  return () => {
+    if (original) Object.defineProperty(window, "matchMedia", original);
+  };
+}
+
+export const TouchHasAWiderBand: Story = {
+  beforeEach: coarsePointer,
+  render: () => <Harness initial={LEVEL} />,
+  play: async ({ canvas, canvasElement }) => {
+    commit.mockClear();
+    const band = canvasElement.querySelector("[data-shape-band]")!;
+    // The same 10 px outside, with a finger (12 px): a move.
+    await drag(band, { x: 150, y: 100 }, { x: 180, y: 80 }, { pointerType: "touch", pointerId: 7 });
+    await waitFor(() => expect(canvas.getByTestId("shape")).toHaveTextContent("230,130,160,80,0"));
+    await expect(commit).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const TouchSecondFingerCancelsTheEdit: Story = {
+  render: () => <Harness initial={LEVEL} />,
+  play: async ({ canvas, canvasElement }) => {
+    commit.mockClear();
+    const band = canvasElement.querySelector("[data-shape-band]")!;
+    const viewport = band.closest("[role=application]")!;
+    const origin = viewport.getBoundingClientRect();
+    const finger = (p: { x: number; y: number }, pointerId: number) => ({
+      clientX: origin.left + (viewport as HTMLElement).clientLeft + p.x + 0.5,
+      clientY: origin.top + (viewport as HTMLElement).clientTop + p.y + 0.5,
+      pointerId,
+      pointerType: "touch",
+      button: 0,
+    });
+    await fireEvent.pointerDown(band, finger({ x: 150, y: 106 }, 7));
+    await fireEvent.pointerMove(band, finger({ x: 180, y: 86 }, 7));
+    await waitFor(() => expect(canvas.getByTestId("shape")).toHaveTextContent("230,130,160,80,0"));
+    // A second finger: the edit is abandoned, the shape is back, and nothing was committed.
+    await fireEvent.pointerDown(viewport, finger({ x: 60, y: 60 }, 8));
+    await waitFor(() => expect(canvas.getByTestId("shape")).toHaveTextContent("200,150,160,80,0"));
+    await fireEvent.pointerMove(band, finger({ x: 200, y: 86 }, 7));
+    await fireEvent.pointerUp(band, finger({ x: 200, y: 86 }, 7));
+    await fireEvent.pointerUp(viewport, finger({ x: 60, y: 60 }, 8));
+    await expect(canvas.getByTestId("shape")).toHaveTextContent("200,150,160,80,0");
+    await expect(commit).not.toHaveBeenCalled();
+  },
+};
+
+export const BrowserCancelRevertsTheEdit: Story = {
+  render: () => <Harness initial={LEVEL} />,
+  play: async ({ canvas, canvasElement }) => {
+    commit.mockClear();
+    const band = canvasElement.querySelector("[data-shape-band]")!;
+    const extra = { pointerType: "touch", pointerId: 7 };
+    // The browser takes the touch (`pointercancel`) mid-edit: the shape reverts and nothing is committed.
+    await fireEvent.pointerDown(band, { ...pointerAt(band, { x: 150, y: 106 }), ...extra });
+    await fireEvent.pointerMove(band, { ...pointerAt(band, { x: 180, y: 86 }), ...extra });
+    await waitFor(() => expect(canvas.getByTestId("shape")).toHaveTextContent("230,130,160,80,0"));
+    await fireEvent.pointerCancel(band, extra);
+    await waitFor(() => expect(canvas.getByTestId("shape")).toHaveTextContent("200,150,160,80,0"));
+    await expect(commit).not.toHaveBeenCalled();
+  },
+};
+
+const below = fn();
+
+export const MousePressJustOutsideReachesTheLayerBelow: Story = {
+  render: () => (
+    <div style={{ width: IMAGE.width + 2, height: IMAGE.height + 2 }}>
+      <ImageStage image={IMAGE} view={VIEW} onView={() => {}} style={{ width: IMAGE.width + 2, height: IMAGE.height + 2 }}>
+        <div className="absolute inset-0 bg-surface" />
+        <StageSurface
+          onPress={(press) => {
+            below(press.point);
+            return {};
+          }}
+        />
+        <ShapeEditor kind="rect" value={LEVEL} onValueChange={change} />
+      </ImageStage>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    below.mockClear();
+    const surface = canvasElement.querySelector("[data-stage-surface]")!;
+    // 9 px above the top side: past a mouse's band, so the press goes through to the surface below.
+    await fireEvent.pointerDown(surface, { ...pointerAt(surface, { x: 150, y: 101 }), pointerId: 1 });
+    await fireEvent.pointerUp(window, { pointerId: 1 });
+    await expect(below).toHaveBeenCalledTimes(1);
+    // Just inside the band it is the editor's, not the surface's.
+    const band = canvasElement.querySelector("[data-shape-band]")!;
+    await fireEvent.pointerDown(band, { ...pointerAt(band, { x: 150, y: 106 }), pointerId: 1 });
+    await fireEvent.pointerUp(band, { ...pointerAt(band, { x: 150, y: 106 }), pointerId: 1 });
+    await expect(below).toHaveBeenCalledTimes(1);
   },
 };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { TAP_MS, TAP_SLOP, centroid, isTap, panButtonCodes, pinchView } from "./gesture";
+import { POINTER_RADIUS_PX, TAP_MS, TAP_SLOP, TOUCH_RADIUS_PX, centroid, hitRadiusPx, isTap, panButtonCodes, pinchView } from "./gesture";
 import { toImage } from "./view";
 
 describe("panButtonCodes", () => {
@@ -69,5 +69,15 @@ describe("isTap", () => {
   it("is not a touch that travelled or lingered", () => {
     expect(isTap(TAP_SLOP + 0.1, 100)).toBe(false);
     expect(isTap(0, TAP_MS + 1)).toBe(false);
+  });
+});
+
+describe("hitRadiusPx", () => {
+  it("gives a fingertip a wider tolerance than a mouse or pen", () => {
+    expect(hitRadiusPx("touch")).toBe(TOUCH_RADIUS_PX);
+    expect(hitRadiusPx("mouse")).toBe(POINTER_RADIUS_PX);
+    expect(hitRadiusPx("pen")).toBe(POINTER_RADIUS_PX);
+    expect(hitRadiusPx("")).toBe(POINTER_RADIUS_PX);
+    expect([POINTER_RADIUS_PX, TOUCH_RADIUS_PX]).toEqual([6, 12]);
   });
 });
