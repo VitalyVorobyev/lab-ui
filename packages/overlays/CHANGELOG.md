@@ -1,5 +1,11 @@
 # @vitavision/overlays
 
+## 0.1.1
+
+### Patch Changes
+
+- 2b38012: Ship the compiled `dist/`. 0.1.0 was published without it, so neither the package entry (`dist/index.js`) nor its types resolved; it also carried `workspace:^` ranges in `devDependencies`. The source is unchanged.
+
 ## 0.1.0
 
 ### Minor Changes
