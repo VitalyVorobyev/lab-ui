@@ -185,7 +185,9 @@ export function Table<Row>({
                   aria-sort={direction}
                   data-sort={sortable ? (direction ?? "none") : undefined}
                   className={cn(
-                    "font-medium text-fg-muted",
+                    // `last:pr-0`, as on the body cells: the last column's header ends where
+                    // its values do, so a numeric header sits flush with its numbers.
+                    "font-medium text-fg-muted last:pr-0",
                     byDensity(density, "pb-2 pr-3 text-xs", "pb-1 pr-2 text-[10px]"),
                     column.numeric && "text-right",
                   )}
