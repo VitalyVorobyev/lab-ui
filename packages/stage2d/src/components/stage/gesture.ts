@@ -11,6 +11,11 @@ import { zoomAbout, type StageView } from "./view";
 /** A mouse button that can pan the stage. */
 export type StageMouseButton = "left" | "middle" | "right";
 
+/**
+ * How far a press may travel and still be a click rather than a drag, in CSS pixels. A pan,
+ * a handle drag and a vertex drag all start only past it, so a jittery click edits nothing.
+ */
+export const CLICK_SLOP = 3;
 /** How far a touch may travel and still be a tap, in CSS pixels. */
 export const TAP_SLOP = 3;
 /** The longest a touch may last and still be a tap, in milliseconds. */

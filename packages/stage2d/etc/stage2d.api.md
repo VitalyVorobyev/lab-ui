@@ -895,14 +895,25 @@ export function rectFromCorners(a: Point, b: Point): Rect;
 export function RectRoiEditor(input: RectRoiEditorProps): JSX.Element;
 
 // @public
+export interface RectRoiEditorHandle {
+    drawDrag(press: StagePress): StageDrag;
+    startDraw(event: StagePointerEvent): void;
+}
+
+// @public
 export interface RectRoiEditorProps {
     bounds?: Rect | undefined;
     draw?: boolean | undefined;
+    drawSurface?: boolean | undefined;
     editable?: boolean | undefined;
+    fill?: string | undefined;
+    fillOpacity?: number | undefined;
+    interior?: "move" | "none" | undefined;
     label?: string | undefined;
     minSize?: number | undefined;
     onCommit?: ((value: Rect) => void) | undefined;
     onValueChange: (value: Rect) => void;
+    ref?: Ref<RectRoiEditorHandle> | undefined;
     stroke?: string | undefined;
     value: Rect | null;
 }

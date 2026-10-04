@@ -22,7 +22,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { cn } from "@vitavision/ui";
 import type { Point } from "../measureGeometry";
 import { useStage } from "./ImageStage";
-import { hitRadiusPx } from "./gesture";
+import { CLICK_SLOP, hitRadiusPx } from "./gesture";
 import { watchTouch } from "./touchWatch";
 import { clampToImage, imageViewBox, toImage } from "./view";
 
@@ -45,9 +45,6 @@ export interface StageDrag {
    */
   claimsTouch?: boolean | undefined;
 }
-
-/** How far a press may travel and still be a click, in screen pixels. */
-const CLICK_SLOP = 3;
 
 /**
  * Start a drag from a press on any element inside an `ImageStage`.

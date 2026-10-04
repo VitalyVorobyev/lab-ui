@@ -22,6 +22,7 @@ import { useCallback } from "react";
 
 import type { Point } from "./measureGeometry";
 import type { StagePointerEvent } from "./stage/hitContext";
+import { CLICK_SLOP } from "./stage/gesture";
 import { useStage } from "./stage/ImageStage";
 import { useStageDrag } from "./stage/StageSurface";
 
@@ -47,9 +48,6 @@ export interface ShapeDragOptions {
   slop?: number | undefined;
 }
 
-/** The default click slop, in screen pixels (the stage's own). */
-const DEFAULT_SLOP = 3;
-
 /**
  * Start moving a shape from a press, inside an `ImageStage`.
  *
@@ -70,7 +68,7 @@ export function useShapeDrag(): (event: StagePointerEvent, handlers: ShapeDragHa
         handlers.onEnd?.({ x: 0, y: 0 }, false, event.nativeEvent);
         return;
       }
-      const slop = options?.slop ?? DEFAULT_SLOP;
+      const slop = options?.slop ?? CLICK_SLOP;
       const from = { x: event.clientX, y: event.clientY };
       // Where the press landed, in image pixels: displacements are measured from it.
       const press = toImage(from);
