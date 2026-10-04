@@ -207,7 +207,7 @@ impl.chess-demo = ["src/components/LayerToggles.tsx"]
 impl.viva-studio = ["src/components/FeatureBrowser/editors/BoolEditor.tsx"]
 uses.val = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
-note.calibration-rs = "ToggleChip for toolbar toggles; lib/configForm.tsx keeps an inline checkbox until L4"
+note.calibration-rs = "ToggleChip for toolbar toggles"
 uses.vm-lab = "@vitavision/ui"
 uses.caliperbench = "@vitavision/ui"
 
@@ -241,7 +241,6 @@ impl.viva-studio = ["src/components/FeatureBrowser/editors/FloatEditor.tsx", "sr
 uses.val = "@vitavision/ui"
 uses.vm-lab = "@vitavision/ui"
 uses.calibration-rs = "@vitavision/ui"
-note.calibration-rs = "Input in the ask-user dialog; lib/configForm.tsx keeps inline inputs until L4"
 uses.ct-studio = "@vitavision/ui"
 uses.caliperbench = "@vitavision/ui"
 
@@ -304,11 +303,12 @@ note.vm-lab = "shortcuts written into tooltip text"
 label = "Schema-driven form"
 layer = "forms"
 impl.lab-ui = ["packages/forms/src/components/SchemaForm.tsx", "packages/forms/src/api/schemaForm.ts"]
-impl.calibration-rs = ["src/lib/configForm.tsx"]
+uses.calibration-rs = "@vitavision/forms"
+note.calibration-rs = "SchemaValueForm over the xtask-emitted config schemas (calibration-rs#143)"
 impl.ct-studio = ["src/components/ParamForm.tsx", "src/components/ConfigEditor.tsx"]
 uses.val = "@vitavision/forms"
 uses.vitavision = "@vitavision/forms"
-note.vitavision = "SchemaValueForm on each detector's WASM schema, one UiSchema per algorithm (createConfigForm.tsx); schemaTools.ts folds ringgrid's $ref-with-siblings (lab-ui#89)"
+note.vitavision = "SchemaValueForm on each detector's WASM schema, one UiSchema per algorithm (createConfigForm.tsx); schemaTools.ts composes the package documents and orders tagged variants' fields by declaration"
 note.viva-studio = "GenICam node-map editors (FeatureBrowser/editors/*): driven by the camera XML, not JSON Schema"
 
 # ── charts ──────────────────────────────────────────────────────────────────────────────
@@ -316,19 +316,20 @@ note.viva-studio = "GenICam node-map editors (FeatureBrowser/editors/*): driven 
 [concepts.histogram]
 label = "Histogram"
 layer = "charts"
-impl.lab-ui = ["packages/charts/src/Histogram.tsx"]
-impl.calibration-rs = ["src/components/Histogram.tsx"]
+impl.lab-ui = ["packages/charts/src/Histogram.tsx", "packages/charts/src/ScoreHistogram.tsx", "packages/charts/src/bars.ts"]
+uses.calibration-rs = "@vitavision/charts"
+note.calibration-rs = "Diagnose's ROI luminance: Histogram over 64 pre-binned counts with the cursor bin (DiagnoseWorkspace/RoiHistogram.tsx, calibration-rs#145)"
 impl.viva-studio = ["src/components/ImageViewer/HistogramOverlay.tsx", "src/components/ImageViewer/histogramUtils.ts"]
 uses.val = "@vitavision/charts"
 uses.vm-lab = "@vitavision/charts"
-note.vm-lab = "ScoreHistogram with an empty defect series, i.e. a single-series histogram"
+note.vm-lab = "ScoreHistogram with an empty defect series; charts 0.8's single-series Histogram (#58) is the direct replacement"
 
 [concepts.line-chart]
 label = "Line chart"
 layer = "charts"
 impl.lab-ui = ["packages/charts/src/LineChart.tsx", "packages/charts/src/Frame.tsx", "packages/charts/src/scale.ts"]
-impl.val = ["src/components/charts/CurveChart.tsx", "src/routes/compare/CompareCurves.tsx"]
-note.val = "wrappers over lab-ui LineChart"
+uses.val = "@vitavision/charts"
+note.val = "CurveChart / CompareCurves are ROC/PR cards composing LineChart, with one chanceDiagonal underlay (visual-anomaly-lab#167)"
 uses.vm-lab = "@vitavision/charts"
 impl.caliperbench = ["src/AlongChart.tsx"]
 note.caliperbench = "own responsive SVG over charts' linePath/linearScale, for hover, pick and bands"
@@ -369,18 +370,18 @@ note.vm-lab = "validityTone steps a continuous validity onto verdict tones"
 label = "2D image stage (zoom / pan / layers)"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/stage/ImageStage.tsx", "packages/stage2d/src/components/stage/view.ts", "packages/stage2d/src/components/ZoomPanCanvas.tsx"]
-impl.val = ["src/components/annotation/AnnotationCanvas.tsx", "src/components/annotation/canvasView.ts"]
-impl.calibration-rs = ["src/components/FrameCanvas.tsx", "src/components/CompareViewer.tsx"]
+uses.val = "@vitavision/stage2d"
+uses.calibration-rs = "@vitavision/stage2d"
 impl.ct-studio = ["src/components/CanvasViewport.tsx"]
 impl.ct-demo = ["src/components/CanvasViewport.tsx"]
 impl.chess-demo = ["src/components/CanvasViewport.tsx"]
 impl.operator-ui = ["src/components/live/FrameCanvas.tsx", "src/components/live/LiveViewport.tsx"]
 impl.viva-studio = ["src/components/ImageViewer/ViewerCanvas.tsx", "src/components/ImageViewer/useZoomPan.ts"]
 uses.vm-lab = "@vitavision/stage2d"
-note.val = "Konva annotation editor; sample/result viewers already use lab-ui ImageStage (viewer/SampleStage.tsx)"
+note.val = "annotation/AnnotationStage.tsx (the editor, visual-anomaly-lab#168) and viewer/SampleStage.tsx compose ImageStage"
 uses.vitavision = "@vitavision/stage2d"
-note.vitavision = "CanvasWorkspace composes ImageStage; annotations/ToolSurface.tsx replaces StageSurface for tool input so a touch tap is told from a pan or pinch (lab-ui#88)"
-note.calibration-rs = "raw Canvas2D"
+note.vitavision = "CanvasWorkspace composes ImageStage; tool input through StageSurface (vitavision#183)"
+note.calibration-rs = "components/FrameCanvas.tsx composes ImageStage: the ROI crop as its image, linked compare panes (calibration-rs#144)"
 note.ct-studio = "raw Canvas2D"
 note.vm-lab = "canvas/CanvasStage.tsx, AlignTab and BirdsEyeTab compose ImageStage"
 uses.caliperbench = "@vitavision/stage2d"
@@ -426,6 +427,8 @@ label = "Image layer: pixelated zoom, resolution tiers"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/stage/ImageLayer.tsx"]
 uses.vm-lab = "@vitavision/stage2d"
+uses.val = "@vitavision/stage2d"
+uses.calibration-rs = "@vitavision/stage2d"
 impl.caliperbench = ["src/SegmentReview.tsx"]
 
 [concepts.layers-menu]
@@ -441,6 +444,8 @@ layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/RectRoiEditor.tsx", "packages/stage2d/src/components/roiEdit.ts"]
 uses.vm-lab = "@vitavision/stage2d"
 note.vm-lab = "canvas/roi.ts converts between the lab's ROI and the editor's Rect"
+uses.val = "@vitavision/stage2d"
+note.val = "the selected annotation box's corners"
 impl.viva-studio = ["src/components/ImageViewer/RoiOverlay.tsx"]
 
 [concepts.polyline-set]
@@ -448,6 +453,8 @@ label = "Selectable polyline set (hover, select, marquee)"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/PolylineSet.tsx", "packages/stage2d/src/components/polylineIndex.ts"]
 uses.vm-lab = "@vitavision/stage2d"
+uses.val = "@vitavision/stage2d"
+uses.vitavision = "@vitavision/stage2d"
 impl.caliperbench = ["src/SegmentLayer.tsx", "src/StationLayer.tsx"]
 
 [concepts.stage-tool-model]
@@ -455,6 +462,8 @@ label = "Stage tool model (what a press on the stage means)"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/stage/StageSurface.tsx"]
 uses.vm-lab = "@vitavision/stage2d"
+uses.val = "@vitavision/stage2d"
+uses.vitavision = "@vitavision/stage2d"
 impl.caliperbench = ["src/SegmentLayer.tsx", "src/SketchLayer.tsx"]
 note.caliperbench = "tools chosen in canvas/ToolRail.tsx; each layer handles its own presses"
 
@@ -490,12 +499,12 @@ layer = "overlays"
 impl.lab-ui = ["packages/overlays/src/TargetOverlay.tsx"]
 uses.vitavision = "@vitavision/overlays"
 note.vitavision = "overlay/targetDetection.ts maps the editor's detection features to a TargetDetection; radsym circles go through TargetOverlay too"
-impl.calibration-rs = ["src/workspaces/EpipolarWorkspace/EpipolarOverlay.tsx"]
+impl.calibration-rs = ["src/workspaces/EpipolarWorkspace/EpipolarOverlay.tsx", "src/components/frameOverlayPaths.ts"]
 impl.ct-studio = ["src/components/overlays.ts", "src/components/diagnoseOverlays.ts"]
 impl.ct-demo = ["src/components/overlays.ts"]
 impl.chess-demo = ["src/components/overlays.ts"]
 impl.operator-ui = ["src/components/live/OverlayLayer.tsx"]
-note.calibration-rs = "residual arrows drawn inside FrameCanvas.tsx"
+note.calibration-rs = "residual arrows, the laser overlay and epipolar markers as stage layers batched by colour; residual vectors have no second consumer yet"
 
 [concepts.heatmap]
 label = "Heatmap / colour-scale layer"
