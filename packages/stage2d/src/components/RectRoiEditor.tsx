@@ -24,7 +24,7 @@ import {
 import { overlayRole } from "./overlayRole";
 import { useStage } from "./stage/ImageStage";
 import { useScreenPx } from "./stage/useScreenPx";
-import { imageViewBox, type Rect } from "./stage/view";
+import { PIXEL_CENTRE, imageViewBox, type Rect } from "./stage/view";
 
 /** Handle square side, in screen pixels. */
 const HANDLE_PX = 9;
@@ -50,8 +50,9 @@ export interface RectRoiEditorProps {
    */
   draw?: boolean | undefined;
   /**
-   * The area the region must stay in. Defaults to `{ x: 0, y: 0, width, height }` of the
-   * image: a region given as a start pixel and a size.
+   * The area the region must stay in, in the stage's centre convention. Defaults to
+   * `{ x: -0.5, y: -0.5, width, height }` of the image: its full extent, so a region that
+   * fills it outlines the image edges.
    */
   bounds?: Rect | undefined;
   /** The smallest side, in image pixels; a smaller drawn box is a click, not a region. Defaults to 4. */
@@ -93,7 +94,7 @@ export function RectRoiEditor({
   stroke = overlayRole("selection"),
 }: RectRoiEditorProps) {
   const stage = useStage();
-  const area = bounds ?? { x: 0, y: 0, width: stage.image.width, height: stage.image.height };
+  const area = bounds ?? { x: -PIXEL_CENTRE, y: -PIXEL_CENTRE, width: stage.image.width, height: stage.image.height };
   const dragRef = useRef<Drag | null>(null);
   const lastRef = useRef<Rect | null>(null);
   const [drawing, setDrawing] = useState<Rect | null>(null);

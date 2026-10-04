@@ -9,6 +9,7 @@ export {
   type ImageStageProps,
   type StageContext,
   type StageHandle,
+  type StageViewChange,
 } from "./components/stage/ImageStage";
 
 export type { StageMouseButton } from "./components/stage/gesture";
@@ -56,6 +57,7 @@ export {
   MAX_SCALE,
   MIN_SCALE_VS_FIT,
   PIXEL_CENTRE,
+  clampToImage,
   clampView,
   fitScale,
   fitView,

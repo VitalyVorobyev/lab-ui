@@ -165,6 +165,9 @@ export interface ClampOptions {
 export function clampRect(rect: Rect, bounds: Rect, minSize: number): Rect;
 
 // @public
+export function clampToImage(p: Point, image: Box): Point;
+
+// @public
 export function clampView(view: StageView, box: Box, image: Box, options?: ClampOptions): StageView;
 
 // @public
@@ -481,9 +484,9 @@ export interface ImageStageProps {
     image: Box;
     initialView?: "auto" | "fit" | undefined;
     label?: string;
-    onBackgroundClick?: (event: PointerEvent_2<HTMLDivElement>) => void;
+    onBackgroundClick?: (event: PointerEvent_2<HTMLDivElement>, point: Point) => void;
     onHover?: (point: Point | null) => void;
-    onView: (view: StageView) => void;
+    onView: (view: StageView, change: StageViewChange) => void;
     panButton?: StageMouseButton | readonly StageMouseButton[] | undefined;
     panKeys?: boolean;
     panTool?: boolean;
@@ -1106,6 +1109,7 @@ export function StageSurface(input: StageSurfaceProps): JSX.Element;
 // @public
 export interface StageSurfaceProps {
     cursor?: string | undefined;
+    extent?: "image" | "viewport" | undefined;
     onDoubleClick?: ((point: Point) => void) | undefined;
     onHover?: ((point: Point) => void) | undefined;
     onPress: (press: StagePress) => StageDrag | null | undefined | void;
@@ -1133,6 +1137,12 @@ export interface StageView {
     scale: number;
     tx: number;
     ty: number;
+}
+
+// @public
+export interface StageViewChange {
+    box: Box;
+    cause: "gesture" | "key" | "command" | "measure";
 }
 
 // @public

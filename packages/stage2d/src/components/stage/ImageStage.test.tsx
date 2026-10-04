@@ -9,7 +9,14 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ImageStage, useStage, type ImageStageProps, type StageContext } from "./ImageStage";
+import {
+  ImageStage,
+  useStage,
+  type ImageStageProps,
+  type StageContext,
+  type StageHandle,
+  type StageViewChange,
+} from "./ImageStage";
 import type { StagePointerEvent } from "./hitContext";
 import type { HitId } from "./hitTest";
 import { useStageHitLayer } from "./useStageHitTest";
@@ -1068,3 +1075,157 @@ function TouchPoint({ onPress }: { onPress: () => void }) {
   const p = toImg({ x: 400, y: 300 });
   return <PointLayer x={p.x} y={p.y} onPress={onPress} />;
 }
+
+describe("ImageStage — why the view changed", () => {
+  /** A stage that records every report, and lets a test set the view from outside. */
+  function Reporting({
+    reports,
+    onHandle,
+    hold = false,
+    onSetView,
+    ...props
+  }: {
+    reports: { view: StageView; change: StageViewChange }[];
+    onHandle?: (handle: StageHandle | null) => void;
+    /** Keep the view where the test put it, ignoring what the stage reports. */
+    hold?: boolean;
+    onSetView?: (set: (view: StageView | null) => void) => void;
+  } & Partial<Omit<ImageStageProps, "view" | "onView" | "children">>) {
+    const [view, setView] = useState<StageView | null>(null);
+    useEffect(() => onSetView?.(setView), [onSetView]);
+    return (
+      <ImageStage
+        image={IMAGE}
+        {...props}
+        view={view}
+        ref={(h) => onHandle?.(h)}
+        onView={(next, change) => {
+          reports.push({ view: next, change });
+          if (!hold) setView(next);
+        }}
+      >
+        <div />
+      </ImageStage>
+    );
+  }
+
+  const last = (reports: { change: StageViewChange }[]) => reports[reports.length - 1]!.change;
+
+  it("tags the opening view and a resize as measure, with the box they were made for", () => {
+    withLayout();
+    const reports: { view: StageView; change: StageViewChange }[] = [];
+    render(<Reporting reports={reports} />);
+    expect(reports).toHaveLength(1);
+    expect(reports[0]!.change).toEqual({ cause: "measure", box: BOX });
+
+    resize({ width: 1000, height: 400 });
+    expect(last(reports)).toEqual({ cause: "measure", box: { width: 1000, height: 400 } });
+  });
+
+  it("tags wheel, drag and double-click as gesture, and the shortcuts as key", () => {
+    withLayout();
+    const reports: { view: StageView; change: StageViewChange }[] = [];
+    const { container } = render(<Reporting reports={reports} />);
+    const viewport = viewportOf(container);
+
+    wheel(viewport, { deltaY: -200, clientX: 200, clientY: 150 });
+    expect(last(reports).cause).toBe("gesture");
+
+    fireEvent.keyDown(viewport, { key: "1" });
+    expect(last(reports).cause).toBe("key");
+    fireEvent.keyDown(viewport, { key: "+" });
+    expect(last(reports).cause).toBe("key");
+    fireEvent.keyDown(viewport, { key: "0" });
+    expect(last(reports).cause).toBe("key");
+    fireEvent.keyDown(viewport, { key: "1" });
+    fireEvent.keyDown(viewport, { key: "ArrowLeft" });
+    expect(last(reports).cause).toBe("key");
+
+    const before = reports.length;
+    fireEvent.pointerDown(viewport, { button: 0, clientX: 400, clientY: 300, pointerId: 1 });
+    fireEvent.pointerMove(viewport, { clientX: 340, clientY: 260, pointerId: 1 });
+    fireEvent.pointerUp(viewport, { button: 0, clientX: 340, clientY: 260, pointerId: 1 });
+    expect(reports.length).toBeGreaterThan(before);
+    expect(last(reports).cause).toBe("gesture");
+
+    fireEvent.doubleClick(viewport, { clientX: 400, clientY: 300 });
+    expect(last(reports).cause).toBe("gesture");
+    expect(last(reports).box).toEqual(BOX);
+  });
+
+  it("tags the handle's fit, zoomTo and frame, and a layer's setView, as command", () => {
+    withLayout();
+    const reports: { view: StageView; change: StageViewChange }[] = [];
+    let handle: StageHandle | null = null;
+    render(<Reporting reports={reports} onHandle={(h) => (handle = h)} />);
+
+    act(() => handle!.zoomTo(2));
+    expect(last(reports).cause).toBe("command");
+    act(() => handle!.frame({ x: 600, y: 400, width: 80, height: 60 }));
+    expect(last(reports).cause).toBe("command");
+    act(() => handle!.fit());
+    expect(last(reports).cause).toBe("command");
+  });
+
+  it("re-opens and reports a view the consumer set back to null after the stage measured", () => {
+    withLayout();
+    const reports: { view: StageView; change: StageViewChange }[] = [];
+    let set: ((view: StageView | null) => void) | null = null;
+    render(<Reporting reports={reports} onSetView={(fn) => (set = fn)} />);
+    const opening = reports[0]!.view;
+
+    act(() => set!({ scale: 3, tx: -10, ty: -10 }));
+    const count = reports.length;
+    act(() => set!(null));
+
+    expect(reports.length).toBe(count + 1);
+    expect(last(reports)).toEqual({ cause: "measure", box: BOX });
+    expect(reports[reports.length - 1]!.view).toEqual(opening);
+  });
+
+  it("keeps working while the consumer holds the view at null: the wheel and the keys still report", () => {
+    withLayout();
+    const reports: { view: StageView; change: StageViewChange }[] = [];
+    const { container } = render(<Reporting reports={reports} hold />);
+    const viewport = viewportOf(container);
+    // Held at null: the opening view was reported once and not adopted.
+    expect(reports).toHaveLength(1);
+
+    wheel(viewport, { deltaY: -200, clientX: 200, clientY: 150 });
+    expect(reports).toHaveLength(2);
+    expect(last(reports).cause).toBe("gesture");
+    expect(reports[1]!.view.scale).toBeGreaterThan(reports[0]!.view.scale);
+
+    fireEvent.keyDown(viewport, { key: "1" });
+    expect(last(reports).cause).toBe("key");
+    expect(reports[reports.length - 1]!.view.scale).toBe(1);
+  });
+});
+
+describe("ImageStage — the background click's image point", () => {
+  it("passes where the click landed, in image coordinates, for a mouse and a tap", () => {
+    withLayout();
+    const onBackgroundClick = vi.fn();
+    const { viewport, stage } = renderWithStage({ onBackgroundClick, initial: { scale: 2, tx: 100, ty: 50 } });
+
+    fireEvent.pointerDown(viewport, { button: 0, clientX: 300, clientY: 250, pointerId: 1 });
+    fireEvent.pointerUp(viewport, { button: 0, clientX: 300, clientY: 250, pointerId: 1 });
+    expect(onBackgroundClick).toHaveBeenCalledTimes(1);
+    const expected = stage().toImage({ x: 300, y: 250 });
+    expect(expected).toEqual(toImage(stage().view, { x: 300, y: 250 }));
+    expect(onBackgroundClick.mock.calls[0]![1]).toEqual(expected);
+
+    const tap = (id: number, x: number, y: number) => ({
+      pointerId: id,
+      pointerType: "touch",
+      isPrimary: true,
+      clientX: x,
+      clientY: y,
+      button: 0,
+    });
+    fireEvent.pointerDown(viewport, tap(2, 500, 350));
+    fireEvent.pointerUp(viewport, tap(2, 500, 350));
+    expect(onBackgroundClick).toHaveBeenCalledTimes(2);
+    expect(onBackgroundClick.mock.calls[1]![1]).toEqual(stage().toImage({ x: 500, y: 350 }));
+  });
+});

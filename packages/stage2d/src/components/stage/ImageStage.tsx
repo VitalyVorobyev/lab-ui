@@ -104,6 +104,21 @@ interface Drag {
   pointerId: number;
 }
 
+/** Why a view was reported through `ImageStage`'s `onView`. */
+export interface StageViewChange {
+  /**
+   * What moved the view:
+   * - `"gesture"`: a wheel zoom, a drag or touch pan, a pinch, a double-click.
+   * - `"key"`: a keyboard shortcut or pan key.
+   * - `"command"`: a call to the handle or the context (`fit`, `zoomTo`, `frame`, `setView`),
+   *   which includes the toolbar's buttons.
+   * - `"measure"`: the opening view, and a resize re-anchoring the view.
+   */
+  cause: "gesture" | "key" | "command" | "measure";
+  /** The measured viewport, in CSS pixels, at the moment of the change. */
+  box: Box;
+}
+
 /** What `useStage` returns: the transform of the enclosing `ImageStage`, and its controls. */
 export interface StageContext {
   /** The view in effect — the controlled `view`, or the opening view while that is `null`. */
@@ -179,8 +194,13 @@ export interface ImageStageProps {
    * view is kept on first measure, only clamped to the legal range.
    */
   view: StageView | null;
-  /** Called with every view change: gestures, keys, toolbar, and viewport resizes. */
-  onView: (view: StageView) => void;
+  /**
+   * Called with every view change: gestures, keys, toolbar, and viewport resizes. The second
+   * argument says why and carries the measured viewport; a one-argument callback ignores it.
+   * A `null` `view` that the stage has already measured is re-opened and reported again, with
+   * cause `"measure"`.
+   */
+  onView: (view: StageView, change: StageViewChange) => void;
   /** Layers, each `absolute inset-0` and sized by the stage. */
   children: ReactNode;
   /** Rendered floating over the bottom-left, outside the transform. */
@@ -217,8 +237,11 @@ export interface ImageStageProps {
   style?: CSSProperties;
   /** Where the pointer is over the image, in image pixels, or `null` when it is outside. */
   onHover?: (point: Point | null) => void;
-  /** A press on the background that was not a pan — how a layer hears "deselect". */
-  onBackgroundClick?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  /**
+   * A press on the background that was not a pan — how a layer hears "deselect". `point` is
+   * where it landed, in image coordinates (the pixel-centre convention, unclamped).
+   */
+  onBackgroundClick?: (event: ReactPointerEvent<HTMLDivElement>, point: Point) => void;
   /** The legal scale range; see `clampView`. */
   clamp?: ClampOptions;
   /** Keyboard zoom/pan shortcuts. On by default; the stage takes focus to receive them. */
@@ -301,25 +324,49 @@ export function ImageStage({
     () => ({ padding: fitOptions?.padding, upscale: fitOptions?.upscale }),
     [fitOptions?.padding, fitOptions?.upscale],
   );
-  const latestRef = useRef({ view, box, image, clamp, onView, opening, fitOpts });
-  useLayoutEffect(() => {
-    latestRef.current = { view, box, image, clamp, onView, opening, fitOpts };
+  const effective = useMemo(
+    () => view ?? (box.width > 0 ? openingView(opening, box, image, fitOpts) : UNMEASURED_VIEW),
+    [view, box, image, opening, fitOpts],
+  );
+
+  const latestRef = useRef({
+    view,
+    effective: UNMEASURED_VIEW,
+    box,
+    image,
+    clamp,
+    onView,
+    opening,
+    fitOpts,
   });
+  useLayoutEffect(() => {
+    latestRef.current = {
+      view,
+      effective,
+      box,
+      image,
+      clamp,
+      onView,
+      opening,
+      fitOpts,
+    };
+  });
+  /** Whether the opening view of the current `null` view has been reported. */
+  const openedRef = useRef(false);
   /** The view to come back to when a double-click leaves fit. */
   const previousRef = useRef<StageView | null>(null);
   const dragRef = useRef<Drag | null>(null);
   /** The touches down now, by pointer id, in client coordinates. */
   const touchesRef = useRef(new Map<number, Point>());
   /** The two-finger gesture in progress, from the moment the second finger went down. */
-  const pinchRef = useRef<{ distance: number; centre: Point; view: StageView } | null>(null);
+  const pinchRef = useRef<{
+    distance: number;
+    centre: Point;
+    view: StageView;
+  } | null>(null);
   /** The registry the stage's layers answer hit-tests through. */
   const [hits] = useState(() => createHitRegistry<StagePointerEvent>());
   const panButtons = useMemo(() => panButtonCodes(panButton), [panButton]);
-
-  const effective = useMemo(
-    () => view ?? (box.width > 0 ? openingView(opening, box, image, fitOpts) : UNMEASURED_VIEW),
-    [view, box, image, opening, fitOpts],
-  );
 
   // `will-change: transform` (and `data-moving`) on the transformed box while the view moves, set
   // on the element itself so a pan costs no React render; see `MOVING_SETTLE_MS`.
@@ -335,10 +382,33 @@ export function ImageStage({
     return () => clearTimeout(timer);
   }, [effective.scale, effective.tx, effective.ty]);
 
-  const commit = useCallback((next: StageView) => {
-    const { box: b, image: i, clamp: c, onView: report } = latestRef.current;
-    report(b.width > 0 ? clampView(next, b, i, c) : next);
+  /** Report a view with its cause and the viewport it was made for (the measured one by default). */
+  const emit = useCallback((next: StageView, cause: StageViewChange["cause"], box?: Box) => {
+    const { box: b, onView: report } = latestRef.current;
+    report(next, { cause, box: box ?? b });
   }, []);
+
+  const commit = useCallback(
+    (next: StageView, cause: StageViewChange["cause"] = "command") => {
+      const { box: b, image: i, clamp: c } = latestRef.current;
+      emit(b.width > 0 ? clampView(next, b, i, c) : next, cause);
+    },
+    [emit],
+  );
+
+  // A `null` view the stage has already measured: `measure` only fires when the size changes,
+  // so without this the opening view was drawn but never reported, and the pane stayed on a
+  // view the app did not hold. Once per null period; a non-null view re-arms it.
+  useEffect(() => {
+    if (view !== null) {
+      openedRef.current = false;
+      return;
+    }
+    if (box.width > 0 && !openedRef.current) {
+      openedRef.current = true;
+      emit(openingView(opening, box, image, fitOpts), "measure");
+    }
+  }, [view, box, image, opening, fitOpts, emit]);
 
   /*
    * The viewport, measured and observed from the moment it mounts (a callback ref with a
@@ -353,54 +423,63 @@ export function ImageStage({
    * as **passive**, which makes `preventDefault` in a synthetic handler a no-op — the page
    * would scroll behind the canvas while you zoom, which reads as the zoom being broken.
    */
-  const attachViewport = useCallback((element: HTMLDivElement | null) => {
-    viewportRef.current = element;
-    if (!element) return;
+  const attachViewport = useCallback(
+    (element: HTMLDivElement | null) => {
+      viewportRef.current = element;
+      if (!element) return;
 
-    const measure = ({ width, height }: Box) => {
-      if (!(width > 0) || !(height > 0)) return;
-      const current = measuredRef.current;
-      if (current.width === width && current.height === height) return;
-      const next = { width, height };
-      measuredRef.current = next;
-      setBox(next);
-      const { view: v, image: i, clamp: c, onView: report, opening: o, fitOpts: f } = latestRef.current;
-      if (v === null) report(openingView(o, next, i, f));
-      // The first measurement: there is no previous viewport to re-anchor against, so the
-      // caller's view is kept — only made legal for this one.
-      else if (!(current.width > 0)) report(clampView(v, next, i, c));
-      else report(preserveCenter(v, current, next, i, c, f));
-    };
+      const measure = ({ width, height }: Box) => {
+        if (!(width > 0) || !(height > 0)) return;
+        const current = measuredRef.current;
+        if (current.width === width && current.height === height) return;
+        const next = { width, height };
+        measuredRef.current = next;
+        setBox(next);
+        const { view: v, image: i, clamp: c, opening: o, fitOpts: f } = latestRef.current;
+        if (v === null) {
+          openedRef.current = true;
+          emit(openingView(o, next, i, f), "measure", next);
+        }
+        // The first measurement: there is no previous viewport to re-anchor against, so the
+        // caller's view is kept — only made legal for this one.
+        else if (!(current.width > 0)) emit(clampView(v, next, i, c), "measure", next);
+        else emit(preserveCenter(v, current, next, i, c, f), "measure", next);
+      };
 
-    // Synchronously, so the first paint already has the right view — and as the *content*
-    // box, which is what the observer reports; measuring the border box here re-anchored
-    // the view by the border's width as soon as the observer's first report arrived.
-    measure(contentSize(element));
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) measure(entry.contentRect);
-    });
-    observer.observe(element);
+      // Synchronously, so the first paint already has the right view — and as the *content*
+      // box, which is what the observer reports; measuring the border box here re-anchored
+      // the view by the border's width as soon as the observer's first report arrived.
+      measure(contentSize(element));
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (entry) measure(entry.contentRect);
+      });
+      observer.observe(element);
 
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      const { view: v, box: b, image: i, clamp: c, onView: report } = latestRef.current;
-      if (v === null || !(b.width > 0)) return;
-      const origin = viewportOrigin(element);
-      const [min, max] = scaleRange(b, i, c);
-      const factor = Math.exp(-event.deltaY * WHEEL_SENSITIVITY);
-      const scale = Math.min(max, Math.max(min, v.scale * factor));
-      const anchor = { x: event.clientX - origin.x, y: event.clientY - origin.y };
-      report(clampView(zoomAbout(v, scale, anchor), b, i, c));
-    };
-    element.addEventListener("wheel", onWheel, { passive: false });
+      const onWheel = (event: WheelEvent) => {
+        event.preventDefault();
+        const { effective: v, box: b, image: i, clamp: c } = latestRef.current;
+        if (!(b.width > 0)) return;
+        const origin = viewportOrigin(element);
+        const [min, max] = scaleRange(b, i, c);
+        const factor = Math.exp(-event.deltaY * WHEEL_SENSITIVITY);
+        const scale = Math.min(max, Math.max(min, v.scale * factor));
+        const anchor = {
+          x: event.clientX - origin.x,
+          y: event.clientY - origin.y,
+        };
+        emit(clampView(zoomAbout(v, scale, anchor), b, i, c), "gesture");
+      };
+      element.addEventListener("wheel", onWheel, { passive: false });
 
-    return () => {
-      observer.disconnect();
-      element.removeEventListener("wheel", onWheel);
-      viewportRef.current = null;
-    };
-  }, []);
+      return () => {
+        observer.disconnect();
+        element.removeEventListener("wheel", onWheel);
+        viewportRef.current = null;
+      };
+    },
+    [emit],
+  );
 
   /* Space is a *modifier*, not a command: held, it turns any press into a pan, which is the
    * one gesture that has to work no matter which layer is under the cursor. */
@@ -425,45 +504,56 @@ export function ImageStage({
 
   const clientToImage = useCallback((p: Point): Point => {
     const element = viewportRef.current;
-    const { view: v } = latestRef.current;
-    if (!element || v === null) return { x: 0, y: 0 };
+    const { view: held, effective: v, box: b } = latestRef.current;
+    // Unmeasured and uncontrolled: there is no view to convert with yet.
+    if (!element || (held === null && !(b.width > 0))) return { x: 0, y: 0 };
     const origin = viewportOrigin(element);
     return toImage(v, { x: p.x - origin.x, y: p.y - origin.y });
   }, []);
 
   const imageToClient = useCallback((p: Point): Point => {
     const element = viewportRef.current;
-    const { view: v } = latestRef.current;
-    if (!element || v === null) return { x: 0, y: 0 };
+    const { view: held, effective: v, box: b } = latestRef.current;
+    // Unmeasured and uncontrolled: there is no view to convert with yet.
+    if (!element || (held === null && !(b.width > 0))) return { x: 0, y: 0 };
     const origin = viewportOrigin(element);
     const local = toScreen(v, p);
     return { x: local.x + origin.x, y: local.y + origin.y };
   }, []);
 
-  const fit = useCallback(() => {
-    const { box: b, image: i, view: v, onView: report, fitOpts: f } = latestRef.current;
-    if (!(b.width > 0)) return;
-    if (v !== null && !isFit(v, b, i, f)) previousRef.current = v;
-    report(fitView(b, i, f));
-  }, []);
+  const fitBy = useCallback(
+    (cause: StageViewChange["cause"]) => {
+      const { box: b, image: i, view: v, fitOpts: f } = latestRef.current;
+      if (!(b.width > 0)) return;
+      if (v !== null && !isFit(v, b, i, f)) previousRef.current = v;
+      emit(fitView(b, i, f), cause);
+    },
+    [emit],
+  );
+  const fit = useCallback(() => fitBy("command"), [fitBy]);
 
-  const zoomTo = useCallback((scale: number, anchor?: Point) => {
-    const { view: v, box: b, image: i, clamp: c, onView: report } = latestRef.current;
-    const element = viewportRef.current;
-    if (v === null || !(b.width > 0) || !element) return;
-    const origin = viewportOrigin(element);
-    const local = anchor
-      ? { x: anchor.x - origin.x, y: anchor.y - origin.y }
-      : { x: b.width / 2, y: b.height / 2 };
-    const [min, max] = scaleRange(b, i, c);
-    report(clampView(zoomAbout(v, Math.min(max, Math.max(min, scale)), local), b, i, c));
-  }, []);
+  const zoomBy = useCallback(
+    (cause: StageViewChange["cause"], scale: number, anchor?: Point) => {
+      const { effective: v, box: b, image: i, clamp: c } = latestRef.current;
+      const element = viewportRef.current;
+      if (!(b.width > 0) || !element) return;
+      const origin = viewportOrigin(element);
+      const local = anchor ? { x: anchor.x - origin.x, y: anchor.y - origin.y } : { x: b.width / 2, y: b.height / 2 };
+      const [min, max] = scaleRange(b, i, c);
+      emit(clampView(zoomAbout(v, Math.min(max, Math.max(min, scale)), local), b, i, c), cause);
+    },
+    [emit],
+  );
+  const zoomTo = useCallback((scale: number, anchor?: Point) => zoomBy("command", scale, anchor), [zoomBy]);
 
-  const frame = useCallback((rect: Rect, pad?: number) => {
-    const { box: b, image: i, onView: report } = latestRef.current;
-    if (!(b.width > 0)) return;
-    report(frameRect(b, i, rect, pad));
-  }, []);
+  const frame = useCallback(
+    (rect: Rect, pad?: number) => {
+      const { box: b, image: i } = latestRef.current;
+      if (!(b.width > 0)) return;
+      emit(frameRect(b, i, rect, pad), "command");
+    },
+    [emit],
+  );
 
   useImperativeHandle(ref, () => ({ frame, fit, zoomTo }), [frame, fit, zoomTo]);
 
@@ -486,25 +576,11 @@ export function ImageStage({
       panning,
       panMode,
     }),
-    [
-      effective,
-      commit,
-      image,
-      box,
-      clientToImage,
-      imageToClient,
-      frame,
-      fit,
-      zoomTo,
-      atFit,
-      panning,
-      panMode,
-    ],
+    [effective, commit, image, box, clientToImage, imageToClient, frame, fit, zoomTo, atFit, panning, panMode],
   );
 
   /** The pointer's tolerance for hover and presses in image pixels: a fingertip is fatter. */
-  const hitRadius = (event: { pointerType: string }) =>
-    imageLengthFor(effective, hitRadiusPx(event.pointerType));
+  const hitRadius = (event: { pointerType: string }) => imageLengthFor(effective, hitRadiusPx(event.pointerType));
 
   /** Offer a press to the items under it, topmost first; whether one claimed it. */
   const routePress = (event: ReactPointerEvent<HTMLDivElement>) =>
@@ -568,7 +644,7 @@ export function ImageStage({
     // During a pan the pointer is holding the image, not pointing at a pixel.
     onHover?.(null);
     hits.clearHover();
-    commit({ scale: effective.scale, tx: origin.tx + dx, ty: origin.ty + dy });
+    commit({ scale: effective.scale, tx: origin.tx + dx, ty: origin.ty + dy }, "gesture");
   };
 
   const endDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -576,7 +652,9 @@ export function ImageStage({
     if (origin?.touch) return; // a touch ends through `touchEnd`
     dragRef.current = null;
     setPanning(false);
-    if (origin && !origin.moved && event.button === 0) onBackgroundClick?.(event);
+    if (origin && !origin.moved && event.button === 0) {
+      onBackgroundClick?.(event, clientToImage({ x: event.clientX, y: event.clientY }));
+    }
   };
 
   /*
@@ -644,6 +722,7 @@ export function ImageStage({
           { x: mid.x - origin.x, y: mid.y - origin.y },
           scaleRange(box, image, clamp),
         ),
+        "gesture",
       );
       return;
     }
@@ -656,7 +735,7 @@ export function ImageStage({
     if (!drag.pan) return;
     setPanning(true);
     onHover?.(null);
-    commit({ scale: effective.scale, tx: drag.tx + dx, ty: drag.ty + dy });
+    commit({ scale: effective.scale, tx: drag.tx + dx, ty: drag.ty + dy }, "gesture");
   };
 
   const touchEnd = (event: ReactPointerEvent<HTMLDivElement>, cancelled: boolean) => {
@@ -686,7 +765,7 @@ export function ImageStage({
     dragRef.current = null;
     setPanning(false);
     if (!drag || cancelled || drag.moved || !isTap(0, event.timeStamp - drag.at)) return;
-    if (!routePress(event)) onBackgroundClick?.(event);
+    if (!routePress(event)) onBackgroundClick?.(event, clientToImage({ x: event.clientX, y: event.clientY }));
   };
 
   /*
@@ -699,14 +778,14 @@ export function ImageStage({
     if (atFit) {
       const restore = previousRef.current;
       if (restore) {
-        onView(clampView(restore, box, image, clamp));
+        emit(clampView(restore, box, image, clamp), "gesture");
       } else {
-        zoomTo(1, { x: event.clientX, y: event.clientY });
+        zoomBy("gesture", 1, { x: event.clientX, y: event.clientY });
       }
       return;
     }
     previousRef.current = effective;
-    onView(fitView(box, image, fitOpts));
+    emit(fitView(box, image, fitOpts), "gesture");
   };
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -716,33 +795,33 @@ export function ImageStage({
     switch (event.key) {
       case "+":
       case "=":
-        zoomTo(Math.min(max, effective.scale * 1.5));
+        zoomBy("key", Math.min(max, effective.scale * 1.5));
         break;
       case "-":
       case "_":
-        zoomTo(Math.max(min, effective.scale / 1.5));
+        zoomBy("key", Math.max(min, effective.scale / 1.5));
         break;
       case "0":
-        fit();
+        fitBy("key");
         break;
       case "1":
-        zoomTo(1);
+        zoomBy("key", 1);
         break;
       case "ArrowLeft":
         if (!panKeys) return;
-        commit({ ...effective, tx: effective.tx + nudge });
+        commit({ ...effective, tx: effective.tx + nudge }, "key");
         break;
       case "ArrowRight":
         if (!panKeys) return;
-        commit({ ...effective, tx: effective.tx - nudge });
+        commit({ ...effective, tx: effective.tx - nudge }, "key");
         break;
       case "ArrowUp":
         if (!panKeys) return;
-        commit({ ...effective, ty: effective.ty + nudge });
+        commit({ ...effective, ty: effective.ty + nudge }, "key");
         break;
       case "ArrowDown":
         if (!panKeys) return;
-        commit({ ...effective, ty: effective.ty - nudge });
+        commit({ ...effective, ty: effective.ty - nudge }, "key");
         break;
       default:
         return;
@@ -836,7 +915,10 @@ function hoverPoint(
 ): Point | null {
   if (!element) return null;
   const origin = viewportOrigin(element);
-  const p = toImage(view, { x: event.clientX - origin.x, y: event.clientY - origin.y });
+  const p = toImage(view, {
+    x: event.clientX - origin.x,
+    y: event.clientY - origin.y,
+  });
   return insideImage(p, image) ? p : null;
 }
 

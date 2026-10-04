@@ -23,11 +23,16 @@ function Ruler({
   initialView = { scale: 1, tx: 0, ty: 0 },
   claimsTouch = false,
   doubleClick = false,
+  extent,
+  frame = { width: IMAGE.width + 2, height: IMAGE.height + 2 },
 }: {
   initialTool: boolean;
   initialView?: StageView;
   claimsTouch?: boolean;
   doubleClick?: boolean;
+  extent?: "image" | "viewport";
+  /** The stage's size: larger than the image, there is a margin around it to press in. */
+  frame?: { width: number; height: number };
 }) {
   const [view, setView] = useState<StageView | null>(initialView);
   const [tool, setTool] = useState(initialTool);
@@ -61,14 +66,15 @@ function Ruler({
       <ImageStage
         image={IMAGE}
         view={view}
-        onView={(next) => {
+        onView={(next, change) => {
           setView(next);
-          onView(next);
+          onView(next, change);
         }}
-        style={{ width: IMAGE.width + 2, height: IMAGE.height + 2 }}
+        style={frame}
       >
         <div className="absolute inset-0 bg-surface" />
         <StageSurface
+          {...(extent ? { extent } : {})}
           onPress={onPress}
           cursor={tool ? "crosshair" : undefined}
           onHover={hovered}
@@ -129,6 +135,11 @@ const meta = {
 finger and pinches with two, so act in \`onEnd\` when \`moved\` is \`false\` (a tap), not in \`onPress\`. \`onMove\` fires only
 once the finger has left the tap slop, \`onCancel\` when a second finger lands or the browser takes the touch, and
 \`onHover\` is not called. \`StagePress\` carries \`touch\`, \`client\` and the hit \`radius\` (12 px for a finger, 6 otherwise).
+
+**Extent.** \`extent="viewport"\` makes the surface cover the whole visible viewport, so a press in the margin around
+the image reaches the tool too (a drawing tool placing a vertex on the image border). Every point it reports (the
+press, a drag's moves and release, hover, double-click) is clamped to the image's extent. The default, \`"image"\`,
+covers the image only, and a press in the margin pans.
 
 **How drags are tracked.** Drags listen on \`window\`, so they survive the pointer leaving the canvas and never
 depend on which element captured the pointer. \`useStageDrag\` starts the same kind of drag from any element, e.g. a
@@ -297,5 +308,71 @@ export const OwnsTheDoubleClick: Story = {
     await expect(doubled).toHaveBeenCalledTimes(1);
     // The stage's double-click-to-fit did not run.
     await expect(canvas.getByTestId("view")).toHaveTextContent("2,0,0");
+  },
+};
+
+/** The margin around the image, in a stage larger than it: 80 px left, 60 px above. */
+const MARGINED = { width: 582, height: 442 };
+const MARGIN_VIEW: StageView = { scale: 1, tx: 80, ty: 60 };
+
+export const ViewportExtentTakesMarginPresses: Story = {
+  render: () => <Ruler initialTool initialView={MARGIN_VIEW} extent="viewport" frame={MARGINED} />,
+  play: async ({ canvas, canvasElement }) => {
+    pressed.mockClear();
+    hovered.mockClear();
+    const surface = canvasElement.querySelector("[data-stage-surface]")!;
+    const viewport = surface.closest("[role=application]")!;
+    // The target is the whole viewport, not the image.
+    const s = surface.getBoundingClientRect();
+    await expect(s.width).toBeCloseTo((viewport as HTMLElement).clientWidth, 0);
+    await expect(s.height).toBeCloseTo((viewport as HTMLElement).clientHeight, 0);
+
+    // A press 30 px left of and 20 px above the image reaches the tool, on the frame's corner.
+    await fireEvent.pointerDown(surface, at(surface, { x: -30, y: -20 }));
+    const press = pressed.mock.lastCall![0] as StagePress;
+    await expect(press.point).toEqual({ x: -0.5, y: -0.5 });
+    await expect(press.client.x).toBeLessThan(
+      canvasElement.querySelector("[data-stage]")!.getBoundingClientRect().left,
+    );
+    // Dragged out past the opposite corner: the release is clamped too.
+    await fireEvent.pointerMove(window, at(surface, { x: 900, y: 700 }));
+    await fireEvent.pointerUp(window, at(surface, { x: 900, y: 700 }));
+    // From (-0.5, -0.5) to (399.5, 299.5): 500 px.
+    await waitFor(() => expect(canvas.getByTestId("ruler")).toHaveTextContent("500 px"));
+
+    // Hover in the margin is clamped as well.
+    await fireEvent.pointerMove(surface, at(surface, { x: 450, y: 40 }));
+    await expect(hovered).toHaveBeenLastCalledWith({ x: 399.5, y: 40 });
+  },
+};
+
+export const ImageExtentLeavesTheMarginToTheStage: Story = {
+  render: () => <Ruler initialTool initialView={MARGIN_VIEW} frame={MARGINED} />,
+  play: async ({ canvasElement }) => {
+    pressed.mockClear();
+    const surface = canvasElement.querySelector("[data-stage-surface]")!;
+    // The surface covers the image only: a press in the margin lands on the stage (a pan).
+    const s = surface.getBoundingClientRect();
+    await expect(s.width).toBeCloseTo(IMAGE.width, 0);
+    const viewport = surface.closest("[role=application]")!;
+    await fireEvent.pointerDown(viewport, at(surface, { x: -30, y: -20 }));
+    await fireEvent.pointerUp(viewport, at(surface, { x: -30, y: -20 }));
+    await expect(pressed).not.toHaveBeenCalled();
+  },
+};
+
+export const ViewportExtentFollowsThePan: Story = {
+  render: () => <Ruler initialTool={false} initialView={MARGIN_VIEW} extent="viewport" frame={MARGINED} />,
+  play: async ({ canvasElement }) => {
+    const surface = canvasElement.querySelector("[data-stage-surface]")!;
+    const viewport = surface.closest("[role=application]")!;
+    const before = surface.getBoundingClientRect();
+    // The tool is off, so the declined press pans the view by (-40, -30).
+    await fireEvent.pointerDown(surface, at(surface, { x: 100, y: 100 }));
+    await fireEvent.pointerMove(viewport, at(surface, { x: 60, y: 70 }));
+    await fireEvent.pointerUp(viewport, at(surface, { x: 60, y: 70 }));
+    // The surface is still the viewport: its on-screen rect did not move with the image.
+    await waitFor(() => expect(surface.getBoundingClientRect().left).toBeCloseTo(before.left, 0));
+    await expect(surface.getBoundingClientRect().width).toBeCloseTo(before.width, 0);
   },
 };

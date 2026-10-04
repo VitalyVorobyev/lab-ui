@@ -211,6 +211,17 @@ export function insideImage(p: Point, image: Box): boolean {
   );
 }
 
+/**
+ * An image coordinate held to the image's extent, `[-0.5, w - 0.5] x [-0.5, h - 0.5]` in the
+ * pixel-centre convention: the point on the frame's edge nearest to `p`.
+ */
+export function clampToImage(p: Point, image: Box): Point {
+  return {
+    x: Math.min(image.width - PIXEL_CENTRE, Math.max(-PIXEL_CENTRE, p.x)),
+    y: Math.min(image.height - PIXEL_CENTRE, Math.max(-PIXEL_CENTRE, p.y)),
+  };
+}
+
 /** A length in image pixels that covers `css` screen pixels at this view. */
 export function imageLengthFor(view: StageView, css: number): number {
   return view.scale > 0 ? css / view.scale : css;

@@ -100,9 +100,9 @@ function StatefulStage({ options = {}, ...args }: ImageStageProps & { options?: 
       <ImageStage
         {...args}
         view={view}
-        onView={(next) => {
+        onView={(next, change) => {
           setView(next);
-          onView(next);
+          onView(next, change);
         }}
         panTool={panTool}
         onHover={(point) => {
@@ -406,9 +406,9 @@ function InteractiveStage(args: ImageStageProps) {
     <StatefulStage
       {...args}
       options={{ toolbar: true, readout: "hover" }}
-      onBackgroundClick={(event) => {
+      onBackgroundClick={(event, point) => {
         setSelected(false);
-        args.onBackgroundClick?.(event);
+        args.onBackgroundClick?.(event, point);
       }}
     >
       {args.children}
@@ -445,6 +445,39 @@ export const InteractiveLayer: Story = {
     await fireEvent.pointerUp(stage, { button: 0, pointerId: 1, ...corner });
     await waitFor(() => expect(handle).toHaveAttribute("aria-pressed", "false"));
     await expect(args.onBackgroundClick).toHaveBeenCalled();
+    // The click's image point comes with it: 12 screen px from the corner is a few image pixels in.
+    await expect(args.onBackgroundClick).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.anything(),
+    );
+  },
+};
+
+/** `onView` says why the view moved and for which viewport: the second argument. */
+export const ReportsWhyTheViewChanged: Story = {
+  render: (args) => <StatefulStage {...args} options={{ toolbar: true }} />,
+  play: async ({ canvas, args }) => {
+    const viewport = canvas.getByRole("application", { name: "Image canvas" });
+    await waitFor(() => expect(args.onView).toHaveBeenCalled());
+    // The opening view is the measure.
+    await expect(args.onView).toHaveBeenNthCalledWith(
+      1,
+      expect.anything(),
+      expect.objectContaining({ cause: "measure" }),
+    );
+    const lastCause = (cause: string) =>
+      expect(args.onView).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ cause }));
+
+    viewport.focus();
+    await userEvent.keyboard("1");
+    await waitFor(() => lastCause("key"));
+
+    const r = viewport.getBoundingClientRect();
+    await fireEvent.wheel(viewport, { deltaY: -120, clientX: r.left + 100, clientY: r.top + 100 });
+    await waitFor(() => lastCause("gesture"));
+
+    await userEvent.click(canvas.getByRole("button", { name: "Fit to window" }));
+    await waitFor(() => lastCause("command"));
   },
 };
 
@@ -581,9 +614,9 @@ function InspectorDriven(args: ImageStageProps) {
           {...args}
           ref={stageRef}
           view={view}
-          onView={(next) => {
+          onView={(next, change) => {
             setView(next);
-            args.onView(next);
+            args.onView(next, change);
           }}
         />
       </div>

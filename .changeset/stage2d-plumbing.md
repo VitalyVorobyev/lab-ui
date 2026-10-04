@@ -1,0 +1,11 @@
+---
+"@vitavision/stage2d": minor
+---
+
+Stage plumbing found migrating a drawing app and a linked-pane frame viewer.
+
+- **`StageSurface` can cover the viewport.** New `extent?: "image" | "viewport"` (default `"image"`, today's behaviour). With `"viewport"` a press in the margin around the image reaches `onPress` instead of panning, so a drawing tool can place a vertex on the image border; the target follows pan, zoom and resize. Every point the surface reports (`press.point`, a drag's `onMove`/`onEnd`, `onHover`, `onDoubleClick`) is clamped to the image's extent, `[-0.5, w - 0.5] x [-0.5, h - 0.5]`; `press.client` stays raw. The clamp is exported as `clampToImage(point, image)`, next to `insideImage`.
+- **`onView` says why.** `onView(view, change)` gets a `StageViewChange` as its second argument: `cause` is `"gesture"` (wheel, drag pan, pinch, double-click), `"key"` (keyboard shortcuts and pan keys), `"command"` (handle and context calls: `fit`, `zoomTo`, `frame`, `setView`, the toolbar's buttons) or `"measure"` (the opening view and resize re-anchoring), and `box` is the measured viewport at that moment. Existing one-argument callbacks keep working. Two panes sharing one view can ignore the other's `"measure"`.
+- **Fix: a `null` view after measurement is re-opened.** When a consumer set `view` back to `null` after the stage had measured, it rendered the opening view but never reported it, and the wheel handler returned early, so the pane was stuck until something else set a view. It now reports the opening view (cause `"measure"`) and the wheel, keys and `zoomTo` work from the opening view throughout.
+- **Fix, behaviour change: `RectRoiEditor`'s default `bounds` is the image's extent.** It was `{ x: 0, y: 0, width, height }` while the editor draws in the centre-convention coordinates of `imageViewBox`, so a full-image region sat half a pixel right and down of the image, and a region could not reach the top and left edges. The default is now `{ x: -0.5, y: -0.5, width, height }`. A region clamped to the default bounds now starts at `-0.5`, not `0`; pass `bounds` to keep the old numbers.
+- **`onBackgroundClick(event, point)`** gets the click's image point (centre convention, unclamped) as a second argument, so a consumer needs no `useStage` bridge to convert it.
