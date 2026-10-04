@@ -13,6 +13,7 @@
 import { barsPath, tallest } from "./bars";
 import { DEFECT_COLOUR, Frame, NORMAL_COLOUR, areaFor } from "./Frame";
 import { extent, histogram, linearScale } from "./scale";
+import { ThresholdRule } from "./ThresholdRule";
 
 // The histogram is always given a whole panel, never a column of a grid.
 const plotArea = areaFor("wide");
@@ -98,17 +99,7 @@ export function ScoreHistogram({
       <path data-bars="" d={barsPath(normalBins, yScale, plotArea)} fill={NORMAL_FILL} opacity={0.65} />
       <path data-bars="" d={barsPath(defectBins, yScale, plotArea)} fill={DEFECT_FILL} opacity={0.65} />
 
-      {threshold !== undefined && Number.isFinite(threshold) && (
-        <line
-          x1={xScale.project(threshold)}
-          x2={xScale.project(threshold)}
-          y1={plotArea.y0}
-          y2={plotArea.y1}
-          stroke="currentColor"
-          strokeWidth={1.25}
-          strokeDasharray="3 2"
-        />
-      )}
+      <ThresholdRule value={threshold} xScale={xScale} area={plotArea} />
     </Frame>
   );
 }

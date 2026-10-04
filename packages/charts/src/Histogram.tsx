@@ -12,6 +12,7 @@ import { barsPath, binAt, binValues, cleanCounts, tallest } from "./bars";
 import { FLUID_DEFAULT_HEIGHT, Frame, areaFor, seriesColour, useFluidSize, type Variant } from "./Frame";
 import { Bands, Markers, PlotInteraction, type InteractionProps } from "./interaction";
 import { linearScale, logScale } from "./scale";
+import { ThresholdRule } from "./ThresholdRule";
 
 /** Props every {@link Histogram} takes, whichever way its data is given. */
 export interface HistogramOptions extends InteractionProps {
@@ -23,6 +24,11 @@ export interface HistogramOptions extends InteractionProps {
   yLabel?: string | undefined;
   /** Unit of x, appended to the x-axis title in parentheses: `luminance (DN)`. */
   unit?: string | undefined;
+  /**
+   * A decision threshold on x, drawn as a dashed rule across the plot (as `ScoreHistogram`
+   * draws its own). Omitted or non-finite: none. For other x positions use `markers`.
+   */
+  threshold?: number | undefined;
   /** Counts span decades in a long-tailed distribution; a log axis keeps the tail visible. */
   logY?: boolean | undefined;
   /** Where the chart is going (see {@link Variant}). Default `"panel"`. */
@@ -67,11 +73,12 @@ export type HistogramProps = HistogramOptions & (HistogramValues | HistogramCoun
  * One distribution as a bar chart over equal-width bins.
  *
  * @remarks
- * An SVG `role="img"` named by `label`. `markers` tick the x axis (a threshold), `bands`
- * shade x ranges, `onHover` adds a crosshair and the x under it, `onPick` reports the x of a
- * click, and `cursor` draws the bin containing an x chosen elsewhere in the selection
- * colour (`--signal`) — no highlight when it lies outside the domain. Empty data draws an
- * empty frame. For two classes sharing a threshold use {@link ScoreHistogram}.
+ * An SVG `role="img"` named by `label`. `threshold` draws a dashed decision rule, `markers`
+ * tick the x axis, `bands` shade x ranges, `onHover` adds a crosshair and the x under it,
+ * `onPick` reports the x of a click, and `cursor` draws the bin containing an x chosen
+ * elsewhere in the selection colour (`--signal`) — no highlight when it lies outside the
+ * domain. Empty data draws an empty frame. For two classes sharing a threshold use
+ * {@link ScoreHistogram}.
  */
 export function Histogram(props: HistogramProps) {
   const {
@@ -84,6 +91,7 @@ export function Histogram(props: HistogramProps) {
     height = FLUID_DEFAULT_HEIGHT,
     footer,
     className,
+    threshold,
     bands,
     markers,
     cursor,
@@ -136,6 +144,7 @@ export function Histogram(props: HistogramProps) {
           fill="var(--signal)"
         />
       )}
+      <ThresholdRule value={threshold} xScale={xScale} area={plotArea} />
       {markers && markers.length > 0 && <Markers markers={markers} xScale={xScale} area={plotArea} />}
       {(onHover || onPick) && (
         <PlotInteraction

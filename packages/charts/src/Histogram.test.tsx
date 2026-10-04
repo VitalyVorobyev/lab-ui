@@ -26,6 +26,16 @@ describe("Histogram", () => {
     noNaN(container);
   });
 
+  it("draws a finite threshold as one dashed rule, and none otherwise", () => {
+    const at = render(<Histogram label="h" counts={[1, 2, 3, 4]} domain={[0, 4]} threshold={1} />).container;
+    const rule = at.querySelector("line[data-threshold]");
+    expect(rule?.getAttribute("stroke-dasharray")).toBe("3 2");
+    expect(rule?.getAttribute("x1")).toBe(rule?.getAttribute("x2"));
+    const none = render(<Histogram label="h" counts={[1, 2]} domain={[0, 2]} threshold={Number.NaN} />).container;
+    expect(none.querySelector("line[data-threshold]")).toBeNull();
+    noNaN(none);
+  });
+
   it("appends the unit to the x title", () => {
     const { getByText } = render(<Histogram label="h" values={[1, 2]} xLabel="luminance" unit="DN" />);
     expect(getByText("luminance (DN)")).toBeTruthy();

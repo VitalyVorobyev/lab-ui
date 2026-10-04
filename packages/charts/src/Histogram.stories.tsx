@@ -37,7 +37,7 @@ const meta = {
 and \`domain\` optional) or already-binned \`counts\` with their \`domain\` — the second is for a caller that
 cannot hand over its samples, such as a luminance histogram of a 20 MP image.
 
-\`markers\` tick the x axis (a decision threshold), \`bands\` shade a range, \`onHover\` reports the x under
+\`threshold\` draws a dashed decision rule, \`markers\` tick the x axis, \`bands\` shade a range, \`onHover\` reports the x under
 the pointer, \`onPick\` the x of a click, and \`cursor\` highlights the bin containing an x chosen elsewhere
 in the selection colour. All x values are in data units. \`variant="fluid"\` takes the container's width.
 
@@ -56,20 +56,20 @@ touch affordance and has no keyboard equivalent, so anything it reveals must als
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** One population of scores with a decision threshold ticked on the axis. */
+/** One population of scores with its decision threshold. */
 export const ValuesWithThreshold: Story = {
   args: {
     values: samples(7, 600, 0.3, 0.12),
     bins: 40,
     xLabel: "anomaly score",
     yLabel: "samples",
-    markers: [{ position: 0.41, tone: "defect", label: "threshold 0.41" }],
+    threshold: 0.41,
     variant: "wide",
   },
   play: async ({ canvas, canvasElement }) => {
     await expect(canvas.getByRole("img", { name: "Anomaly scores" })).toBeInTheDocument();
     await expect(canvasElement.querySelectorAll("path[data-bars]")).toHaveLength(1);
-    await expect(canvasElement.querySelectorAll("[data-markers] line")).toHaveLength(1);
+    await expect(canvasElement.querySelectorAll("line[data-threshold]")).toHaveLength(1);
     await expect(canvasElement.querySelector("[data-cursor-bin]")).toBeNull();
   },
 };

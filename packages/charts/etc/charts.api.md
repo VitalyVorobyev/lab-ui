@@ -140,6 +140,7 @@ export interface HistogramOptions extends InteractionProps {
     height?: number | undefined;
     label: string;
     logY?: boolean | undefined;
+    threshold?: number | undefined;
     unit?: string | undefined;
     variant?: Variant | undefined;
     xLabel?: string | undefined;
