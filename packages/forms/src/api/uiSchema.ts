@@ -79,12 +79,23 @@ export interface FieldUi {
   descriptionAs?: "hint" | "inline" | "none" | undefined;
   /**
    * Clearing a number input puts the default back (the default, `true`): the schema's
-   * `default`, else the nearest legal value for a required field, else — for an optional
-   * field with no default — nothing, which removes the key. With `false` the field is left
-   * empty where it can be (an optional field loses its key) and keeps its value where it
-   * cannot (a required one). A nullable field is set to `null` either way.
+   * non-null `default`, else the nearest legal value for a required field, else — for an
+   * optional field with no usable default — nothing, which removes the key (the schema
+   * default then applies). With `false` the field is left empty where it can be (an
+   * optional field loses its key) and keeps its value where it cannot (a required,
+   * non-nullable one). A required nullable field is set to `null`. An optional field is
+   * never set to `null` unless `clearTo` says so.
    */
   restoreDefaultOnClear?: boolean | undefined;
+  /**
+   * For a nullable field, what clearing writes. `"null"` writes `null` even when the key is
+   * optional — the way to let a user choose `None` for an `Option<T>` whose default is
+   * `Some(…)`, since for a serde `#[serde(default)]` field an absent key means the default
+   * and `null` means `None`. Left out, clearing an optional field removes the key and
+   * clearing a required nullable one writes `null` (see `restoreDefaultOnClear`). It has no
+   * effect on a field that is not nullable.
+   */
+  clearTo?: "null" | undefined;
 }
 
 /**

@@ -6,6 +6,7 @@ import dataset from "../api/__fixtures__/dataset_spec.json";
 import detector from "../api/__fixtures__/detector_config.json";
 import handeye from "../api/__fixtures__/rig_handeye_config.json";
 import planar from "../api/__fixtures__/planar_intrinsics_config.json";
+import targetSpec from "../api/__fixtures__/target_spec.json";
 import rigExtrinsics from "../api/__fixtures__/rig_extrinsics_config.json";
 import type { JsonSchema } from "../api/schemaNode";
 import { defaultValueForSchema } from "../api/schemaValue";
@@ -191,7 +192,7 @@ describe("numbers", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("reads a nullable number: empty is null", () => {
+  it("reads an optional nullable number: empty removes the key, never writes null", () => {
     const { last } = setup(DETECTOR, defaultValueForSchema(DETECTOR));
     const strength = screen.getByRole<HTMLInputElement>("spinbutton", { name: "Min strength" });
     expect(strength.value).toBe("");
@@ -200,7 +201,54 @@ describe("numbers", () => {
     typeNumber("Min strength", "0.4");
     expect((last() as { min_strength: unknown }).min_strength).toBe(0.4);
     fireEvent.blur(typeNumber("Min strength", ""));
-    expect((last() as { min_strength: unknown }).min_strength).toBeNull();
+    expect(last()).not.toHaveProperty("min_strength");
+  });
+
+  describe("clearing a nullable number", () => {
+    const OPT: JsonSchema = {
+      type: "object",
+      properties: {
+        with_default: { type: ["number", "null"], default: 0.25 },
+        null_default: { type: ["number", "null"], default: null },
+        must_have: { type: ["number", "null"], default: 1 },
+        none: { type: ["number", "null"], default: 0.25 },
+      },
+      required: ["must_have"],
+    };
+    const ui = { fields: { with_default: { restoreDefaultOnClear: false }, none: { clearTo: "null" as const } } };
+
+    it("writes the default for an optional field with a non-null default when restoring", () => {
+      const { last } = setup(OPT, { with_default: 0.5, must_have: 2 });
+      fireEvent.blur(typeNumber("With default", ""));
+      expect(last()).toEqual({ with_default: 0.25, must_have: 2 });
+    });
+
+    it("removes the key when restoring is off, or when the default is null", () => {
+      const { last } = setup(OPT, { with_default: 0.5, null_default: 3, must_have: 2 }, { ui });
+      fireEvent.blur(typeNumber("With default", ""));
+      expect(last()).toEqual({ null_default: 3, must_have: 2 });
+      fireEvent.blur(typeNumber("Null default", ""));
+      expect(last()).toEqual({ must_have: 2 });
+    });
+
+    it("writes null for a required nullable field", () => {
+      const { last } = setup(OPT, { must_have: 2 });
+      fireEvent.blur(typeNumber("Must have", ""));
+      expect(last()).toEqual({ must_have: null });
+    });
+
+    it("writes null for an optional nullable field under clearTo: null", () => {
+      const { last } = setup(OPT, { none: 0.5, must_have: 2 }, { ui });
+      fireEvent.blur(typeNumber("None", ""));
+      expect(last()).toEqual({ none: null, must_have: 2 });
+    });
+
+    it("shows the default of an absent key as the placeholder, and none for null or a null default", () => {
+      setup(OPT, { null_default: null, none: null, must_have: 2 });
+      expect(screen.getByRole<HTMLInputElement>("spinbutton", { name: "With default" }).placeholder).toBe("0.25");
+      expect(screen.getByRole<HTMLInputElement>("spinbutton", { name: "Null default" }).placeholder).toBe("none");
+      expect(screen.getByRole<HTMLInputElement>("spinbutton", { name: "None" }).placeholder).toBe("none");
+    });
   });
 
   it("applies the app's bounds and unit over the schema's", () => {
@@ -265,6 +313,19 @@ describe("closed sets", () => {
     setup(MODE, { mode: "fast", level: 2, flag: null, kind: null });
     expect(screen.getByRole("combobox", { name: "Flag" }).textContent).toBe("None");
     expect(screen.getByRole("combobox", { name: "Kind" }).textContent).toBe("None");
+  });
+
+  it("shows the schema default of an absent nullable set, and writes null for the unset entry", async () => {
+    const schema: JsonSchema = {
+      type: "object",
+      properties: { method: { type: ["string", "null"], enum: ["ring_fit", "gradient", null], default: "ring_fit" } },
+    };
+    const { last } = setup(schema, {});
+    const picker = screen.getByRole("combobox", { name: "Method" });
+    expect(picker.textContent).toBe("ring_fit");
+    fireEvent.click(picker);
+    fireEvent.click(await screen.findByRole("option", { name: "None" }));
+    expect(last()).toEqual({ method: null });
   });
 
   it("does not claim a value outside the set", () => {
@@ -371,13 +432,39 @@ describe("nullable blocks", () => {
     expect(screen.getByRole<HTMLInputElement>("spinbutton", { name: "Scale" }).value).toBe("0.25");
   });
 
-  it("reads a nullable string: empty is null", () => {
+  it("reads an optional nullable string: empty removes the key", () => {
     const { last } = setup(DETECTOR, defaultValueForSchema(DETECTOR));
     const label = screen.getByRole("textbox", { name: "Label" });
     fireEvent.change(label, { target: { value: "run 4" } });
     expect((last() as { label: unknown }).label).toBe("run 4");
     fireEvent.change(label, { target: { value: "" } });
-    expect((last() as { label: unknown }).label).toBeNull();
+    expect(last()).not.toHaveProperty("label");
+  });
+
+  it("writes null when a required or clearTo: null nullable string is emptied, and keeps \"\" for a plain one", () => {
+    const schema: JsonSchema = {
+      type: "object",
+      properties: {
+        req: { type: ["string", "null"] },
+        opt: { type: ["string", "null"], default: "dflt" },
+        plain: { type: "string" },
+      },
+      required: ["req"],
+    };
+    const { last } = setup(schema, { req: "a", opt: "b", plain: "c" }, { ui: { fields: { opt: { clearTo: "null" } } } });
+    expect(screen.getByRole<HTMLInputElement>("textbox", { name: "Opt" }).value).toBe("b");
+    fireEvent.change(screen.getByRole("textbox", { name: "Req" }), { target: { value: "" } });
+    expect(last()).toMatchObject({ req: null });
+    fireEvent.change(screen.getByRole("textbox", { name: "Opt" }), { target: { value: "" } });
+    expect(last()).toMatchObject({ opt: null });
+    fireEvent.change(screen.getByRole("textbox", { name: "Plain" }), { target: { value: "" } });
+    expect(last()).toMatchObject({ plain: "" });
+  });
+
+  it("shows the default of an absent optional nullable string as the placeholder", () => {
+    const schema: JsonSchema = { type: "object", properties: { opt: { type: ["string", "null"], default: "dflt" } } };
+    setup(schema, {});
+    expect(screen.getByRole<HTMLInputElement>("textbox", { name: "Opt" }).placeholder).toBe("dflt");
   });
 });
 
@@ -733,5 +820,16 @@ describe("round trip", () => {
     );
     expect(screen.getByRole<HTMLInputElement>("spinbutton", { name: "Nms radius" }).value).toBe("3");
     expect(spy).not.toHaveBeenCalled();
+  });
+});
+
+describe("ringgrid target_spec", () => {
+  it("shows a $ref-with-siblings variant's struct fields and edits them", () => {
+    const schema = targetSpec as unknown as JsonSchema;
+    const { last } = setup(schema, defaultValueForSchema(schema));
+    expect(screen.getByRole("spinbutton", { name: "Rows" })).toBeTruthy();
+    expect(screen.getByRole("spinbutton", { name: "Pitch mm" })).toBeTruthy();
+    typeNumber("Rows", "7");
+    expect((last() as { lattice: { kind: string; rows: number } }).lattice).toMatchObject({ kind: "hex", rows: 7 });
   });
 });

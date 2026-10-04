@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import detector from "./__fixtures__/detector_config.json";
 import planar from "./__fixtures__/planar_intrinsics_config.json";
+import targetSpec from "./__fixtures__/target_spec.json";
 import rigExtrinsics from "./__fixtures__/rig_extrinsics_config.json";
 import type { JsonSchema } from "./schemaNode";
 import {
@@ -19,6 +20,7 @@ import {
 const DETECTOR = detector as unknown as JsonSchema;
 const PLANAR = planar as unknown as JsonSchema;
 const RIG = rigExtrinsics as unknown as JsonSchema;
+const TARGET = targetSpec as unknown as JsonSchema;
 
 function shapeAt(schema: JsonSchema, path: string): SchemaShape {
   const info = fieldAt(schema, path);
@@ -352,5 +354,42 @@ describe("seedVariant", () => {
     expect(seedVariant(shape, "Fixed", DETECTOR)).toEqual({ Fixed: 0 });
     expect(seedVariant(shape, "Relative", DETECTOR)).toEqual({ Relative: { fraction: 0, floor: 0 } });
     expect(seedVariant(shape, "Nope", DETECTOR)).toBeUndefined();
+  });
+});
+
+describe("ringgrid target_spec ($ref beside properties)", () => {
+  function taggedAt(path: string) {
+    const shape = shapeAt(TARGET, path);
+    if (shape.kind !== "tagged") throw new Error(`${path} is ${shape.kind}, not tagged`);
+    return shape;
+  }
+
+  it("shows every lattice variant's struct fields next to its discriminator", () => {
+    const lattice = taggedAt("lattice");
+    expect(lattice.discriminator).toBe("kind");
+    const hex = lattice.variants.find((variant) => variant.tag === "hex");
+    const rect = lattice.variants.find((variant) => variant.tag === "rect");
+    expect(hex?.fields.map((field) => field.key).sort()).toEqual(["long_row_cols", "pitch_mm", "rows"]);
+    expect(hex?.fields.every((field) => field.required)).toBe(true);
+    expect(rect?.fields.map((field) => field.key).sort()).toEqual(["cols", "pitch_mm", "rows"]);
+  });
+
+  it("shows the coded variant's fields and an empty plain variant", () => {
+    const coding = taggedAt("coding");
+    const coded = coding.variants.find((variant) => variant.tag === "coded16");
+    const plain = coding.variants.find((variant) => variant.tag === "plain");
+    expect(coded?.fields.length).toBeGreaterThan(0);
+    expect(plain?.fields).toEqual([]);
+  });
+
+  it("round-trips the defaults through the tagged variants", () => {
+    const value = defaultValueForSchema(TARGET) as { lattice: { kind: string; rows?: number } };
+    expect(value.lattice.kind).toBe("hex");
+    expect(typeof value.lattice.rows).toBe("number");
+    expect(defaultValueForSchema(TARGET)).toEqual(value);
+    const lattice = taggedAt("lattice");
+    const rect = seedVariant(lattice, "rect", TARGET);
+    expect(rect).toMatchObject({ kind: "rect" });
+    expect(activeTagged(lattice, rect)?.tag).toBe("rect");
   });
 });

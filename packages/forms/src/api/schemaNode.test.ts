@@ -56,6 +56,61 @@ describe("derefNode", () => {
   });
 });
 
+describe("derefNode with sibling properties", () => {
+  const defs: JsonSchema = {
+    $defs: {
+      Hex: {
+        type: "object",
+        description: "The struct.",
+        properties: { rows: { type: "integer", minimum: 1 }, pitch: { type: "number" } },
+        required: ["rows", "pitch"],
+      },
+    },
+  };
+
+  it("merges the sibling's properties first, then the target's", () => {
+    const node: JsonSchema = {
+      $ref: "#/$defs/Hex",
+      properties: { kind: { const: "hex", type: "string" } },
+      required: ["kind"],
+      description: "Mine.",
+    };
+    const merged = derefNode(node, defs);
+    expect(Object.keys(merged.properties ?? {})).toEqual(["kind", "rows", "pitch"]);
+    expect(merged.required).toEqual(["kind", "rows", "pitch"]);
+    expect(merged.description).toBe("Mine.");
+    expect(merged.type).toBe("object");
+  });
+
+  it("merges a property in both, the sibling's keywords winning", () => {
+    const node: JsonSchema = {
+      $ref: "#/$defs/Hex",
+      properties: { rows: { maximum: 9, minimum: 2, description: "Rows." } },
+      required: ["rows", "extra"],
+    };
+    const merged = derefNode(node, defs);
+    expect(merged.properties?.["rows"]).toEqual({ type: "integer", minimum: 2, maximum: 9, description: "Rows." });
+    expect(Object.keys(merged.properties ?? {})).toEqual(["rows", "pitch"]);
+    expect(merged.required).toEqual(["rows", "extra", "pitch"]);
+  });
+
+  it("keeps the target's properties and required when only one side has them", () => {
+    const node: JsonSchema = { $ref: "#/$defs/Hex", default: { rows: 1, pitch: 2 } };
+    const merged = derefNode(node, defs);
+    expect(merged.properties).toBe(defs.$defs?.["Hex"]?.properties);
+    expect(merged.required).toBe(defs.$defs?.["Hex"]?.required);
+  });
+
+  it("applies the same merge to allOf: [X]", () => {
+    const { schema } = resolveSchema(
+      { allOf: [{ type: "object", properties: { a: { type: "string" } }, required: ["a"] }], properties: { k: { const: "x" } }, required: ["k"] },
+      defs,
+    );
+    expect(Object.keys(schema.properties ?? {})).toEqual(["k", "a"]);
+    expect(schema.required).toEqual(["k", "a"]);
+  });
+});
+
 describe("stripNullable", () => {
   it("reads type: [T, null]", () => {
     expect(stripNullable({ type: ["integer", "null"], minimum: 0 })).toEqual({

@@ -222,7 +222,7 @@ export const GroupedByTheApp: Story = {
   },
 };
 
-/** A `null`-able struct is a switch that sets and unsets it; a `null`-able number or string is just an empty control. */
+/** A `null`-able struct is a switch that sets and unsets it; a `null`-able number or string is just an empty control (clearing removes the key, so the schema default applies). */
 export const NullableBlocks: Story = {
   args: { schema: DETECTOR, value: DETECTOR_VALUE, ui: DETECTOR_UI },
   play: async ({ canvas, args }) => {
@@ -232,7 +232,7 @@ export const NullableBlocks: Story = {
     await expect(canvas.getByTestId("value")).toHaveTextContent('"min_strength": 0.4');
     await userEvent.clear(strength);
     await userEvent.tab();
-    await expect(canvas.getByTestId("value")).toHaveTextContent('"min_strength": null');
+    await expect(canvas.getByTestId("value")).not.toHaveTextContent("min_strength");
 
     const pyramid = canvas.getByRole("switch", { name: "Pyramid" });
     await expect(pyramid).not.toBeChecked();
@@ -313,6 +313,35 @@ export const ClearRestoresDefault: Story = {
     await userEvent.tab();
     await expect(sigma).toHaveValue(null);
     await expect(canvas.getByTestId("value")).not.toHaveTextContent("blur_sigma");
+  },
+};
+
+/** An `Option<f64>` whose default is `Some(0.25)`: clearing it removes the key, and `clearTo: "null"` lets the user choose `None`. */
+const OPTION_WITH_DEFAULT: JsonSchema = {
+  type: "object",
+  properties: {
+    residual: { type: ["number", "null"], default: 0.25 },
+    seeds: { type: ["integer", "null"], default: 512 },
+  },
+};
+
+export const OptionWithDefault: Story = {
+  args: {
+    schema: OPTION_WITH_DEFAULT,
+    value: { residual: 0.5, seeds: 100 },
+    ui: { fields: { residual: { restoreDefaultOnClear: false }, seeds: { clearTo: "null" } } },
+  },
+  play: async ({ canvas }) => {
+    const residual = canvas.getByRole("spinbutton", { name: "Residual" });
+    await userEvent.clear(residual);
+    await userEvent.tab();
+    await expect(residual).toHaveAttribute("placeholder", "0.25");
+    await expect(canvas.getByTestId("value")).not.toHaveTextContent("residual");
+
+    const seeds = canvas.getByRole("spinbutton", { name: "Seeds" });
+    await userEvent.clear(seeds);
+    await userEvent.tab();
+    await expect(canvas.getByTestId("value")).toHaveTextContent('"seeds": null');
   },
 };
 
