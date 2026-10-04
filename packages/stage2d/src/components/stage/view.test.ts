@@ -12,6 +12,7 @@ import {
   imageViewBox,
   initialView,
   insideImage,
+  clampToImage,
   isFit,
   preserveCenter,
   scaleRange,
@@ -166,6 +167,15 @@ describe("the pixel-centre convention", () => {
     expect(insideImage({ x: -0.51, y: 0 }, IMAGE)).toBe(false);
     expect(insideImage({ x: IMAGE.width - 0.51, y: 0 }, IMAGE)).toBe(true);
     expect(insideImage({ x: IMAGE.width - PIXEL_CENTRE, y: 0 }, IMAGE)).toBe(false);
+  });
+
+  it("clamps a point to the image's extent, leaving an inside point alone", () => {
+    expect(clampToImage({ x: 10, y: 20 }, IMAGE)).toEqual({ x: 10, y: 20 });
+    expect(clampToImage({ x: -50, y: -9 }, IMAGE)).toEqual({ x: -PIXEL_CENTRE, y: -PIXEL_CENTRE });
+    expect(clampToImage({ x: 5000, y: 5000 }, IMAGE)).toEqual({
+      x: IMAGE.width - PIXEL_CENTRE,
+      y: IMAGE.height - PIXEL_CENTRE,
+    });
   });
 
   it("frames a rect on its centre in the same convention", () => {

@@ -106,7 +106,7 @@ export const Move: Story = {
     await expect(commit).toHaveBeenCalledTimes(1);
     // Moved past the corner: held inside the image without shrinking.
     await drag(canvas.getByRole("button", { name: /Region/ }), { x: 150, y: 120 }, { x: -200, y: -200 });
-    await waitFor(() => expect(canvas.getByTestId("roi")).toHaveTextContent("0,0,160,120"));
+    await waitFor(() => expect(canvas.getByTestId("roi")).toHaveTextContent("-0.5,-0.5,160,120"));
   },
 };
 
@@ -135,8 +135,24 @@ export const Draw: Story = {
     await expect(canvas.getByTestId("roi")).toHaveTextContent("none");
     // Dragged up-left from the start corner, and past the image's edge.
     await drag(surface, { x: 100, y: 120 }, { x: -40, y: 30 });
-    await waitFor(() => expect(canvas.getByTestId("roi")).toHaveTextContent("0,30,100,90"));
+    await waitFor(() => expect(canvas.getByTestId("roi")).toHaveTextContent("-0.5,30,100.5,90"));
     await expect(commit).toHaveBeenCalledTimes(1);
+  },
+};
+
+/**
+ * The default bounds are the image's own extent, `[-0.5, w - 0.5]`: a region that fills them
+ * is drawn on the image's edges, not half a pixel right and down of them.
+ */
+export const FullImage: Story = {
+  render: () => <Harness initial={{ x: -0.5, y: -0.5, width: IMAGE.width, height: IMAGE.height }} />,
+  play: async ({ canvasElement }) => {
+    const image = canvasElement.querySelector("[data-stage]")!.getBoundingClientRect();
+    const outline = canvasElement.querySelector("svg rect[fill-opacity]")!.getBoundingClientRect();
+    await expect(outline.left).toBeCloseTo(image.left, 3);
+    await expect(outline.top).toBeCloseTo(image.top, 3);
+    await expect(outline.right).toBeCloseTo(image.right, 3);
+    await expect(outline.bottom).toBeCloseTo(image.bottom, 3);
   },
 };
 

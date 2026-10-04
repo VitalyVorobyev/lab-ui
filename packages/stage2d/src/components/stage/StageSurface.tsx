@@ -19,11 +19,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 
+import { cn } from "@vitavision/ui";
 import type { Point } from "../measureGeometry";
 import { useStage } from "./ImageStage";
 import { hitRadiusPx } from "./gesture";
 import { watchTouch } from "./touchWatch";
-import { imageViewBox } from "./view";
+import { clampToImage, imageViewBox, toImage } from "./view";
 
 /** What a drag does as the pointer moves and when it is released, in image coordinates. */
 export interface StageDrag {
@@ -137,6 +138,15 @@ export interface StageSurfaceProps {
    * stage's double-click-to-fit does not run; leave it out to keep the fit.
    */
   onDoubleClick?: ((point: Point) => void) | undefined;
+  /**
+   * How far the surface reaches. `"image"` (the default) is the image rectangle: a press in
+   * the margin around the image goes to the stage, which pans. `"viewport"` covers everything
+   * visible, margin included, so a drawing tool can place a point on the image's border by
+   * pressing just outside it; every point the surface then reports (the press, a drag's moves
+   * and release, hover, double-click) is clamped to the image's extent, `[-0.5, w - 0.5]` by
+   * `[-0.5, h - 0.5]`. `StagePress.client` stays the raw pointer position.
+   */
+  extent?: "image" | "viewport" | undefined;
 }
 
 /**
@@ -156,9 +166,12 @@ export interface StageSurfaceProps {
  *
  * A touch gesture that sets `claimsTouch: true` is claimed like a mouse press.
  *
+ * With `extent="viewport"` the surface also takes presses in the margin around the image, and
+ * clamps every reported point to the image.
+ *
  * The surface draws nothing. It carries `data-dragging` while a gesture it started is in flight.
  */
-export function StageSurface({ onPress, cursor, onHover, onDoubleClick }: StageSurfaceProps) {
+export function StageSurface({ onPress, cursor, onHover, onDoubleClick, extent = "image" }: StageSurfaceProps) {
   const stage = useStage();
   const start = useStageDrag();
   const [dragging, setDragging] = useState(false);
@@ -167,6 +180,22 @@ export function StageSurface({ onPress, cursor, onHover, onDoubleClick }: StageS
   // A touch still being watched when the surface goes away is cancelled, not left listening.
   useEffect(() => () => watchRef.current?.(), []);
 
+  const viewport = extent === "viewport";
+  // The image point under a client position; held to the image only for a viewport-wide surface.
+  const pointAt = (client: Point): Point => {
+    const p = stage.toImage(client);
+    return viewport ? clampToImage(p, stage.image) : p;
+  };
+  // The visible area in image coordinates, from the view and the measured box, so it follows
+  // pan, zoom and resize; the image rectangle until the viewport has been measured.
+  const target = (() => {
+    const { image, view, box } = stage;
+    if (!viewport || !(box.width > 0)) return { x: -0.5, y: -0.5, width: image.width, height: image.height };
+    const a = toImage(view, { x: 0, y: 0 });
+    const b = toImage(view, { x: box.width, y: box.height });
+    return { x: a.x, y: a.y, width: b.x - a.x, height: b.y - a.y };
+  })();
+
   const onPointerDown = (event: ReactPointerEvent<SVGRectElement>) => {
     const touch = event.pointerType === "touch";
     if (stage.panMode || (!touch && event.button !== 0)) return;
@@ -174,7 +203,7 @@ export function StageSurface({ onPress, cursor, onHover, onDoubleClick }: StageS
     if (touch && watchRef.current) return;
     const client = { x: event.clientX, y: event.clientY };
     const drag = onPress({
-      point: stage.toImage(client),
+      point: pointAt(client),
       client,
       touch,
       radius: hitRadiusPx(event.pointerType),
@@ -192,10 +221,10 @@ export function StageSurface({ onPress, cursor, onHover, onDoubleClick }: StageS
         finish();
       };
       watchRef.current = watchTouch(event, {
-        onMove: (e) => drag.onMove?.(stage.toImage({ x: e.clientX, y: e.clientY }), e),
+        onMove: (e) => drag.onMove?.(pointAt({ x: e.clientX, y: e.clientY }), e),
         onEnd: (e, moved) => {
           release();
-          drag.onEnd?.(stage.toImage({ x: e.clientX, y: e.clientY }), e, moved);
+          drag.onEnd?.(pointAt({ x: e.clientX, y: e.clientY }), e, moved);
         },
         onCancel: () => {
           release();
@@ -205,10 +234,10 @@ export function StageSurface({ onPress, cursor, onHover, onDoubleClick }: StageS
       return;
     }
     start(event, {
-      onMove: drag.onMove,
+      onMove: drag.onMove && ((point, e) => drag.onMove?.(viewport ? clampToImage(point, stage.image) : point, e)),
       onEnd: (point, e, moved) => {
         finish();
-        drag.onEnd?.(point, e, moved);
+        drag.onEnd?.(viewport ? clampToImage(point, stage.image) : point, e, moved);
       },
       onCancel: () => {
         finish();
@@ -220,27 +249,27 @@ export function StageSurface({ onPress, cursor, onHover, onDoubleClick }: StageS
   return (
     <svg
       viewBox={imageViewBox(stage.image)}
-      className="pointer-events-none absolute inset-0 h-full w-full"
+      className={cn("pointer-events-none absolute inset-0 h-full w-full", viewport && "overflow-visible")}
       data-dragging={dragging ? "" : undefined}
       aria-hidden
     >
       <rect
         data-stage-surface=""
-        x={-0.5}
-        y={-0.5}
-        width={stage.image.width}
-        height={stage.image.height}
+        x={target.x}
+        y={target.y}
+        width={target.width}
+        height={target.height}
         fill="transparent"
         className="pointer-events-auto"
         style={{ cursor: stage.panMode ? undefined : cursor }}
         onPointerDown={onPointerDown}
         onPointerMove={(event) => {
-          if (!dragging && event.pointerType !== "touch") onHover?.(stage.toImage({ x: event.clientX, y: event.clientY }));
+          if (!dragging && event.pointerType !== "touch") onHover?.(pointAt({ x: event.clientX, y: event.clientY }));
         }}
         onDoubleClick={(event) => {
           if (!onDoubleClick) return;
           event.stopPropagation();
-          onDoubleClick(stage.toImage({ x: event.clientX, y: event.clientY }));
+          onDoubleClick(pointAt({ x: event.clientX, y: event.clientY }));
         }}
       />
     </svg>
