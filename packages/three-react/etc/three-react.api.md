@@ -56,6 +56,9 @@ export interface FrameTreeProps {
 }
 
 // @public
+export function invalidateScene(runtime: FrameTreeRuntime): void;
+
+// @public
 export function LaserFan(input: LaserFanProps): JSX;
 
 // @public
@@ -147,6 +150,8 @@ export interface TargetBoardProps {
         cols: number;
         rows: number;
     } | undefined;
+    color?: string | undefined;
+    edgeColor?: string | undefined;
     height: number;
     onSelect?: (() => void) | undefined;
     width: number;
@@ -157,6 +162,9 @@ export function useFrameTree(): FrameTreeRuntime;
 
 // @public
 export function useSceneColors(): SceneColors;
+
+// @public
+export function useSceneInvalidate(): () => void;
 
 // (No @packageDocumentation comment for this package)
 

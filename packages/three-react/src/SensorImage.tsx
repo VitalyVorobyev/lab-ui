@@ -4,6 +4,7 @@ import { WebGLRenderer } from "three";
 
 import { useSceneColors } from "./colors";
 import type { PlayheadSource } from "./FrameTree";
+import { onSceneInvalidate } from "./sceneSignal";
 
 /** Props of {@link SensorImage}. */
 export interface SensorImageProps {
@@ -15,7 +16,7 @@ export interface SensorImageProps {
   canonical: CanonicalPinhole;
   /** The camera's remap LUT; the canvas is `lut.width × lut.height` pixels. */
   lut: RemapTable;
-  /** Which sample to show, read every animation frame. */
+  /** Which sample to show, read every animation frame while the image is visible. */
   playhead: PlayheadSource;
   /** Class of the canvas (size it with CSS; its pixel size is the LUT's). */
   className?: string;
@@ -26,8 +27,12 @@ export interface SensorImageProps {
 /**
  * A calibrated camera's image of the scene in the enclosing `FrameTree`: a
  * `SensorView` (`@vitavision/three`) on a canvas of its own, rendered from the same objects (physical layer
- * only) at the playhead. Redraws when the playhead moves, and a few times a second otherwise
- * so late-loading meshes and theme changes appear.
+ * only) at the playhead.
+ *
+ * It redraws only when something changed: the playhead's sample, the theme, an
+ * {@link invalidateScene} of `runtime` (`Robot` and `TargetBoard` send one when they change the
+ * scene; call it yourself after changing the scene outside React), or the image coming back
+ * into view. While it is scrolled out of view or its tab is hidden it does no work at all.
  */
 export function SensorImage({ runtime, frame, canonical, lut, playhead, className, label }: SensorImageProps) {
   const hostRef = useRef<HTMLSpanElement>(null);
@@ -47,10 +52,11 @@ export function SensorImage({ runtime, frame, canonical, lut, playhead, classNam
     playheadRef.current = playhead;
   }, [playhead]);
 
+  // Any theme change (not only the background's) may recolour what the image shows.
   useEffect(() => {
     backgroundRef.current = background;
     repaintRef.current?.();
-  }, [background]);
+  }, [background, colors]);
 
   useEffect(() => {
     attributesRef.current = { className, name };
@@ -80,30 +86,60 @@ export function SensorImage({ runtime, frame, canonical, lut, playhead, classNam
     renderer.setPixelRatio(1);
     renderer.setSize(lut.width, lut.height, false);
     const view = new SensorView({ canonical: { width, height, focalPx }, lut });
+
+    // The loop runs only while the image is visible, polling the playhead (a cheap read) every
+    // frame and rendering only when it moved or something marked the image dirty.
     let raf = 0;
-    let last = -1;
-    let lastAt = 0;
-    repaintRef.current = () => {
-      renderer.setClearColor(backgroundRef.current);
-      view.setBackground(backgroundRef.current);
-      last = -1;
-    };
-    repaintRef.current();
-    const tick = (now: number) => {
+    let last = Number.NaN;
+    let dirty = true;
+    let inView = true;
+    const visible = () => inView && document.visibilityState !== "hidden";
+    const tick = () => {
+      raf = 0;
+      if (!visible()) return;
       raf = requestAnimationFrame(tick);
       const k = playheadRef.current.get();
-      if (k === last && now - lastAt < 250) return;
+      if (!dirty && k === last) return;
+      dirty = false;
       last = k;
-      lastAt = now;
       runtime.apply(k);
       const scene = runtime.root.parent ?? runtime.root;
       scene.updateMatrixWorld();
       const camera = runtime.frame(frame);
       if (camera) view.render(renderer, scene, camera.matrixWorld);
     };
-    raf = requestAnimationFrame(tick);
+    const wake = () => {
+      dirty = true;
+      if (raf === 0 && visible()) raf = requestAnimationFrame(tick);
+    };
+    repaintRef.current = () => {
+      renderer.setClearColor(backgroundRef.current);
+      view.setBackground(backgroundRef.current);
+      wake();
+    };
+    repaintRef.current();
+
+    const stopInvalidate = onSceneInvalidate(runtime, wake);
+    const onVisibility = () => {
+      if (visible()) wake();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    // Without IntersectionObserver the image counts as always in view.
+    const observer =
+      typeof IntersectionObserver === "undefined"
+        ? null
+        : new IntersectionObserver((entries) => {
+            const was = inView;
+            inView = entries.at(-1)?.isIntersecting ?? inView;
+            if (inView && !was) wake();
+          });
+    observer?.observe(canvas);
+
     return () => {
       cancelAnimationFrame(raf);
+      stopInvalidate();
+      document.removeEventListener("visibilitychange", onVisibility);
+      observer?.disconnect();
       repaintRef.current = null;
       canvasRef.current = null;
       view.dispose();

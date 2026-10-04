@@ -54,6 +54,11 @@ export function useFrameTree(): FrameTreeRuntime {
   return runtime;
 }
 
+/** The runtime of the enclosing {@link FrameTree}, or `null` outside one. */
+export function useOptionalFrameTree(): FrameTreeRuntime | null {
+  return use(RuntimeContext);
+}
+
 /** Props of {@link AtFrame}. */
 export interface AtFrameProps {
   /** Frame name, e.g. `"cam_left"` or `"ur5e/tool0"`. */

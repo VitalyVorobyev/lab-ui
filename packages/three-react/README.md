@@ -35,7 +35,12 @@ moved here as PLAN L8-1.
   `AtFrame` live in that frame.
 - `Robot`, `CameraFrustum`, `LaserFan`, `TargetBoard`, `LightGizmo`, `FrameAxes`.
 - `SensorImage` — a camera's calibrated image of the enclosing `FrameTree` (a `SensorView`
-  on its own canvas, physical layer only) at the playhead.
+  on its own canvas, physical layer only) at the playhead. It redraws only when the playhead's
+  sample, the theme or the scene changes, and not while it is out of view.
+- `invalidateScene(runtime)` / `useSceneInvalidate()` — tell a `SensorImage` to redraw after
+  changing the scene outside React (`Robot` and `TargetBoard` do it themselves).
+- `TargetBoard` is printed paper and ink (`color`, `edgeColor`) in every theme; only its
+  viewer-only outline follows the theme and the selection.
 - `useSceneColors` — the theme's scene colours, following the `dark` class.
 - `SceneColorsProvider` — colours to use instead of the tokens, for an app whose palette
   does not define them; keys left out still follow the tokens.

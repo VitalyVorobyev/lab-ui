@@ -7,11 +7,14 @@ import {
   type LightShapeLike,
   TargetBoard as TargetBoardObject,
   disposeObject,
+  normalizeColor,
 } from "@vitavision/three";
 import { useEffect, useMemo, useRef } from "react";
 import type { Object3D } from "three";
 
 import { useSceneColors } from "./colors";
+import { useOptionalFrameTree } from "./FrameTree";
+import { invalidateScene } from "./sceneSignal";
 
 /** Colour an object is built with before its effect applies the theme's. */
 const UNSET = "gray";
@@ -124,16 +127,28 @@ export interface TargetBoardProps {
   height: number;
   /** Checkerboard squares, columns along X. */
   checker?: { cols: number; rows: number } | undefined;
-  /** Emphasised (selected). */
+  /**
+   * Light (paper) colour, any CSS colour. Default: white paper (`#f2f2f2`). The board is a
+   * physical object, so this is its colour in every theme and in a `SensorImage`.
+   */
+  color?: string | undefined;
+  /** Dark-square (ink) colour, any CSS colour. Default: black ink (`#1a1a1a`). */
+  edgeColor?: string | undefined;
+  /** Emphasised (selected): the outline is drawn in the accent colour and over other objects. */
   active?: boolean;
   /** Makes it pickable. */
   onSelect?: (() => void) | undefined;
 }
 
-/** A planar target in the target frame (z = 0, facing +Z). */
-export function TargetBoard({ width, height, checker, active = false, onSelect }: TargetBoardProps) {
+/**
+ * A planar target in the target frame (z = 0, facing +Z): a printed board in fixed paper and
+ * ink colours, whatever the theme. Only its outline, which a `SensorImage` does not show,
+ * follows the theme (`muted`) and the selection (`signal`).
+ */
+export function TargetBoard({ width, height, checker, color, edgeColor, active = false, onSelect }: TargetBoardProps) {
   const colors = useSceneColors();
   const picking = usePick(onSelect);
+  const runtime = useOptionalFrameTree();
   const cols = checker?.cols;
   const rows = checker?.rows;
   const object = useDisposed(
@@ -142,18 +157,27 @@ export function TargetBoard({ width, height, checker, active = false, onSelect }
         new TargetBoardObject({
           width,
           height,
-          color: UNSET,
-          edgeColor: UNSET,
+          outlineColor: UNSET,
           checker: cols !== undefined && rows !== undefined ? { cols, rows } : undefined,
         }),
       [width, height, cols, rows],
     ),
   );
   useEffect(() => {
-    object.setColors(colors.surface, active ? colors.signal : colors.fg);
-    object.setOutlineColor(active ? colors.signal : colors.fg);
+    object.setColors(color === undefined ? undefined : normalizeColor(color), edgeColor === undefined ? undefined : normalizeColor(edgeColor));
+    if (runtime) invalidateScene(runtime);
+  }, [object, color, edgeColor, runtime]);
+  // A board leaving the scene changes what a sensor sees, too.
+  useEffect(
+    () => () => {
+      if (runtime) invalidateScene(runtime);
+    },
+    [object, runtime],
+  );
+  useEffect(() => {
+    object.setOutlineColor(active ? colors.signal : colors.muted);
     object.setActive(active);
-  }, [object, active, colors]);
+  }, [object, active, colors.signal, colors.muted]);
   return <primitive object={object} {...picking} />;
 }
 
