@@ -1,9 +1,0 @@
----
-"@vitavision/stage2d": minor
----
-
-Touch input, so an app can use `StageSurface`, `PolylineSet` and `ShapeEditor` without writing its own surface (lab-ui#88).
-
-- **`StageSurface` tells a touch from a mouse.** `StagePress` gains `touch`, `client` (client coordinates, for anchoring a tooltip) and `radius` (the hit-test tolerance in screen pixels: 12 for a touch, 6 otherwise). `StageDrag` gains `claimsTouch`. A touch whose drag does not set it is now *watched*, not claimed: the stage still pans (one-finger mode) and pinches, `onMove` fires once the finger leaves the tap slop, `onEnd(point, event, moved)` fires on release (`moved` is `false` for a tap), and `onCancel` fires on `pointercancel` or when a second finger lands. `onHover` is no longer called for a touch. New `onDoubleClick` prop: when given, the surface handles the double click and the stage's double-click-to-fit does not run. **Behaviour change:** an unclaimed touch used to be claimed like a mouse press and no longer is, so act in `onEnd` when `moved` is `false`; return `claimsTouch: true` to keep the old behaviour.
-- **`PolylineSet` can step aside.** New `interactive` prop, on by default only when `onItemPress`, `onSelect`, `onHover`, `onHoverChange` or `marquee` is given. When off, the layer renders no press target, so a draw tool's `StageSurface` below receives the press, while `useStageHitTest` still finds the lines. On an interactive layer a touch is no longer claimed (the stage can pan and pinch) and a line is selected on a tap.
-- **`ShapeEditor` decides a press once.** The nearest handle wins over the interior, so a small shape's corner is no longer a move. The band along the outline (6 px for a mouse, 12 px for a touch) moves the shape, so a rotated box or an ellipse can be grabbed at its edge. A press beyond the band is declined and reaches the stage. A second finger landing during a touch edit cancels it: the shape reverts and nothing is committed.

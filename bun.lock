@@ -64,7 +64,7 @@
     },
     "packages/charts": {
       "name": "@vitavision/charts",
-      "version": "0.7.1",
+      "version": "0.8.0",
       "dependencies": {
         "@vitavision/ui": "workspace:^",
       },
@@ -125,7 +125,7 @@
     },
     "packages/forms": {
       "name": "@vitavision/forms",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "dependencies": {
         "@vitavision/ui": "workspace:^",
       },
@@ -140,7 +140,7 @@
     },
     "packages/overlays": {
       "name": "@vitavision/overlays",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "devDependencies": {
         "@storybook/react-vite": "10.6.0",
         "@vitavision/stage2d": "workspace:^",
@@ -155,7 +155,7 @@
     },
     "packages/stage2d": {
       "name": "@vitavision/stage2d",
-      "version": "0.10.0",
+      "version": "0.11.0",
       "dependencies": {
         "@vitavision/ui": "workspace:^",
         "lucide-react": "^1.48.0",
