@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { StackedBars } from "./BarChart";
 import { DEFECT_COLOUR, Legend, NORMAL_COLOUR, SERIES_COLOURS, seriesColour } from "./Frame";
-import { ScoreHistogram } from "./Histogram";
+import { ScoreHistogram } from "./ScoreHistogram";
 import { LineChart } from "./LineChart";
 import { LineProfile } from "./LineProfile";
 

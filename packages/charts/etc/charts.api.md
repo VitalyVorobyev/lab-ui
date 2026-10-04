@@ -121,16 +121,41 @@ export interface FrameProps {
 }
 
 // @public
+export function Histogram(props: HistogramProps): JSX.Element;
+
+// @public
 export function histogram(values: readonly number[], domain: [number, number], count: number): number[];
 
 // @public
-export interface HistogramProps {
-    bins?: number;
+export interface HistogramCounts {
+    counts: ArrayLike<number>;
+    domain: [number, number];
+    values?: undefined;
+}
+
+// @public
+export interface HistogramOptions extends InteractionProps {
     className?: string | undefined;
-    defect: number[];
+    footer?: ReactNode;
+    height?: number | undefined;
     label: string;
-    normal: number[];
-    threshold?: number;
+    logY?: boolean | undefined;
+    threshold?: number | undefined;
+    unit?: string | undefined;
+    variant?: Variant | undefined;
+    xLabel?: string | undefined;
+    yLabel?: string | undefined;
+}
+
+// @public
+export type HistogramProps = HistogramOptions & (HistogramValues | HistogramCounts);
+
+// @public
+export interface HistogramValues {
+    bins?: number | undefined;
+    counts?: undefined;
+    domain?: [number, number] | undefined;
+    values: ArrayLike<number>;
 }
 
 // @public
@@ -290,7 +315,17 @@ export interface Scale {
 }
 
 // @public
-export function ScoreHistogram(input: HistogramProps): JSX.Element;
+export function ScoreHistogram(input: ScoreHistogramProps): JSX.Element;
+
+// @public
+export interface ScoreHistogramProps {
+    bins?: number;
+    className?: string | undefined;
+    defect: number[];
+    label: string;
+    normal: number[];
+    threshold?: number;
+}
 
 // @public
 export interface Series {

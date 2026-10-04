@@ -1,0 +1,105 @@
+/**
+ * Score distribution by class, with a threshold drawn on it.
+ *
+ * This is the chart that makes a threshold decision legible: a confusion matrix says how
+ * many were wrong, and this says *why* — two distributions that barely separate, or one
+ * long normal tail crossing the line.
+ *
+ * Both classes share one set of bin edges, computed over the union of their scores. Binned
+ * separately they would be drawn on different axes and the overlap — the only thing worth
+ * looking at — would be an artefact of the binning.
+ */
+
+import { barsPath, tallest } from "./bars";
+import { DEFECT_COLOUR, Frame, NORMAL_COLOUR, areaFor } from "./Frame";
+import { extent, histogram, linearScale } from "./scale";
+import { ThresholdRule } from "./ThresholdRule";
+
+// The histogram is always given a whole panel, never a column of a grid.
+const plotArea = areaFor("wide");
+
+// Green for normal, red for defect — the verdict tokens, named once in `Frame`.
+const NORMAL_FILL = NORMAL_COLOUR;
+const DEFECT_FILL = DEFECT_COLOUR;
+
+/** Props for {@link ScoreHistogram}. */
+export interface ScoreHistogramProps {
+  /** Anomaly scores of the samples labelled normal. */
+  normal: number[];
+  /** Anomaly scores of the samples labelled defective. */
+  defect: number[];
+  /** The decision threshold, drawn as a dashed vertical rule. Omitted or non-finite: none. */
+  threshold?: number;
+  /** Number of equal-width bins over the union of both classes' scores. Default 32. */
+  bins?: number;
+  /** Accessible name of the chart (the SVG's `aria-label`). Required. */
+  label: string;
+  /** Extra classes for the outer `<figure>`, merged with `cn`. */
+  className?: string | undefined;
+}
+
+/**
+ * Overlaid histograms of the normal and defect score distributions, with the threshold on
+ * them.
+ *
+ * @remarks
+ * Always the `wide` variant. Painted in the verdict tokens (`--normal`, `--defect`); the
+ * legend names both classes with their counts, so the chart does not rely on colour alone.
+ */
+export function ScoreHistogram({
+  normal,
+  defect,
+  threshold,
+  bins = 32,
+  label,
+  className,
+}: ScoreHistogramProps) {
+  const domain = extent([...normal, ...defect]);
+  const normalBins = histogram(normal, domain, bins);
+  const defectBins = histogram(defect, domain, bins);
+  const top = tallest(normalBins, defectBins);
+
+  const xScale = linearScale(domain, plotArea.x0, plotArea.x1);
+  const yScale = linearScale([0, top], plotArea.y0, plotArea.y1);
+  return (
+    <Frame
+      xScale={xScale}
+      yScale={yScale}
+      xLabel="anomaly score"
+      yLabel="samples"
+      label={label}
+      variant="wide"
+      className={className}
+      footer={
+        <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className="inline-block h-2 w-3 rounded-sm"
+              style={{ backgroundColor: NORMAL_FILL, opacity: 0.75 }}
+            />
+            <span className="font-mono text-xs">normal ({normal.length})</span>
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className="inline-block h-2 w-3 rounded-sm"
+              style={{ backgroundColor: DEFECT_FILL, opacity: 0.75 }}
+            />
+            <span className="font-mono text-xs">defect ({defect.length})</span>
+          </li>
+          {threshold !== undefined && (
+            <li className="font-mono text-xs">threshold {threshold.toFixed(4)}</li>
+          )}
+        </ul>
+      }
+    >
+      {/* Normals first and defects over them: the defect bars are the smaller population
+          in every realistic split, so drawing them last keeps them from being buried. */}
+      <path data-bars="" d={barsPath(normalBins, yScale, plotArea)} fill={NORMAL_FILL} opacity={0.65} />
+      <path data-bars="" d={barsPath(defectBins, yScale, plotArea)} fill={DEFECT_FILL} opacity={0.65} />
+
+      <ThresholdRule value={threshold} xScale={xScale} area={plotArea} />
+    </Frame>
+  );
+}

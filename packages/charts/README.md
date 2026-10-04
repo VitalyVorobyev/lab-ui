@@ -20,14 +20,15 @@ is accepted.
 
 **Charts** — hand-rolled SVG over the pure domain/tick/project math in `scale.ts`:
 `Frame` + `Legend` (the axes/grid/label shell every chart composes), `LineChart`
-(multi-series, optional log y), `StackedBars`, `ScoreHistogram` (two-class distribution
-with a threshold rule), and `LineProfile` (one or more series against arc length in pixels
+(multi-series, optional log y), `StackedBars`, `Histogram` (one distribution from raw
+`values` or pre-binned `counts`, with markers, a cursor bin and hover/pick), `ScoreHistogram` (two-class
+distribution with a threshold rule), and `LineProfile` (one or more series against arc length in pixels
 along a scan line or caliper axis, with detected edges drawn as labelled vertical rules).
 
 **Fitting a chart to its container**: `variant="fluid"` takes the container's width at a fixed
 `height`, for a chart in a resizable inspector.
 
-**Interaction** on `LineChart` and `LineProfile`:
+**Interaction** on `LineChart`, `LineProfile` and `Histogram`:
 - `onHover` draws a crosshair with a value readout, and `onPick` reports a click's x.
 - `cursor` draws an x chosen elsewhere, such as the pointer on the canvas a profile came from.
 - `bands` shade x ranges, and `markers` tick positions on the x axis.
