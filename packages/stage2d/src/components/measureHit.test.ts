@@ -120,8 +120,22 @@ describe("nearestMeasurePrimitive", () => {
     expect(nearestMeasurePrimitive(primitives, at(90, 21), 1, 1)).toBeNull();
   });
 
-  it("never picks a primitive with a non-finite coordinate", () => {
+  it("never picks a primitive with a non-finite coordinate, but picks segments by their finite ones", () => {
     expect(nearestMeasurePrimitive([{ kind: "point", id: "nan", x: Number.NaN, y: 0 }], at(0, 0), 100, 1)).toBeNull();
+    expect(nearestMeasurePrimitive([{ kind: "polyline", id: "nan", points: [0, 0, Number.NaN, 5] }], at(0, 0), 100, 1)).toBeNull();
+    const ticks: MeasurePrimitive = { kind: "segments", id: "ticks", points: [Number.NaN, 0, 0, 0, 10, 10, 20, 10] };
+    expect(nearestMeasurePrimitive([ticks], at(15, 12), 3, 1)).toEqual({ id: "ticks", distance: 2 });
+    expect(nearestMeasurePrimitive([{ kind: "segments", id: "none", points: [1, 2, 3] }], at(1, 2), 100, 1)).toBeNull();
+  });
+
+  it("finds a primitive that spans the whole scene among thousands of small ones", () => {
+    const many: MeasurePrimitive[] = Array.from({ length: 3000 }, (_, n) => ({ kind: "point", id: `p${n}`, x: (n % 60) * 20, y: Math.floor(n / 60) * 20 }));
+    many.push({ kind: "segment", id: "long", x1: -5, y1: -5, x2: 1205, y2: 1005 });
+    many.push({ kind: "point", x: 3, y: 3 });
+    expect(nearestMeasurePrimitive(many, at(610, 509), 2, 1)?.id).toBe("long");
+    expect(nearestMeasurePrimitive(many, at(401, 300), 2, 1)?.id).toBe("p920");
+    expect(nearestMeasurePrimitive(many, at(-50, -50), 2, 1)).toBeNull();
+    expect(nearestMeasurePrimitive([], at(0, 0), 2, 1)).toBeNull();
   });
 
   it("follows a new array, and keeps answering for the same one", () => {

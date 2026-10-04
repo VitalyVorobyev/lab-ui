@@ -66,7 +66,8 @@ describe("measure hit-test properties", () => {
   it("nearestMeasurePrimitive agrees with a plain scan of every primitive", () => {
     const rand = prng(84);
     for (let run = 0; run < 40; run++) {
-      const primitives = scene(rand, 60);
+      // Small scenes grid coarsely; large ones finely, with long primitives kept off the grid.
+      const primitives = scene(rand, run % 2 === 0 ? 60 : 600);
       const scale = 0.25 + rand() * 4;
       for (let q = 0; q < 50; q++) {
         const p = { x: rand() * EXTENT, y: rand() * EXTENT };

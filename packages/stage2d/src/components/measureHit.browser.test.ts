@@ -80,7 +80,7 @@ describe.skipIf(server.config.coverage.enabled)("MeasureOverlay hit-test budget"
     const p50 = percentile(times, 0.5);
     const p95 = percentile(times, 0.95);
     console.info(
-      `10k primitives: first pick (boxes built) ${first.toFixed(1)} ms · pick p50 ${(p50 * 1000).toFixed(1)} µs · p95 ${(p95 * 1000).toFixed(1)} µs · ${found}/1000 hits`,
+      `10k primitives: first pick (grid built) ${first.toFixed(1)} ms · pick p50 ${(p50 * 1000).toFixed(1)} µs · p95 ${(p95 * 1000).toFixed(1)} µs · ${found}/1000 hits`,
     );
     expect(p95).toBeLessThan(2);
     expect(found).toBeGreaterThan(0);

@@ -50,7 +50,7 @@
     "name": "@vitavision/stage2d",
     "path": "packages/stage2d/dist/index.js",
     "import": "*",
-    "limit": "27 kB",
+    "limit": "27.6 kB",
     "ignore": [
       "@vitavision/ui",
       "lucide-react",
