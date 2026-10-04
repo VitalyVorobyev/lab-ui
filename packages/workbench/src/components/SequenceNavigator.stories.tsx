@@ -18,6 +18,9 @@ const FRAMES: SequenceItem[] = Array.from({ length: 12 }, (_, i) => ({
 
 const change = fn();
 
+/** How far the focus outline reaches outside a thumbnail: a 2 px outline at a 2 px offset. */
+const RING_ROOM = 4;
+
 function Stateful(args: SequenceNavigatorProps) {
   const [value, setValue] = useState(args.value);
   return (
@@ -93,6 +96,15 @@ export const Stepping: Story = {
 export const AtTheEnds: Story = {
   args: { value: "f12" },
   play: async ({ canvas }) => {
+    // The strip scrolls the last item into view with room for its ring (the layout is CSS;
+    // measure it only where the stylesheet is loaded). A scroll position is whole pixels, so
+    // the room can come out up to a pixel short.
+    const list = canvas.getByRole("list", { name: "Frames" });
+    if (getComputedStyle(list).display === "flex") {
+      await expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
+      const last = canvas.getByRole("button", { name: "dome_0012.bmp" }).getBoundingClientRect();
+      await expect(list.getBoundingClientRect().right - last.right).toBeGreaterThanOrEqual(RING_ROOM - 1);
+    }
     await expect(canvas.getByRole("button", { name: "Next" })).toBeDisabled();
     await userEvent.click(canvas.getByRole("button", { name: "Previous" }));
     await expect(change).toHaveBeenLastCalledWith("f11");
@@ -127,6 +139,17 @@ export const LabelsWithoutThumbnails: Story = {
   args: { items: FRAMES.slice(0, 3).map(({ id, label }) => ({ id, label })), value: "f1" },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("dome_0002.bmp")).toBeVisible();
+    // The strip clips at its edge, so the ring of the first and last items needs room inside it.
+    const list = canvas.getByRole("list", { name: "Frames" });
+    if (getComputedStyle(list).display === "flex") {
+      const box = list.getBoundingClientRect();
+      const first = canvas.getByRole("button", { name: "dome_0001.bmp" }).getBoundingClientRect();
+      const last = canvas.getByRole("button", { name: "dome_0003.bmp" }).getBoundingClientRect();
+      await expect(first.left - box.left).toBeGreaterThanOrEqual(RING_ROOM);
+      await expect(first.top - box.top).toBeGreaterThanOrEqual(RING_ROOM);
+      await expect(box.right - last.right).toBeGreaterThanOrEqual(RING_ROOM);
+      await expect(box.bottom - last.bottom).toBeGreaterThanOrEqual(RING_ROOM);
+    }
   },
 };
 

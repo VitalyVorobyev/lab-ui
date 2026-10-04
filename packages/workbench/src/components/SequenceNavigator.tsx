@@ -120,7 +120,9 @@ export function SequenceNavigator({
         disabled={items.length < 2 || atStart}
         onClick={() => step(-1)}
       />
-      <ol ref={listRef} aria-label={ariaLabel} className="flex min-w-0 gap-1 overflow-x-auto py-1">
+      {/* The padding (and the matching scroll padding, for the current item scrolled into view)
+          is the room for the current ring and the focus outline: the scroller clips at its edge. */}
+      <ol ref={listRef} aria-label={ariaLabel} className="flex min-w-0 scroll-px-1 gap-1 overflow-x-auto p-1">
         {items.map((item) => {
           const current = item.id === value;
           const { status } = item;
