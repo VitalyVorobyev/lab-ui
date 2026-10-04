@@ -5,6 +5,8 @@ import { expect, fireEvent, fn, waitFor } from "storybook/test";
 import { PolylineSet, type PolylineSelectMode, type PolylineSetItem, type PolylineSetProps } from "./PolylineSet";
 import type { PolylineId } from "./polylineIndex";
 import { ImageStage } from "./stage/ImageStage";
+import { StageSurface } from "./stage/StageSurface";
+import { useStageHitTest } from "./stage/useStageHitTest";
 import type { StageView } from "./stage/view";
 
 const IMAGE = { width: 400, height: 300 };
@@ -56,6 +58,37 @@ function Harness(props: Partial<PolylineSetProps>) {
       </ImageStage>
       <output data-testid="selected">{[...selected].sort().join(",") || "none"}</output>
     </div>
+  );
+}
+
+const surfacePress = fn();
+
+/** A draw tool's surface below a polyline layer that takes no presses; the line is still found by the hit-test. */
+function DrawOverLines({ interactive }: { interactive?: boolean }) {
+  const [text, setText] = useState("no press");
+  return (
+    <div>
+      <ImageStage image={IMAGE} view={VIEW} onView={() => {}} style={{ width: IMAGE.width + 2, height: IMAGE.height + 2 }}>
+        <div className="absolute inset-0 bg-canvas" />
+        <Surface onText={setText} />
+        <PolylineSet items={ITEMS} interactive={interactive} />
+      </ImageStage>
+      <output data-testid="surface">{text}</output>
+    </div>
+  );
+}
+
+function Surface({ onText }: { onText: (text: string) => void }) {
+  const { hitTest } = useStageHitTest();
+  return (
+    <StageSurface
+      onPress={(press) => {
+        surfacePress(press);
+        const hit = hitTest(press.point, press.radius);
+        onText(hit ? `hit ${String(hit.id)}` : "no hit");
+        return {};
+      }}
+    />
   );
 }
 
@@ -207,5 +240,65 @@ export const DimmedAndVertices: Story = {
     await expect(canvasElement.querySelector("[data-hovered-line]")).not.toBeNull();
     await expect(canvasElement.querySelector("[data-points]")).not.toBeNull();
     await expect(canvasElement.querySelector("path[opacity='0.35']")).not.toBeNull();
+  },
+};
+
+export const NotInteractiveLetsPressesThrough: Story = {
+  render: () => <DrawOverLines />,
+  play: async ({ canvas, canvasElement }) => {
+    surfacePress.mockClear();
+    // No handler, so no press target: the layer draws, and answers the hit-test.
+    await expect(canvasElement.querySelector("[data-hit]")).toBeNull();
+    await expect(canvasElement.querySelector("[data-marquee-surface]")).toBeNull();
+    const surface = canvasElement.querySelector("[data-stage-surface]")!;
+    // On the top edge of square 1: the surface gets the press, and the hit-test still finds the line.
+    await fireEvent.pointerDown(surface, at(surface, { x: 100, y: 60 }));
+    await fireEvent.pointerUp(window, at(surface, { x: 100, y: 60 }));
+    await expect(surfacePress).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(canvas.getByTestId("surface")).toHaveTextContent("hit 1"));
+    await fireEvent.pointerDown(surface, at(surface, { x: 200, y: 160 }));
+    await fireEvent.pointerUp(window, at(surface, { x: 200, y: 160 }));
+    await waitFor(() => expect(canvas.getByTestId("surface")).toHaveTextContent("no hit"));
+  },
+};
+
+export const InteractiveClaimsPresses: Story = {
+  render: () => <DrawOverLines interactive />,
+  play: async ({ canvasElement }) => {
+    surfacePress.mockClear();
+    const hit = canvasElement.querySelector("[data-hit]")!;
+    await expect(hit).not.toBeNull();
+    // Forced on without a handler: the press target is back, and it takes the press from the surface.
+    await fireEvent.pointerDown(hit, at(hit, { x: 100, y: 60 }));
+    await expect(surfacePress).not.toHaveBeenCalled();
+  },
+};
+
+export const TouchSelectsOnTap: Story = {
+  play: async ({ canvas, canvasElement }) => {
+    select.mockClear();
+    itemPress.mockClear();
+    const hit = canvasElement.querySelector("[data-hit]")!;
+    const viewport = hit.closest("[role=application]")!;
+    const touch = (p: { x: number; y: number }, id = 5) => at(hit, p, { pointerType: "touch", pointerId: id });
+    // The press is left to the stage (it may be a pan or a pinch): nothing is selected yet.
+    await fireEvent.pointerDown(hit, touch({ x: 100, y: 61 }));
+    await expect(select).not.toHaveBeenCalled();
+    await fireEvent.pointerUp(viewport, touch({ x: 100, y: 61 }));
+    await expect(select).toHaveBeenLastCalledWith([1], "replace");
+    await expect(itemPress).toHaveBeenLastCalledWith(1);
+    await waitFor(() => expect(canvas.getByTestId("selected")).toHaveTextContent("1"));
+    // A finger that travels is a pan, not a selection.
+    select.mockClear();
+    await fireEvent.pointerDown(hit, touch({ x: 340, y: 150 }));
+    await fireEvent.pointerMove(viewport, touch({ x: 300, y: 150 }));
+    await fireEvent.pointerUp(viewport, touch({ x: 300, y: 150 }));
+    await expect(select).not.toHaveBeenCalled();
+    // A second finger turns the first into a pinch.
+    await fireEvent.pointerDown(hit, touch({ x: 340, y: 150 }));
+    await fireEvent.pointerDown(viewport, touch({ x: 240, y: 150 }, 6));
+    await fireEvent.pointerUp(viewport, touch({ x: 340, y: 150 }));
+    await fireEvent.pointerUp(viewport, touch({ x: 240, y: 150 }, 6));
+    await expect(select).not.toHaveBeenCalled();
   },
 };

@@ -46,7 +46,7 @@ import type {
 
 import { cn } from "@vitavision/ui";
 import type { Point } from "../measureGeometry";
-import { centroid, isTap, panButtonCodes, pinchView, type StageMouseButton } from "./gesture";
+import { centroid, hitRadiusPx, isTap, panButtonCodes, pinchView, type StageMouseButton } from "./gesture";
 import { StageHitContext, type StagePointerEvent } from "./hitContext";
 import { createHitRegistry } from "./hitTest";
 import {
@@ -71,9 +71,6 @@ import {
 const WHEEL_SENSITIVITY = 0.0015;
 /** How far a press may travel and still count as a click rather than a pan. */
 const CLICK_SLOP = 3;
-/** The pointer's tolerance for hover and presses, in screen pixels: a mouse, and a fingertip. */
-const POINTER_RADIUS = 6;
-const TOUCH_RADIUS = 12;
 /** The view before the viewport has been measured — nothing is on screen yet. */
 const UNMEASURED_VIEW: StageView = { scale: 1, tx: 0, ty: 0 };
 
@@ -464,7 +461,7 @@ export function ImageStage({
 
   /** The pointer's tolerance for hover and presses in image pixels: a fingertip is fatter. */
   const hitRadius = (event: { pointerType: string }) =>
-    imageLengthFor(effective, event.pointerType === "touch" ? TOUCH_RADIUS : POINTER_RADIUS);
+    imageLengthFor(effective, hitRadiusPx(event.pointerType));
 
   /** Offer a press to the items under it, topmost first; whether one claimed it. */
   const routePress = (event: ReactPointerEvent<HTMLDivElement>) =>

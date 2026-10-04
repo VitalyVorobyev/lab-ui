@@ -9,7 +9,7 @@
  * `nearestPolyline`, not by the DOM, which keeps this layer engine-agnostic for L6-1.
  */
 
-import { useMemo, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import type { Point } from "./measureGeometry";
 import {
@@ -26,6 +26,7 @@ import { useStageDrag } from "./stage/StageSurface";
 import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
 import { useStageHitLayer, useStageHitTest } from "./stage/useStageHitTest";
 import { useScreenPx } from "./stage/useScreenPx";
+import { watchTouch } from "./stage/touchWatch";
 import { imageViewBox, type Rect } from "./stage/view";
 
 /** One polyline of a `PolylineSet`, with optional styling. */
@@ -76,6 +77,17 @@ export interface PolylineSetProps {
    * and to the layers below.
    */
   marquee?: boolean | undefined;
+  /**
+   * Whether the layer takes presses and hover. Defaults to `true` when any of `onItemPress`,
+   * `onSelect`, `onHover`, `onHoverChange` or `marquee` is given. When `false` the layer
+   * renders no press target at all: a press on a line falls through to whatever is below (a
+   * draw tool's `StageSurface`, say), while `useStageHitTest` still finds the lines. Set it
+   * `false` while a tool other than selection is active.
+   *
+   * A touch on an interactive layer is not claimed: the stage still pans and pinches, and the
+   * line is selected when the finger lifts after a tap.
+   */
+  interactive?: boolean | undefined;
   /** CSS colour of the lines. Defaults to the overlay `feature` role: they are detected lines. */
   stroke?: string | undefined;
   /** CSS colour of a selected line. Defaults to the overlay `selection` role. */
@@ -107,6 +119,8 @@ const MAX_VERTEX_DOTS = 5000;
  * - **Halo.** Every line has a halo, so it holds on any image.
  * - **Points.** Above `vertexScale`, the points of the hovered and selected lines are drawn.
  * - **Panning.** The hand tool and a held space bar still pan.
+ * - **Tools.** Without a handler (or with `interactive={false}`) the layer takes no presses
+ *   and only answers `useStageHitTest`, so a draw tool's surface below receives them.
  *
  * The SVG carries `data-hovered` (the hovered id) and `data-sweeping` while a band is drawn.
  */
@@ -120,6 +134,7 @@ export function PolylineSet({
   onItemPress,
   onSelect,
   marquee = false,
+  interactive,
   stroke = overlayRole("feature"),
   selectionStroke = overlayRole("selection"),
   hitWidth = 14,
@@ -130,6 +145,12 @@ export function PolylineSet({
 }: PolylineSetProps) {
   const stage = useStage();
   const startDrag = useStageDrag();
+  const watchRef = useRef<(() => void) | null>(null);
+  // A touch still being watched when the layer goes away is cancelled, not left listening.
+  useEffect(() => () => watchRef.current?.(), []);
+  const takesPresses =
+    interactive ??
+    (onItemPress !== undefined || onSelect !== undefined || onHover !== undefined || onHoverChange !== undefined || marquee);
   const px = useScreenPx();
   const { hitTestAll } = useStageHitTest();
 
@@ -230,7 +251,9 @@ export function PolylineSet({
   };
 
   const onLinePointerDown = (event: ReactPointerEvent<SVGPathElement>) => {
-    if (stage.panMode || event.button !== 0) return;
+    const touch = event.pointerType === "touch";
+    if (stage.panMode || (!touch && event.button !== 0)) return;
+    if (touch && watchRef.current) return; // a second finger: the watch cancels itself, the stage pinches
     // A band has to be able to start anywhere, and on a frame that is mostly lines "anywhere"
     // is usually on one. Declining here would hand the press to the stage (which pans), not to
     // a surface below, because only the topmost element is a press's target.
@@ -244,6 +267,22 @@ export function PolylineSet({
     // hands it to the point layer.
     const point = stage.toImage({ x: event.clientX, y: event.clientY });
     if (hitTestAll(point, hitWidth / 2, { pressable: true }).some((hit) => hit.layerId !== ownId && hit.priority > priority)) return;
+    if (touch && !marquee) {
+      // Not claimed: the press may become a pan or a pinch, so the line is selected on the tap.
+      const additive = event.metaKey || event.ctrlKey;
+      watchRef.current = watchTouch(event, {
+        onEnd: (_e, _moved, tap) => {
+          watchRef.current = null;
+          if (!tap) return;
+          onItemPress?.(id, event);
+          onSelect?.([id], additive ? "toggle" : "replace");
+        },
+        onCancel: () => {
+          watchRef.current = null;
+        },
+      });
+      return;
+    }
     // Claimed, and selected on the press: a selection that waits for the release feels like
     // lag on a canvas where every other gesture is immediate.
     event.stopPropagation();
@@ -261,7 +300,7 @@ export function PolylineSet({
       data-hovered={hoverId ?? undefined}
       data-sweeping={band ? "" : undefined}
     >
-      {marquee && (
+      {takesPresses && marquee && (
         <rect
           data-marquee-surface=""
           x={-0.5}
@@ -308,18 +347,20 @@ export function PolylineSet({
         {dots && <path data-points="" d={dots} stroke={selectionStroke} strokeWidth={px(3)} />}
         {/* The one hit target: every line, transparent, wide. Which line it was is the
             index's answer, not the DOM's. */}
-        <path
-          data-hit=""
-          d={groups.hit}
-          stroke="transparent"
-          strokeWidth={px(hitWidth)}
-          style={{ pointerEvents: "stroke", cursor: stage.panMode ? undefined : marquee ? "crosshair" : "pointer" }}
-          onPointerDown={onLinePointerDown}
-          onPointerMove={(event) => {
-            if (!band) setHover(pickAt(event));
-          }}
-          onPointerLeave={() => setHover(null)}
-        />
+        {takesPresses && (
+          <path
+            data-hit=""
+            d={groups.hit}
+            stroke="transparent"
+            strokeWidth={px(hitWidth)}
+            style={{ pointerEvents: "stroke", cursor: stage.panMode ? undefined : marquee ? "crosshair" : "pointer" }}
+            onPointerDown={onLinePointerDown}
+            onPointerMove={(event) => {
+              if (!band && event.pointerType !== "touch") setHover(pickAt(event));
+            }}
+            onPointerLeave={() => setHover(null)}
+          />
+        )}
       </g>
       {band && (
         <rect
