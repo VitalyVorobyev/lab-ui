@@ -329,6 +329,13 @@ vitavision. The last is last because of SSR and the router.
 - **L6-3..5 — Migrate** calibration-rs `FrameCanvas`, VAL `AnnotationCanvas`/`LiveStage`,
   and the vitavision editor canvas, one PR each. Done when each app's e2e tests pass,
   Konva is removed from that app's dependencies, and the concept matrix is updated.
+  *L6-5 done 2026-10-04:* vitavision#182. The editor canvas is one `ImageStage`: image, heatmap,
+  detections (`TargetOverlay`, L7-1) and hand-drawn shapes are its layers, and `konva`, `react-konva`
+  and `use-image` are gone. Feature coordinates are detector-native (the centre of pixel *i* at *i*),
+  and the feature file is versioned, with a v1 import migration. The editor e2e specs pass 17/17,
+  with the algorithm fixture shifted by exactly −0.5 (PuzzleBoard, which never had the offset, by 0).
+  The concept matrix shows vitavision on `stage2d`, `overlays` and `forms`. The gaps it worked around
+  are lab-ui#88 (stage2d) and #89 (forms). L6-3 (calibration-rs) and L6-4 (VAL) remain.
 
 ### L7 — Overlays
 
@@ -338,11 +345,15 @@ vitavision. The last is last because of SSR and the router.
   Done when:
   - the jscpd intra-repo clone count in `vitavision/src/components/editor/**` drops to 0;
   - screenshot parity on the demo pages is ≤ 0.001.
-  *Progress 2026-10-03 (not done until vitavision adopts it):* `packages/overlays` is built to §4: `TargetOverlay`
-  over a normalised `TargetDetection`, the lattice builders, the `directed` / `circle-*` glyph generators and
-  `EllipseSet` for image-sized ellipses, on stage2d's `GridLayer`, `AreaSet` and `PointSet`. vitavision has no
-  radsym overlay (its radsym results are circles and a heatmap), so the clones to remove are the four board overlays
-  and the four glyph components. The adoption PR maps the detector results to `TargetDetection` and deletes them.
+  *Done 2026-10-04:* overlays 0.1.0 (#85; republished as 0.1.1 by #87, because 0.1.0 went out without `dist/`),
+  adopted by vitavision#182. `TargetOverlay` over a normalised `TargetDetection`, with the lattice builders, the
+  `directed` / `circle-*` glyph generators and `EllipseSet` for image-sized ellipses, sits on stage2d's `GridLayer`,
+  `AreaSet` and `PointSet`. vitavision maps every detector's features to `TargetDetection`
+  (`overlay/targetDetection.ts`) and has deleted the four board overlays and four glyph components. Both gates hold:
+  - `jscpd --min-lines 10` finds 0 clones in `src/components/editor/**`;
+  - all 34 route screenshots, demo pages included, match the pre-migration baseline within 0.001.
+    The editor canvas after a run differs by design (Fit now fills the canvas, plus the SVG renderer and the
+    overlay roles); the e2e specs prove the same detections at the same positions.
 
 ### L8 — 3D
 

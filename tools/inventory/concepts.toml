@@ -304,19 +304,11 @@ note.vm-lab = "shortcuts written into tooltip text"
 label = "Schema-driven form"
 layer = "forms"
 impl.lab-ui = ["packages/forms/src/components/SchemaForm.tsx", "packages/forms/src/api/schemaForm.ts"]
-impl.vitavision = [
-  "src/components/editor/algorithms/calibrationTargets/CharucoConfigForm.tsx",
-  "src/components/editor/algorithms/calibrationTargets/ChessboardConfigForm.tsx",
-  "src/components/editor/algorithms/calibrationTargets/MarkerBoardConfigForm.tsx",
-  "src/components/editor/algorithms/chessCorners/ChessCornersConfigForm.tsx",
-  "src/components/editor/algorithms/puzzleboard/PuzzleboardConfigForm.tsx",
-  "src/components/editor/algorithms/radsym/RadsymConfigForm.tsx",
-  "src/components/editor/algorithms/ringgrid/RinggridConfigForm.tsx",
-]
 impl.calibration-rs = ["src/lib/configForm.tsx"]
 impl.ct-studio = ["src/components/ParamForm.tsx", "src/components/ConfigEditor.tsx"]
 uses.val = "@vitavision/forms"
-note.vitavision = "hand-written per detector, not schema-driven (F4)"
+uses.vitavision = "@vitavision/forms"
+note.vitavision = "SchemaValueForm on each detector's WASM schema, one UiSchema per algorithm (createConfigForm.tsx); schemaTools.ts folds ringgrid's $ref-with-siblings (lab-ui#89)"
 note.viva-studio = "GenICam node-map editors (FeatureBrowser/editors/*): driven by the camera XML, not JSON Schema"
 
 # ── charts ──────────────────────────────────────────────────────────────────────────────
@@ -378,7 +370,6 @@ label = "2D image stage (zoom / pan / layers)"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/stage/ImageStage.tsx", "packages/stage2d/src/components/stage/view.ts", "packages/stage2d/src/components/ZoomPanCanvas.tsx"]
 impl.val = ["src/components/annotation/AnnotationCanvas.tsx", "src/components/annotation/canvasView.ts"]
-impl.vitavision = ["src/components/editor/CanvasWorkspace.tsx", "src/components/editor/hooks/useCanvasGestures.ts"]
 impl.calibration-rs = ["src/components/FrameCanvas.tsx", "src/components/CompareViewer.tsx"]
 impl.ct-studio = ["src/components/CanvasViewport.tsx"]
 impl.ct-demo = ["src/components/CanvasViewport.tsx"]
@@ -387,7 +378,8 @@ impl.operator-ui = ["src/components/live/FrameCanvas.tsx", "src/components/live/
 impl.viva-studio = ["src/components/ImageViewer/ViewerCanvas.tsx", "src/components/ImageViewer/useZoomPan.ts"]
 uses.vm-lab = "@vitavision/stage2d"
 note.val = "Konva annotation editor; sample/result viewers already use lab-ui ImageStage (viewer/SampleStage.tsx)"
-note.vitavision = "Konva"
+uses.vitavision = "@vitavision/stage2d"
+note.vitavision = "CanvasWorkspace composes ImageStage; annotations/ToolSurface.tsx replaces StageSurface for tool input so a touch tap is told from a pan or pinch (lab-ui#88)"
 note.calibration-rs = "raw Canvas2D"
 note.ct-studio = "raw Canvas2D"
 note.vm-lab = "canvas/CanvasStage.tsx, AlignTab and BirdsEyeTab compose ImageStage"
@@ -433,7 +425,7 @@ note.caliperbench = "FrameRequest / FitOnOpen helper components that call useSta
 label = "Image layer: pixelated zoom, resolution tiers"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/stage/ImageLayer.tsx"]
-impl.vm-lab = ["src/canvas/ImageLayer.tsx"]
+uses.vm-lab = "@vitavision/stage2d"
 impl.caliperbench = ["src/SegmentReview.tsx"]
 
 [concepts.layers-menu]
@@ -447,21 +439,22 @@ impl.caliperbench = ["src/canvas/ViewBar.tsx"]
 label = "Rectangle ROI editor"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/RectRoiEditor.tsx", "packages/stage2d/src/components/roiEdit.ts"]
-impl.vm-lab = ["src/canvas/RoiLayer.tsx", "src/canvas/roiEdit.ts"]
+uses.vm-lab = "@vitavision/stage2d"
+note.vm-lab = "canvas/roi.ts converts between the lab's ROI and the editor's Rect"
 impl.viva-studio = ["src/components/ImageViewer/RoiOverlay.tsx"]
 
 [concepts.polyline-set]
 label = "Selectable polyline set (hover, select, marquee)"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/PolylineSet.tsx", "packages/stage2d/src/components/polylineIndex.ts"]
-impl.vm-lab = ["src/canvas/ContourLayer.tsx", "src/canvas/contourSelection.ts"]
+uses.vm-lab = "@vitavision/stage2d"
 impl.caliperbench = ["src/SegmentLayer.tsx", "src/StationLayer.tsx"]
 
 [concepts.stage-tool-model]
 label = "Stage tool model (what a press on the stage means)"
 layer = "stage2d"
 impl.lab-ui = ["packages/stage2d/src/components/stage/StageSurface.tsx"]
-impl.vm-lab = ["src/canvas/useCanvasInteraction.ts"]
+uses.vm-lab = "@vitavision/stage2d"
 impl.caliperbench = ["src/SegmentLayer.tsx", "src/SketchLayer.tsx"]
 note.caliperbench = "tools chosen in canvas/ToolRail.tsx; each layer handles its own presses"
 
@@ -495,18 +488,8 @@ note.vm-lab = "Tauri dialogs yield paths; FileDrop's path route (workbench 0.2) 
 label = "Calibration-target / feature overlay"
 layer = "overlays"
 impl.lab-ui = ["packages/overlays/src/TargetOverlay.tsx"]
-impl.vitavision = [
-  "src/components/editor/canvas/overlays/CharucoOverlay.tsx",
-  "src/components/editor/canvas/overlays/ChessboardOverlay.tsx",
-  "src/components/editor/canvas/overlays/MarkerboardOverlay.tsx",
-  "src/components/editor/canvas/overlays/GridEdgesGroup.tsx",
-  "src/components/editor/algorithms/puzzleboard/PuzzleboardOverlay.tsx",
-  "src/components/editor/canvas/primitives/ArUcoMarkerGlyph.tsx",
-  "src/components/editor/canvas/primitives/CircleGlyph.tsx",
-  "src/components/editor/canvas/primitives/DirectedPointGlyph.tsx",
-  "src/components/editor/canvas/primitives/RingMarkerGlyph.tsx",
-]
-note.vitavision = "vitavision has no radsym overlay (FeatureLayer draws its circles and a heatmap); the primitives are the per-kind glyphs FeatureLayer renders"
+uses.vitavision = "@vitavision/overlays"
+note.vitavision = "overlay/targetDetection.ts maps the editor's detection features to a TargetDetection; radsym circles go through TargetOverlay too"
 impl.calibration-rs = ["src/workspaces/EpipolarWorkspace/EpipolarOverlay.tsx"]
 impl.ct-studio = ["src/components/overlays.ts", "src/components/diagnoseOverlays.ts"]
 impl.ct-demo = ["src/components/overlays.ts"]
@@ -516,8 +499,10 @@ note.calibration-rs = "residual arrows drawn inside FrameCanvas.tsx"
 
 [concepts.heatmap]
 label = "Heatmap / colour-scale layer"
-layer = "overlays"
-impl.vitavision = ["src/components/editor/canvas/HeatmapLayer.tsx", "src/components/editor/algorithms/radsym/useRadsymHeatmap.ts"]
+layer = "stage2d"
+impl.lab-ui = ["packages/stage2d/src/components/HeatmapLayer.tsx", "packages/stage2d/src/components/heatmapRaster.ts"]
+uses.vitavision = "@vitavision/stage2d"
+note.vitavision = "algorithms/radsym/useRadsymHeatmap.ts computes the FRST response; stage2d's HeatmapLayer draws it"
 impl.val = ["src/components/viewer/LabelLayer.tsx"]
 
 # ── three ───────────────────────────────────────────────────────────────────────────────
