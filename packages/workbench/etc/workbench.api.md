@@ -16,6 +16,7 @@ import { ToastOptions } from '@vitavision/ui';
 import { ToastRecord } from '@vitavision/ui';
 import { ToastStore } from '@vitavision/ui';
 import { ToastTone } from '@vitavision/ui';
+import { Tone } from '@vitavision/ui';
 
 // @public
 export function acceptsFile(file: {
@@ -190,7 +191,14 @@ export function resolveSize(size: PaneSize, length: number): number;
 export interface SequenceItem {
     id: string;
     label: string;
+    status?: SequenceItemStatus | undefined;
     thumbnail?: string | undefined;
+}
+
+// @public
+export interface SequenceItemStatus {
+    label: string;
+    tone: Tone;
 }
 
 // @public

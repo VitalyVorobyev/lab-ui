@@ -42,7 +42,9 @@ const meta = {
       description: {
         component: `The current item of an ordered set — a frame of a capture — as a strip of lazily loaded thumbnails between
 previous and next, with the position and \`[\` / \`]\` from anywhere outside a text field. \`renderThumbnail\` draws a
-thumbnail whose URL must be fetched first.
+thumbnail whose URL must be fetched first. An item's \`status\` (\`{ tone, label }\`) draws a dot in the thumbnail's
+corner — "not found" in a batch run — over any thumbnail rendering. The strip is as wide as its thumbnails, so
+previous and next stay beside a short sequence; a long one scrolls.
 
 **Use** it where a person steps through a capture one frame at a time: a header, under a canvas.
 
@@ -50,7 +52,8 @@ thumbnail whose URL must be fetched first.
 \`SegmentedControl\` or \`Select\`).
 
 **Accessibility**: the strip is a named list of buttons, each named by its item; the current one has
-\`aria-current="true"\`. Previous and next declare \`aria-keyshortcuts\`.`,
+\`aria-current="true"\`. A status is said in words: the item is named, and titled, \`"label, status"\`, and the dot
+is decoration. Previous and next declare \`aria-keyshortcuts\`.`,
       },
     },
   },
@@ -124,5 +127,67 @@ export const LabelsWithoutThumbnails: Story = {
   args: { items: FRAMES.slice(0, 3).map(({ id, label }) => ({ id, label })), value: "f1" },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("dome_0002.bmp")).toBeVisible();
+  },
+};
+
+/** A batch run's verdicts as per-item status: a dot in the corner, the status in each item's name. */
+export const WithStatus: Story = {
+  args: {
+    items: FRAMES.map((frame, i) => ({
+      ...frame,
+      status:
+        i === 2 || i === 7
+          ? { tone: "defect" as const, label: "not found" }
+          : i === 4
+            ? { tone: "warning" as const, label: "low contrast" }
+            : i < 9
+              ? { tone: "normal" as const, label: "found" }
+              : undefined,
+    })),
+  },
+  play: async ({ canvas }) => {
+    const missing = canvas.getByRole("button", { name: "dome_0003.bmp, not found" });
+    await expect(missing).toHaveAttribute("aria-current", "true");
+    await expect(missing).toHaveAttribute("data-status", "defect");
+    await expect(missing).toHaveAttribute("title", "dome_0003.bmp, not found");
+    await expect(missing.querySelector('[data-tone="defect"]')).not.toBeNull();
+    await expect(canvas.getByRole("button", { name: "dome_0005.bmp, low contrast" })).toHaveAttribute(
+      "data-status",
+      "warning",
+    );
+    // An item without a status keeps its plain name and draws no dot.
+    const plain = canvas.getByRole("button", { name: "dome_0010.bmp" });
+    await expect(plain).not.toHaveAttribute("data-status");
+    await expect(plain.querySelector("[data-tone]")).toBeNull();
+  },
+};
+
+/**
+ * Three frames in a wide row: the strip is as wide as its thumbnails, so Next sits beside the
+ * last one instead of at the far end of the row.
+ */
+export const ShortSequence: Story = {
+  args: {
+    items: FRAMES.slice(0, 3).map(({ id, label }, i) => ({
+      id,
+      label,
+      status: i === 1 ? { tone: "defect" as const, label: "not found" } : undefined,
+    })),
+    value: "f1",
+  },
+  play: async ({ canvas }) => {
+    const list = canvas.getByRole("list", { name: "Frames" });
+    const next = canvas.getByRole("button", { name: "Next" });
+    await expect(canvas.getByText("1 / 3")).toBeVisible();
+    // The layout is CSS; measure it only where the stylesheet is loaded.
+    if (getComputedStyle(list).display === "flex") {
+      const last = canvas.getByRole("button", { name: "dome_0003.bmp" }).getBoundingClientRect();
+      const gap = next.getBoundingClientRect().left - last.right;
+      await expect(gap).toBeGreaterThanOrEqual(0);
+      await expect(gap).toBeLessThanOrEqual(12);
+      await expect(list.getBoundingClientRect().width).toBeLessThan(560 / 2);
+    }
+    await userEvent.click(next);
+    await expect(change).toHaveBeenLastCalledWith("f2");
   },
 };

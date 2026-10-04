@@ -25,7 +25,7 @@ bun add @vitavision/workbench @vitavision/ui
 | `PlaybackBar` | Transport for a sampled timeline: step, play/pause, markers, scrubber, `t = k · dt`, speed, loop. |
 | `createPlayhead`, `usePlayhead`, `usePlaybackClock` | The playback position as an external store, and the real-time clock that drives it. |
 | `FileDrop` | Drop zone (or full-window `overlay`) plus an "Open files…" button; `accept` applied to both routes; dropped folders walked. In a desktop shell, a `pathSource` yields paths to `onPaths` instead of `File`s (see below). |
-| `SequenceNavigator` | The current item of an ordered set (a frame of a capture) as a lazy thumbnail strip with previous/next, the position, and `[` / `]` from anywhere outside a text field. |
+| `SequenceNavigator` | The current item of an ordered set (a frame of a capture) as a lazy thumbnail strip with previous/next, the position, and `[` / `]` from anywhere outside a text field. A per-item `status` (`{ tone, label }`) draws a dot in the thumbnail's corner and is said in the item's name. |
 | `Toaster`, `toast()` | Notifications from anywhere; one `<Toaster />` near the root. **Now lives in `@vitavision/ui`**; re-exported here (same bindings, one default store) so existing imports keep working. Prefer `import { toast } from "@vitavision/ui"`. |
 
 The pure logic behind them is exported too and tested without a DOM: `splitSize.ts`
