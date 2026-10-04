@@ -118,6 +118,7 @@ export {
   type SegmentPrimitive,
   type SegmentsPrimitive,
 } from "./components/MeasureOverlay";
+export { measurePrimitiveDistance, nearestMeasurePrimitive } from "./components/measureHit";
 
 export {
   OVERLAY_ROLES,

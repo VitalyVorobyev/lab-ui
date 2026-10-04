@@ -1,7 +1,10 @@
-import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, render } from "@testing-library/react";
+import { useState } from "react";
+import { describe, expect, it, vi } from "vitest";
 
-import { MeasureOverlay, type MeasurePrimitive } from "./MeasureOverlay";
+import { MeasureOverlay, type MeasureOverlayProps, type MeasurePrimitive } from "./MeasureOverlay";
+import { ImageStage } from "./stage/ImageStage";
+import { useStageHitTest, type StageHitTestApi } from "./stage/useStageHitTest";
 
 describe("MeasureOverlay", () => {
   it("sets the viewBox to the native image size, so primitives are drawn in image pixels", () => {
@@ -218,6 +221,87 @@ describe("MeasureOverlay", () => {
       );
       expect(container.querySelector("text")).toBeNull();
       expect(container.querySelector("path")?.getAttribute("d")).toBe("");
+    });
+  });
+
+  describe("hover and pick", () => {
+    const primitives: MeasurePrimitive[] = [
+      { kind: "caliper", id: "c1", cx: 20, cy: 20, width: 20, height: 10, angle: 0, state: "dimmed" },
+      { kind: "circle", id: "c2", cx: 70, cy: 70, r: 10, state: "selected" },
+      { kind: "segment", x1: 0, y1: 95, x2: 100, y2: 95 },
+    ];
+
+    it("draws the app's hovered primitive in the hover state, and leaves a selected one selected", () => {
+      const { container, rerender } = render(
+        <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={1} hoveredId="c1" />,
+      );
+      const svg = container.querySelector("svg")!;
+      expect(svg.getAttribute("data-hovered")).toBe("c1");
+      const c1 = container.querySelector("g[data-id='c1']")!;
+      expect(c1.getAttribute("data-state")).toBe("hover");
+      // Hover replaces dimmed: the mark is drawn at full opacity, thicker.
+      expect(c1.hasAttribute("opacity")).toBe(false);
+      rerender(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={1} hoveredId="c2" />);
+      expect(container.querySelector("g[data-id='c2']")?.getAttribute("data-state")).toBe("selected");
+      expect(container.querySelector("g[data-id='c1']")?.getAttribute("data-state")).toBe("dimmed");
+      rerender(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={1} hoveredId={null} />);
+      expect(svg.hasAttribute("data-hovered")).toBe(false);
+    });
+
+    it("needs no stage while it has no handler", () => {
+      expect(() => render(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={1} />)).not.toThrow();
+    });
+
+    /** A 100×100 stage at 1:1, the overlay in it, and the stage's hit-test. */
+    function Picking(props: Partial<MeasureOverlayProps> & { onApi: (api: StageHitTestApi) => void }) {
+      const { onApi, ...overlay } = props;
+      const [view, setView] = useState<{ scale: number; tx: number; ty: number } | null>({ scale: 1, tx: 0, ty: 0 });
+      return (
+        <ImageStage image={{ width: 100, height: 100 }} view={view} onView={setView}>
+          <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={1} {...overlay} />
+          <Asker onApi={onApi} />
+        </ImageStage>
+      );
+    }
+
+    function Asker({ onApi }: { onApi: (api: StageHitTestApi) => void }) {
+      onApi(useStageHitTest());
+      return null;
+    }
+
+    it("answers the stage's hit-test by id, under its layer id and priority", () => {
+      let api!: StageHitTestApi;
+      render(<Picking onApi={(a) => (api = a)} onHoverChange={() => {}} layerId="measure" priority={150} />);
+      expect(api.hitTest({ x: 22, y: 21 })).toMatchObject({ id: "c1", layerId: "measure", priority: 150, dist: 0 });
+      expect(api.hitTest({ x: 82, y: 70 })).toMatchObject({ id: "c2" });
+      // The segment has no id: never picked.
+      expect(api.hitTest({ x: 50, y: 95 })).toBeNull();
+    });
+
+    it("is pressable only with onItemPress", () => {
+      let api!: StageHitTestApi;
+      const { rerender } = render(<Picking onApi={(a) => (api = a)} onHoverChange={() => {}} />);
+      expect(api.hitTest({ x: 22, y: 21 }, 6, { pressable: true })).toBeNull();
+      rerender(<Picking onApi={(a) => (api = a)} onItemPress={() => {}} />);
+      expect(api.hitTest({ x: 22, y: 21 }, 6, { pressable: true })).toMatchObject({ id: "c1" });
+    });
+
+    it("tracks the hover the app does not control, and forgets it when it stops being pickable", () => {
+      const onHoverChange = vi.fn();
+      const { container, rerender } = render(<Picking onApi={() => {}} onHoverChange={onHoverChange} />);
+      const viewport = container.querySelector("[role=application]")!;
+      const stage = container.querySelector("[data-stage]")!.getBoundingClientRect();
+      act(() => {
+        viewport.dispatchEvent(
+          new PointerEvent("pointermove", { bubbles: true, clientX: stage.left + 20.5, clientY: stage.top + 20.5, pointerType: "mouse" }),
+        );
+      });
+      expect(onHoverChange).toHaveBeenLastCalledWith("c1");
+      expect(container.querySelector("g[data-id='c1']")?.getAttribute("data-state")).toBe("hover");
+      rerender(<Picking onApi={() => {}} />);
+      expect(container.querySelector("g[data-id='c1']")?.getAttribute("data-state")).toBe("dimmed");
+      rerender(<Picking onApi={() => {}} onHoverChange={onHoverChange} />);
+      expect(container.querySelector("g[data-id='c1']")?.getAttribute("data-state")).toBe("dimmed");
     });
   });
 });

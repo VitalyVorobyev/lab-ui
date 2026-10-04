@@ -10,6 +10,15 @@
  * that reads as constant on screen.
  */
 
+/** `MeasureOverlay`'s dot radius when a point names none, in screen pixels. */
+export const MEASURE_POINT_RADIUS_PX = 3;
+/** The arm of a cross mark, from its centre, in screen pixels. */
+export const MEASURE_CROSS_PX = 5;
+/** How far a dimension line sits off its span when it names no offset, in image pixels. */
+export const MEASURE_DIMENSION_OFFSET = 16;
+/** The size of a caliper's arrow head (`arrowHeadPoints`' `size`), in screen pixels. */
+export const MEASURE_ARROW_HEAD_PX = 4;
+
 /** A 2D point — in image pixels unless a signature says otherwise. */
 export interface Point {
   /** Horizontal coordinate, increasing rightward. */
@@ -99,7 +108,7 @@ export function crossSegments(x: number, y: number, size: number): [[Point, Poin
  * it). So only a raw difference near zero is treated as "nothing to draw"; every other
  * multiple of a full turn normalizes to `2π` itself rather than collapsing to `0`.
  */
-function sweepAngle(startAngle: number, endAngle: number): number {
+export function sweepAngle(startAngle: number, endAngle: number): number {
   const turn = Math.PI * 2;
   const EPSILON = 1e-9;
   const raw = endAngle - startAngle;

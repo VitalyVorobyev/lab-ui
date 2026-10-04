@@ -613,14 +613,22 @@ export function MeasureOverlay(input: MeasureOverlayProps): JSX.Element;
 export interface MeasureOverlayProps {
     className?: string;
     halo?: "role" | "all" | "none" | undefined;
+    hoveredId?: string | null | undefined;
+    layerId?: string | undefined;
     nativeHeight: number;
     nativeWidth: number;
+    onHoverChange?: ((id: string | null) => void) | undefined;
+    onItemPress?: ((id: string, event: StagePointerEvent) => boolean | void) | undefined;
     primitives: MeasurePrimitive[];
+    priority?: number | undefined;
     strokeScale: number;
 }
 
 // @public
 export type MeasurePrimitive = PointPrimitive | SegmentPrimitive | SegmentsPrimitive | CirclePrimitive | ArcPrimitive | CaliperPrimitive | DimensionPrimitive | PolylinePrimitive;
+
+// @public
+export function measurePrimitiveDistance(primitive: MeasurePrimitive, point: Point, strokeScale: number): number;
 
 // @public
 export const MIN_SCALE_VS_FIT = 0.25;
@@ -645,6 +653,12 @@ export function nearestContourSegment(points: Point[], point: Point): number;
 
 // @public
 export function nearestEllipse(index: EllipseIndex, p: Point, radius: number): EllipseHit | null;
+
+// @public
+export function nearestMeasurePrimitive(primitives: readonly MeasurePrimitive[], point: Point, radius: number, strokeScale: number): {
+    id: string;
+    distance: number;
+} | null;
 
 // @public
 export function nearestPoint(index: PointIndex, x: number, y: number, radius: number): PointHit | null;
