@@ -234,6 +234,15 @@ export function zoomAbout(view: StageView, scale: number, anchor: Point): StageV
 
 /** The scale range `clampView` and `scaleRange` allow. */
 export interface ClampOptions {
+  /**
+   * How far the image may be panned. `"cover"` (the default): an axis the image overflows
+   * keeps the viewport covered, and an axis it does not fill is centred. `"center"`: any
+   * image point may be brought to the viewport's centre and no further, on both axes and at
+   * every scale — so a zoom about the pointer keeps the pointer's pixel under it while the
+   * image is still smaller than the viewport, and an edge or corner can be worked on in the
+   * middle of the screen.
+   */
+  panBounds?: "cover" | "center" | undefined;
   /** Lowest scale, as a multiple of fit. Defaults to `MIN_SCALE_VS_FIT`. */
   minScaleVsFit?: number;
   /** Highest scale, in CSS pixels per image pixel. Defaults to `MAX_SCALE`. */
@@ -251,10 +260,11 @@ export function scaleRange(box: Box, image: Box, options: ClampOptions = {}): [n
 /**
  * Keep the view legal: scale inside its range, and the image never dragged off screen.
  *
- * An axis where the scaled image is smaller than the viewport is centred rather than left
- * where a drag put it — free-floating pixels in a grey field is a way to be lost with no
- * visible handle to get back. An axis where it is larger is held so the viewport stays
- * covered.
+ * With the default `panBounds: "cover"`, an axis where the scaled image is smaller than the
+ * viewport is centred rather than left where a drag put it — free-floating pixels in a grey
+ * field is a way to be lost with no visible handle to get back — and an axis where it is
+ * larger is held so the viewport stays covered. With `"center"`, each axis only keeps some
+ * image point at or past the viewport's centre.
  */
 export function clampView(
   view: StageView,
@@ -264,11 +274,17 @@ export function clampView(
 ): StageView {
   const [min, max] = scaleRange(box, image, options);
   const scale = clamp(view.scale, min, max);
+  const axis = options.panBounds === "center" ? centreAxis : clampAxis;
   return {
     scale,
-    tx: clampAxis(view.tx, box.width, image.width * scale),
-    ty: clampAxis(view.ty, box.height, image.height * scale),
+    tx: axis(view.tx, box.width, image.width * scale),
+    ty: axis(view.ty, box.height, image.height * scale),
   };
+}
+
+/** `"center"` bounds: the content's far edge may come to the centre, and its near edge too. */
+function centreAxis(t: number, boxLength: number, contentLength: number): number {
+  return clamp(t, boxLength / 2 - contentLength, boxLength / 2);
 }
 
 function clampAxis(t: number, boxLength: number, contentLength: number): number {
