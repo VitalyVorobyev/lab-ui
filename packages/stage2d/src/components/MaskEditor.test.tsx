@@ -67,10 +67,28 @@ describe("MaskEditor", () => {
     const canvas = getByRole("button", { name: "Mask brush" });
     fireEvent.focus(canvas);
     fireEvent.keyDown(canvas, { key: "ArrowUp" });
-    const ring = container.querySelector("svg[aria-hidden] circle");
-    expect([ring?.getAttribute("cx"), ring?.getAttribute("cy"), ring?.getAttribute("r")]).toEqual(["4", "3", "2"]);
+    // A circle of diameter 4 centred on (4, 3): "M6 3a2 2 0 1 0 -4 0a2 2 0 1 0 4 0Z".
+    expect(container.querySelector("path[data-draft-brush]")?.getAttribute("d")).toBe("M6 3a2 2 0 1 0 -4 0a2 2 0 1 0 4 0Z");
     fireEvent.blur(canvas);
-    expect(container.querySelector("svg[aria-hidden] circle")).toBeNull();
+    expect(container.querySelector("path[data-draft-brush]")).toBeNull();
+  });
+
+  it("draws the brush footprint under a hovering pointer, and removes it on leave", () => {
+    const { container, getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable brushRadius={2} /></ImageStage>);
+    const canvas = getByRole("button", { name: "Mask brush" });
+    expect(container.querySelector("path[data-draft-brush]")).toBeNull();
+    fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 2.5, clientY: 3.5 });
+    expect(container.querySelector("path[data-draft-brush]")?.getAttribute("d")).toBe("M4 3a2 2 0 1 0 -4 0a2 2 0 1 0 4 0Z");
+    fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 4.5, clientY: 3.5 });
+    expect(container.querySelector("path[data-draft-brush]")?.getAttribute("d")).toBe("M6 3a2 2 0 1 0 -4 0a2 2 0 1 0 4 0Z");
+    fireEvent.pointerLeave(canvas, { pointerId: 1 });
+    expect(container.querySelector("path[data-draft-brush]")).toBeNull();
+  });
+
+  it("shows no footprint when read-only", () => {
+    const { container, getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={() => {}} /></ImageStage>);
+    fireEvent.pointerMove(getByRole("img", { name: "Mask brush" }), { pointerId: 1, clientX: 2.5, clientY: 3.5 });
+    expect(container.querySelector("path[data-draft-brush]")).toBeNull();
   });
 
   it("starts each stroke from the caller's mask, so a rejected edit is dropped", () => {

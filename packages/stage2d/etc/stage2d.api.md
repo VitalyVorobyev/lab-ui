@@ -189,6 +189,7 @@ export function ContourEditor(input: ContourEditorProps): JSX.Element;
 
 // @public
 export interface ContourEditorProps {
+    bounds?: Rect | undefined;
     editable?: boolean;
     label?: string;
     onChange: (points: Point[]) => void;
@@ -235,6 +236,7 @@ export interface DraftShapeProps {
     halo?: boolean | undefined;
     role?: OverlayRole | undefined;
     shape: DraftShapeSpec | null;
+    stroke?: string | undefined;
 }
 
 // @public
@@ -254,6 +256,16 @@ export type DraftShapeSpec = {
     kind: "polygon";
     points: ArrayLike<number>;
     cursor?: Point | undefined;
+    closing?: boolean | undefined;
+} | {
+    kind: "stroke";
+    points: ArrayLike<number>;
+    width: number;
+} | {
+    kind: "brush";
+    x: number;
+    y: number;
+    diameter: number;
 } | {
     kind: "rect";
     from: Point;
