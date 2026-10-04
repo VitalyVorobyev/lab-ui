@@ -34,7 +34,8 @@ export interface AppShellProps {
   header?: ReactNode;
   /**
    * A fixed-width column at the far left, outside the resizable panels: an icon rail of
-   * workspaces. It takes its content's width and is a `<nav>` named by `railLabel`.
+   * workspaces, such as a `NavRail`. It takes its content's width and is a `<nav>` named by
+   * `railLabel`.
    */
   rail?: ReactNode;
   /** Names the rail's landmark (`<nav>`). Defaults to "Workspaces". */
