@@ -477,15 +477,23 @@ export type HitId = string | number;
 export function ImageLayer(input: ImageLayerProps): JSX.Element;
 
 // @public
-export interface ImageLayerProps {
+export interface ImageLayerBaseProps {
     alt: string;
     className?: string | undefined;
     onError?: (() => void) | undefined;
+    onFullNeeded?: (() => void) | undefined;
     onLoad?: (() => void) | undefined;
     pixelatedAbove?: number | undefined;
-    preview?: ImageTier | undefined;
-    src: string;
 }
+
+// @public
+export type ImageLayerProps = ImageLayerBaseProps & ({
+    src: string;
+    preview?: ImageTier | undefined;
+} | {
+    src?: string | undefined;
+    preview: ImageTier;
+});
 
 // @public
 export function imageLengthFor(view: StageView, css: number): number;
@@ -501,6 +509,7 @@ export interface ImageStageProps {
     className?: string;
     doubleClickFit?: boolean | undefined;
     fit?: FitOptions | undefined;
+    focusable?: boolean | undefined;
     image: Box;
     initialView?: "auto" | "fit" | undefined;
     label?: string;
@@ -1079,8 +1088,9 @@ export interface StageHitTestApi {
 export interface StageLayer {
     disabled?: boolean | undefined;
     id: string;
-    label: string;
+    label: ReactNode;
     shortcut?: string | undefined;
+    swatch?: string | undefined;
     visible: boolean;
 }
 
@@ -1089,6 +1099,7 @@ export function StageLayersMenu(input: StageLayersMenuProps): JSX.Element;
 
 // @public
 export interface StageLayersMenuProps {
+    heading?: ReactNode;
     label?: string | undefined;
     layers: readonly StageLayer[];
     onVisibleChange: (id: string, visible: boolean) => void;

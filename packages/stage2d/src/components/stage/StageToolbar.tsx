@@ -229,8 +229,16 @@ export function StageButton({ label, pressed, hint, shortcut, className, childre
 export interface StageLayer {
   /** Its identity, passed back to `onVisibleChange`. */
   id: string;
-  /** Its name in the menu. */
-  label: string;
+  /**
+   * Its name in the menu: text, or richer content such as a name and a count. It names the
+   * menu item for assistive technology, so keep its text meaningful.
+   */
+  label: ReactNode;
+  /**
+   * A CSS colour shown as a small dot before the label, matching the layer's colour on the
+   * canvas. Decorative (`aria-hidden`), so the label must name the layer on its own.
+   */
+  swatch?: string | undefined;
   /** Whether it is shown. */
   visible: boolean;
   /** Shown but not switchable, e.g. a layer that has nothing to draw yet. */
@@ -245,17 +253,19 @@ export interface StageLayersMenuProps {
   layers: readonly StageLayer[];
   /** Called with a layer's id and its new visibility. */
   onVisibleChange: (id: string, visible: boolean) => void;
-  /** The trigger's accessible name and the menu's heading. Defaults to "Layers". */
+  /** The trigger's accessible name and tooltip. Defaults to "Layers". */
   label?: string | undefined;
+  /** The heading over the menu's items. Defaults to `label`. */
+  heading?: ReactNode;
 }
 
 /**
  * A `StageButton`-shaped trigger opening a menu of layer toggles, for `StageToolbar`'s
- * children. Each layer is a `menuitemcheckbox`; toggling one keeps the menu open for the
- * next. The trigger shows as pressed while any layer is hidden, so a canvas missing a layer
- * says so before the menu is opened.
+ * children. Each layer is a `menuitemcheckbox`, with its `swatch` as a dot before its label;
+ * toggling one keeps the menu open for the next. The trigger shows as pressed while any layer
+ * is hidden, so a canvas missing a layer says so before the menu is opened.
  */
-export function StageLayersMenu({ layers, onVisibleChange, label = "Layers" }: StageLayersMenuProps) {
+export function StageLayersMenu({ layers, onVisibleChange, label = "Layers", heading = label }: StageLayersMenuProps) {
   const hidden = layers.some((layer) => !layer.visible && !layer.disabled);
   return (
     <DropdownMenu
@@ -266,7 +276,7 @@ export function StageLayersMenu({ layers, onVisibleChange, label = "Layers" }: S
         </StageButton>
       }
     >
-      <MenuLabel>{label}</MenuLabel>
+      <MenuLabel>{heading}</MenuLabel>
       {layers.map((layer) => (
         <MenuCheckboxItem
           key={layer.id}
@@ -275,6 +285,14 @@ export function StageLayersMenu({ layers, onVisibleChange, label = "Layers" }: S
           disabled={layer.disabled}
           shortcut={layer.shortcut}
         >
+          {layer.swatch !== undefined && (
+            <span
+              data-swatch=""
+              aria-hidden
+              className="mr-2 inline-block size-2 rounded-full align-middle ring-1 ring-line"
+              style={{ backgroundColor: layer.swatch }}
+            />
+          )}
           {layer.label}
         </MenuCheckboxItem>
       ))}

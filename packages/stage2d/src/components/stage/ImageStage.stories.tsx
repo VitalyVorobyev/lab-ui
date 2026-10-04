@@ -180,7 +180,8 @@ put layers *outside* it to make them interactive — that is exactly how layers 
 
 **Accessibility**: the viewport is \`role="application"\` with an \`aria-label\` (\`label\`, default
 "Image canvas") and takes focus; with focus, \`+\` / \`-\` zoom, \`0\` fits, \`1\` is 100% and the arrows
-pan (\`panKeys={false}\` frees them). Toolbar buttons are real buttons with \`aria-label\` and
+pan (\`panKeys={false}\` frees them). With \`focusable={false}\` (the default when \`shortcuts\` is off) it is a
+\`role="group"\` and not a tab stop, for an app that owns the keyboard on its own wrapper. Toolbar buttons are real buttons with \`aria-label\` and
 \`aria-pressed\`. The image itself needs its own \`alt\`; overlays are decorative and \`aria-hidden\`,
 so a result drawn only on the canvas must also be stated in text beside it.`,
       },
@@ -695,5 +696,35 @@ export const FitPadding: Story = {
     const { scale, ty } = stageView(canvasElement);
     await expect(ty).toBeCloseTo(24, 0);
     await expect(scale).toBeCloseTo((viewport.clientHeight - 48) / IMAGE.height, 4);
+  },
+};
+
+/**
+ * An app that owns the keyboard on its own wrapper. With `shortcuts` off the stage is not a
+ * tab stop either (`focusable` follows `shortcuts`), so the wrapper is the only one and the
+ * viewport is a plain named group. Pass `focusable` to decide it separately.
+ */
+export const NotFocusable: Story = {
+  args: { shortcuts: false },
+  render: (args) => (
+    <div
+      role="region"
+      aria-label="Annotation editor"
+      tabIndex={0}
+      className="rounded-control outline-none focus-visible:ring-1 focus-visible:ring-signal"
+    >
+      <StatefulStage {...args} options={{ readout: "static" }} />
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const stage = canvas.getByRole("group", { name: "Image canvas" });
+    await expect(stage).not.toHaveAttribute("tabindex");
+    await expect(canvas.queryByRole("application")).toBeNull();
+    const editor = canvas.getByRole("region", { name: "Annotation editor" });
+    await userEvent.tab();
+    await expect(editor).toHaveFocus();
+    await userEvent.tab();
+    await expect(editor).not.toHaveFocus();
+    await expect(stage).not.toHaveFocus();
   },
 };

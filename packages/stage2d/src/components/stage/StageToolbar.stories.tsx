@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Crosshair, SquareDashed } from "lucide-react";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { ImageStage } from "./ImageStage";
@@ -10,15 +11,50 @@ import type { StageView } from "./view";
 const IMAGE = { width: 1280, height: 1024 };
 const layerChange = fn();
 
+const PLAIN_LAYERS: StageLayer[] = [
+  { id: "region", label: "Region", visible: true, shortcut: "R" },
+  { id: "contours", label: "Contours", visible: true },
+  { id: "points", label: "Edge points", visible: false, disabled: true },
+];
+
+/** Layers named with a count beside the name, each with its colour on the canvas. */
+const SWATCH_LAYERS: StageLayer[] = [
+  {
+    id: "edges",
+    label: (
+      <>
+        Edges <span className="text-fg-muted tabular-nums">128</span>
+      </>
+    ),
+    swatch: "#3fb6a8",
+    visible: true,
+  },
+  {
+    id: "fit",
+    label: (
+      <>
+        Fitted circles <span className="text-fg-muted tabular-nums">3</span>
+      </>
+    ),
+    swatch: "#d9a13b",
+    visible: true,
+  },
+  { id: "grid", label: "Grid", swatch: "#8a94a0", visible: false },
+];
+
 /** An app's toolbar groups: tools with hints and keys, and a layers menu. */
-function Workbench({ width }: { width?: number }) {
+function Workbench({
+  width,
+  initialLayers = PLAIN_LAYERS,
+  heading,
+}: {
+  width?: number;
+  initialLayers?: StageLayer[];
+  heading?: ReactNode;
+}) {
   const [view, setView] = useState<StageView | null>(null);
   const [tool, setTool] = useState<"select" | "region">("select");
-  const [layers, setLayers] = useState<StageLayer[]>([
-    { id: "region", label: "Region", visible: true, shortcut: "R" },
-    { id: "contours", label: "Contours", visible: true },
-    { id: "points", label: "Edge points", visible: false, disabled: true },
-  ]);
+  const [layers, setLayers] = useState<StageLayer[]>(initialLayers);
   return (
     <div style={{ height: 360, width }}>
       <ImageStage
@@ -42,6 +78,7 @@ function Workbench({ width }: { width?: number }) {
             </StageButton>
             <StageLayersMenu
               layers={layers}
+              {...(heading === undefined ? {} : { heading })}
               onVisibleChange={(id, visible) => {
                 layerChange(id, visible);
                 setLayers((all) => all.map((layer) => (layer.id === id ? { ...layer, visible } : layer)));
@@ -68,13 +105,17 @@ const meta = {
 \`StageButton\` is the bar's icon button. Its tooltip is the native \`title\`; with \`hint\` and/or \`shortcut\` it is the
 ui \`Tooltip\` instead — the label, the hint, and the key as a \`Kbd\` (this needs a \`TooltipProvider\` above the stage).
 \`StageLayersMenu\` is a layers button opening a menu of layer toggles; it shows as pressed while any layer is hidden.
+A layer's \`label\` may be rich content (a name and a count), and its \`swatch\` (a CSS colour) is drawn as a dot
+before it to match the layer's colour on the canvas. \`label\` names the trigger; \`heading\` (defaulting to it)
+titles the menu.
 
 **Use** them for canvas controls: tools, layers, view commands.
 
 **Don't** put task controls (thresholds, a model's settings) on the canvas — they belong in the inspector.
 
 **Accessibility**: buttons are named by \`label\`; toggles expose \`aria-pressed\`; a \`shortcut\` is also
-\`aria-keyshortcuts\` (binding the key is the app's). The layers menu is a \`menu\` of \`menuitemcheckbox\` items.`,
+\`aria-keyshortcuts\` (binding the key is the app's). The layers menu is a \`menu\` of \`menuitemcheckbox\` items, each named by its label's text; a swatch is
+\`aria-hidden\`, so the label must name the layer without its colour.`,
       },
     },
   },
@@ -133,5 +174,30 @@ export const NarrowCanvas: Story = {
     const readout = canvasElement.querySelector("[data-readout-slot]")!;
     await expect(readout).toHaveTextContent("1023.4, 511.9 px");
     await expect((readout as HTMLElement).getBoundingClientRect().width).toBeGreaterThan(80);
+  },
+};
+
+/**
+ * Layers named with rich labels (a name and a count) and colour swatches, under a heading
+ * of their own; the trigger keeps its short name.
+ */
+export const LayerSwatches: Story = {
+  render: () => <Workbench initialLayers={SWATCH_LAYERS} heading="Overlays on this frame" />,
+  play: async ({ canvas }) => {
+    layerChange.mockClear();
+    const trigger = canvas.getByRole("button", { name: "Layers" });
+    // The grid is hidden and switchable, so the trigger says so.
+    await expect(trigger).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(trigger);
+    const body = within(document.body);
+    await expect(await body.findByText("Overlays on this frame")).toBeInTheDocument();
+    const edges = await body.findByRole("menuitemcheckbox", { name: "Edges 128" });
+    const swatch = edges.querySelector<HTMLElement>("[data-swatch]");
+    await expect(swatch).toHaveAttribute("aria-hidden", "true");
+    await expect(swatch?.style.backgroundColor).toBe("rgb(63, 182, 168)");
+    await userEvent.click(body.getByRole("menuitemcheckbox", { name: "Grid" }));
+    await expect(layerChange).toHaveBeenCalledWith("grid", true);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(trigger).toHaveAttribute("aria-pressed", "false"));
   },
 };
