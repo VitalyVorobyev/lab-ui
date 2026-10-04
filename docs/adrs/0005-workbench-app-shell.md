@@ -1,7 +1,7 @@
-# ADR-0003: App-shell building blocks are in scope, as `@vitavision/workbench`
+# ADR-0005: App-shell building blocks are in scope, as `@vitavision/workbench`
 
 - Status: Accepted
-- Date: 2026-09-27
+- Date: 2026-09-27 (numbered 0003 until 2026-10, when it was renumbered: 0003 is the type family)
 - Plan: `docs/plan/PLAN.md` §2, ticket W-1
 - Amends: the README's "Scope" section, which listed app-shell layout as deliberately out of scope
 

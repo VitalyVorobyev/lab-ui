@@ -1,500 +1,85 @@
-# lab-ui → central component library + cross-repo visual-language refactor
-# Claude Code handoff (plan mode)
+# Plan: one component library, one visual language
 
-> Place at `lab-ui/docs/plan/PLAN.md`. **Plan mode first.** Read §1 before proposing
-> anything. Execute one ticket per PR. A PR touches exactly one repository unless the
-> ticket says otherwise. Commit only when asked. Every gate result is written to
-> `lab-ui/docs/measurements/<gate>.md` with repo name and commit SHA.
+The roadmap for `@vitavision/*` and the apps that consume it.
+- **How to work** (rules, definition of done, workflow): [CLAUDE.md](../../CLAUDE.md).
+- **Decisions:** [docs/adrs/](../adrs/).
+- **Design spec:** [docs/visual-language.md](../visual-language.md).
+- **Open issues:** the GitHub tracker.
+- **History:** the full ticket text and done notes of every phase are in
+  `git log -- docs/plan/PLAN.md`; the last long version is at commit `d4edfd6`.
 
-## 0. Goal
+## Goal
 
-1. `github.com/VitalyVorobyev/lab-ui` (today one package, `@vitavision/lab-ui@0.5.0`)
-   becomes a bun-workspace monorepo of **independently published** `@vitavision/*`
-   packages. It is the single home for UI primitives, forms, charts, the 2D image stage,
-   calibration overlays, and the 3D scene.
-2. All React frontends are upgraded to one **latest-compatible toolchain baseline** (§3).
-3. All React frontends converge on **one visual language** (§5), step by step, with each
-   app's local duplicate deleted once it has migrated.
-4. Every shared component meets the quality bar in §4: written well, documented, tested.
+1. **One home for shared UI.** The shared React UI of the vitavision apps lives here, as independently published `@vitavision/*` packages.
+2. **One toolchain.** Every React frontend is on one toolchain baseline: [ADR-0002](../adrs/0002-toolchain-baseline.md), `tools/inventory/baseline.toml`.
+3. **One visual language.** Every React frontend speaks one visual language, and an app deletes its local version of a concept once it uses the package's.
+4. **One quality bar.** Every shared component meets the definition of done.
 
-**In scope** (verify the paths; the assumed layout is siblings under `~/vision/`):
+## Consumers
 
-| Repo | Frontend path | Current state (read 2026-09-26) |
+The `in_plan` repos are mapped in `tools/inventory/concepts.toml`, and their local versions of each concept are counted in
+`docs/measurements/concept-matrix.md` (`bun run inventory:concepts`).
+
+| Repo | Frontend | Uses (default branch, 2026-10-04) |
 |---|---|---|
-| lab-ui | `/` | tsup; peer `react-router ^8.3`; Radix; Tailwind v4 *source* CSS; IBM Plex |
-| visual-anomaly-lab | `frontend/` | consumes lab-ui 0.3; Konva; TS ^7; vitest 4; react-router 8; no eslint |
-| vitavision | `/` | **SSR** (`src/entry-server.tsx`), Cloudflare; Konva; framer-motion; react-router-dom 7; TS ~6.0; vitest 5; Inter/Geist Mono/Source Serif |
-| calibration-rs | `app/` | Tauri; R3F 9.7 + three 0.185.1; own `components/ui`, `FrameCanvas`, `configForm`; react-router-dom 7; Inter/Geist Mono |
-| calib-targets-rs | `studio/`, `demo/` | TS ~5.8; react-router-dom 7; no design system |
-| etendue | `web/` (future) | consumes `@vitavision/three*` (see the etendue PLAN update) |
-| vision-metrology | `lab/frontend/` (added 2026-10-03) | Tauri + browser; consumes `@vitavision/lab-ui` 0.3, the **last consumer** of the compat package; own ROI, contour-set, datum, image and frame-switcher layers over `ImageStage` |
-| caliperbench | `frontend/` (added 2026-10-03) | consumes `ui` 0.8, `stage2d` 0.7, `charts` 0.6; own chain/segment editor, caliper strips, along-centerline chart, tool rail |
+| visual-anomaly-lab | `frontend/` | ui, forms, charts, stage2d |
+| vitavision | `/` (server-rendered) | ui, forms, stage2d, overlays |
+| calibration-rs | `app/` | ui, forms, charts, stage2d, three, three-react |
+| calib-targets-rs | `studio/`, `demo/` | ui (studio); none yet (demo) |
+| vision-metrology | `lab/frontend/` | ui, charts, stage2d, workbench |
+| caliperbench | `frontend/` | ui, forms, charts, stage2d |
+| etendue | `web/apps/studio` | ui, charts, stage2d, workbench, three, three-react |
 
-**Out of scope:** Rust dependency upgrades. Those are a separate plan, because
-nalgebra is pinned through tiny-solver. The only Rust-side change allowed here is
-aligning Tauri crates with `@tauri-apps/*` 2.11.x. The `@vitavision/*` WASM packages
-stay in their Rust repos.
+## Done
 
-## 1. Read first (mandatory)
+| Phase | Outcome |
+|---|---|
+| L0 | Concept matrix, dependency matrix, stage benchmark |
+| L1 | The monorepo, toolchain baseline, Storybook and every CI gate, first publish |
+| L2 | Every app upgraded to the baseline |
+| L3 | The visual language (IBM Plex, ADR-0003), tokens with contrast tests, `ui` adopted in every app |
+| L4 | `SchemaValueForm`; schema-driven detector forms in vitavision |
+| L5 | Charts consolidated (`Histogram`, interaction, colour maps) |
+| L6 | Stage engine (ADR-0004); point, polyline, area, grid and heatmap layers with one hit-test; three apps off Konva |
+| L7 | `@vitavision/overlays`: one `TargetOverlay` for every calibration target |
+| L8 | `@vitavision/three` and `three-react` |
+| W | `@vitavision/workbench` (ADR-0005) |
+| U | What vision-metrology's lab and caliperbench needed: editors, layers menu, image layer, polyline set, overlay roles, chart interaction, sequence navigator |
+| L9-1 (part) | `@vitavision/lab-ui` retired; deprecated on npm |
 
-- `lab-ui/{README.md,package.json,tsup.config.ts,src/styles.css,src/theme.ts,src/index.ts}` and all of `lab-ui/src/components/**`.
-- `visual-anomaly-lab/{CLAUDE.md,AGENTS.md}` and `frontend/src/**` (the Konva stage: `AnnotationCanvas`, `LiveStage`, `LabelLayer`, `LiveLayer`).
-- `vitavision/{AGENTS.md,.claude/CLAUDE.md,src/entry-server.tsx,src/index.css}`, the editor canvas under `src/components/editor/**`, and `src/lib/wasm/worker/**`.
-- `calibration-rs/app/src/{components/**,lib/configForm.tsx,workspaces/**}` and `calibration-rs/docs/adrs/0018-schema-driven-ui.md`.
-- `calib-targets-rs/{studio,demo}/src/**`.
+## Open
 
-**Facts relied on.** Re-verify each; if any is false, stop and report.
+### L9-1: close-out
 
-- F1: lab-ui `Button.tsx` and `Panel.tsx` import `Link` from `react-router`, which forces
-  a router peer dependency on every consumer.
-- F2: A jscpd run (min 60 tokens) across the 5 frontends found **3.1% duplication, almost
-  all intra-repo**. Cross-repo duplication is *conceptual*: independent
-  re-implementations, not copy-paste. Progress is therefore measured with the concept
-  matrix (L0-1), not with jscpd.
-- F3: 2D stages come in three technologies: lab-ui (DOM image + SVG overlay),
-  Konva (vitavision, VAL), and calibration-rs `FrameCanvas`.
-- F4: Schema forms exist three times: lab-ui `SchemaForm`, calibration-rs `configForm.tsx`,
-  and vitavision's hand-written `*ConfigForm.tsx` per detector.
-- F5: vitavision renders on the server, so every shared package must be SSR-safe.
-- F6: The intra-repo clones in vitavision are the target overlays (`Charuco`/`Chessboard`/`Markerboard`/`Puzzleboard`,
-  sharing 20–41-line blocks) and the WASM worker wrappers (`chessCorners`/`puzzleboard`/`radsym`).
-- F7: The tsup README says it is no longer maintained and points to tsdown.
+Done when:
+- the concept matrix shows exactly **one implementation per concept** across the in-scope repos;
+- the dependency matrix (`bun run inventory:deps`) shows **0 undocumented deviations**.
 
-## 2. Target layout
+What the matrix still counts is mostly local versions in vision-metrology's lab and caliperbench of
+things the packages now ship:
+- the stage handle and layers menu
+- the polyline set and tool model
+- the sequence navigator
+- chart interaction and colour maps
+- a status bar, nav rail and stepper
+- the datum layer and image comparison
 
-```text
-lab-ui/                                  bun workspace · changesets · one CI
-├── packages/
-│   ├── ui/            @vitavision/ui           tokens (Tailwind v4 source CSS), theme, primitives
-│   ├── forms/         @vitavision/forms        JSON Schema (draft 2020-12, schemars output) → form
-│   ├── charts/        @vitavision/charts       Histogram, Line, LineProfile, Bar, scales
-│   ├── stage2d/       @vitavision/stage2d      view transform, zoom/pan, layered overlays, hit-test, measure
-│   ├── workbench/     @vitavision/workbench    studio-app shell: split panes, tree, playback, file drop, toasts (ADR-0003)
-│   ├── overlays/      @vitavision/overlays     calib-target / feature overlays on stage2d
-│   ├── three/         @vitavision/three        framework-agnostic 3D (spec: etendue PLAN §2–§4, P2-2)
-│   ├── three-react/   @vitavision/three-react  thin R3F bindings (etendue PLAN P2-3)
-│   └── config/        @vitavision/config-{ts,eslint,vitest}  shared presets (private: false)
-├── apps/storybook/                             Storybook 10: docs site + story source for tests
-├── tools/inventory/                            concept matrix + dependency matrix scripts
-├── tools/bench/                                stage2d benchmark harness (Playwright)
-└── docs/{visual-language.md,adrs/,measurements/,plan/}
-```
+### Adoption, one PR per app in that app's repo
 
-**Dependency rules** (enforced by `tools/inventory/check-deps.ts` in CI):
+- **vision-metrology lab and caliperbench.** Move onto the stage2d editors and layers, the charts interaction, and the workbench pieces. Delete each local version, and update `concepts.toml` here.
+- **Re-measure.** After each adoption, re-run `inventory:concepts` and `inventory:deps` and commit the regenerated reports.
 
-- `ui` depends only on Radix, `clsx`, `tailwind-merge`, and `lucide-react`. It has **no
-  router and no motion library**.
-- `forms` and `charts` depend on `ui`. `stage2d` depends on `ui`. `workbench` depends on `ui`
-  and `lucide-react` (ADR-0003). `overlays` depends on
-  `stage2d`, and on `@vitavision/{calib-targets,chess-corners,ringgrid,radsym}` as
-  **optional peers used for types only**.
-- `three-react` depends on `three`, and `three` never imports React.
-- `react` and `react-dom` are always peer dependencies. No package depends on a router.
-- Every package has `sideEffects` limited to CSS, is ESM only, and ships `exports` with
-  `types`.
+### Candidates
 
-## 3. Toolchain baseline
+- **`@vitavision/worker`.** The WASM-worker wrapper pattern that vitavision repeats for each detector. Build it once a second detector app wants it.
 
-Rule: take the latest version, **unless a peer range blocks it**. In that case, pin the
-newest compatible version and record the blocker plus its re-check trigger in
-`docs/adrs/0002-toolchain-baseline.md`. Versions below were read from the npm registry on
-2026-09-26. **Re-read them in L1-1** with `npm view <pkg> version peerDependencies`;
-if newer versions have appeared, the rule still applies.
+## Ideas, not scheduled
 
-| Package | Baseline | Note |
-|---|---|---|
-| react, react-dom | 19.3.0 | R3F 9.8.1 peers `>=19 <19.4` — watch before 19.4 |
-| react-router | 8.4.0 | **replaces react-router-dom** (whose latest is 7.18.4; there is no 8.x `-dom`). 81 files import `react-router-dom` across vitavision and the calibration-rs app |
-| typescript | **6.0.3 (not 7.0.2)** | Blocker: typescript-eslint 8.70.1 peers `typescript <6.1.0`. VAL goes **down** from ^7. Trigger: typescript-eslint admits 7 |
-| vite / @vitejs/plugin-react | 8.3.1 / 6.1.1 | |
-| vitest / @vitest/browser-playwright | 5.0.2 / 5.0.2 | VAL goes up from 4 |
-| tailwindcss / @tailwindcss/vite | 4.3.3 / 4.3.3 | |
-| eslint / typescript-eslint | 10.11.0 / 8.70.1 | plus `@eslint-react/eslint-plugin` 5.20.8, `eslint-plugin-react-hooks` 7.1.1, `eslint-plugin-storybook` 10.6.0 |
-| eslint-plugin-jsx-a11y | **excluded** | Peer eslint ≤9, last release 2024-10. Accessibility is enforced by axe in story tests (§4) |
-| storybook (+ addon-docs, addon-a11y) | 10.6.0 | **`@storybook/addon-vitest` excluded**: it peers vitest ^3‖^4. Stories are tested through `composeStories` in Vitest browser mode instead. Trigger: the addon admits vitest 5 |
-| tsdown | 0.23.0 | Replaces tsup (F7). It is 0.x, so pin exactly |
-| three / @types/three | 0.186.1 / 0.186.0 | **Exact pin**: three breaks on minor releases |
-| @react-three/fiber / drei | 9.8.1 / 10.7.9 | |
-| konva / react-konva | 10.7.0 / 19.3.0 | Only until the L6 decision |
-| motion | 13.4.4 | Replaces `framer-motion` (same version line, renamed). Apps only, never in `ui` |
-| radix-ui (umbrella) or @radix-ui/* | 1.6.7 / per package | Keep per-package imports; the umbrella is optional |
-| lucide-react | 1.48.0 | |
-| @playwright/test | 1.63.0 | plus `@axe-core/playwright` 4.13.0 |
-| @changesets/cli | 3.0.3 | |
-| size-limit | 14.0.1 | |
-| @microsoft/api-extractor | 7.59.2 | API reports and TSDoc-completeness checks |
-| publint / @arethetypeswrong/cli / knip | 0.3.24 / 0.18.5 / 6.38.0 | |
-| bun | 1.4.2 | Pinned in `packageManager` |
-| @tauri-apps/api / cli | 2.11.1 / 2.11.5 | calibration-rs and VAL |
+- Preview packages for every PR (pkg.pr.new), so an app can try a change before release.
+- The stage2d benchmark as a CI regression job that fails on a > 20 % regression.
 
-TS compiler options for all repos, via `@vitavision/config-ts`: `strict`,
-`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`,
-`moduleResolution: "bundler"`, `jsx: "react-jsx"`.
+## Decisions
 
-## 4. Quality bar: component Definition of Done (checked in CI per package)
-
-A component or module is "done" when **all** of the following hold:
-
-1. **API.** Named exports only. React 19 ref-as-prop, with no `forwardRef`. Controlled
-   and uncontrolled pairs follow the `value`/`defaultValue`/`onValueChange` convention.
-   It accepts `className` merged with `cn`, and exposes state as `data-*` attributes.
-   Links go through `asChild` (Radix `Slot`), never a router import. There is no module
-   scope access to `window` or `document`.
-2. **Docs.** Every exported symbol has TSDoc. The api-extractor report
-   (`packages/*/etc/*.api.md`) is committed and has **0 `ae-undocumented` findings**;
-   an API change without an updated report fails CI. Each component has a Storybook docs
-   page covering purpose, when *not* to use it, props (autodocs), accessibility notes,
-   and one story per meaningful state.
-3. **Tests.**
-   - Stories are the fixtures. `*.test.tsx` imports them via `composeStories` and runs
-     interaction tests in Vitest browser mode (Chromium via `@vitest/browser-playwright`).
-   - Pure logic (`*.ts`) has unit tests, with property tests where the domain allows it
-     (view transforms, scales, schema mapping).
-   - Coverage is **≥90% of lines for `*.ts` logic** and **≥80% for components**.
-   - **Accessibility**: axe finds 0 serious or critical violations for every story, in
-     both light and dark themes.
-   - **SSR**: `renderToString` of every story runs in Node with 0 errors and 0 warnings.
-   - **Visual regression**: Playwright screenshots of every story in both themes, on the
-     **macOS runner only** because font rendering differs by OS, with
-     `maxDiffPixelRatio ≤ 0.001`.
-4. **Packaging.** publint reports 0 errors and attw reports 0 problems. Each package has a
-   size-limit budget, set in L1 to the measured size +10% and failing CI on excess.
-   knip reports 0 unused exports and dependencies.
-5. **Lint and types.** 0 errors and 0 warnings. No `any`; `@ts-expect-error` only with a
-   linked issue.
-
-## 5. Visual language
-
-`docs/visual-language.md` is the normative spec, and Storybook "Foundations" is its
-living specimen. The starting point is lab-ui's existing principle: an *instrument*
-design system with true-neutral greys, one accent (`signal`), and verdict colours
-(`normal`/`defect`/`warn`) reserved for verdicts. Semantic tokens follow
-lab-ui `styles.css` (`ground`, `surface`, `raised`, `overlay`, `line`, `canvas`, `fg*`,
-`signal*`, radii `control`/`panel`).
-
-The spec must add the following:
-
-- **Type.** The repos currently disagree: IBM Plex Sans/Mono in lab-ui and VAL,
-  Inter/Geist Mono in vitavision and calibration-rs, plus Source Serif in vitavision's
-  editorial pages. Decision **D1** in §8 settles the default. Numerals are tabular, and
-  the mono font uses a slashed zero.
-- **Scales.** Spacing and type scales, plus density (`Density.tsx` exists; formalise
-  compact and comfortable).
-- **Data-visualisation palette.** Categorical and sequential colour-vision-safe palettes
-  for charts, overlays and heatmaps, and the rule that overlay colours never reuse verdict
-  colours.
-- **Overlay grammar** for stage2d and three: stroke widths in *screen* pixels regardless
-  of zoom, marker shapes per feature kind, and a selection/hover/dimmed state model.
-- **Motion.** Shared packages use CSS transitions only and respect `prefers-reduced-motion`.
-- **Boundary.** vitavision's editorial and blog pages keep their typography and layout.
-  Only their tokens migrate: colours, radii, spacing. Everything interactive (editor,
-  demos, canvas, forms) adopts the packages.
-
-**Gate G5.1**: 0 raw Tailwind palette classes (for example `bg-gray-500` or
-`text-blue-600`) and 0 hex literals in the component sources of migrated areas. It is
-enforced by a lint rule in `@vitavision/config-eslint`, scoped to each app's migrated
-directories list.
-
-## 6. Phases and tickets
-
-Format: `ID — title · Repo · Files · Done when`.
-
-### L0 — Measure before changing
-
-- **L0-1 — Concept matrix.** Repo: lab-ui. Files: `tools/inventory/{concepts.toml,matrix.ts}`.
-  `concepts.toml` explicitly maps each concept (button, panel, table, select, dialog,
-  tooltip, slider, schema-form, histogram, line-chart, image-stage, target-overlay,
-  3d-frustum, …) to implementing file paths per repo. The mapping is explicit: no
-  heuristics. `matrix.ts` renders `docs/measurements/concept-matrix.md`.
-  Done when every in-scope repo is mapped. Also enumerate *all* of the user's GitHub repos
-  with a `package.json` depending on `react` (`gh repo list` plus a code search) and
-  report any missing from §0.
-- **L0-2 — Dependency matrix.** Files: `tools/inventory/deps.ts` → `docs/measurements/deps.md`.
-  Lists package × repo × version, flagging deviations from §3. Done when it runs in CI.
-- **L0-3 — Stage benchmark harness.** Files: `tools/bench/stage2d/`. The scene is a
-  20 MP image (5472×3648) with 20k point markers and 5k polyline segments; the workload
-  is scripted continuous pan and zoom plus pointer-move hit-testing in Chromium on
-  M-series.
-  Candidates are (a) lab-ui SVG-over-DOM, (b) Konva with layer caching, and (c) batched
-  Canvas2D layers; add (d) a WebGL points layer only if (a)–(c) all fail.
-  Done when all candidates are measured and recorded (feeds L6-1).
-
-### L1 — Monorepo and baseline in lab-ui
-
-- **L1-1 — Toolchain ADR.** Re-verify §3 versions and write `docs/adrs/0002-toolchain-baseline.md`.
-- **L1-2 — Workspace conversion.** Move `src/` into `packages/ui` (primitives, theme,
-  tokens), `packages/forms` (`SchemaForm`, `api/schemaForm*`, `api/mapValues*`),
-  `packages/charts` (`components/charts/*`), and `packages/stage2d` (`components/stage/*`,
-  `ZoomPanCanvas`, `MeasureOverlay`, `measureGeometry`). Switch tsup → tsdown and add the
-  shared config packages and changesets. `packages/lab-ui` becomes a re-export with a
-  console-free deprecation notice in its README and a `deprecated` field on publish.
-  Done when every existing test passes unchanged in its new location.
-- **L1-3 — Router decoupling.** Give `Button` and `Panel` `asChild` via `@radix-ui/react-slot`
-  and remove the `react-router` peer everywhere. This is a breaking change, recorded as a
-  changeset minor for 0.x. Done when `grep -r "react-router" packages/*/src` is empty.
-- **L1-4 — Storybook and test harness.** Covers `apps/storybook`, the composeStories +
-  Vitest browser setup, axe, SSR render tests, and Playwright visual tests.
-  Done when the §4 CI jobs exist and run on the moved components; failures are listed,
-  not yet fixed.
-- **L1-5 — Bring existing components to DoD.** One PR per package. Done when every §4
-  gate is green for `ui`, `forms`, `charts` and `stage2d` (stage2d gets its API only;
-  the engine is decided in L6).
-- **L1-6 — Publish** `@vitavision/{ui,forms,charts,stage2d}@0.6.0` and the
-  `lab-ui` compat package. Storybook is deployed to GitHub Pages. Done when
-  `bun add` into a scratch Vite app renders every story.
-
-### L2 — Upgrade the apps to the baseline (one PR per repo, before any component migration)
-
-Order: VAL, then calib-targets-rs `studio`/`demo`, then calibration-rs `app`, then
-vitavision. The last is last because of SSR and the router.
-
-- **L2-n — Upgrade `<repo>`.** Apply §3 and `@vitavision/config-*`. This includes
-  react-router-dom → react-router 8 (vitavision and calibration-rs), framer-motion → motion
-  (vitavision, 4 files), TS 7 → 6.0.3 (VAL), and TS 5.8 → 6.0.3 (calib-targets).
-  **No UI changes in this phase.**
-  Done when:
-  - typecheck, lint, unit and e2e tests are green;
-  - L0-2 shows 0 deviations except documented exceptions;
-  - Playwright screenshots of the app's main routes show `maxDiffPixelRatio ≤ 0.001`
-    against the pre-upgrade baseline (captured first in the same PR);
-  - the production bundle-size delta is reported;
-  - for vitavision, the SSR build and `entry-server.test.tsx` are green.
-
-### L3 — Visual language and `ui` adoption
-
-- **L3-1 — `docs/visual-language.md` and Storybook Foundations** (tokens, type, scales,
-  data-vis palette, overlay grammar), resolving D1.
-  Done when the user approves the specimen page.
-- **L3-2 — Token update in `ui`**, with contrast checks for every text/background token
-  pair: **WCAG AA ≥ 4.5:1** for text and ≥ 3:1 for UI boundaries, in both themes, as
-  unit tests.
-- **L3-3..n — Adopt `ui` per app.** In calibration-rs, delete `app/src/components/ui/*`.
-  In VAL, move to `@vitavision/ui`. In calib-targets studio, adopt it. In vitavision,
-  migrate tokens for the editorial pages and components for the interactive areas.
-  Done when the concept matrix shows 0 local implementations for the ui concepts in that
-  repo and G5.1 holds in the migrated directories.
-  *Done 2026-09-30 in all four repos:* calibration-rs#142, visual-anomaly-lab#165,
-  calib-targets-rs#107, vitavision#168 + #169 (`docs/measurements/l3-3-*.md`).
-
-### L4 — Forms
-
-- **L4-1 — Merge implementations.** Merge lab-ui `SchemaForm` and calibration-rs
-  `configForm.tsx` into `@vitavision/forms`. Done when both apps' existing form tests
-  pass against the package, **and** each schema in `calibration-rs/app/src/schemas/*.json`
-  round-trips: the default value renders, then serialises back identical.
-  *Done 2026-10-03:* forms 0.7.0 `SchemaValueForm` (#80) — edits a whole value: nested
-  objects, `$ref`, `oneOf` (const, externally and internally tagged), nullable, lists and
-  tuples, plus a `UiSchema` for layout. calibration-rs#143 adopted it, deleted
-  `configForm.tsx`, ported its 6 tests, and added a round-trip test for all 9 schemas against
-  defaults the xtask now emits (`<name>.default.json`).
-- **L4-2 — Schemas for the WASM detectors.** Upstream tickets in the Rust repos
-  (chess-corners-rs, calib-targets-rs, ringgrid, radsym) ask them to ship the schemars
-  JSON Schema of each config in their npm package.
-  *Done 2026-10-03:* the schemas are generated by an `xtask emit-schemas --check` in each
-  repo and shipped as `schemas/*.json` in each npm package: chess-corners 1.3.0 (which also
-  adds `DetectorConfig.fromJson`), calib-targets 0.15.4 (projective-grid 0.14.2),
-  ringgrid 0.13.1 (re-derived fields `readOnly`), radsym 0.4.2 (adds `with_config_json`).
-- **L4-3 — Replace vitavision's hand-written `*ConfigForm.tsx`** with schema-driven forms.
-  Done when the forms are functionally identical: e2e tests set every field and produce
-  the same config JSON as before.
-  *Done 2026-10-03:* vitavision#181. Each config is now the WASM document itself, and each
-  `UiSchema` mirrors the old layout. Two checks prove the config JSON is unchanged:
-  `legacyConfig.test.ts` against a snapshot of the old adapters' WASM documents, and
-  `test-wasm-schemas.ts` against the real WASM. The editor e2e specs reproduce every
-  algorithm's detections exactly.
-
-### L5 — Charts
-
-- **L5-1 — Consolidate** VAL `CurveChart`/`CompareCurves` and calibration-rs `Histogram`
-  onto `@vitavision/charts`. Done when the concept matrix shows one implementation per
-  chart concept.
-  *Done 2026-10-04:* charts 0.8.0 adds `Histogram`, a single-series histogram over raw `values` or pre-binned
-  `counts` with a cursor bin and a threshold rule (#93, closes #58), and calibration-rs's ROI luminance histogram
-  is that chart (calibration-rs#145). VAL's `CurveChart` / `CompareCurves` were already `LineChart`
-  compositions; their duplicated chance diagonal is one helper now (visual-anomaly-lab#167). VAL and calibration-rs
-  have no local chart left. What the matrix still counts is caliperbench's `AlongChart` and the vm-lab / caliperbench
-  colour maps, which wait on their adoption of U-6.
-
-### L6 — 2D stage
-
-- **L6-1 — ADR: stage engine.** Choose the simplest candidate from L0-3 that passes
-  gate **G6.1**: p95 frame time ≤ 16.7 ms during pan and zoom, and pointer hit-test
-  p95 ≤ 2 ms, on the L0-3 scene. If none passes, add the WebGL candidate and re-measure.
-  *Done 2026-10-03: [ADR-0004](../adrs/0004-stage-engine.md).* The stage stays SVG over a DOM
-  image (candidate a′), with batched layers and index-based picking; Konva is ruled out. The
-  ADR lists what L6-2 still has to add: point, grid and heatmap layers and one hit-test API.
-- **L6-2 — Implement `stage2d`** on the chosen engine. The API is layered: an image layer,
-  typed overlay layers (points, polylines, polygons, grids, heatmap), a hit-test API, the
-  measure tool, and a view-transform core reused from lab-ui `stage/view.ts`.
-  Done when §4 holds and G6.1 is re-measured on the package build.
-  *Done 2026-10-03:* part (a) added `PointSet`, the one hit-test (`useStageHitTest`) and touch input
-  ([l6-2a](../measurements/l6-2a-points-hit-test.md)); part (b) added `AreaSet`, `GridLayer`,
-  `HeatmapLayer`, the rotated `ShapeEditor`, `DraftShape` / `MarqueeRect` and `useShapeDrag`
-  ([l6-2b](../measurements/l6-2b-areas-grid-heatmap.md)). Every layer batches by appearance, and the pickable ones resolve the pointer through a pure
-  index (hit-test p95 6 µs on 20k quads, 0.02 ms across layers on the L0-3 scene); §4 holds for all of them.
-- **L6-3..5 — Migrate** calibration-rs `FrameCanvas`, VAL `AnnotationCanvas`/`LiveStage`,
-  and the vitavision editor canvas, one PR each. Done when each app's e2e tests pass,
-  Konva is removed from that app's dependencies, and the concept matrix is updated.
-  *L6-5 done 2026-10-04:* vitavision#182. The editor canvas is one `ImageStage`: image, heatmap,
-  detections (`TargetOverlay`, L7-1) and hand-drawn shapes are its layers, and `konva`, `react-konva`
-  and `use-image` are gone. Feature coordinates are detector-native (the centre of pixel *i* at *i*),
-  and the feature file is versioned, with a v1 import migration. The editor e2e specs pass 17/17,
-  with the algorithm fixture shifted by exactly −0.5 (PuzzleBoard, which never had the offset, by 0).
-  The concept matrix shows vitavision on `stage2d`, `overlays` and `forms`. The gaps it worked around
-  are lab-ui#88 (stage2d) and #89 (forms), fixed by #94 and #95 (stage2d 0.11) and #92 (forms 0.8) and adopted by
-  vitavision#183, which deleted its own tool surface, ellipse hit layer and `will-change` rule.
-  *L6-3 done 2026-10-04:* calibration-rs#144. `FrameCanvas` is an `ImageStage`: the ROI crop is its image, the
-  residual arrows, laser overlay and epipolar markers are SVG layers batched by colour, and the overlays moved half a
-  pixel onto the pixel centre the detectors use. The Diagnose, Compare and Epipolar e2e tests pass.
-  *L6-4 done 2026-10-04:* visual-anomaly-lab#168, after a behavioural contract spec was landed on the Konva editor
-  first (#166). The annotation editor is one `ImageStage` (`AnnotationStage`), and `konva` / `react-konva` are gone.
-  The stage2d gaps it needed came first: #96 (`ContourEditor` bounds, `DraftShape` close cue, brush stroke and
-  footprint), #98 (CSS colours, fill rule and item paint order on `AreaSet`, colours on `PointSet`), #99
-  (viewport-wide `StageSurface`, `onView` causes, the null-view fix, the `RectRoiEditor` bounds fix) and #100
-  (`panBounds: "center"`), released as stage2d 0.12.0. The contract passes unchanged; the remaining editor gaps are
-  #101. L6-3..5 are done.
-
-### L7 — Overlays
-
-- **L7-1 — `@vitavision/overlays`.** One generic target-overlay component parameterised
-  by feature kind, replacing vitavision's Charuco/Chessboard/Markerboard/Puzzleboard/Radsym
-  overlays (F6).
-  Done when:
-  - the jscpd intra-repo clone count in `vitavision/src/components/editor/**` drops to 0;
-  - screenshot parity on the demo pages is ≤ 0.001.
-  *Done 2026-10-04:* overlays 0.1.0 (#85; republished as 0.1.1 by #87, because 0.1.0 went out without `dist/`),
-  adopted by vitavision#182. `TargetOverlay` over a normalised `TargetDetection`, with the lattice builders, the
-  `directed` / `circle-*` glyph generators and `EllipseSet` for image-sized ellipses, sits on stage2d's `GridLayer`,
-  `AreaSet` and `PointSet`. vitavision maps every detector's features to `TargetDetection`
-  (`overlay/targetDetection.ts`) and has deleted the four board overlays and four glyph components. Both gates hold:
-  - `jscpd --min-lines 10` finds 0 clones in `src/components/editor/**`;
-  - all 34 route screenshots, demo pages included, match the pre-migration baseline within 0.001.
-    The editor canvas after a run differs by design (Fit now fills the canvas, plus the SVG renderer and the
-    overlay roles); the e2e specs prove the same detections at the same positions.
-
-### L8 — 3D
-
-- **L8-1 — Build `@vitavision/three` and `@vitavision/three-react`** per etendue PLAN
-  P2-2/P2-3, including the calibration-rs `Viewer3DWorkspace` extraction proof (P2-4).
-  The gates are unchanged (G2.2 and the rest).
-  *Done by the PR that adds `packages/three` and `packages/three-react`:* both were
-  incubated in etendue (`web/packages/three{,-react}`, etendue `docs/pivot/PLAN.md`
-  P2-2/P2-3) and moved here unchanged apart from the §4 fixes the PR lists. G2.2 passed there
-  (etendue `docs/measurements/g2_2_perf.md`: p95 frame interval 7.8 ms). User decision
-  2026-09-29: publish ahead of the P2-4 extraction proof (etendue PLAN §7 had it the other
-  way round); both were published at 0.1.0 on 2026-09-30 (#42). P2-4 closed the same day:
-  calibration-rs's 3D viewer runs on the published packages (calibration-rs#121).
-
-### W — Studio building blocks (ADR-0003)
-
-- **W-1 — `@vitavision/workbench`.** Repo: lab-ui. Files: `packages/workbench/`,
-  `docs/adrs/0003-workbench-app-shell.md`. The building blocks of a studio app: `AppShell`,
-  `SplitPane`, `TreeView`, `PlaybackBar` with its external playhead store
-  (`createPlayhead`, `usePlayhead`, `usePlaybackClock`), `FileDrop`, and `Toaster`/`toast()`.
-  User decision 2026-09-27: shared studio UI and one visual language across the studio apps.
-  Incubated in etendue (`web/packages/workbench`, etendue PLAN P2-6) to the §4 DoD and moved
-  here by PR. First consumer: etendue studio. Expected second: calibration-rs
-  `calibration-diagnose`. Done when §4 holds for the package, it is published at 0.1.0 (its
-  npm trusted publisher registered first, ADR-0001), and etendue studio consumes the
-  published version.
-
-### U — Second consumers: the vision-metrology lab and CaliperBench
-
-Added 2026-10-03. Both apps re-implement the same canvas and inspector pieces on top of
-`ImageStage`, which is the second consumer the promotion rule asks for. Evidence paths are in
-`tools/inventory/concepts.toml` (`vm-lab`, `caliperbench`). One PR per ticket; each ships to
-the §4 DoD with a changeset.
-
-- **U-0 — Inventory and tickets.** Map both frontends in `concepts.toml` (`vm-lab` moves into
-  scope) and file the single-consumer proposals as issues. Done when `matrix.ts --check`
-  passes with both repos mapped.
-- **U-1 — `ui`: value-typed `NumberInput`, `Popover`, `DropdownMenu`, `Listbox`, `Kbd`.**
-  `NumberInput` gains `value: number | null` / `onValueChange` that keeps the typed text while
-  focused, on the `numberText` helpers `VectorInput` already uses. Evidence: vm-lab's
-  clear-to-zero fixes in the Teach sections, `FrameSwitcher`'s and `LayersMenu`'s hand-rolled
-  listbox; caliperbench's layers popover and `.cb-kbd` hints.
-- **U-2 — `stage2d`: stage handle, `ImageLayer`, toolbar hints, layers menu.** An imperative
-  handle (`frame`, `fit`, `zoomTo`) and an `initialView` policy; an image layer with a
-  pixelated threshold and a preview → full resolution swap; `StageButton` hints with a
-  shortcut; a layers menu for `StageToolbar`. Also fixes the `steppedScale` floor (zoom out
-  stays enabled below 0.125 and does nothing).
-- **U-3 — `stage2d`: `RectRoiEditor`.** Draw, move and resize an axis-aligned region with
-  eight handles, clamped to the image. Evidence: vm-lab `RoiLayer`/`roiEdit.ts`; viva-studio
-  `RoiOverlay.tsx`.
-- **U-4 — `stage2d`: tool model and `PolylineSet`.** One place that decides what a press on the
-  stage means (pan, a tool's drag, a layer's click), and a layer of many selectable open or
-  closed polylines with hover, selected and dimmed states and marquee selection. Rendered as
-  batched paths with geometric hit-testing, which the L0-3 benchmark shows passes G6.1 on
-  either candidate engine, so it does not pre-empt L6-1.
-- **U-5 — `stage2d`: overlay role tokens and `MeasureOverlay` additions.** The §5 role
-  colours (feature, model, structure, selection, label, halo) as tokens, a `useScreenPx`
-  helper, and additive `MeasureOverlay` changes: a `polyline` primitive and an optional
-  per-primitive `id` and `state`. Additive, because vision-metrology's backend mirrors
-  `MeasurePrimitive` field for field.
-- **U-6 — `charts`: responsive frame and interaction.** Container-sized `Frame`, hover
-  readout, click-to-pick, an external cursor, `bands` and `markers`, and the §4 sequential
-  maps (`viridis`, `cividis`). Evidence: caliperbench `AlongChart.tsx`; vm-lab's caliper
-  profiles and `AlignTab`'s validity tones.
-- **U-7 — `workbench`: sequence navigator and Tauri paths for `FileDrop`.** A lazy thumbnail
-  strip with `[`/`]` stepping, and a path-based route through `FileDrop` for desktop shells
-  whose native drop and dialogs yield paths, not `File`s.
-
-*Done 2026-10-03:* U-1 #61, U-2 #63, U-3 #64, U-4 #66, U-5 #67, U-6 #69, U-7 #70, with two
-fixes from the same evidence: the narrow-canvas toolbar #68 (vm-lab gap 6) and a
-Playwright-free `@vitavision/config-vitest/dom` #71 (vm-lab gap 1). Released as `ui` 0.10.0,
-`stage2d` 0.8.0, `charts` 0.7.0, `workbench` 0.2.0 and `config-vitest` 0.4.0. Neither app has
-adopted the U-2..U-7 components yet; the concept matrix still counts their local versions.
-
-Single-consumer proposals wait as issues under the promotion rule:
-- a datum / frame handle layer (#54);
-- a nav rail and stepper (#55);
-- a status bar (#56);
-- a checker / wipe / difference comparison (#57);
-- a single-series histogram (#58);
-- `ContourEditor` support for open polylines with brush editing (#59).
-
-### L9 — Close-out
-
-- **L9-1 — Final state.** Done when:
-  - the concept matrix has exactly one implementation per concept across all repos;
-  - `@vitavision/lab-ui` is marked deprecated on npm with 0 remaining consumers. The last
-    one is vision-metrology's lab, which migrates in its own roadmap (track L, step L2);
-  - the dependency matrix shows 0 undocumented deviations.
-
-  *`@vitavision/lab-ui` retired 2026-10-03 (#72):* no in-scope repo depends on it (VAL moved
-  off it in visual-anomaly-lab#165, vm-lab in vision-metrology#43). `packages/lab-ui` and its
-  CI, size-limit, knip, consumer-check and inventory entries are gone; the npm deprecation
-  stays. The concept-matrix and dependency-matrix criteria are still open.
-
-### Promotion rule (standing)
-
-A component enters the library only when a **second** app needs it now, and it moves
-with its stories and tests. The WASM-worker wrapper pattern (F6) is the next candidate,
-as `@vitavision/worker`. Promote it only when VAL or another app needs it.
-
-## 7. Release and CI
-
-- Changesets with independent versions, all 0.x. Every PR with a user-facing change
-  carries a changeset.
-- Every PR publishes preview packages via pkg.pr.new, so apps can try a change before
-  release. Local cross-repo work uses `bun link`.
-- CI jobs: lint, typecheck, unit + browser tests, axe, SSR, api-extractor, publint,
-  attw, knip, size-limit, and visual tests (macOS), plus the monthly L0-2 report and the
-  L0-3 benchmark as a regression job (fails on a >20% regression).
-
-## 8. Decisions for the user (defaults apply if not answered)
-
-- **D1 Type family.** IBM Plex Sans/Mono (lab-ui, VAL) vs Inter + Geist Mono
-  (vitavision, calibration-rs). Default: render both in the Foundations specimen
-  (L3-1) and the user picks. Source Serif stays for vitavision's editorial pages either way.
-  **Decided 2026-09-27: IBM Plex Sans + IBM Plex Mono** (ADR-0003).
-- **D2 Repo name.** Keep `lab-ui` or rename it to something like `vitavision-ui`. Default:
-  keep it (GitHub redirects renames, but the packages move to new names regardless).
-- **D3 Storybook deployment.** Default: GitHub Pages, public.
-
-## 9. CLAUDE.md for lab-ui (create in L1-2)
-
-Include the commands (`bun run {build,test,lint,typecheck,storybook,bench}`), the §2
-layering rules, the §4 DoD as a checklist, and these constraints: one repo per PR, commit
-only when asked, no speculative components (the promotion rule), no router imports in
-packages, no module-scope DOM access, and version exceptions only through ADR-0002.
+- **D1, type family:** IBM Plex Sans + IBM Plex Mono (ADR-0003).
+- **D2, repo name:** keep `lab-ui`. This is the default; it was never asked to change.
+- **D3, Storybook:** GitHub Pages, public. Live at https://vitalyvorobyev.github.io/lab-ui/.

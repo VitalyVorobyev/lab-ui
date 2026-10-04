@@ -1,7 +1,7 @@
 /**
  * The hit-test gate (G6.1: pointer hit-test p95 ≤ 2 ms) for the point layer, measured in
  * Chromium on the L0-3 scene's marker count and on a 100k-point stress scene. The numbers
- * are recorded in `docs/measurements/l6-2a-points-hit-test.md`. As in
+ * are recorded in `docs/measurements/stage2d-layer-budgets.md`. As in
  * `polylineIndex.browser.test.ts`, the assertion is the gate itself, so a slow CI machine
  * does not flake it while a real regression still fails.
  *

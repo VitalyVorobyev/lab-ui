@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-09-27. The owner decided after reviewing the L3-1 specimen (Storybook →
   Foundations → *Type family (D1)*, PR #35).
-- Evidence: `docs/visual-language.md` §2, and `docs/measurements/l3-1-foundations.md`.
+- Evidence: the comparison below, measured for the specimen. The measurement record it came from is in the git history (`docs/measurements/l3-1-foundations.md`, removed 2026-10).
 
 ## Decision
 
@@ -11,6 +11,23 @@ The default type pair of every `@vitavision/*` package and every migrated app is
 **IBM Plex Sans** (variable) for text and **IBM Plex Mono** for values. It replaces Inter and
 Geist Mono in vitavision and calibration-rs as each app migrates (L3-3..n). **Source
 Serif 4** stays on vitavision's editorial pages (spec §7).
+
+## Comparison
+
+Before the decision, lab-ui and VAL used IBM Plex Sans/Mono, and vitavision and calibration-rs
+used Inter/Geist Mono. Measured from the files each candidate would ship (`tools/visual-language/fonts.py`):
+
+| | IBM Plex Sans + IBM Plex Mono | Inter + Geist Mono |
+|---|---|---|
+| x-height / em | 0.516 (mono 0.516) | 0.546 (mono 0.530): about 6 % larger at the same px |
+| Width of a typical inspector line | 24.0 em | 25.0 em: about 4 % wider |
+| Sans digits | tabular by default: prose and tables align with no feature | proportional; tabular needs `tnum` |
+| Side effect of `tnum` | none (Plex has no `tnum`) | also re-spaces `- . , : ( ) + − ×`, so global tabular figures visibly space the hyphens in prose |
+| I / l / 1 | distinct (`l` has a tail) | identical `I` and `l` by default; `cv05` + `cv08` fix it (serifed `I`, tailed `l`) |
+| Mono zero | dotted in fontsource's build, which drops `zero`; slashed in IBM's complete build, where the existing `slashed-zero` rule works | slashed by default |
+| Files | Plex Sans 45 KB + Plex Mono 48 KB per weight (IBM complete; a latin subset that keeps `zero` would be ~15 KB) | Inter 97 KB (latin, `opsz` + `wght`) + Geist Mono 23 KB |
+| npm source | fontsource + `@ibm/plex-mono` (IBM) | `inter-ui` (a third-party repackaging; Inter's author does not publish to npm) + fontsource |
+| Personality | engineered, slightly technical, IBM | neutral, contemporary, the default of many products |
 
 ## Why
 

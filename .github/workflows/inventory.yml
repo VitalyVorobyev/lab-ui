@@ -1,9 +1,9 @@
 name: Inventory
 
-# The L0-2 dependency matrix: every mapped frontend's declared versions against the §3
-# baseline, read from each repo's default branch on GitHub. It reports; it never fails on
-# a deviation — the per-repo "0 deviations" gate is `deps.ts --strict --repo <id>`, run by
-# the upgrade PR for that repo (PLAN L2).
+# The dependency matrix: every mapped frontend's declared versions against the toolchain
+# baseline (tools/inventory/baseline.toml), read from each repo's default branch on GitHub.
+# It reports; it never fails on a deviation — the per-repo "0 deviations" gate is
+# `deps.ts --strict --repo <id>`, run by the upgrade PR for that repo.
 
 on:
   pull_request:
@@ -27,7 +27,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       - name: Unit tests
         run: bun test tools/inventory

@@ -4,7 +4,7 @@
 - Date: 2026-10-03
 - Plan: `docs/plan/PLAN.md` §6, ticket L6-1
 - Data: `docs/measurements/stage2d-bench.md` (L0-3), `docs/measurements/stage2d-bench-analysis.md`,
-  `docs/measurements/u4-polyline-set.md`
+  `docs/measurements/stage2d-layer-budgets.md`
 
 ## Context
 
@@ -81,7 +81,7 @@ free and what the package already relies on:
 If a consumer's real scene fails G6.1 on (a′), for example hundreds of thousands of visible
 markers, that **one layer** gets a Canvas2D drawing backend behind the same layer props. The
 rules above make that a local change: the index, the selection model and the props stay, and
-only the drawing moves (`u4-polyline-set.md` makes the same point for `PolylineSet`). A move of
+only the drawing moves (`stage2d-layer-budgets.md` makes the same point for `PolylineSet`). A move of
 the whole stage to Canvas2D, or adding WebGL, needs a new ADR with a benchmark of that scene.
 
 ## Consequences

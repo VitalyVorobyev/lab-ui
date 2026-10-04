@@ -8,11 +8,13 @@
       "entry": [
         "tools/inventory/*.ts",
         "tools/dod/*.ts",
+        "tools/docs/*.ts",
         "tools/visual-language/*.ts"
       ],
       "project": [
         "tools/inventory/**/*.ts",
         "tools/dod/**/*.ts",
+        "tools/docs/**/*.ts",
         "tools/visual-language/**/*.ts"
       ],
       "ignoreDependencies": [

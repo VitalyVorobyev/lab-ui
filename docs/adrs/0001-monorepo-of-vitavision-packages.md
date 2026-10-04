@@ -36,6 +36,6 @@ The layering rules are enforced in CI by `tools/inventory/check-deps.ts`:
 
 ## Consequences
 
-- Consumers of `@vitavision/lab-ui` 0.x keep working through the compatibility package. Today those are visual-anomaly-lab and vision-metrology/lab.
+- Consumers of `@vitavision/lab-ui` 0.x keep working through the compatibility package. *Update 2026-10-03:* no consumer is left (visual-anomaly-lab and vision-metrology/lab moved to the packages); the package is gone from this repository and stays deprecated on npm.
 - Tailwind v4 must see class names from every package it uses, so a consumer's CSS entry needs one `@source` per package `dist`. The `ui` README documents this.
 - Each new package name needs its own npm trusted-publisher entry before it can be published from CI.

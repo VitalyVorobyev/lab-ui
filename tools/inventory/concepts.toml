@@ -29,6 +29,10 @@ manifests = [
   "packages/forms/package.json",
   "packages/charts/package.json",
   "packages/stage2d/package.json",
+  "packages/overlays/package.json",
+  "packages/workbench/package.json",
+  "packages/three/package.json",
+  "packages/three-react/package.json",
   "package.json",
 ]
 
