@@ -1,5 +1,24 @@
 # @vitavision/stage2d
 
+## 0.12.0
+
+### Minor Changes
+
+- 1c1b1d8: `AreaSet` and `PointSet` take CSS colours, and `AreaSet` gains fill and paint-order controls.
+  
+  - `AreaSetItem.stroke` / `fill` and `AreaSetProps.stroke`: CSS colours (used as given) in place of the overlay role's. Batching stays by appearance: N distinct colours are N paths.
+  - `AreaSetProps.fillOpacity` (default 0.12), `fillRule` (`"evenodd"` gives each item its own fill path, so a self-intersecting ring keeps its open centre; outlines stay batched), `paintOrder` (`"items"`: batches are consecutive runs in item order, so a later region covers an earlier one) and `selectionFill` (`"item"`: a selected region keeps its own fill and only its outline is restyled). Defaults render as before.
+  - `PointSetItem.color`: a CSS colour in place of the role's; points of one colour share a batch. Selection still paints in `selectionStroke`.
+- d9a4b3c: `ClampOptions.panBounds: "center"` (opt-in, via `ImageStage`'s `clamp` prop): any image point may be brought to the viewport's centre and no further, on both axes and at every scale. With the default `"cover"` bounds an axis the image does not fill is re-centred, so a zoom about the pointer drifts while the zoomed image is still narrower than the viewport, and an edge or corner cannot be brought to the middle of the screen; `"center"` keeps the pointer's pixel under it and lets an editor work on an edge in the centre.
+- ca3dd68: `ContourEditor` takes `bounds` (image-coordinate clamp area; default unchanged). `DraftShape` takes `stroke` (CSS colour override), a `closing` cue on polygons, and new `stroke` (brush trail) and `brush` (footprint cursor) kinds. `MaskEditor` draws its brush ring with the `brush` footprint and shows it under a hovering pointer.
+- 610d4d8: Stage plumbing found migrating a drawing app and a linked-pane frame viewer.
+  
+  - **`StageSurface` can cover the viewport.** New `extent?: "image" | "viewport"` (default `"image"`, today's behaviour). With `"viewport"` a press in the margin around the image reaches `onPress` instead of panning, so a drawing tool can place a vertex on the image border; the target follows pan, zoom and resize. Every point the surface reports (`press.point`, a drag's `onMove`/`onEnd`, `onHover`, `onDoubleClick`) is clamped to the image's extent, `[-0.5, w - 0.5] x [-0.5, h - 0.5]`; `press.client` stays raw. The clamp is exported as `clampToImage(point, image)`, next to `insideImage`.
+  - **`onView` says why.** `onView(view, change)` gets a `StageViewChange` as its second argument: `cause` is `"gesture"` (wheel, drag pan, pinch, double-click), `"key"` (keyboard shortcuts and pan keys), `"command"` (handle and context calls: `fit`, `zoomTo`, `frame`, `setView`, the toolbar's buttons) or `"measure"` (the opening view and resize re-anchoring), and `box` is the measured viewport at that moment. Existing one-argument callbacks keep working. Two panes sharing one view can ignore the other's `"measure"`.
+  - **Fix: a `null` view after measurement is re-opened.** When a consumer set `view` back to `null` after the stage had measured, it rendered the opening view but never reported it, and the wheel handler returned early, so the pane was stuck until something else set a view. It now reports the opening view (cause `"measure"`) and the wheel, keys and `zoomTo` work from the opening view throughout.
+  - **Fix, behaviour change: `RectRoiEditor`'s default `bounds` is the image's extent.** It was `{ x: 0, y: 0, width, height }` while the editor draws in the centre-convention coordinates of `imageViewBox`, so a full-image region sat half a pixel right and down of the image, and a region could not reach the top and left edges. The default is now `{ x: -0.5, y: -0.5, width, height }`. A region clamped to the default bounds now starts at `-0.5`, not `0`; pass `bounds` to keep the old numbers.
+  - **`onBackgroundClick(event, point)`** gets the click's image point (centre convention, unclamped) as a second argument, so a consumer needs no `useStage` bridge to convert it.
+
 ## 0.11.0
 
 ### Minor Changes
