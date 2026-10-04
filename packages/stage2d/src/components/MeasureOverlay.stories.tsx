@@ -64,6 +64,11 @@ function OverlayStage(args: MeasureOverlayProps) {
   );
 }
 
+/** The marks matching `selector`, without the halos drawn under them. */
+function marks(svg: SVGSVGElement, selector: string): Element[] {
+  return [...svg.querySelectorAll(selector)].filter((element) => !element.closest("[data-halo]"));
+}
+
 function overlay(root: HTMLElement): SVGSVGElement {
   const svg = root.querySelector<SVGSVGElement>("svg[role='presentation']");
   if (!svg) throw new Error("MeasureOverlay's <svg> was not rendered");
@@ -76,10 +81,17 @@ const meta = {
   parameters: {
     docs: {
       description: {
-        component: `A pure-props SVG layer that draws measurement primitives — \`point\`, \`segment\`, \`circle\`,
-\`arc\`, \`caliper\`, \`dimension\` — in **source-image pixel coordinates**, each with an optional \`tone\`
-(\`signal\` / \`normal\` / \`defect\` / \`warn\` / \`muted\`, the same vocabulary as \`LineProfile\`'s edge
-marks).
+        component: `A pure-props SVG layer that draws measurement primitives — \`point\`, \`segment\`, \`segments\`,
+\`polyline\`, \`circle\`, \`arc\`, \`caliper\`, \`dimension\` — in **source-image pixel coordinates**, each with an
+optional \`tone\` (\`signal\` / \`normal\` / \`defect\` / \`warn\` / \`muted\`, the same vocabulary as
+\`LineProfile\`'s edge marks) or an overlay \`role\` (\`feature\`, \`model\`, \`structure\`).
+
+**Halo**: a primitive with a \`role\` is drawn over a dark band 2 screen px wider than itself, and its label
+over a 3 px one, so it holds on a bright part of the image. \`halo="all"\` gives every primitive one,
+\`halo="none"\` none.
+
+**Many marks**: a \`polyline\` joins its points; \`segments\` draws many unconnected ones (the ticks of a
+shape model, say) as one path, so thousands of them cost one element.
 
 **Use** it as a child of \`ImageStage\`, so the one stage transform keeps it registered with the pixel it
 measures. Pass the live scale (\`useStage().view.scale\`) as \`strokeScale\`: strokes, crosses and labels
@@ -284,12 +296,14 @@ export const Polylines: Story = {
   },
   play: async ({ canvasElement }) => {
     const svg = overlay(canvasElement);
-    const lines = svg.querySelectorAll("g[data-kind='polyline'] path");
+    const lines = marks(svg, "g[data-kind='polyline'] path");
     await expect(lines).toHaveLength(3);
     await expect(lines[0]!.getAttribute("d")).toMatch(/Z$/);
     await expect(lines[0]).toHaveAttribute("stroke", "var(--stage-model)");
     await expect(lines[1]).toHaveAttribute("stroke", "var(--stage-feature)");
     await expect(lines[2]).toHaveAttribute("stroke-dasharray");
+    // The two role-coloured lines are drawn over a halo; the tone-coloured one is not.
+    await expect(svg.querySelectorAll("g[data-kind='polyline'] [data-halo]")).toHaveLength(2);
   },
 };
 
@@ -318,5 +332,75 @@ export const States: Story = {
     // Without state or id, a primitive renders as before: no data-state, no opacity.
     await expect(svg.querySelector("g[data-id='c1']")).not.toHaveAttribute("data-state");
     await expect(svg.querySelector("g[data-id='c1']")).not.toHaveAttribute("opacity");
+  },
+};
+
+/**
+ * Ticks along every edge of the part, as a shape model stores them: in no particular order, so
+ * a polyline cannot join them. Over 3,000 of them are one path.
+ */
+const TICKS = (() => {
+  const ticks: number[][] = [];
+  const tick = (x: number, y: number, nx: number, ny: number) => ticks.push([x - 3 * nx, y - 3 * ny, x + 3 * nx, y + 3 * ny]);
+  for (const [cx, cy, r] of [
+    [440, 400, 90],
+    [840, 400, 90],
+    [640, 660, 60],
+  ] as const) {
+    const count = Math.round(2 * Math.PI * r);
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * 2 * Math.PI;
+      tick(cx + r * Math.cos(a), cy + r * Math.sin(a), Math.cos(a), Math.sin(a));
+    }
+  }
+  for (let x = 264; x <= 1016; x += 1) {
+    tick(x, 192, 0, 1);
+    tick(x, 832, 0, 1);
+  }
+  // A fixed shuffle (a stride coprime to the count), so the order is scattered but the story is stable.
+  const stride = 7919;
+  return ticks.map((_, i) => ticks[(i * stride) % ticks.length]!).flat();
+})();
+
+/** Thousands of unconnected ticks, in the `model` role, as one `segments` path. */
+export const BatchedSegments: Story = {
+  args: {
+    primitives: [{ kind: "segments", id: "model", role: "model", points: TICKS, label: "model" }],
+  },
+  play: async ({ canvasElement }) => {
+    const svg = overlay(canvasElement);
+    const paths = marks(svg, "g[data-kind='segments'] path");
+    await expect(paths).toHaveLength(1);
+    await expect(paths[0]!.getAttribute("d")!.match(/M/g)?.length).toBe(TICKS.length / 4);
+    await expect(TICKS.length / 4).toBeGreaterThan(3000);
+    await expect(svg.querySelector("g[data-kind='segments'] [data-halo] path")).toHaveAttribute("stroke", "var(--stage-halo)");
+  },
+};
+
+/**
+ * Role-coloured marks on the bright plate, each over a halo, labels included. The verdict-toned
+ * dimension beside them has none; `halo="all"` would give it one too.
+ */
+export const RoleHalo: Story = {
+  args: {
+    primitives: [
+      { kind: "point", x: 560, y: 260, cross: true, role: "model", label: "origin" },
+      { kind: "point", x: 740, y: 276, role: "feature", radius: 4, label: "scratch" },
+      { kind: "circle", cx: 640, cy: 660, r: 64, role: "model" },
+      { kind: "segment", x1: 300, y1: 560, x2: 980, y2: 560, role: "structure", dashed: true },
+      { kind: "caliper", cx: 640, cy: 500, width: 80, height: 40, angle: 0, role: "feature", label: "C1" },
+      { kind: "dimension", x1: 300, y1: 760, x2: 980, y2: 760, label: "680.0 px", offset: 24, tone: "signal" },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const svg = overlay(canvasElement);
+    await expect(svg.querySelectorAll("[data-halo]")).toHaveLength(5);
+    await expect(svg.querySelector("g[data-kind='dimension'] [data-halo]")).toBeNull();
+    for (const label of ["origin", "scratch", "C1"]) {
+      const text = [...svg.querySelectorAll("text")].find((t) => t.textContent === label)!;
+      await expect(text).toHaveAttribute("paint-order", "stroke");
+      await expect(text).toHaveAttribute("stroke", "var(--stage-halo)");
+    }
+    await expect([...svg.querySelectorAll("text")].find((t) => t.textContent === "680.0 px")).toHaveAttribute("stroke", "none");
   },
 };
