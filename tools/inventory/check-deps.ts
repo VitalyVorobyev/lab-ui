@@ -1,5 +1,5 @@
 /**
- * Enforce the layering rules of PLAN §2 over `packages/*` — run in CI.
+ * Enforce the layering rules (CLAUDE.md, "Layering") over `packages/*` — run in CI.
  *
  *     bun tools/inventory/check-deps.ts
  *
@@ -30,7 +30,7 @@ const ALLOWED: Record<string, (string | RegExp)[]> = {
   "@vitavision/charts": ["@vitavision/ui"],
   // lucide-react for the toolbar's icons: already in `ui`'s set, so no new third party.
   "@vitavision/stage2d": ["@vitavision/ui", "lucide-react"],
-  // App-shell building blocks (ADR-0003); lucide-react for the transport's icons, as in stage2d.
+  // App-shell building blocks (ADR-0005); lucide-react for the transport's icons, as in stage2d.
   "@vitavision/workbench": ["@vitavision/ui", "lucide-react"],
   // Calibration-target overlays (PLAN L7-1). `stage2d` is a peer, never a dependency: the stage's
   // context must be the one copy the app mounts, or the layers cannot find it. The WASM detector

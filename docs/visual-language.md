@@ -1,13 +1,12 @@
 # The visual language of the `@vitavision/*` frontends
 
-This is the normative spec (PLAN §5). Storybook's **Foundations** section is its living
+This is the normative spec. Storybook's **Foundations** section is its living
 specimen: every rule below has a page there, rendered from the real tokens and components.
-The numbers come from `tools/visual-language/` and are recorded in
-[`docs/measurements/l3-1-foundations.md`](measurements/l3-1-foundations.md).
+The numbers come from `tools/visual-language/`.
 
-- **Status.** Accepted in L3-1. Decision **D1** (§2) is settled: IBM Plex
+- **Status.** Accepted 2026-09-27. The type family is IBM Plex
   ([ADR-0003](adrs/0003-type-family-ibm-plex.md)).
-- **Rule words.** *Must* is enforced, or will be by the ticket named. *Should* is the default,
+- **Rule words.** *Must* is enforced (see the table at the end). *Should* is the default,
   and a reviewer can accept a stated reason to break it.
 - **Starting point.** lab-ui's own principle is an *instrument* design system. The chrome is
   true-neutral grey so the data can be loud. There is exactly one accent, and the verdict
@@ -26,8 +25,8 @@ The semantic tokens live in `@vitavision/ui/styles.css`. Specimen: *Foundations 
 | Verdicts | `normal`, `defect`, `warn` | Only for a pass/fail/attention judgement the app has actually made. They are never a series colour, a decoration, or a continuous scale. `defect` also marks destructive actions. |
 
 - **Must:** components use token names only. There are no raw Tailwind palette classes
-  (`bg-gray-500`) and no hex literals. This is gate **G5.1**, a lint rule in
-  `@vitavision/config-eslint` scoped to each app's migrated directories (L3-3..n).
+  (`bg-gray-500`) and no hex literals. The `tokensOnly` rule of
+  `@vitavision/config-eslint` enforces it in each app's migrated directories.
 - **Must:** a "verdict" means the app compared a value with a declared threshold and said
   so. A continuous quality (a score, an error in px) is a magnitude and uses a sequential
   map (§4), even when low values are "good".
@@ -36,14 +35,14 @@ The semantic tokens live in `@vitavision/ui/styles.css`. Specimen: *Foundations 
   as text on their own /12 tint.
 - **Must:** `signal` stays apart from every verdict colour for a reader with any dichromacy:
   ≥ 8 OKLab ΔE×100 in light, ≥ 9.3 in dark (the same test file).
-  - L3-2 retuned both for this. The 0.6 values were 1.7 apart under tritanopia, so a
+  - Both were retuned for this in 0.7. The 0.6 values were 1.7 apart under tritanopia, so a
     tritanope saw "selected" and "passed" as one colour.
   - That is why the light accent is a deep slate-teal (`#235159`). It must stay dark enough
     for 4.5:1 text, which leaves hue as the only lever.
 - **Should:** colour is never the only cue. A verdict carries its text or an icon, and a
   selection carries a shape (outline, fill, check).
 
-## 2. Type — IBM Plex Sans + IBM Plex Mono (D1)
+## 2. Type — IBM Plex Sans + IBM Plex Mono
 
 **Decision (2026-09-27, [ADR-0003](adrs/0003-type-family-ibm-plex.md)):** IBM Plex Sans for
 text and IBM Plex Mono for values, in every package and migrated app.
@@ -61,28 +60,9 @@ text and IBM Plex Mono for values, in every package and migrated app.
 - **Should not:** load Plex from fontsource or Google Fonts as well. Those builds lose the
   slashed zero, and two faces with one family name race.
 
-The comparison the decision was made on follows. Before the decision, lab-ui and VAL used
-IBM Plex Sans/Mono, and vitavision and calibration-rs used Inter/Geist Mono. The side-by-side
-specimen is in PR #35's Storybook. Today's specimen is *Foundations / Type*.
+The comparison the decision was made on is in ADR-0003.
 
-Measured from the files each candidate would ship (`tools/visual-language/fonts.py`):
-
-| | IBM Plex Sans + IBM Plex Mono | Inter + Geist Mono |
-|---|---|---|
-| x-height / em | 0.516 (mono 0.516) | 0.546 (mono 0.530): about 6 % larger at the same px |
-| Width of a typical inspector line | 24.0 em | 25.0 em: about 4 % wider |
-| Sans digits | tabular by default: prose and tables align with no feature | proportional; tabular needs `tnum` |
-| Side effect of `tnum` | none (Plex has no `tnum`) | also re-spaces `- . , : ( ) + − ×`, so global tabular figures visibly space the hyphens in prose |
-| I / l / 1 | distinct (`l` has a tail) | identical `I` and `l` by default; `cv05` + `cv08` fix it (serifed `I`, tailed `l`) |
-| Mono zero | dotted in fontsource's build, which drops `zero`; slashed in IBM's complete build, where the existing `slashed-zero` rule works | slashed by default |
-| Files | Plex Sans 45 KB + Plex Mono 48 KB per weight (IBM complete; a latin subset that keeps `zero` would be ~15 KB) | Inter 97 KB (latin, `opsz` + `wght`) + Geist Mono 23 KB |
-| npm source | fontsource + `@ibm/plex-mono` (IBM) | `inter-ui` (a third-party repackaging; Inter's author does not publish to npm) + fontsource |
-| Personality | engineered, slightly technical, IBM | neutral, contemporary, the default of many products |
-
-The specimen shows each pair **as it would ship**, meaning the builds and features above.
-The *Confusables* story also shows both pairs the way the apps load them today.
-
-Rules that hold whichever pair wins:
+Rules:
 
 - **Must:** numbers that are compared — table columns, readouts, axes, live counters — use
   tabular figures, and mono values use a slashed zero. Plex's digits are tabular by
@@ -94,8 +74,7 @@ Rules that hold whichever pair wins:
 
 ## 3. Scales
 
-Specimen: *Foundations / Scales*. These values are the ones the packages already use
-(surveyed in L3-1). The spec names them so new code picks a role, not a size.
+Specimen: *Foundations / Scales*. These values are the ones the packages already use. The spec names them so new code picks a role, not a size.
 
 ### Type roles
 
@@ -134,7 +113,7 @@ padding and leading, never hit targets or type below 10 px.
 | field | `gap-1.5`, label 12 px | `gap-1`, label 11 px |
 | table cell / header | `py-2 pr-3` 14 px / `pb-2` 12 px | `py-0.5 pr-2` 11 px / `pb-1` 10 px |
 
-Every control, the `Select` trigger included (fixed in L3-2), takes its height from
+Every control, the `Select` trigger included, takes its height from
 `useControlHeight`.
 
 ### Radii and elevation
@@ -143,7 +122,7 @@ Every control, the `Select` trigger included (fixed in L3-2), takes its height f
   - `rounded-control` (6 px) for controls.
   - `rounded-panel` (10 px) for panels, cards and dialogs.
   - `rounded-full` for pills, dots, switches and line swatches.
-  - There is no bare `rounded`; L3-2 moved the last seven to the tokens.
+  - There is no bare `rounded`.
 - **Elevation:**
   - The page and panels are flat, separated by `ground` vs `surface` and a `ring-line`.
   - Only floating layers cast a shadow: popovers, menus and tooltips use `shadow-lg`;
@@ -158,7 +137,7 @@ Specimen: *Foundations / Data-vis palette*.
   - Each colour is ≥ 3:1 against `surface` and `ground` in its theme.
   - Under the Machado simulations of protanopia, deuteranopia and tritanopia, no two
     colours are closer than **9.4** OKLab ΔE×100, in either theme.
-    - L3-2 nudged dark series 3 from `#8ba3ff` to `#7ba8ff`. It had been 9.1 under
+    - Dark series 3 moved from `#8ba3ff` to `#7ba8ff`. It had been 9.1 under
       protanopia.
     - `charts/src/palette.test.ts` holds both rules.
   - A seventh series reuses a slot and is told apart by its legend text.
@@ -180,9 +159,10 @@ Specimen: *Foundations / Data-vis palette*.
     legend.
 - **Must:** a chart or map shows its scale: a legend with units, and the gain for anything
   drawn exaggerated.
-- **Where the maps will live:** the LUTs ship as data in `@vitavision/charts`, used by
-  `stage2d`, when the second app needs them (the promotion rule; L5/L6). Until then the
-  specimen holds the anchors.
+- **Where the maps live:** `@vitavision/charts` ships `viridis` and `cividis` as data
+  (`COLORMAPS`, `colormapRgb`, `colormapGradient`) with `ColormapLegend`; `stage2d`'s
+  `HeatmapLayer` takes any `(t) => rgb` colour map, such as `colormapRgb("viridis", t)`.
+  `PuOr` is specified here and not yet shipped.
 
 ## 5. Overlay grammar
 
@@ -240,7 +220,7 @@ both themes.
 | ground truth vs prediction | truth dashed `4 3`, prediction solid |
 | origin | ring r 7 px with i and j axes |
 | region, annotation | outline plus 12 % fill |
-| measurement | `MeasureOverlay` primitives (lab-ui), unchanged |
+| measurement | `MeasureOverlay` primitives (`stage2d`) |
 
 **States.**
 
@@ -259,7 +239,7 @@ both themes.
 ## 6. Motion
 
 - **Must:** shared packages use CSS transitions only. There is no motion library in any
-  `@vitavision/*` package (PLAN §2).
+  `@vitavision/*` package (the layering rules in CLAUDE.md).
 - **Durations:**
   - Colour, opacity and transform changes use Tailwind's default 150 ms.
   - Progress bars use 300 ms.
@@ -274,14 +254,14 @@ both themes.
 - vitavision's editorial and blog pages keep their typography and layout: Source Serif 4,
   heading tracking, prose widths. Only their **tokens** migrate: colours, radii, spacing.
 - Everything interactive adopts the packages: the editor, demos, canvas and forms.
-- The migrated directories of each app are listed in its lint config for G5.1 (L3-3..n).
+- The migrated directories of each app are listed in its lint config for `tokensOnly`.
 
 ## Where each rule is enforced
 
 | Rule | Enforced by |
 |---|---|
-| tokens only, no palette classes or hex literals | G5.1 lint rule, L3-3..n |
+| tokens only, no palette classes or hex literals | `tokensOnly` in `@vitavision/config-eslint` |
 | text contrast ≥ 4.5:1, UI boundaries ≥ 3:1, signal vs verdicts under dichromacy | `ui/src/contrast.test.ts` |
 | axe, light and dark | the story harness, today (Foundations included) |
 | series palette ≥ 3:1 and CVD separation | `charts/src/palette.test.ts`; `tools/visual-language/colours.py` prints the numbers |
-| overlay strokes in screen px | `stage2d` view-math unit tests; the role tokens and `useScreenPx` (U-5) |
+| overlay strokes in screen px | `stage2d` view-math unit tests; the role tokens and `useScreenPx` |

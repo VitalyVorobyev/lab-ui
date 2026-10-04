@@ -1,6 +1,6 @@
 /**
  * The hit-test gate (G6.1: pointer hit-test p95 ≤ 2 ms), measured in Chromium on the scenes
- * `PolylineSet` is for. The numbers are recorded in `docs/measurements/u4-polyline-set.md`.
+ * `PolylineSet` is for. The numbers are recorded in `docs/measurements/stage2d-layer-budgets.md`.
  * The assertion is the gate itself, not a tighter bound, so a slow CI machine does not
  * flake it while a real regression still fails.
  *

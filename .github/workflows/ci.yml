@@ -29,7 +29,7 @@ jobs:
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
 
-      - name: Layering rules (PLAN §2)
+      - name: Layering rules
         run: bun run check:deps
 
       - name: Typecheck
@@ -57,8 +57,8 @@ jobs:
             test -f "packages/$p/src/styles.css"
           done
 
-  # ── PLAN §4 Definition-of-Done gates ─────────────────────────────────────────────────
-  # Required since L1-5 (docs/measurements/dod-l1-5.md): a regression in any gate fails CI.
+  # ── Definition-of-Done gates (CLAUDE.md) ─────────────────────────────────────────────
+  # A regression in any gate fails CI.
 
   dod:
     name: "DoD: ${{ matrix.gate }}"

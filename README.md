@@ -18,59 +18,10 @@ The design direction is an *instrument*: the chrome is grey so the data can be l
 | [`@vitavision/config-ts`](packages/config/ts), [`config-eslint`](packages/config/eslint), [`config-vitest`](packages/config/vitest) | Shared toolchain presets for the apps | |
 
 `@vitavision/lab-ui`, the 0.x single package these were split from, is deprecated on npm and
-no longer in this repository (PLAN L9-1). Its published versions stay installable; its last
-README, with the migration table, is in the git history under `packages/lab-ui`.
+no longer in this repository. Its published versions stay installable; its last README, with
+the migration table, is in the git history under `packages/lab-ui`.
 
-`docs/plan/PLAN.md` is the roadmap; `docs/adrs/` holds the decisions (ADR-0002 is the toolchain
-baseline); `docs/measurements/` holds every gate result (concept matrix, dependency matrix,
-stage benchmark).
-
-## Development
-
-This repo is a **bun** workspace (`packageManager` pins the version).
-
-```bash
-bun install
-bun run typecheck   # every package, sources resolved across the workspace
-bun run test        # vitest per package + bun test for tools/ and config/
-bun run build       # tsdown → packages/*/dist
-bun run check:deps  # the PLAN §2 layering rules
-bun run bench       # the stage2d benchmark (headed Chromium)
-```
-
-Packages resolve each other's **sources** through the `@vitavision/source` export condition,
-so typecheck and tests need no prior build. To try a change in a consuming app before
-publishing, `bun link` the package there and rebuild it.
-
-## Releasing
-
-Changesets, independent versions, all 0.x (PLAN §7). Every PR with a user-facing change
-carries a changeset (`bun run changeset`); a breaking change is a **minor**.
-
-On `main`, `.github/workflows/release.yml` keeps a **"Version Packages" PR** open while
-changesets are pending. Merging that PR is the release: the workflow typechecks, tests,
-builds, runs the consumer check (`bun run check:consumer` — the packed tarballs installed
-into a fresh app), and publishes every package whose version is not yet on npm, with
-provenance.
-
-Publishing is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) — no npm
-token in the repo. **Each package name needs its trusted publisher registered on npmjs.com**
-(repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`) before its
-first release from CI. npm only lets a publisher be registered on a name that already exists,
-so a new package's first version is published by hand, exactly as CI would build it:
-
-```sh
-bun install && bun run build                 # every package's dist/
-bun tools/release/resolve-workspace.ts       # workspace:^ → real ranges in the manifests
-cd packages/<name> && npm pack --dry-run     # check: dist/ is listed, no workspace: ranges
-npm publish                                  # then register the trusted publisher
-cd ../.. && git checkout packages            # undo the manifest rewrite
-```
-
-A bare `npm publish` skips the first two steps and ships a package without `dist/`
-(overlays 0.1.0).
-
-The Storybook docs site deploys from `main` to GitHub Pages (`.github/workflows/storybook.yml`).
+To work on the packages, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Scope
 
@@ -80,7 +31,7 @@ Deliberately not here:
   decision, and `ui` does not force every consumer into a fixed-viewport shell. A *studio* —
   permanent navigator, viewport, inspector and timeline, nothing scrolling but the panels —
   takes its frame from the separate `@vitavision/workbench`
-  ([ADR-0003](docs/adrs/0003-workbench-app-shell.md)); an app that scrolls never installs it.
+  ([ADR-0005](docs/adrs/0005-workbench-app-shell.md)); an app that scrolls never installs it.
 - **Compiled CSS.** `styles.css` is Tailwind source on purpose — pre-compiling it would
   fix its utilities against *this* package's Tailwind config instead of yours.
 - **API routes and generated types.** `fetchPlane` takes a URL and `SchemaForm` types its

@@ -35,7 +35,7 @@ second of the same motion runs first and is discarded, as warm-up.
 
 | id | Engine | Hit-test |
 |---|---|---|
-| `a` | lab-ui `ImageStage` (this repo's `src/`): DOM `<img>` plus an SVG with one element per feature and non-scaling strokes | `document.elementFromPoint` |
+| `a` | `ImageStage` as it stood before `@vitavision/stage2d` (the old single package): DOM `<img>` plus an SVG with one element per feature and non-scaling strokes | `document.elementFromPoint` |
 | `a-batched` | Same stage, with one SVG `<path>` per layer | Uniform grid |
 | `b` | Konva with one node per feature, as vitavision and VAL build it. The overlay layer is cached while the scale holds still | Konva hit canvas |
 | `b-nocache` | Same as `b`, without the cache | Konva hit canvas |

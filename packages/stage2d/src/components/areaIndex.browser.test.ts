@@ -1,7 +1,7 @@
 /**
  * The hit-test gate (G6.1: pointer hit-test p95 ≤ 2 ms) for the area layer, measured in
  * Chromium on 20,000 and 100,000 marker quads over the L0-3 image. The numbers are recorded
- * in `docs/measurements/l6-2b-areas-grid-heatmap.md`. As in `pointIndex.browser.test.ts`, the
+ * in `docs/measurements/stage2d-layer-budgets.md`. As in `pointIndex.browser.test.ts`, the
  * assertion is the gate itself, so a slow CI machine does not flake it while a real regression
  * still fails.
  *

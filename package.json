@@ -20,7 +20,7 @@
     "bench": "bun run --filter @vitavision/bench-stage2d bench",
     "changeset": "changeset",
     "storybook": "bun run --filter @vitavision/storybook storybook",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "api": "bun run --filter './packages/*' api",
     "publint": "bun tools/dod/pack-check.ts publint",
     "attw": "bun tools/dod/pack-check.ts attw",

@@ -3,7 +3,7 @@
 The building blocks of a vitavision *studio* app — a tool whose surfaces are all permanent: a
 navigator, a viewport, an inspector, a timeline. Built on `@vitavision/ui` and its tokens.
 
-In scope by [ADR-0003](../../docs/adrs/0003-workbench-app-shell.md): first built for etendue's
+In scope by [ADR-0005](../../docs/adrs/0005-workbench-app-shell.md): first built for etendue's
 studio (incubated there as `web/packages/workbench`), with the calibration-rs diagnose app as
 the expected second consumer.
 

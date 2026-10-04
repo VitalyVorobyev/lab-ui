@@ -1,9 +1,8 @@
 """Measure the fonts `@vitavision/ui/fonts.css` ships (ADR-0003).
 
 Run: uv run --with fonttools --with brotli python tools/visual-language/fonts.py
-Prints a Markdown table. The D1 comparison with Inter + Geist Mono in
-docs/measurements/l3-1-foundations.md was made by this script at 15aad00, before L3-2
-vendored the fonts and dropped the candidates.
+Prints a Markdown table. The comparison with Inter + Geist Mono in ADR-0003 was made by
+this script at 15aad00, before the fonts were vendored and the other candidates dropped.
 """
 
 from pathlib import Path
