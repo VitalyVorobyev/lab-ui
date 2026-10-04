@@ -36,7 +36,7 @@
 
 ### Patch Changes
 
-- a037a0f: `Toaster` and `toast()` move from `@vitavision/workbench` to `@vitavision/ui`: notifications are a generic primitive, and vitavision (which renders on the server) is the second app that needs them. Moved with their stories and tests; the API is unchanged.
+- a037a0f: `Toaster` and `toast()` move from `@vitavision/workbench` to `@vitavision/ui`: notifications are a generic primitive, and apps without the studio shell need them too. Moved with their stories and tests; the API is unchanged.
   
   - `@vitavision/ui` exports `Toaster`, `ToasterProps`, `toast`, `createToastStore`, `defaultToastStore` and the types `ToastTone`, `ToastOptions`, `ToastRecord`, `ToastStore`. No new dependency and no new styles: the stack uses the existing tokens, and `styles.css` already scans the component sources.
   - `@vitavision/workbench` re-exports the same names from `@vitavision/ui` (the same bindings, so there is still exactly one default store), and `import { toast } from "@vitavision/workbench"` keeps working. **Deprecated:** import them from `@vitavision/ui`; the re-exports are kept for compatibility.
@@ -48,7 +48,7 @@
 
 ### Minor Changes
 
-- 6f8bd54: New package: the building blocks of a studio app on `@vitavision/ui` (ADR-0003). Incubated in etendue's studio and moved here with its stories and tests.
+- 6f8bd54: New package: the building blocks of a studio app on `@vitavision/ui`.
   
   - `AppShell`: a full-viewport frame (header; left | main | right with resizable, optionally remembered side panels; bottom), with landmarks.
   - `SplitPane`: two panes with a draggable, keyboard-operable divider (WAI-ARIA window splitter). Sizes in px or %, min/max, collapsible, controlled or uncontrolled, `storageKey`. Split panes nest.

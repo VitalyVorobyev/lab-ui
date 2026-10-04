@@ -11,7 +11,7 @@
   - `PointSetItem.color`: a CSS colour in place of the role's; points of one colour share a batch. Selection still paints in `selectionStroke`.
 - d9a4b3c: `ClampOptions.panBounds: "center"` (opt-in, via `ImageStage`'s `clamp` prop): any image point may be brought to the viewport's centre and no further, on both axes and at every scale. With the default `"cover"` bounds an axis the image does not fill is re-centred, so a zoom about the pointer drifts while the zoomed image is still narrower than the viewport, and an edge or corner cannot be brought to the middle of the screen; `"center"` keeps the pointer's pixel under it and lets an editor work on an edge in the centre.
 - ca3dd68: `ContourEditor` takes `bounds` (image-coordinate clamp area; default unchanged). `DraftShape` takes `stroke` (CSS colour override), a `closing` cue on polygons, and new `stroke` (brush trail) and `brush` (footprint cursor) kinds. `MaskEditor` draws its brush ring with the `brush` footprint and shows it under a hovering pointer.
-- 610d4d8: Stage plumbing found migrating a drawing app and a linked-pane frame viewer.
+- 610d4d8: Stage plumbing for drawing tools and linked panes.
   
   - **`StageSurface` can cover the viewport.** New `extent?: "image" | "viewport"` (default `"image"`, today's behaviour). With `"viewport"` a press in the margin around the image reaches `onPress` instead of panning, so a drawing tool can place a vertex on the image border; the target follows pan, zoom and resize. Every point the surface reports (`press.point`, a drag's `onMove`/`onEnd`, `onHover`, `onDoubleClick`) is clamped to the image's extent, `[-0.5, w - 0.5] x [-0.5, h - 0.5]`; `press.client` stays raw. The clamp is exported as `clampToImage(point, image)`, next to `insideImage`.
   - **`onView` says why.** `onView(view, change)` gets a `StageViewChange` as its second argument: `cause` is `"gesture"` (wheel, drag pan, pinch, double-click), `"key"` (keyboard shortcuts and pan keys), `"command"` (handle and context calls: `fit`, `zoomTo`, `frame`, `setView`, the toolbar's buttons) or `"measure"` (the opening view and resize re-anchoring), and `box` is the measured viewport at that moment. Existing one-argument callbacks keep working. Two panes sharing one view can ignore the other's `"measure"`.
@@ -23,13 +23,13 @@
 
 ### Minor Changes
 
-- cc3132a: stage2d gains a pickable ellipse layer, a second marker angle, fit options and a compositor hint; overlays follows (lab-ui#88).
+- cc3132a: stage2d gains a pickable ellipse layer, a second marker angle, fit options and a compositor hint; overlays follows.
   
   - `EllipseSet` (and `ellipsePath`) move from `@vitavision/overlays` into stage2d, next to `AreaSet`. It now registers with the stage's hit-test: `hoveredId`, `onHoverChange`, `onItemPress`, `layerId`, `priority`, and `pickable={false}` to stay out of it. The pure index is exported too: `buildEllipseIndex`, `nearestEllipse` (outline within the pointer's radius, else the smallest containing ellipse; true Euclidean distance), `ellipsesInRect`, `pointInEllipse`, `ellipseBounds`. `@vitavision/overlays` re-exports `EllipseSet`, `EllipseSetItem`, `EllipseSetProps` and `ellipsePath`, and `TargetOverlay` draws its rings and edge bits with `pickable={false}`, so its picking is unchanged. Its peer range on stage2d is now `>=0.11.0`.
   - `MarkerShape.path(x, y, unit, angle, angle2)` receives `PointSetItem.angle2` (`undefined` when the item has none); existing shapes ignore it. overlays' `directed` marker reads `angle` and `angle2` directly, so `packAxes` and `unpackAxes` are removed (breaking for overlays: put the two directions in `angle` and `angle2`).
   - `fitScale`, `fitView`, `isFit`, `initialView` and `preserveCenter` take `FitOptions` (`padding` in CSS pixels per side, `upscale: false` to cap fit at 1:1); the defaults give today's numbers. `ImageStage` has a `fit` prop applied to every fit path: `initialView`, the handle's and the context's `fit()`, the `0` key, the double-click toggle, the toolbar's Fit button and `data-fit`.
   - `ImageStage` sets `will-change: transform` (and `data-moving`) on its transformed box while the view changes and for 150 ms after, so a pan stays on the compositor; left on permanently, Chromium keeps the layer at the raster scale it had when the hint was applied and a zoomed-in image goes blurry.
-- a7fae89: Touch input, so an app can use `StageSurface`, `PolylineSet` and `ShapeEditor` without writing its own surface (lab-ui#88).
+- a7fae89: Touch input, so an app can use `StageSurface`, `PolylineSet` and `ShapeEditor` without writing its own surface.
   
   - **`StageSurface` tells a touch from a mouse.** `StagePress` gains `touch`, `client` (client coordinates, for anchoring a tooltip) and `radius` (the hit-test tolerance in screen pixels: 12 for a touch, 6 otherwise). `StageDrag` gains `claimsTouch`. A touch whose drag does not set it is now *watched*, not claimed: the stage still pans (one-finger mode) and pinches, `onMove` fires once the finger leaves the tap slop, `onEnd(point, event, moved)` fires on release (`moved` is `false` for a tap), and `onCancel` fires on `pointercancel` or when a second finger lands. `onHover` is no longer called for a touch. New `onDoubleClick` prop: when given, the surface handles the double click and the stage's double-click-to-fit does not run. **Behaviour change:** an unclaimed touch used to be claimed like a mouse press and no longer is, so act in `onEnd` when `moved` is `false`; return `claimsTouch: true` to keep the old behaviour.
   - **`PolylineSet` can step aside.** New `interactive` prop, on by default only when `onItemPress`, `onSelect`, `onHover`, `onHoverChange` or `marquee` is given. When off, the layer renders no press target, so a draw tool's `StageSurface` below receives the press, while `useStageHitTest` still finds the lines. On an interactive layer a touch is no longer claimed (the stage can pan and pinch) and a line is selected on a tap.
@@ -39,7 +39,7 @@
 
 ### Minor Changes
 
-- 2f31859: `AreaSet`, `GridLayer`, `HeatmapLayer`, a rotated `ShapeEditor`, draft previews and shape moving (L6-2b). All additive.
+- 2f31859: `AreaSet`, `GridLayer`, `HeatmapLayer`, a rotated `ShapeEditor`, draft previews and shape moving. All additive.
   
   - **`AreaSet`**: closed regions (marker quads, polygons, annotations) as batched outline-plus-12 %-fill paths per state and role, with hover, selected and dimmed states, labels where regions are 24 screen px apart, an optional `firstVertexTick` on corner 0, and `onHoverChange` / `onItemPress` at `STAGE_HIT_PRIORITY.area`. A press near an outline picks that region, else the smallest region that contains it. Exported with the pure `buildAreaIndex`, `nearestArea`, `areasInRect`, `pointInPolygon`, `areaPath` and `areaCentre`.
   - **`GridLayer`**: a detected lattice. Nodes `{ id, i, j, x, y }` are a `PointSet` (`plus` by default, picked at point priority); the edges between lattice neighbours are two batched paths, restyled per axis through `edges`; `indexLabels` shows `i,j`. Exported with the pure `latticeEdges`.
@@ -52,7 +52,7 @@
 
 ### Minor Changes
 
-- 97fbe12: `PointSet`, one hit-test across layers, and right-button and touch input on `ImageStage` (L6-2a).
+- 97fbe12: `PointSet`, one hit-test across layers, and right-button and touch input on `ImageStage`.
   
   - **`PointSet`**: thousands of points as a few batched paths, with a marker per kind from the overlay grammar (`dot`, `plus`, `cross`, `square`, `hollow`, `directed`; add your own through `markers`, a path generator), hover, selected (with ring) and dimmed states, labels only where points are 24 screen px apart (at most 200), and `onHoverChange` / `onItemPress`. Exported with `MARKER_SHAPES`, `circlePath` and the pure `buildPointIndex`, `buildPointIndexFrom`, `nearestPoint`, `pointsInRect` and `thinPoints`.
   - **Hit-test**: `useStageHitTest()` returns `hitTest(point, radiusScreenPx = 6)` and `hitTestAll`, ranked by `STAGE_HIT_PRIORITY` (points above lines above areas above images), so a press handler decides select, draw or pan with one question. `PointSet` and `PolylineSet` answer it; `useStageHitLayer` registers any other layer.
@@ -120,7 +120,7 @@
     leaving the canvas and does not depend on pointer capture.
 - ccaa3d9: Add overlay role tokens and `useScreenPx`, and extend `MeasureOverlay` additively with a `polyline` primitive, `role`, and per-primitive `id` and `state`.
   
-  - **Role tokens.** `styles.css` now defines the visual-language §5 overlay roles:
+  - **Role tokens.** `styles.css` now defines the overlay roles:
     `--stage-feature`, `--stage-model`, `--stage-structure`, `--stage-selection`,
     `--stage-label`, `--stage-halo`. They are also Tailwind colours (`stroke-stage-feature`).
     - `overlayRole(role)` gives the SVG paint.
@@ -187,8 +187,8 @@
   
   Optional props that forward a value now accept `undefined` explicitly (for consumers on
   `exactOptionalPropertyTypes`).
-- 9aeeb5d: `@vitavision/stage2d` meets the PLAN §4 Definition of Done (API only; the rendering engine is
-  unchanged until L6).
+- 9aeeb5d: `@vitavision/stage2d` gets its quality pass: documented, tested, accessible (API only; the
+  rendering engine is unchanged).
   
   - **`ImageStage` keeps a controlled opening view.** A non-null `view` passed at mount is no longer
     replaced by fit on the first measurement; it is kept, clamped to what the viewport allows.
@@ -208,7 +208,7 @@
     `StageToolbarDividerProps`, `ZoomPanCanvasProps`.
   - `ZoomPanCanvas` (deprecated) uses the `canvas` token for its background instead of a hex
     literal, and is marked `@deprecated` in its TSDoc.
-  - Every export has TSDoc; the API report has no `ae-undocumented` entries.
+  - Every export has TSDoc.
 
 ### Patch Changes
 

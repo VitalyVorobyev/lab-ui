@@ -39,20 +39,20 @@
 
 ### Minor Changes
 
-- a037a0f: `Toaster` and `toast()` move from `@vitavision/workbench` to `@vitavision/ui`: notifications are a generic primitive, and vitavision (which renders on the server) is the second app that needs them. Moved with their stories and tests; the API is unchanged.
+- a037a0f: `Toaster` and `toast()` move from `@vitavision/workbench` to `@vitavision/ui`: notifications are a generic primitive, and apps without the studio shell need them too. Moved with their stories and tests; the API is unchanged.
   
   - `@vitavision/ui` exports `Toaster`, `ToasterProps`, `toast`, `createToastStore`, `defaultToastStore` and the types `ToastTone`, `ToastOptions`, `ToastRecord`, `ToastStore`. No new dependency and no new styles: the stack uses the existing tokens, and `styles.css` already scans the component sources.
   - `@vitavision/workbench` re-exports the same names from `@vitavision/ui` (the same bindings, so there is still exactly one default store), and `import { toast } from "@vitavision/workbench"` keeps working. **Deprecated:** import them from `@vitavision/ui`; the re-exports are kept for compatibility.
 
 ### Patch Changes
 
-- 5115556: Fix: under `prefers-reduced-motion: reduce`, style changes are applied synchronously again (#48). `styles.css` collapsed motion to `0.01ms`, which is still a transition: an element with `transition-property: all` kept its old computed value until the next frame, so code that sets a style and measures in the same tick read stale numbers (mermaid laid a 1508×201 diagram out as 2146×2079). Transitions and animations are now `0s` (delays too). `animationend` still fires at once, so a Radix `Presence` exit animation added by a consumer still unmounts. Apps that scoped `transition-duration: 0s` to work around this can drop it.
+- 5115556: Fix: under `prefers-reduced-motion: reduce`, style changes are applied synchronously again. `styles.css` collapsed motion to `0.01ms`, which is still a transition: an element with `transition-property: all` kept its old computed value until the next frame, so code that sets a style and measures in the same tick read stale numbers (mermaid laid a 1508×201 diagram out as 2146×2079). Transitions and animations are now `0s` (delays too). `animationend` still fires at once, so a Radix `Presence` exit animation added by a consumer still unmounts. Apps that scoped `transition-duration: 0s` to work around this can drop it.
 
 ## 0.8.0
 
 ### Minor Changes
 
-- a019b87: Three additions for editing physical quantities, incubated in etendue's studio (`web/packages/ui-next`) and moved here with their stories and tests:
+- a019b87: Three additions for editing physical quantities:
   
   - **`NumberInput` takes a `unit`** (`mm`, `m`, `°`, `px`), written inside the field after the number — mono, muted, not part of the value, and announced as the field's description (after the caller's own `aria-describedby`, before a surrounding `Field`'s). The input then sits in a full-width wrapper carrying `data-unit`; `className`, `style` and `ref` still go to the `<input>`. Without `unit` the markup is byte-identical to 0.6.0. Its props are now exported as `NumberInputProps`.
   - **`VectorInput`** — a small vector (a position, a set of angles) edited as one row: an axis label before each field, the unit once at the end, `precision` at rest and the typed text while a field has focus (Escape restores the value on focus). `readOnly` renders a `ReadoutStrip`.
@@ -91,9 +91,9 @@
   
   Optional props that forward a value now accept `undefined` explicitly (for consumers on
   `exactOptionalPropertyTypes`).
-- 51bdec5: `@vitavision/ui` meets the PLAN §4 Definition of Done (L1-5): axe finds 0 serious/critical
-  issues in every story in both themes, every export is documented (0 `ae-undocumented`), lint
-  reports 0 problems, and every file meets its coverage threshold.
+- 51bdec5: `@vitavision/ui` gets its quality pass: axe finds 0 serious/critical issues in every story in
+  both themes, every export is documented, lint reports 0 problems, and every file meets its
+  coverage threshold.
   
   **Visible: colour tokens.** Seven token values change so that text reaches WCAG AA (4.5:1).
   Hues are unchanged; the light theme's accent, verdict colours and quiet greys are darker. In the
@@ -115,9 +115,8 @@
   | `--warn` | light | `#b45309` | `#9d4808` | text on `warn/12` over `ground` (badge) | 3.78 | 4.63 |
   
   One class changes with them: the `danger` button's hover tint is `bg-defect/15` (was `/20`),
-  so its label keeps 4.63:1 on hover. Residue for L3-2: with AA as the floor, `fg-subtle` now sits
-  close to `fg-muted` in both themes, so the two-step grey hierarchy is mostly carried by size and
-  weight; the token-pair contrast tests of L3-2 should revisit the scale as a whole.
+  so its label keeps 4.63:1 on hover. With AA as the floor, `fg-subtle` now sits close to
+  `fg-muted` in both themes, so the two-step grey hierarchy is mostly carried by size and weight.
   
   **Accessibility.**
   

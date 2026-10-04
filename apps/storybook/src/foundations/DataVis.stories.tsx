@@ -85,8 +85,7 @@ const meta = {
       description: {
         component: `Categorical colours tell series apart; sequential maps show magnitude; a diverging
 map shows a signed value around zero. **None of them is a verdict colour**, and a verdict colour is
-never a series — a red line that means "series 4" teaches a reader to ignore red.
-Spec: \`docs/visual-language.md\` §4.`,
+never a series — a red line that means "series 4" teaches a reader to ignore red.`,
       },
     },
   },

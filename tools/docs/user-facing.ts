@@ -33,7 +33,7 @@ export const RULES: Rule[] = [
   },
   {
     name: "process jargon",
-    pattern: /ae-undocumented|Definition of Done|\bDoD\b|promotion rule|docs\/(?:measurements|plan|adrs)|visual-language\.md|visual-language §/,
+    pattern: /ae-undocumented|Definition of Done|\bDoD\b|promotion rule|docs\/(?:measurements|plan|adrs)|visual-language §/,
   },
 ];
 

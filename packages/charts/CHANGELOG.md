@@ -29,7 +29,7 @@
   - **`bands`** (x ranges with a tone and a label) and **`markers`** (ticks on the x axis).
     `Bands`, `Markers`, `PlotInteraction` and `seriesValueAt` are exported for custom charts.
   - **`Scale.invert`.** Implementers of `Scale` must add it, which makes this a minor.
-  - **Sequential colour maps (visual-language §4).**
+  - **Sequential colour maps.**
     - `colormap("viridis" | "cividis", t)`, `colormapValue(map, value, domain)`, `colormapRgb`
       and `colormapGradient`.
     - `ColormapLegend` shows a map's scale with its units, which the spec requires beside every
@@ -79,8 +79,8 @@
   - The palette itself changed. Old (both themes): `#3bc9db #f0883e #a78bfa #34d399 #f87171
     #8b949b`. New, light: `#0f92c5 #b57c38 #7e5be6 #482ab3 #e04b9b #595f65`; dark:
     `#27e4ef #c27421 #8ba3ff #4a6ee0 #f96dcc #7f878d` — cyan, orange, violet, blue, pink,
-    neutral. The old series 4 and 5 were the dark theme's verdict colours, which PLAN §5
-    forbids; every new colour holds 3:1 against the panel in its theme, and all six stay
+    neutral. The old series 4 and 5 were the dark theme's verdict colours, which a series
+    must never reuse; every new colour holds 3:1 against the panel in its theme, and all six stay
     apart under simulated protanopia, deuteranopia and tritanopia.
   - `NORMAL_COLOUR` is `"var(--normal)"` and `DEFECT_COLOUR` is `"var(--defect)"` — the
     `@vitavision/ui` verdict tokens, so they follow the theme too.

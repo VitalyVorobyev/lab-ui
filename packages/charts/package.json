@@ -1,7 +1,7 @@
 {
   "name": "@vitavision/charts",
   "version": "0.8.0",
-  "description": "Small SVG charts for the vitavision lab apps: histogram, line, bar, line profile, scales.",
+  "description": "Small SVG charts on @vitavision/ui: histogram, line, bar, line profile, scales, colour maps, hover and pick.",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",

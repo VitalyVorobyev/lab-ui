@@ -1,7 +1,7 @@
 /**
  * Colour checks for token tests: WCAG 2.2 contrast, alpha compositing, and OKLab distance
  * under simulated colour-vision deficiency. The same maths as
- * `tools/visual-language/colours.py` (docs/visual-language.md §1, §4, §5).
+ * the lab-ui repository's `tools/visual-language/colours.py`.
  */
 
 /**

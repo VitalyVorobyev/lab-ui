@@ -6,5 +6,5 @@ export declare const plugin: ESLint.Plugin;
 /** The shared flat config: typescript-eslint (type-aware), React, hooks, Storybook. */
 export declare function recommended(options: { tsconfigRootDir: string }): Linter.Config[];
 
-/** Gate G5.1 — no raw palette classes or hex colours — over the given migrated directories. */
+/** Colour from the design tokens only — no raw palette classes or hex colours — in the given directories. */
 export declare function tokensOnly(files: string[]): Linter.Config;

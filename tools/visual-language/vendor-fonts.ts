@@ -81,7 +81,7 @@ copyFileSync(join(SANS, "LICENSE"), join(OUT, "LICENSE-IBM-Plex-Sans.txt"));
 copyFileSync(join(MONO, "LICENSE.txt"), join(OUT, "LICENSE-IBM-Plex-Mono.txt"));
 
 const css = `/*
- * IBM Plex for the @vitavision packages (ADR-0003): import once, next to styles.css.
+ * IBM Plex for the @vitavision packages: import once, next to styles.css.
  *
  *   @import "@vitavision/ui/fonts.css";
  *

@@ -20,7 +20,7 @@ const meta = {
   parameters: {
     docs: {
       description: {
-        component: `The palette switch shared by every lab app: one button cycling system → light → dark,
+        component: `The palette switch: one button cycling system → light → dark,
 stored in \`localStorage\` under a per-app \`storageKey\`.
 
 **Use** it once, in the app header. "System" is a real state — it follows the OS and survives

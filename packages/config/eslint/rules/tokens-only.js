@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * `vitavision/tokens-only` — gate G5.1 (PLAN §5): in a migrated directory, colour comes from
+ * `vitavision/tokens-only`: in a migrated directory, colour comes from
  * the design tokens and nowhere else. Flags, in any string or template literal:
  *
  *   - a raw Tailwind palette utility: `bg-gray-500`, `text-blue-600/50`, `hover:ring-red-400`;
@@ -25,8 +25,8 @@ export const tokensOnly = {
     type: "problem",
     docs: { description: "Colours come from design tokens: no raw Tailwind palette classes, no hex literals." },
     messages: {
-      palette: "Raw Tailwind palette class `{{match}}` — use a semantic token (bg-surface, text-fg-muted, …). See docs/visual-language.md.",
-      hex: "Hex colour literal `{{match}}` — use a design token (a CSS variable or its utility). See docs/visual-language.md.",
+      palette: "Raw Tailwind palette class `{{match}}` — use a semantic token (bg-surface, text-fg-muted, …). See the Foundations / Colour page of the @vitavision Storybook.",
+      hex: "Hex colour literal `{{match}}` — use a design token (a CSS variable or its utility). See the Foundations / Colour page of the @vitavision Storybook.",
     },
     schema: [],
   },
