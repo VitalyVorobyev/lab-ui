@@ -19,6 +19,7 @@ import {
   PerspectiveCamera,
   PlaneGeometry,
   RGFormat,
+  SRGBColorSpace,
   Scene,
   ShaderMaterial,
   Color,
@@ -67,8 +68,9 @@ export interface SensorViewOptions {
   /** MSAA samples of the canonical render. Default 4. */
   samples?: number;
   /**
-   * Storage of the canonical render: `"byte"` (8-bit, the default, for display) or
-   * `"half"` (16-bit float, linear radiance without quantisation, for measurement).
+   * Storage of the canonical render: `"byte"` (8-bit sRGB, the default, for display: its
+   * levels are spaced as the eye sees them, so dark tones do not band) or `"half"` (16-bit
+   * float, linear radiance without quantisation, for measurement).
    */
   precision?: "byte" | "half";
   /**
@@ -164,7 +166,9 @@ export class SensorView {
 
     this.canonicalTarget = new WebGLRenderTarget(canonical.width, canonical.height, {
       samples,
-      ...(precision === "half" ? { type: HalfFloatType } : {}),
+      // 8 bits of linear light leave the darks a handful of levels; sRGB storage is encoded
+      // on write and decoded on sampling, so the resampling still filters linear values.
+      ...(precision === "half" ? { type: HalfFloatType } : { colorSpace: SRGBColorSpace }),
     });
     this.canonicalTarget.texture.minFilter = LinearFilter;
     this.canonicalTarget.texture.magFilter = LinearFilter;

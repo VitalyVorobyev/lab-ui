@@ -1,4 +1,4 @@
-import { BoxGeometry, Group, Mesh, MeshBasicMaterial, type Object3D } from "three";
+import { BoxGeometry, DataTexture, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, type Object3D } from "three";
 import { describe, expect, it, vi } from "vitest";
 
 import { FrameTreeRuntime } from "./frameTree";
@@ -60,6 +60,24 @@ describe("robot visuals", () => {
     const material = applyRobotMaterial([root, m2], "gray");
     expect(m1.material).toBe(material);
     expect(m2.material).toBe(material);
+  });
+
+  it("frees each replaced material and its textures once, never the new one", () => {
+    const map = new DataTexture();
+    const shared = new MeshBasicMaterial({ map });
+    const own = new MeshBasicMaterial();
+    const root = new Group();
+    const child = new Group();
+    root.add(new Mesh(new BoxGeometry(), shared), child);
+    child.add(new Mesh(new BoxGeometry(), [shared, own]));
+    const spies = [vi.spyOn(map, "dispose"), vi.spyOn(shared, "dispose"), vi.spyOn(own, "dispose")];
+    const disposeNew = vi.spyOn(MeshStandardMaterial.prototype, "dispose");
+    // `child` is reached twice: from `root` and on its own.
+    const material = applyRobotMaterial([root, child], "gray");
+    for (const s of spies) expect(s).toHaveBeenCalledOnce();
+    expect(disposeNew).not.toHaveBeenCalled();
+    disposeNew.mockRestore();
+    expect((child.children[0] as Mesh).material).toBe(material);
   });
 
   it("builds a glTF loader", () => {

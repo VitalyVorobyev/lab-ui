@@ -1,4 +1,4 @@
-import { Color, type LineBasicMaterial, type Mesh, type MeshBasicMaterial, Raycaster, Vector3 } from "three";
+import { Color, type LineBasicMaterial, type LineLoop, type Mesh, type MeshBasicMaterial, Raycaster, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 
 import { GIZMO_LAYER } from "../layers";
@@ -135,6 +135,39 @@ describe("TargetBoard", () => {
 
   it("draws a plain surface without a checker", () => {
     expect(new TargetBoard({ width: 1, height: 1, color: "white", edgeColor: "black" }).children).toHaveLength(2);
+  });
+
+  it("is paper and ink by default, with its outline on the gizmo layer only", () => {
+    const b = new TargetBoard({ width: 1, height: 1, checker: { cols: 2, rows: 2 } });
+    const [base, dark, outline] = b.children as [Mesh, Mesh, LineLoop];
+    const color = (o: Mesh | LineLoop) => (o.material as MeshBasicMaterial | LineBasicMaterial).color;
+    expect(color(base).equals(new Color(0xf2f2f2))).toBe(true);
+    expect(color(dark).equals(new Color(0x1a1a1a))).toBe(true);
+    expect(color(outline).equals(color(dark))).toBe(true);
+    // A sensor renders the physical layer: the surface and squares, never the outline.
+    expect(base.layers.isEnabled(0) && dark.layers.isEnabled(0)).toBe(true);
+    expect(outline.layers.isEnabled(0)).toBe(false);
+    expect(outline.layers.isEnabled(GIZMO_LAYER)).toBe(true);
+
+    b.setOutlineColor("orange");
+    b.setColors("white", "black");
+    expect(color(outline).equals(new Color("orange"))).toBe(true);
+    expect(color(dark).equals(new Color("black"))).toBe(true);
+    b.setColors();
+    expect(color(base).equals(new Color(0xf2f2f2))).toBe(true);
+    expect(color(dark).equals(new Color(0x1a1a1a))).toBe(true);
+
+    b.setActive(true);
+    expect((outline.material as LineBasicMaterial).depthTest).toBe(false);
+    expect(outline.renderOrder).toBeGreaterThan(base.renderOrder);
+    b.setActive(false);
+    expect((outline.material as LineBasicMaterial).depthTest).toBe(true);
+    expect(outline.renderOrder).toBe(base.renderOrder);
+  });
+
+  it("takes its own outline colour", () => {
+    const b = new TargetBoard({ width: 1, height: 1, outlineColor: "red" });
+    expect(((b.children[1] as LineLoop).material as LineBasicMaterial).color.equals(new Color("red"))).toBe(true);
   });
 });
 

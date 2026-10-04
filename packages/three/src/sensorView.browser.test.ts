@@ -1,4 +1,14 @@
-import { DoubleSide, Matrix4, Mesh, MeshBasicMaterial, PlaneGeometry, Scene, WebGLRenderTarget, WebGLRenderer } from "three";
+import {
+  DoubleSide,
+  Matrix4,
+  Mesh,
+  MeshBasicMaterial,
+  PlaneGeometry,
+  SRGBColorSpace,
+  Scene,
+  WebGLRenderTarget,
+  WebGLRenderer,
+} from "three";
 import { afterAll, describe, expect, it } from "vitest";
 
 import { GIZMO_LAYER } from "./layers";
@@ -102,6 +112,30 @@ describe("SensorView", () => {
     expect([px[0], px[1], px[2]]).toEqual([0, 255, 0]);
     view.dispose();
     target.dispose();
+  });
+
+  it("keeps dark tones apart in the byte canonical render", () => {
+    // Four dark greys in bands across the view. Stored as 8-bit linear light they all fall on
+    // one or two levels (8 and 16 both came back as 13); stored as sRGB each comes back as given.
+    const levels = [8, 16, 24, 32];
+    const scene = new Scene();
+    levels.forEach((v, k) => {
+      const band = new Mesh(new PlaneGeometry(0.4, 2), new MeshBasicMaterial({ color: `rgb(${v}, ${v}, ${v})`, side: DoubleSide }));
+      band.position.set(-0.6 + 0.4 * k, 0, 1);
+      scene.add(band);
+    });
+    const view = new SensorView({ canonical: { width: W, height: H, focalPx: 40 }, lut: lut((i, j) => [i, j]) });
+    // An sRGB output, so the bytes read back are the display values.
+    const target = new WebGLRenderTarget(W, H, { colorSpace: SRGBColorSpace });
+    view.render(renderer, scene, new Matrix4(), target);
+    const read = levels.map((_, k) => {
+      const px = new Uint8Array(4);
+      renderer.readRenderTargetPixels(target, 8 + 16 * k, 24, 1, 1, px);
+      return px[0]!;
+    });
+    view.dispose();
+    target.dispose();
+    for (const [k, v] of levels.entries()) expect(Math.abs(read[k]! - v)).toBeLessThanOrEqual(1);
   });
 
   it("rejects a LUT of the wrong size", () => {
