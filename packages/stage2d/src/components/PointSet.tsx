@@ -32,6 +32,8 @@ export interface PointSetItem extends PointItem {
   role?: OverlayRole | undefined;
   /** Its orientation in radians, clockwise from +x; read by `directed`. */
   angle?: number | undefined;
+  /** A second angle in radians, for a glyph with two axes. `MarkerShape.path` gets `undefined` without it. */
+  angle2?: number | undefined;
   /** Text drawn beside it, when the zoom leaves room (points at least 24 screen px apart). */
   label?: string | undefined;
 }
@@ -299,14 +301,14 @@ export function PointSet({
           <>
             {halo && (
               <path
-                d={hoverShape.path(hoverItem.x, hoverItem.y, unit, hoverItem.angle ?? 0)}
+                d={hoverShape.path(hoverItem.x, hoverItem.y, unit, hoverItem.angle ?? 0, hoverItem.angle2)}
                 stroke={HALO}
                 strokeWidth={widthOf(hoverShape, hoverRole, hoverSelected ? "selected" : "hover") + px(2)}
               />
             )}
             <path
               data-hovered-point=""
-              d={hoverShape.path(hoverItem.x, hoverItem.y, unit, hoverItem.angle ?? 0)}
+              d={hoverShape.path(hoverItem.x, hoverItem.y, unit, hoverItem.angle ?? 0, hoverItem.angle2)}
               stroke={hoverSelected ? selectionStroke : overlayRole(hoverRole)}
               strokeWidth={widthOf(hoverShape, hoverRole, hoverSelected ? "selected" : "hover")}
             />
@@ -342,7 +344,7 @@ function batchPath(batch: Batch, items: readonly PointSetItem[], unit: number, c
   for (const i of batch.indices) {
     const item = items[i]!;
     if (window && (item.x < window.x || item.x > window.x + window.width || item.y < window.y || item.y > window.y + window.height)) continue;
-    d += batch.shape.path(item.x, item.y, unit, item.angle ?? 0);
+    d += batch.shape.path(item.x, item.y, unit, item.angle ?? 0, item.angle2);
   }
   batch.cache = { key, d };
   return d;

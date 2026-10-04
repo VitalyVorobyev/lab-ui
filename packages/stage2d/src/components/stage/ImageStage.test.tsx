@@ -533,6 +533,107 @@ describe("ImageStage — gestures and keys", () => {
   });
 });
 
+describe("ImageStage — will-change while the view moves", () => {
+  it("sets will-change: transform and data-moving on a view change, and clears them once it settles", () => {
+    vi.useFakeTimers();
+    try {
+      withLayout();
+      const { container, viewport } = renderWithStage();
+      const box = container.querySelector("[data-stage]") as HTMLElement;
+      expect(box.style.willChange).toBe("transform");
+      expect(box.hasAttribute("data-moving")).toBe(true);
+      act(() => {
+        vi.advanceTimersByTime(149);
+      });
+      expect(box.style.willChange).toBe("transform");
+      act(() => {
+        vi.advanceTimersByTime(2);
+      });
+      expect(box.style.willChange).toBe("");
+      expect(box.hasAttribute("data-moving")).toBe(false);
+
+      fireEvent.keyDown(viewport, { key: "1" });
+      expect(box.style.willChange).toBe("transform");
+      // Another change before it settles restarts the wait.
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+      fireEvent.keyDown(viewport, { key: "0" });
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(box.style.willChange).toBe("transform");
+      act(() => {
+        vi.advanceTimersByTime(60);
+      });
+      expect(box.style.willChange).toBe("");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("ImageStage — the fit option", () => {
+  const FIT = { padding: 24, upscale: false } as const;
+
+  it("opens at the padded fit with initialView=\"fit\", and reports it as fit", () => {
+    withLayout();
+    const onViewChange = vi.fn();
+    render(<Harness initialView="fit" fit={FIT} onViewChange={onViewChange} />);
+    expect(onViewChange).toHaveBeenLastCalledWith(fitView(BOX, IMAGE, FIT));
+    expect(probe().fit).toBe(true);
+    expect(probe().scale).toBeCloseTo((BOX.height - 48) / IMAGE.height, 9);
+  });
+
+  it("caps a small image at 1:1 and centres it", () => {
+    withLayout();
+    const small = { width: 200, height: 100 };
+    const onViewChange = vi.fn();
+    render(<Harness image={small} initialView="fit" fit={FIT} onViewChange={onViewChange} />);
+    expect(onViewChange).toHaveBeenLastCalledWith({ scale: 1, tx: 300, ty: 250 });
+  });
+
+  it("applies it to the handle's fit(), the 0 key, the toolbar-facing context and the double-click toggle", () => {
+    withLayout();
+    const { viewport, stage } = renderWithStage({ fit: FIT });
+    const fitted = fitView(BOX, IMAGE, FIT);
+    fireEvent.keyDown(viewport, { key: "1" });
+    expect(stage().isFit).toBe(false);
+    fireEvent.keyDown(viewport, { key: "0" });
+    expect(stage().view).toEqual(fitted);
+    expect(stage().isFit).toBe(true);
+    expect(viewport.hasAttribute("data-fit")).toBe(true);
+
+    fireEvent.keyDown(viewport, { key: "1" });
+    act(() => stage().fit());
+    expect(stage().view).toEqual(fitted);
+
+    // Double-click leaves fit for the view it came from, then returns to the padded fit.
+    fireEvent.keyDown(viewport, { key: "1" });
+    fireEvent.doubleClick(viewport, { clientX: 400, clientY: 300 });
+    expect(stage().view).toEqual(fitted);
+    fireEvent.doubleClick(viewport, { clientX: 400, clientY: 300 });
+    expect(stage().view.scale).toBe(1);
+  });
+
+  it("re-fits with the margin when the viewport resizes while fit", () => {
+    withLayout();
+    const { stage } = renderWithStage({ fit: FIT, initialView: "fit" });
+    resize({ width: 500, height: 700 });
+    expect(stage().view).toEqual(fitView({ width: 500, height: 700 }, IMAGE, FIT));
+    expect(stage().isFit).toBe(true);
+  });
+
+  it("does not re-fit on a new but equal options object", () => {
+    withLayout();
+    const onViewChange = vi.fn();
+    const { rerender } = render(<Harness fit={{ padding: 24 }} initialView="fit" onViewChange={onViewChange} />);
+    const calls = onViewChange.mock.calls.length;
+    rerender(<Harness fit={{ padding: 24 }} initialView="fit" onViewChange={onViewChange} />);
+    expect(onViewChange.mock.calls.length).toBe(calls);
+  });
+});
+
 describe("ImageStage — the layer context", () => {
   it("converts between client and image coordinates, both ways", () => {
     withLayout();

@@ -74,6 +74,7 @@ export {
   zoomAbout,
   type Box,
   type ClampOptions,
+  type FitOptions,
   type Rect,
   type StageView,
 } from "./components/stage/view";
@@ -178,6 +179,23 @@ export {
   type AreaId,
   type AreaIndex,
 } from "./components/areaIndex";
+export {
+  EllipseSet,
+  type EllipseSetItem,
+  type EllipseSetProps,
+} from "./components/EllipseSet";
+export {
+  buildEllipseIndex,
+  ellipseBounds,
+  ellipsePath,
+  ellipsesInRect,
+  nearestEllipse,
+  pointInEllipse,
+  type Ellipse,
+  type EllipseHit,
+  type EllipseId,
+  type EllipseIndex,
+} from "./components/ellipseIndex";
 export {
   GridLayer,
   type GridEdgeStyle,

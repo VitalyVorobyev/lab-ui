@@ -5,10 +5,13 @@
 ```ts
 
 import { AreaSetItem } from '@vitavision/stage2d';
+import { ellipsePath } from '@vitavision/stage2d';
+import { EllipseSet } from '@vitavision/stage2d';
+import { EllipseSetItem } from '@vitavision/stage2d';
+import { EllipseSetProps } from '@vitavision/stage2d';
 import { GridNode } from '@vitavision/stage2d';
 import { JSX } from 'react';
 import { MarkerShape } from '@vitavision/stage2d';
-import { OverlayRole } from '@vitavision/stage2d';
 import { PointSetItem } from '@vitavision/stage2d';
 import { StagePointerEvent } from '@vitavision/stage2d';
 
@@ -39,37 +42,13 @@ export function edgeBitEllipses(bits: readonly TargetEdgeBit[]): EllipseSetItem[
 // @public
 export function edgeBitsFromPuzzleboard(edges: readonly PuzzleboardEdge[], corners: readonly TargetCorner[], alignment: PuzzleboardAlignment | null | undefined, period?: number): TargetEdgeBit[];
 
-// @public
-export function ellipsePath(cx: number, cy: number, rx: number, ry: number, angle?: number): string;
+export { ellipsePath }
 
-// @public
-export function EllipseSet(input: EllipseSetProps): JSX.Element;
+export { EllipseSet }
 
-// @public
-export interface EllipseSetItem {
-    angle?: number | undefined;
-    dashed?: boolean | undefined;
-    id: TargetId;
-    opacity?: number | undefined;
-    role?: OverlayRole | undefined;
-    rx: number;
-    ry: number;
-    x: number;
-    y: number;
-}
+export { EllipseSetItem }
 
-// @public
-export interface EllipseSetProps {
-    dimmed?: Iterable<TargetId> | ((id: TargetId) => boolean) | undefined;
-    halo?: boolean | undefined;
-    hoveredId?: TargetId | null | undefined;
-    items: readonly EllipseSetItem[];
-    label?: string | undefined;
-    minRadius?: number | undefined;
-    role?: OverlayRole | undefined;
-    selectedIds?: Iterable<TargetId> | undefined;
-    selectionStroke?: string | undefined;
-}
+export { EllipseSetProps }
 
 // @public
 export interface GridBounds {
@@ -126,9 +105,6 @@ export interface MarkerPolygon {
 
 // @public
 export function markerPolygons(markers: readonly TargetMarker[]): MarkerPolygon[];
-
-// @public
-export function packAxes(angle: number, angle2?: number): number;
 
 // @public
 export const PUZZLEBOARD_PERIOD = 501;
@@ -270,9 +246,6 @@ export interface TargetRing {
     x: number;
     y: number;
 }
-
-// @public
-export function unpackAxes(packed: number): number[];
 
 // (No @packageDocumentation comment for this package)
 

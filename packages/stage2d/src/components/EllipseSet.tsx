@@ -1,40 +1,27 @@
 /**
- * Many ellipses over the image whose size is data: fitted ring edges, edge-bit dots.
+ * Many ellipses over the image whose size is data, hoverable and selectable: fitted ring
+ * edges, edge-bit dots, drawn ellipse annotations.
  *
  * A `MarkerShape` is sized in screen pixels, so it cannot draw a ring whose radius is a
  * measurement. This layer draws exact ellipses (two arcs each) in image pixels, batched by
  * appearance into a handful of `<path>`s (ADR-0004 rule 1). Strokes stay screen-sized (rule 4).
- * It is not picked: pair it with a `PointSet` at the centres, which is what `TargetOverlay` does.
+ * The pointer is resolved by `nearestEllipse` through the stage's hit registry, never by the
+ * DOM (rule 2); `pickable={false}` leaves a decorative layer out of it.
  */
 
-import {
-  OVERLAY_STATE_OPACITY,
-  OVERLAY_STATE_WIDTH,
-  imageViewBox,
-  overlayRole,
-  useScreenPx,
-  useStage,
-  type OverlayRole,
-} from "@vitavision/stage2d";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
-import { ellipsePath } from "./glyphs";
-import type { TargetId } from "./model";
+import { buildEllipseIndex, ellipsePath, nearestEllipse, type Ellipse, type EllipseId, type EllipseIndex } from "./ellipseIndex";
+import { overlayRole, OVERLAY_STATE_OPACITY, OVERLAY_STATE_WIDTH, type OverlayRole } from "./overlayRole";
+import { useStage } from "./stage/ImageStage";
+import type { StagePointerEvent } from "./stage/hitContext";
+import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
+import { useStageHitLayer } from "./stage/useStageHitTest";
+import { useScreenPx } from "./stage/useScreenPx";
+import { imageViewBox } from "./stage/view";
 
 /** One ellipse of an `EllipseSet`. */
-export interface EllipseSetItem {
-  /** Its identity, for hover, selection and dimming. */
-  id: TargetId;
-  /** Centre x, image pixels. */
-  x: number;
-  /** Centre y, image pixels. */
-  y: number;
-  /** Semi-axis along the rotated x axis, image pixels. */
-  rx: number;
-  /** Semi-axis along the rotated y axis, image pixels. */
-  ry: number;
-  /** Rotation of the `rx` axis, radians clockwise on screen. Defaults to 0. */
-  angle?: number | undefined;
+export interface EllipseSetItem extends Ellipse {
   /** The overlay role it is painted in. Defaults to the layer's `role`. */
   role?: OverlayRole | undefined;
   /** Draw it dashed (4 3 screen px), so two kinds differ by more than colour. */
@@ -49,12 +36,33 @@ export interface EllipseSetProps {
   items: readonly EllipseSetItem[];
   /** The role of an item that names none. Defaults to `"feature"`. */
   role?: OverlayRole | undefined;
-  /** The hovered id: its ellipses are drawn at 2 px. */
-  hoveredId?: TargetId | null | undefined;
+  /** The hovered id, when the app controls hover: its ellipses are drawn at 2 px. */
+  hoveredId?: EllipseId | null | undefined;
+  /** Called when the ellipse under the pointer changes. `null` when it leaves every ellipse. Not called when `pickable` is off. */
+  onHoverChange?: ((id: EllipseId | null) => void) | undefined;
   /** The selected ids, drawn at 2.5 px in the selection colour. */
-  selectedIds?: Iterable<TargetId> | undefined;
+  selectedIds?: Iterable<EllipseId> | undefined;
   /** Ids drawn at 35 % opacity, as a set or a predicate. Pass a stable value: a new one re-batches the layer. */
-  dimmed?: Iterable<TargetId> | ((id: TargetId) => boolean) | undefined;
+  dimmed?: Iterable<EllipseId> | ((id: EllipseId) => boolean) | undefined;
+  /**
+   * A press landed on an ellipse. Setting it makes the layer claim presses on its ellipses,
+   * so the stage does not pan from them. The event is the `pointerdown` (the `pointerup` for
+   * a touch tap), so `useShapeDrag` can start a drag from it.
+   *
+   * A mounted `StageSurface` hears a press first; there, ask `useStageHitTest` what is
+   * under it instead.
+   */
+  onItemPress?: ((id: EllipseId, event: StagePointerEvent) => void) | undefined;
+  /**
+   * Whether the layer takes part in the stage's hit-test. On by default. Turn it off for a
+   * decorative layer (the ring outlines under a `PointSet` of centres), so it neither
+   * hovers, nor claims presses, nor answers `useStageHitTest`.
+   */
+  pickable?: boolean | undefined;
+  /** The id hit-tests report for this layer. Defaults to a generated one. */
+  layerId?: string | undefined;
+  /** Rank against other layers in hit-tests. Defaults to `STAGE_HIT_PRIORITY.area`. */
+  priority?: number | undefined;
   /** Draw the dark band under every stroke. On by default. */
   halo?: boolean | undefined;
   /**
@@ -82,6 +90,36 @@ function batchPath(items: readonly EllipseSetItem[], indices: readonly number[],
   return d;
 }
 
+/**
+ * The layer's entry in the stage's hit registry: a component, not a hook call in
+ * `EllipseSet`, so `pickable={false}` really unregisters it. Renders nothing.
+ */
+function EllipseHits({
+  index,
+  layerId,
+  priority,
+  onHover,
+  onPress,
+}: {
+  index: EllipseIndex;
+  layerId: string | undefined;
+  priority: number;
+  onHover: (id: EllipseId | null) => void;
+  onPress: ((id: EllipseId, event: StagePointerEvent) => void) | undefined;
+}) {
+  useStageHitLayer({
+    layerId,
+    priority,
+    pick: (point, radius) => {
+      const hit = nearestEllipse(index, point, radius);
+      return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
+    },
+    onHover,
+    onPress: onPress ? (id, event) => onPress(id, event) : undefined,
+  });
+  return null;
+}
+
 /** The ellipses of one batched path. */
 interface Batch {
   key: string;
@@ -101,15 +139,24 @@ interface Batch {
  * - **States** follow visual-language §5: 1.5 screen px (1 for `model` and `structure`), hover
  *   2, selected 2.5 in the selection colour, dimmed at 35 % opacity. Every stroke has a halo.
  * - **Batching** is by (role, dash, opacity, dimming): a thousand rings are a dozen elements.
+ * - **Picking** goes through the stage's hit registry: a press within the pointer's tolerance of
+ *   an outline picks that ellipse, else the smallest ellipse containing the point.
+ *   `onHoverChange` and `onItemPress` here, and `useStageHitTest` for an app that arbitrates
+ *   between layers. `pickable={false}` turns it off.
  *
- * The SVG carries `data-ellipses` (the count).
+ * The SVG carries `data-ellipses` (the count) and `data-hovered` (the hovered id).
  */
 export function EllipseSet({
   items,
   role = "feature",
-  hoveredId = null,
+  hoveredId,
+  onHoverChange,
   selectedIds,
   dimmed,
+  onItemPress,
+  pickable = true,
+  layerId,
+  priority = STAGE_HIT_PRIORITY.area,
   halo = true,
   minRadius,
   selectionStroke = overlayRole("selection"),
@@ -123,8 +170,12 @@ export function EllipseSet({
   const isDimmed = useMemo(() => {
     if (typeof dimmed === "function") return dimmed;
     const set = new Set(dimmed ?? []);
-    return (id: TargetId) => set.has(id);
+    return (id: EllipseId) => set.has(id);
   }, [dimmed]);
+
+  const index = useMemo(() => (pickable ? buildEllipseIndex(items) : null), [items, pickable]);
+  const [ownHover, setOwnHover] = useState<EllipseId | null>(null);
+  const hoverId = hoveredId !== undefined ? hoveredId : pickable ? ownHover : null;
 
   const batches = useMemo(() => {
     const normal = new Map<string, Batch>();
@@ -158,12 +209,12 @@ export function EllipseSet({
   const pickedPath = useMemo(() => (batches.picked ? batchPath(items, batches.picked.indices, floor) : ""), [batches, items, floor]);
 
   const hoverPositions: number[] = [];
-  if (hoveredId !== null) {
+  if (hoverId !== null) {
     items.forEach((item, i) => {
-      if (item.id === hoveredId) hoverPositions.push(i);
+      if (item.id === hoverId) hoverPositions.push(i);
     });
   }
-  const hoverSelected = hoveredId !== null && selectedSet.has(hoveredId);
+  const hoverSelected = hoverId !== null && selectedSet.has(hoverId);
 
   const widthOf = (itemRole: OverlayRole, state: "default" | "hover" | "selected"): number => {
     const thin = itemRole === "model" || itemRole === "structure";
@@ -177,7 +228,20 @@ export function EllipseSet({
       className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
       {...(label !== undefined ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
       data-ellipses={items.length}
+      data-hovered={hoverId ?? undefined}
     >
+      {index && (
+        <EllipseHits
+          index={index}
+          layerId={layerId}
+          priority={priority}
+          onHover={(id) => {
+            setOwnHover(id);
+            onHoverChange?.(id);
+          }}
+          onPress={onItemPress}
+        />
+      )}
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {normalPaths.map(({ batch, d }) => (
           <g key={batch.key} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>
