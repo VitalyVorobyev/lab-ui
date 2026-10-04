@@ -97,13 +97,18 @@ export const AtTheEnds: Story = {
   args: { value: "f12" },
   play: async ({ canvas }) => {
     // The strip scrolls the last item into view with room for its ring (the layout is CSS;
-    // measure it only where the stylesheet is loaded). A scroll position is whole pixels, so
-    // the room can come out up to a pixel short.
+    // measure it only where the stylesheet is loaded). The scroll happens in an effect, after
+    // the first paint; and a scroll position is whole pixels, so the room can come out up to a
+    // pixel short.
     const list = canvas.getByRole("list", { name: "Frames" });
     if (getComputedStyle(list).display === "flex") {
       await expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
-      const last = canvas.getByRole("button", { name: "dome_0012.bmp" }).getBoundingClientRect();
-      await expect(list.getBoundingClientRect().right - last.right).toBeGreaterThanOrEqual(RING_ROOM - 1);
+      const last = canvas.getByRole("button", { name: "dome_0012.bmp" });
+      await waitFor(() =>
+        expect(list.getBoundingClientRect().right - last.getBoundingClientRect().right).toBeGreaterThanOrEqual(
+          RING_ROOM - 1,
+        ),
+      );
     }
     await expect(canvas.getByRole("button", { name: "Next" })).toBeDisabled();
     await userEvent.click(canvas.getByRole("button", { name: "Previous" }));
