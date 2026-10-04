@@ -2,7 +2,7 @@
  * Many closed regions over the image, hoverable and selectable: marker quads, drawn polygons,
  * region annotations, defect outlines.
  *
- * Drawn as a handful of batched paths, one per (state, role), each outline with its 12 % fill
+ * Drawn as a handful of batched paths, one per (state, role, colours), each outline with its 12 % fill
  * in one element (ADR-0004 rule 1); the pointer is resolved by `nearestArea` through the
  * stage's hit registry, never by the DOM (rule 2); strokes and labels are sized in screen
  * pixels (rule 4). A scene of 5,000 quads is a dozen DOM nodes plus at most 200 labels.
@@ -10,6 +10,7 @@
 
 import { useMemo, useState } from "react";
 
+import { batchAreas, type AreaBatch } from "./areaBatching";
 import { areaCentre, areaPath, buildAreaIndex, nearestArea, type Area, type AreaId } from "./areaIndex";
 import { useLabelIndices } from "./labelLod";
 import { overlayRole, OVERLAY_STATE_OPACITY, OVERLAY_STATE_WIDTH, type OverlayRole } from "./overlayRole";
@@ -26,6 +27,13 @@ export interface AreaSetItem extends Area {
   role?: OverlayRole | undefined;
   /** Text drawn at its centre (the mean of its vertices), when the zoom leaves room. */
   label?: string | undefined;
+  /**
+   * CSS colour of its outline (`#hex`, `var(--x)`, `color-mix(…)`; used as given). Overrides
+   * the role and the layer's `stroke`. Items sharing a colour share a batch.
+   */
+  stroke?: string | undefined;
+  /** CSS colour of its fill. Defaults to its outline colour. */
+  fill?: string | undefined;
 }
 
 /** Props of `AreaSet`. */
@@ -61,6 +69,30 @@ export interface AreaSetProps {
    * of a marker quad reads (the overlay grammar's "corner 0 ticked"). Off by default.
    */
   firstVertexTick?: boolean | undefined;
+  /** CSS colour of every outline that names none of its own, in place of its role's. */
+  stroke?: string | undefined;
+  /** The fill's alpha, 0 to 1. Defaults to 0.12. */
+  fillOpacity?: number | undefined;
+  /**
+   * How a self-overlapping ring is filled. `"nonzero"` (the default) fills everything a ring
+   * encloses; `"evenodd"` leaves the doubly-wound part of a self-intersecting ring open, as
+   * a rasteriser would. With `"evenodd"` every region's fill is its own path (even-odd across
+   * a batched path would cut a hole where two regions overlap); outlines stay batched.
+   */
+  fillRule?: "nonzero" | "evenodd" | undefined;
+  /**
+   * The paint order. `"appearance"` (the default) draws one batch per appearance, in order of
+   * first appearance. `"items"` draws consecutive runs in item order, so a later region
+   * covers an earlier one of another appearance (a subtract region over an add region); more
+   * runs mean more paths, so use it when the order matters.
+   */
+  paintOrder?: "appearance" | "items" | undefined;
+  /**
+   * What a selected region looks like. `"selection"` (the default) paints it in the
+   * selection colour, fill and outline. `"item"` keeps its own fill (and its place in the
+   * paint order) and restyles only the outline.
+   */
+  selectionFill?: "selection" | "item" | undefined;
   /** Draw the dark band under every outline. On by default; off for a fast, flat layer. */
   halo?: boolean | undefined;
   /** CSS colour of selected regions. Defaults to the overlay `selection` role. */
@@ -80,21 +112,11 @@ const FILL_OPACITY = 0.12;
 /** How long the first-vertex tick is, in screen pixels, at most. */
 const TICK_PX = 8;
 
-/** The regions of one batched path. */
-interface Batch {
-  key: string;
-  role: OverlayRole;
-  dim: boolean;
-  /** Item positions, ascending. */
-  indices: number[];
-  /** The outlines, concatenated. */
-  d: string;
-}
-
 /**
  * A selectable set of closed regions inside an `ImageStage`.
  *
- * - **Rendering**: an outline and its 12 % fill, in the item's role (`feature` by default).
+ * - **Rendering**: an outline and its 12 % fill, in the item's role (`feature` by default) or its own
+ *   `stroke` / `fill` colours (`fillOpacity`, `fillRule`, `paintOrder` and `selectionFill` tune the fill).
  *   Rings are wound alike before they are batched, so overlapping regions never cut a hole in
  *   each other.
  * - **States**, from visual-language §5: default 1.5 screen px (1 for `model` and
@@ -118,6 +140,11 @@ export function AreaSet({
   onItemPress,
   labels = true,
   firstVertexTick = false,
+  stroke,
+  fillOpacity = FILL_OPACITY,
+  fillRule = "nonzero",
+  paintOrder = "appearance",
+  selectionFill = "selection",
   halo = true,
   selectionStroke = overlayRole("selection"),
   layerId,
@@ -156,28 +183,13 @@ export function AreaSet({
 
   // Regions grouped by appearance. Rebuilt when the items or the selection change, never on
   // hover or on a view change.
-  const groups = useMemo(() => {
-    const normal = new Map<string, Batch>();
-    const picked: Batch = { key: "selected", role: "selection", dim: false, indices: [], d: "" };
-    items.forEach((item, i) => {
-      if (selectedSet.has(item.id)) {
-        picked.indices.push(i);
-        picked.d += areaPath(item.points);
-        return;
-      }
-      const itemRole = item.role ?? role;
-      const dim = isDimmed(item.id);
-      const key = `${dim ? 1 : 0}|${itemRole}`;
-      let batch = normal.get(key);
-      if (!batch) {
-        batch = { key, role: itemRole, dim, indices: [], d: "" };
-        normal.set(key, batch);
-      }
-      batch.indices.push(i);
-      batch.d += areaPath(item.points);
-    });
-    return { normal: [...normal.values()], picked: picked.indices.length > 0 ? picked : null };
-  }, [items, role, selectedSet, isDimmed]);
+  const groups = useMemo(
+    () => batchAreas(items, { role, stroke, paintOrder, fillRule, selectionFill, selected: selectedSet, isDimmed }),
+    [items, role, stroke, paintOrder, fillRule, selectionFill, selectedSet, isDimmed],
+  );
+  const keepFill = selectionFill === "item";
+  const evenOdd = fillRule === "evenodd";
+  const separate = evenOdd || keepFill;
 
   // The tick is a line a few screen pixels long, so it is the one thing here that follows
   // the zoom: regenerated per zoom step, in O(regions).
@@ -186,14 +198,19 @@ export function AreaSet({
     const batches = groups.picked ? [...groups.normal, groups.picked] : groups.normal;
     return batches.map((batch) => {
       let d = "";
-      for (const i of batch.indices) d += tickPath(items[i]!.points, TICK_PX * unit);
+      for (const i of batch.indices) {
+        // A selected item keeping its fill is ticked in the selection batch only.
+        if (keepFill && batch !== groups.picked && selectedSet.has(items[i]!.id)) continue;
+        d += tickPath(items[i]!.points, TICK_PX * unit);
+      }
       return { batch, d };
     });
-  }, [firstVertexTick, groups, items, unit]);
+  }, [firstVertexTick, groups, items, unit, keepFill, selectedSet]);
 
   const hoverItem = hoverId !== null ? items[positionOf.get(hoverId) ?? -1] : undefined;
   const hoverSelected = hoverItem ? selectedSet.has(hoverItem.id) : false;
   const hoverRole = hoverItem?.role ?? role;
+  const hoverStroke = hoverItem ? (hoverItem.stroke ?? stroke ?? overlayRole(hoverRole)) : undefined;
 
   // Labels sit at the centre of a region; the layout is the shared level-of-detail rule.
   const anchors = useMemo(() => {
@@ -223,6 +240,16 @@ export function AreaSet({
     return px(OVERLAY_STATE_WIDTH[state] - (thin && state !== "selected" ? 0.5 : 0));
   };
 
+  const strokeOf = (batch: AreaBatch) => batch.stroke ?? overlayRole(batch.role);
+
+  /** Each region's fill as its own even-odd path, or all of them as one path. */
+  const fillPaths = (batch: AreaBatch, colour: string, tag: string) =>
+    evenOdd ? (
+      batch.fills!.map((d, k) => <path key={batch.indices[k]} data-fill={tag} d={d} fill={colour} fillOpacity={fillOpacity} fillRule="evenodd" />)
+    ) : (
+      <path data-fill={tag} d={batch.fills!.join("")} fill={colour} fillOpacity={fillOpacity} />
+    );
+
   return (
     <svg
       viewBox={imageViewBox(stage.image)}
@@ -233,26 +260,30 @@ export function AreaSet({
     >
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {groups.normal.map((batch) => (
-          <g key={batch.key} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>
-            {halo && <path d={batch.d} stroke={HALO} strokeWidth={widthOf(batch.role, "default") + px(2)} opacity={0.6} />}
-            <path
-              data-batch={batch.key}
-              d={batch.d}
-              fill={overlayRole(batch.role)}
-              fillOpacity={FILL_OPACITY}
-              stroke={overlayRole(batch.role)}
-              strokeWidth={widthOf(batch.role, "default")}
-            />
+          <g key={batch.id} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>
+            {halo && (!separate || batch.d !== "") && <path d={batch.d} stroke={HALO} strokeWidth={widthOf(batch.role, "default") + px(2)} opacity={0.6} />}
+            {separate && fillPaths(batch, batch.fill ?? strokeOf(batch), batch.key)}
+            {(!separate || batch.d !== "") && (
+              <path
+                data-batch={batch.key}
+                d={batch.d}
+                fill={separate ? undefined : (batch.fill ?? strokeOf(batch))}
+                fillOpacity={separate ? undefined : fillOpacity}
+                stroke={strokeOf(batch)}
+                strokeWidth={widthOf(batch.role, "default")}
+              />
+            )}
           </g>
         ))}
         {groups.picked && (
           <>
             {halo && <path d={groups.picked.d} stroke={HALO} strokeWidth={widthOf("selection", "selected") + px(2)} />}
+            {evenOdd && !keepFill && fillPaths(groups.picked, selectionStroke, "selected")}
             <path
               data-selected-areas=""
               d={groups.picked.d}
-              fill={selectionStroke}
-              fillOpacity={FILL_OPACITY}
+              fill={evenOdd || keepFill ? undefined : selectionStroke}
+              fillOpacity={evenOdd || keepFill ? undefined : fillOpacity}
               stroke={selectionStroke}
               strokeWidth={widthOf("selection", "selected")}
             />
@@ -266,18 +297,18 @@ export function AreaSet({
             <path
               data-hovered-area=""
               d={areaPath(hoverItem.points)}
-              stroke={hoverSelected ? selectionStroke : overlayRole(hoverRole)}
+              stroke={hoverSelected ? selectionStroke : hoverStroke}
               strokeWidth={widthOf(hoverRole, hoverSelected ? "selected" : "hover")}
             />
           </>
         )}
         {ticks.map(({ batch, d }) => (
-          <g key={`tick|${batch.key}`} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>
+          <g key={`tick|${batch.id}`} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>
             {halo && <path d={d} stroke={HALO} strokeWidth={px(OVERLAY_STATE_WIDTH.selected + 2)} opacity={0.6} />}
             <path
               data-ticks={batch.key}
               d={d}
-              stroke={batch === groups.picked ? selectionStroke : overlayRole(batch.role)}
+              stroke={batch === groups.picked ? selectionStroke : strokeOf(batch)}
               strokeWidth={px(OVERLAY_STATE_WIDTH.selected)}
             />
           </g>

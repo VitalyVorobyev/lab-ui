@@ -346,3 +346,29 @@ export const DrawOrSelect: Story = {
     await expect(stage).not.toHaveAttribute("data-panning");
   },
 };
+
+export const Colours: Story = {
+  parameters: {
+    docs: { description: { story: "`color` overrides the role: include and exclude prompts, or an error ramp. Points of one colour share a batch." } },
+  },
+  render: () => (
+    <Frame>
+      <PointSet
+        items={[
+          { id: 0, x: 60, y: 60, color: "#16a34a" },
+          { id: 1, x: 120, y: 90, color: "#16a34a" },
+          { id: 2, x: 200, y: 150, color: "var(--defect)" },
+          { id: 3, x: 260, y: 200, color: "#16a34a", kind: "plus" },
+          { id: 4, x: 300, y: 80 },
+        ]}
+        selectedIds={[1]}
+      />
+    </Frame>
+  ),
+  play: async ({ canvasElement }) => {
+    // Colour splits batches: dot|green, dot|defect, plus|green, dot|default are 4 (one point is selected).
+    const batches = [...canvasElement.querySelectorAll("path[data-batch]")];
+    await expect(batches.map((b) => b.getAttribute("stroke")).sort()).toEqual(["#16a34a", "#16a34a", "var(--defect)", "var(--stage-feature)"].sort());
+    await expect(canvasElement.querySelector("path[data-selected-points]")).not.toBeNull();
+  },
+};

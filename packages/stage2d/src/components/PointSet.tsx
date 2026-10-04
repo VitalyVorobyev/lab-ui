@@ -2,7 +2,7 @@
  * Many points over the image, hoverable and selectable: detected corners, ring centres,
  * keypoints, labelled landmarks.
  *
- * Drawn as a handful of batched paths, one per (state, style, marker kind), never one element
+ * Drawn as a handful of batched paths, one per (state, style, colour, marker kind), never one element
  * per point (ADR-0004 rules 1 and 3); the pointer is resolved by `nearestPoint` through the
  * stage's hit registry, never by the DOM (rule 2); markers are sized in screen pixels (rule
  * 4). A scene of 20,000 points is under a dozen DOM nodes plus at most 200 labels.
@@ -30,6 +30,11 @@ export interface PointSetItem extends PointItem {
   kind?: string | undefined;
   /** The overlay role it is painted in. Defaults to the marker kind's role, usually `feature`. */
   role?: OverlayRole | undefined;
+  /**
+   * CSS colour of its mark (`#hex`, `var(--x)`, `color-mix(…)`; used as given). Overrides the
+   * role; selection still paints in `selectionStroke`. Points sharing a colour share a batch.
+   */
+  color?: string | undefined;
   /** Its orientation in radians, clockwise from +x; read by `directed`. */
   angle?: number | undefined;
   /** A second angle in radians, for a glyph with two axes. `MarkerShape.path` gets `undefined` without it. */
@@ -93,6 +98,8 @@ interface Batch {
   key: string;
   shape: MarkerShape;
   role: OverlayRole;
+  /** The custom colour, when the items of this batch have one. */
+  color: string | undefined;
   dim: boolean;
   /** Item positions, ascending. */
   indices: number[];
@@ -176,7 +183,7 @@ export function PointSet({
         const key = kindName;
         let batch = picked.get(key);
         if (!batch) {
-          batch = { key, shape, role: "selection", dim: false, indices: [], cache: null };
+          batch = { key, shape, role: "selection", color: undefined, dim: false, indices: [], cache: null };
           picked.set(key, batch);
         }
         batch.indices.push(i);
@@ -184,10 +191,11 @@ export function PointSet({
       }
       const role = item.role ?? shape.role ?? "feature";
       const dim = isDimmed(item.id);
-      const key = `${dim ? 1 : 0}|${role}|${kindName}`;
+      const color = item.color || undefined;
+      const key = `${dim ? 1 : 0}|${role}|${kindName}${color ? `|${color}` : ""}`;
       let batch = normal.get(key);
       if (!batch) {
-        batch = { key, shape, role, dim, indices: [], cache: null };
+        batch = { key, shape, role, color, dim, indices: [], cache: null };
         normal.set(key, batch);
       }
       batch.indices.push(i);
@@ -272,7 +280,7 @@ export function PointSet({
             key={batch.key}
             data-batch={batch.key}
             d={d}
-            stroke={overlayRole(batch.role)}
+            stroke={batch.color ?? overlayRole(batch.role)}
             strokeWidth={widthOf(batch.shape, batch.role, "default")}
             opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : 1}
           />
@@ -309,7 +317,7 @@ export function PointSet({
             <path
               data-hovered-point=""
               d={hoverShape.path(hoverItem.x, hoverItem.y, unit, hoverItem.angle ?? 0, hoverItem.angle2)}
-              stroke={hoverSelected ? selectionStroke : overlayRole(hoverRole)}
+              stroke={hoverSelected ? selectionStroke : (hoverItem?.color || overlayRole(hoverRole))}
               strokeWidth={widthOf(hoverShape, hoverRole, hoverSelected ? "selected" : "hover")}
             />
           </>

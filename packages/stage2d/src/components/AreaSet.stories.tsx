@@ -348,3 +348,89 @@ export const DrawOrSelect: Story = {
     await expect(canvas.getByTestId("drawn")).toHaveTextContent("1");
   },
 };
+
+/** A five-pointed star drawn as one self-intersecting ring: its centre is wound twice. */
+const STAR = Array.from({ length: 5 }, (_, k) => {
+  const t = -Math.PI / 2 + (k * 4 * Math.PI) / 5;
+  return [120 + 70 * Math.cos(t), 110 + 70 * Math.sin(t)];
+}).flat();
+
+export const LabelColours: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Regions in the colours of their labels: `stroke` and `fill` are CSS colours used as given, `fillOpacity` is the fill's alpha, and `fillRule=\"evenodd\"` leaves the doubly-wound centre of a self-intersecting ring open. Items of one colour share a batch.",
+      },
+    },
+  },
+  render: () => (
+    <Frame>
+      <AreaSet
+        fillOpacity={0.45}
+        fillRule="evenodd"
+        items={[
+          { id: "star", stroke: "#e11d48", points: STAR },
+          { id: "box", stroke: "#2563eb", fill: "color-mix(in srgb, #2563eb 60%, white)", points: [220, 40, 360, 40, 360, 120, 220, 120] },
+          { id: "box2", stroke: "#2563eb", fill: "color-mix(in srgb, #2563eb 60%, white)", points: [220, 160, 360, 160, 360, 240, 220, 240] },
+        ]}
+      />
+    </Frame>
+  ),
+  play: async ({ canvasElement }) => {
+    // Two colours are two batches, not one element per region.
+    await expect(canvasElement.querySelectorAll("path[data-batch]")).toHaveLength(2);
+    const star = canvasElement.querySelector<SVGPathElement>("path[data-fill='0|feature|#e11d48|']")!;
+    await expect(star).toHaveAttribute("fill", "#e11d48");
+    await expect(star).toHaveAttribute("fill-opacity", "0.45");
+    await expect(star).toHaveAttribute("fill-rule", "evenodd");
+    // The ring's tip is filled, its doubly-wound centre is open.
+    await expect(star.isPointInFill(new DOMPoint(120, 110))).toBe(false);
+    await expect(star.isPointInFill(new DOMPoint(120, 62))).toBe(true);
+  },
+};
+
+export const AddSubtractInOrder: Story = {
+  render: () => (
+    <Frame>
+      <AreaSet
+        paintOrder="items"
+        fillOpacity={0.6}
+        items={[
+          { id: "add1", stroke: "#16a34a", points: [40, 40, 240, 40, 240, 200, 40, 200] },
+          { id: "sub", stroke: "#dc2626", points: [120, 80, 320, 80, 320, 240, 120, 240] },
+          { id: "add2", stroke: "#16a34a", points: [260, 30, 380, 30, 380, 110, 260, 110] },
+        ]}
+      />
+    </Frame>
+  ),
+  play: async ({ canvasElement }) => {
+    // Three runs in document order: add, subtract, add (not two appearance batches).
+    const batches = [...canvasElement.querySelectorAll("path[data-batch]")];
+    await expect(batches).toHaveLength(3);
+    await expect(batches.map((b) => b.getAttribute("stroke"))).toEqual(["#16a34a", "#dc2626", "#16a34a"]);
+  },
+};
+
+export const SelectionKeepsFill: Story = {
+  render: () => (
+    <Frame>
+      <AreaSet
+        selectionFill="item"
+        selectedIds={["a"]}
+        fillOpacity={0.45}
+        items={[
+          { id: "a", stroke: "#2563eb", points: [40, 40, 200, 40, 200, 160, 40, 160] },
+          { id: "b", stroke: "#d97706", points: [220, 80, 360, 80, 360, 220, 220, 220] },
+        ]}
+      />
+    </Frame>
+  ),
+  play: async ({ canvasElement }) => {
+    const fill = canvasElement.querySelector("path[data-fill='0|feature|#2563eb|']")!;
+    // The selected region keeps its own fill; the selection overlay is an outline only.
+    await expect(fill).toHaveAttribute("fill", "#2563eb");
+    const overlay = canvasElement.querySelector("path[data-selected-areas]")!;
+    await expect(overlay).not.toHaveAttribute("fill");
+  },
+};
