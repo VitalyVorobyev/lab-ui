@@ -114,7 +114,7 @@ each row's index in \`rows\`, whatever the order on screen. \`sortRows\` gives t
 outside the table.
 
 **Don't** use it for layout, or for a two-column key/value list of a single record. Don't make
-a column sortable when its order means nothing to a reader (an id, free text).
+a column sortable when its order tells a reader nothing, such as a row number.
 
 **Accessibility**: a real \`<table>\` with \`<th scope="col">\`; \`caption\` is visually hidden but
 names the table. Activatable rows are focusable (\`tabIndex=0\`) and keep their \`row\` role, so the

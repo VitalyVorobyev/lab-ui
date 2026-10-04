@@ -195,11 +195,16 @@ export function Table<Row>({
                       type="button"
                       onClick={() => changeSort(column)}
                       className={cn(
-                        "inline-flex cursor-pointer items-center gap-1 rounded-control font-medium transition-colors hover:text-fg",
+                        // Block-level `flex`, not `inline-flex`: an inline box would sit on the
+                        // cell's line box and make a sortable header row 2px taller than a plain
+                        // one. The padding, cancelled by the margin, gives the focus ring room
+                        // without moving the label off the column's edge.
+                        "-mx-1 flex w-fit max-w-full cursor-pointer items-center gap-1 rounded-control px-1",
+                        "font-medium transition-colors hover:text-fg",
                         focusRing,
                         // The arrow sits on the inner side of a right-aligned header, so the
                         // label stays flush with the numbers under it.
-                        column.numeric ? "flex-row-reverse text-right" : "text-left",
+                        column.numeric ? "ml-auto flex-row-reverse text-right" : "text-left",
                         direction && "text-fg",
                       )}
                     >
