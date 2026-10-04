@@ -273,8 +273,9 @@ export class TargetBoard extends Group {
     constructor(input: TargetBoardOptions);
     get active(): boolean;
     setActive(value: boolean): void;
-    setColors(color: ColorRepresentation, edgeColor: ColorRepresentation): void;
+    setColors(color?: ColorRepresentation, edgeColor?: ColorRepresentation): void;
     setOpacity(opacity: number): void;
+    setOutlineColor(color: ColorRepresentation): void;
 }
 
 // @public
@@ -283,9 +284,10 @@ export interface TargetBoardOptions {
         cols: number;
         rows: number;
     } | undefined;
-    color: ColorRepresentation;
-    edgeColor: ColorRepresentation;
+    color?: ColorRepresentation | undefined;
+    edgeColor?: ColorRepresentation | undefined;
     height: number;
+    outlineColor?: ColorRepresentation | undefined;
     width: number;
 }
 

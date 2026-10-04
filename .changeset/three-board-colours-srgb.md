@@ -1,0 +1,9 @@
+---
+"@vitavision/three": minor
+---
+
+Physical target colours, sharper dark tones in sensor images, and no texture leak when restyling robots.
+
+- **Behaviour change: `TargetBoard` is paper and ink by default, and its outline is viewer-only.** `TargetBoardOptions.color` and `edgeColor` are now optional fixed colours, defaulting to `0xf2f2f2` (paper) and `0x1a1a1a` (ink): a printed calibration board is white with black squares whatever the viewer's theme, so a sensor image no longer shows inverted squares in a dark theme or a tint on a selected board. The outline moved to `GIZMO_LAYER`, so a `SensorView` no longer draws it; a viewport that enables that layer still does. New `outlineColor` option (default: the dark-square colour) and `setOutlineColor(color)` colour the outline on its own; `setColors(color, edgeColor)` now changes only the paper and ink colours, and either may be omitted to return to its default. While `setActive(true)`, the outline is drawn after the opaque geometry and ignores depth, so a selected board stays visible behind other objects. To keep the previous look, pass `color` and `edgeColor` (for example your theme's surface and foreground colours) and call `setOutlineColor` with the colour you used to pass to `setColors` as the edge colour.
+- **Fix: `SensorView` with `precision: "byte"` (the default) stores its canonical render as sRGB.** It stored 8-bit linear light, which leaves dark tones only a few levels and shows as banding in display images; neighbouring dark greys now come back distinct. `precision: "half"` is unchanged.
+- **Fix: `applyRobotMaterial` frees the replaced materials' textures.** It disposed the replaced materials but not their maps. Each replaced material is now disposed once, with its textures, however many meshes shared it, and the new shared material is never disposed even when `roots` overlap.

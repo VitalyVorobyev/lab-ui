@@ -151,6 +151,7 @@ export function TargetBoard({ width, height, checker, active = false, onSelect }
   );
   useEffect(() => {
     object.setColors(colors.surface, active ? colors.signal : colors.fg);
+    object.setOutlineColor(active ? colors.signal : colors.fg);
     object.setActive(active);
   }, [object, active, colors]);
   return <primitive object={object} {...picking} />;

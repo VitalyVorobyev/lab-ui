@@ -5,9 +5,10 @@
  * transform of their own — the baked link pose places them.
  */
 
-import { type ColorRepresentation, Mesh, MeshStandardMaterial, type Object3D } from "three";
+import { type ColorRepresentation, type Material, Mesh, MeshStandardMaterial, type Object3D } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+import { disposeMaterial } from "./dispose";
 import type { FrameTreeRuntime } from "./frameTree";
 
 /** A link's visual mesh (etendue `ManifestVisual`). */
@@ -85,19 +86,23 @@ export function attachRobotVisuals(
 
 /**
  * Replace every mesh material under `roots` with one shared matte material of `color`, so
- * robots read as one family whatever colours their source meshes carry. Returns the material
- * (change its colour on a theme switch; dispose it with the robot).
+ * robots read as one family whatever colours their source meshes carry. The replaced
+ * materials are disposed with their textures, each once however many meshes shared it.
+ * Returns the material (change its colour on a theme switch; dispose it with the robot).
  */
 export function applyRobotMaterial(roots: Iterable<Object3D>, color: ColorRepresentation): MeshStandardMaterial {
   const material = new MeshStandardMaterial({ color, metalness: 0.1, roughness: 0.65 });
+  const replaced = new Set<Material>();
   for (const root of roots) {
     root.traverse((node) => {
       if (node instanceof Mesh) {
-        const old = node.material as { dispose(): void } | { dispose(): void }[];
-        for (const m of Array.isArray(old) ? old : [old]) m.dispose();
+        const old = node.material as Material | Material[];
+        // A mesh reached twice (overlapping roots) already holds the new material: keep it.
+        for (const m of Array.isArray(old) ? old : [old]) if (m !== material) replaced.add(m);
         node.material = material;
       }
     });
   }
+  for (const m of replaced) disposeMaterial(m);
   return material;
 }

@@ -88,7 +88,7 @@
     "name": "@vitavision/three",
     "path": "packages/three/dist/index.js",
     "import": "*",
-    "limit": "5.28 kB",
+    "limit": "5.32 kB",
     "ignore": [
       "three"
     ]
