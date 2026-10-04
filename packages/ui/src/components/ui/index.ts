@@ -70,6 +70,7 @@ export { SegmentedControl } from "./SegmentedControl";
 export { Select, type SelectOption } from "./Select";
 export { Slider } from "./Slider";
 export { Table, type Column } from "./Table";
+export { sortRows, type SortDirection, type TableSort } from "./tableSort";
 export { Checkbox, Switch } from "./Toggle";
 export { ToggleChip } from "./ToggleChip";
 export { Toaster, type ToasterProps } from "./Toaster";
