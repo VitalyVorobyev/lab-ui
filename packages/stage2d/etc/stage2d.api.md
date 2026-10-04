@@ -68,13 +68,17 @@ export function AreaSet(input: AreaSetProps): JSX.Element;
 
 // @public
 export interface AreaSetItem extends Area {
+    fill?: string | undefined;
     label?: string | undefined;
     role?: OverlayRole | undefined;
+    stroke?: string | undefined;
 }
 
 // @public
 export interface AreaSetProps {
     dimmed?: Iterable<AreaId> | ((id: AreaId) => boolean) | undefined;
+    fillOpacity?: number | undefined;
+    fillRule?: "nonzero" | "evenodd" | undefined;
     firstVertexTick?: boolean | undefined;
     halo?: boolean | undefined;
     hoveredId?: AreaId | null | undefined;
@@ -84,10 +88,13 @@ export interface AreaSetProps {
     layerId?: string | undefined;
     onHoverChange?: ((id: AreaId | null) => void) | undefined;
     onItemPress?: ((id: AreaId, event: StagePointerEvent) => void) | undefined;
+    paintOrder?: "appearance" | "items" | undefined;
     priority?: number | undefined;
     role?: OverlayRole | undefined;
     selectedIds?: Iterable<AreaId> | undefined;
+    selectionFill?: "selection" | "item" | undefined;
     selectionStroke?: string | undefined;
+    stroke?: string | undefined;
 }
 
 // @public
@@ -735,6 +742,7 @@ export function PointSet(input: PointSetProps): JSX.Element;
 export interface PointSetItem extends PointItem {
     angle?: number | undefined;
     angle2?: number | undefined;
+    color?: string | undefined;
     kind?: string | undefined;
     label?: string | undefined;
     role?: OverlayRole | undefined;
