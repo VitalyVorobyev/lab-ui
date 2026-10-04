@@ -612,6 +612,7 @@ export function MeasureOverlay(input: MeasureOverlayProps): JSX.Element;
 // @public
 export interface MeasureOverlayProps {
     className?: string;
+    halo?: "role" | "all" | "none" | undefined;
     nativeHeight: number;
     nativeWidth: number;
     primitives: MeasurePrimitive[];
@@ -619,7 +620,7 @@ export interface MeasureOverlayProps {
 }
 
 // @public
-export type MeasurePrimitive = PointPrimitive | SegmentPrimitive | CirclePrimitive | ArcPrimitive | CaliperPrimitive | DimensionPrimitive | PolylinePrimitive;
+export type MeasurePrimitive = PointPrimitive | SegmentPrimitive | SegmentsPrimitive | CirclePrimitive | ArcPrimitive | CaliperPrimitive | DimensionPrimitive | PolylinePrimitive;
 
 // @public
 export const MIN_SCALE_VS_FIT = 0.25;
@@ -963,6 +964,18 @@ export interface SegmentPrimitive extends PrimitiveCommon {
     x2: number;
     y1: number;
     y2: number;
+}
+
+// @public
+export function segmentsPath(points: ArrayLike<number>): string;
+
+// @public
+export interface SegmentsPrimitive extends PrimitiveCommon {
+    dashed?: boolean;
+    kind: "segments";
+    label?: string;
+    points: number[];
+    tone?: MeasureTone;
 }
 
 // @public
