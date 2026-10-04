@@ -56,7 +56,19 @@ provenance.
 Publishing is npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) — no npm
 token in the repo. **Each package name needs its trusted publisher registered on npmjs.com**
 (repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`) before its
-first release from CI.
+first release from CI. npm only lets a publisher be registered on a name that already exists,
+so a new package's first version is published by hand, exactly as CI would build it:
+
+```sh
+bun install && bun run build                 # every package's dist/
+bun tools/release/resolve-workspace.ts       # workspace:^ → real ranges in the manifests
+cd packages/<name> && npm pack --dry-run     # check: dist/ is listed, no workspace: ranges
+npm publish                                  # then register the trusted publisher
+cd ../.. && git checkout packages            # undo the manifest rewrite
+```
+
+A bare `npm publish` skips the first two steps and ships a package without `dist/`
+(overlays 0.1.0).
 
 The Storybook docs site deploys from `main` to GitHub Pages (`.github/workflows/storybook.yml`).
 

@@ -9,7 +9,9 @@ name: Release
 # trusted publisher on npmjs.com names three things that must keep matching this file:
 # repository `VitalyVorobyev/lab-ui`, workflow `release.yml`, environment `npm`. A package
 # name with no trusted publisher registered cannot be published from here — register it
-# (npmjs.com → package → Settings → Trusted publishing) before its first release.
+# (npmjs.com → package → Settings → Trusted publishing) before its first release. npm only
+# allows that on a name that exists, so a new package's first version is published by hand:
+# build and resolve-workspace first, exactly as `bun run release` does (README "Releasing").
 on:
   push:
     branches: [main]
