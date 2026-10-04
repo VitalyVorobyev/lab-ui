@@ -12,6 +12,7 @@ import {
   crossSegments,
   dimensionGeometry,
   rotatePoint,
+  segmentsPath,
   strokeWidthFor,
   type Point,
 } from "./measureGeometry";
@@ -165,6 +166,26 @@ describe("measure geometry properties", () => {
       expect(dot(h1, h2, v1, v2)).toBeCloseTo(0, 6);
       expect((h1.x + h2.x) / 2).toBeCloseTo(x, 6);
       expect((v1.y + v2.y) / 2).toBeCloseTo(y, 6);
+    }
+  });
+
+  it("segmentsPath draws every whole, finite segment once, in order, and nothing else", () => {
+    const g = generators(29);
+    for (let run = 0; run < RUNS; run += 1) {
+      const count = Math.floor(g.between(0, 40));
+      const points: number[] = [];
+      const kept: number[][] = [];
+      for (let i = 0; i < count; i += 1) {
+        const segment = [g.coordinate(), g.coordinate(), g.coordinate(), g.coordinate()];
+        if (g.between(0, 1) < 0.1) segment[Math.floor(g.between(0, 4))] = Number.NaN;
+        else kept.push(segment);
+        points.push(...segment);
+      }
+      const extra = Math.floor(g.between(0, 4));
+      for (let i = 0; i < extra; i += 1) points.push(g.coordinate());
+      const d = segmentsPath(points);
+      const parsed = [...d.matchAll(/M(\S+) (\S+)L(\S+) (\S+?)(?=M|$)/g)].map((m) => m.slice(1, 5).map(Number));
+      expect(parsed).toEqual(kept);
     }
   });
 });

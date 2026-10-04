@@ -116,6 +116,7 @@ export {
   type PolylinePrimitive,
   type PrimitiveCommon,
   type SegmentPrimitive,
+  type SegmentsPrimitive,
 } from "./components/MeasureOverlay";
 
 export {
@@ -265,6 +266,7 @@ export {
   dimensionGeometry,
   polygonPath,
   rotatePoint,
+  segmentsPath,
   strokeWidthFor,
   type DimensionGeometry,
   type Point,

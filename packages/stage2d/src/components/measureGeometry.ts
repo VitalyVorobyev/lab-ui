@@ -57,6 +57,30 @@ export function polygonPath(points: readonly Point[]): string {
   return commands.join(" ");
 }
 
+/**
+ * Many unconnected segments as one SVG path: `M x1 y1 L x2 y2` per segment.
+ *
+ * One path draws thousands of ticks for the cost of one element. A segment with a
+ * non-finite coordinate is skipped rather than written, since a single `NaN` in path data
+ * stops the browser drawing every segment after it.
+ *
+ * @param points - `[x1, y1, x2, y2, …]`, four numbers per segment. A trailing partial
+ *   segment is ignored.
+ * @returns The path data; `""` without a whole segment.
+ */
+export function segmentsPath(points: ArrayLike<number>): string {
+  let d = "";
+  for (let i = 0; i + 3 < points.length; i += 4) {
+    const x1 = points[i]!;
+    const y1 = points[i + 1]!;
+    const x2 = points[i + 2]!;
+    const y2 = points[i + 3]!;
+    if (!(Number.isFinite(x1) && Number.isFinite(y1) && Number.isFinite(x2) && Number.isFinite(y2))) continue;
+    d += `M${x1} ${y1}L${x2} ${y2}`;
+  }
+  return d;
+}
+
 /** The two line segments of a cross mark centred on `(x, y)`, each `2·size` long. */
 export function crossSegments(x: number, y: number, size: number): [[Point, Point], [Point, Point]] {
   return [

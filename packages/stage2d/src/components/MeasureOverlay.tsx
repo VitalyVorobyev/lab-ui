@@ -17,7 +17,17 @@
  */
 
 import { imageViewBox } from "./stage/view";
-import { arcPath, arrowHeadPoints, caliperArrow, caliperCorners, crossSegments, dimensionGeometry, polygonPath, strokeWidthFor } from "./measureGeometry";
+import {
+  arcPath,
+  arrowHeadPoints,
+  caliperArrow,
+  caliperCorners,
+  crossSegments,
+  dimensionGeometry,
+  polygonPath,
+  segmentsPath,
+  strokeWidthFor,
+} from "./measureGeometry";
 import { OVERLAY_STATE_OPACITY, overlayRole, type OverlayRole, type OverlayState } from "./overlayRole";
 import { polylinePath } from "./polylineIndex";
 import { cn, toneColor, type MeasureTone } from "@vitavision/ui";
@@ -168,10 +178,35 @@ export interface PolylinePrimitive extends PrimitiveCommon {
   label?: string;
 }
 
-/** Anything `MeasureOverlay` can draw, discriminated by `kind`. */
+/**
+ * Many unconnected segments drawn as one element, e.g. the tick marks of a shape model whose
+ * points are stored in no particular order, so that a `polyline` cannot join them. Thousands
+ * of segments cost one path, not one element each.
+ */
+export interface SegmentsPrimitive extends PrimitiveCommon {
+  /** Discriminant. */
+  kind: "segments";
+  /**
+   * `[x1, y1, x2, y2, …]` in image coordinates: four numbers per segment. A trailing partial
+   * segment is ignored, and a segment with a non-finite coordinate is skipped.
+   */
+  points: number[];
+  /** Verdict colour. Defaults to the neutral tone. */
+  tone?: MeasureTone;
+  /** A short dash pattern. */
+  dashed?: boolean;
+  /** Text drawn just above the first segment's start. */
+  label?: string;
+}
+
+/**
+ * Anything `MeasureOverlay` can draw, discriminated by `kind`. Kinds are added in minor
+ * releases, so code that switches over `kind` should keep a default case.
+ */
 export type MeasurePrimitive =
   | PointPrimitive
   | SegmentPrimitive
+  | SegmentsPrimitive
   | CirclePrimitive
   | ArcPrimitive
   | CaliperPrimitive
@@ -182,6 +217,15 @@ const DEFAULT_LABEL_SIZE = 11;
 const DEFAULT_POINT_RADIUS = 3;
 const DEFAULT_CROSS_SIZE = 5;
 const DEFAULT_DIMENSION_OFFSET = 16;
+/** How much wider than the mark above it a halo is, in screen pixels. */
+const HALO_PX = 2;
+const HALO_OPACITY = 0.6;
+/** The halo behind a label's glyphs, in screen pixels. */
+const LABEL_HALO_PX = 3;
+/** How much wider than the mark a selection ring is, and how much a selected dot's ring grows its radius. */
+const RING_PX = 3;
+const RING_GROW_PX = 2;
+const HALO = overlayRole("halo");
 
 /** Props of `MeasureOverlay`. */
 export interface MeasureOverlayProps {
@@ -198,6 +242,15 @@ export interface MeasureOverlayProps {
    * pixels) this is simply `useStage().view.scale`. See `strokeWidthFor`.
    */
   strokeScale: number;
+  /**
+   * Which primitives get a halo: a dark band under the mark (2 screen px wider, at 60 %
+   * opacity) and behind its label's glyphs (3 screen px), so it holds on a bright part of the
+   * image as well as a dark one.
+   * - `"role"` (the default): primitives that carry a `role`.
+   * - `"all"`: every primitive, verdict tones included.
+   * - `"none"`: none.
+   */
+  halo?: "role" | "all" | "none" | undefined;
   /** Merged onto the `<svg>` with `cn`. */
   className?: string;
 }
@@ -212,19 +265,23 @@ export interface MeasureOverlayProps {
  *
  * A primitive's colour is its `role` (overlay grammar) if given, else its verdict `tone`.
  * Its `state` follows the overlay grammar: `hover` thickens it, `selected` thickens it and
- * rings it in the selection colour, and `dimmed` fades it. Each primitive is a `<g>` carrying
- * `data-kind`, plus `data-id` and `data-state` when given.
+ * rings it in the selection colour, and `dimmed` fades it. A primitive with a `role` is drawn
+ * over a halo, and so is its label; `halo` widens or drops that. Each primitive is a `<g>`
+ * carrying `data-kind`, plus `data-id` and `data-state` when given; its halo is the
+ * `<g data-halo>` inside it.
  */
 export function MeasureOverlay({
   nativeWidth,
   nativeHeight,
   primitives,
   strokeScale,
+  halo = "role",
   className,
 }: MeasureOverlayProps) {
   const hairline = strokeWidthFor(strokeScale, 1);
   const thick = strokeWidthFor(strokeScale, 1.5);
   const labelSize = strokeWidthFor(strokeScale, DEFAULT_LABEL_SIZE);
+  const labelHalo = strokeWidthFor(strokeScale, LABEL_HALO_PX);
 
   return (
     <svg
@@ -240,6 +297,12 @@ export function MeasureOverlay({
         // Hover and selected widen the strokes by the overlay grammar's ratios (2 and 2.5 to the
         // default's 1.5).
         const widen = state === "hover" ? 2 / 1.5 : state === "selected" ? 2.5 / 1.5 : 1;
+        const haloed = halo === "all" || (halo === "role" && primitive.role !== undefined);
+        // Measured off the mark's own width, so the bands under a dashed mark break where it does.
+        const dash = `${hairline * widen * 4} ${hairline * widen * 3}`;
+        // A selected mark's outermost band is its ring: the halo goes under that and outgrows it.
+        const ring = state === "selected";
+        const haloPx = (ring ? RING_PX : 0) + HALO_PX;
         return (
           <g
             // Primitives carry no required identity; a position is the only stable key.
@@ -250,16 +313,33 @@ export function MeasureOverlay({
             data-state={primitive.state}
             opacity={OVERLAY_STATE_OPACITY[state] === 1 ? undefined : OVERLAY_STATE_OPACITY[state]}
           >
-            {state === "selected" && (
+            {haloed && (
+              <g data-halo="" opacity={HALO_OPACITY}>
+                <Primitive
+                  primitive={primitive}
+                  colour={HALO}
+                  hairline={hairline * widen + strokeWidthFor(strokeScale, haloPx)}
+                  thick={thick * widen + strokeWidthFor(strokeScale, haloPx)}
+                  dash={dash}
+                  labelSize={0}
+                  labelHalo={0}
+                  strokeScale={strokeScale}
+                  grow={(ring ? RING_GROW_PX : 0) + HALO_PX / 2}
+                />
+              </g>
+            )}
+            {ring && (
               <g opacity={0.6}>
                 <Primitive
                   primitive={primitive}
                   colour={overlayRole("selection")}
-                  hairline={hairline * widen + strokeWidthFor(strokeScale, 3)}
-                  thick={thick * widen + strokeWidthFor(strokeScale, 3)}
+                  hairline={hairline * widen + strokeWidthFor(strokeScale, RING_PX)}
+                  thick={thick * widen + strokeWidthFor(strokeScale, RING_PX)}
+                  dash={dash}
                   labelSize={0}
+                  labelHalo={0}
                   strokeScale={strokeScale}
-                  ring
+                  grow={RING_GROW_PX}
                 />
               </g>
             )}
@@ -268,7 +348,9 @@ export function MeasureOverlay({
               colour={colour}
               hairline={hairline * widen}
               thick={thick * widen}
+              dash={dash}
               labelSize={labelSize}
+              labelHalo={haloed ? labelHalo : 0}
               strokeScale={strokeScale}
             />
           </g>
@@ -283,19 +365,30 @@ function Primitive({
   colour,
   hairline,
   thick,
+  dash,
   labelSize,
+  labelHalo,
   strokeScale,
-  ring = false,
+  grow,
 }: {
   primitive: MeasurePrimitive;
   colour: string;
   hairline: number;
   thick: number;
+  /** The dash pattern of a dashed mark. */
+  dash: string;
+  /** Label font size; 0 draws no label. */
   labelSize: number;
+  /** Width of the halo behind a label's glyphs; 0 draws none. */
+  labelHalo: number;
   strokeScale: number;
-  /** Drawn as the selection ring under the mark: no fill on a filled circle, a larger dot. */
-  ring?: boolean;
+  /**
+   * Set for a band drawn under the mark (its halo, its selection ring): screen pixels a dot's
+   * radius grows by. A filled circle is then outlined rather than filled.
+   */
+  grow?: number | undefined;
 }) {
+  const band = grow !== undefined;
 
   switch (primitive.kind) {
     case "point": {
@@ -306,16 +399,15 @@ function Primitive({
           <g stroke={colour} strokeWidth={hairline}>
             <line x1={h[0].x} y1={h[0].y} x2={h[1].x} y2={h[1].y} />
             <line x1={v[0].x} y1={v[0].y} x2={v[1].x} y2={v[1].y} />
-            <Label x={primitive.x} y={primitive.y - size - 2} text={primitive.label} colour={colour} size={labelSize} />
+            <Label x={primitive.x} y={primitive.y - size - 2} text={primitive.label} colour={colour} size={labelSize} halo={labelHalo} />
           </g>
         );
       }
-      // The ring under a selected dot is the dot grown by 2 screen px.
-      const radius = strokeWidthFor(strokeScale, (primitive.radius ?? DEFAULT_POINT_RADIUS) + (ring ? 2 : 0));
+      const radius = strokeWidthFor(strokeScale, (primitive.radius ?? DEFAULT_POINT_RADIUS) + (grow ?? 0));
       return (
         <g>
           <circle cx={primitive.x} cy={primitive.y} r={radius} fill={colour} />
-          <Label x={primitive.x} y={primitive.y - radius - 2} text={primitive.label} colour={colour} size={labelSize} />
+          <Label x={primitive.x} y={primitive.y - radius - 2} text={primitive.label} colour={colour} size={labelSize} halo={labelHalo} />
         </g>
       );
     }
@@ -329,9 +421,21 @@ function Primitive({
           y2={primitive.y2}
           stroke={colour}
           strokeWidth={hairline}
-          strokeDasharray={primitive.dashed ? `${hairline * 4} ${hairline * 3}` : undefined}
+          strokeDasharray={primitive.dashed ? dash : undefined}
         />
       );
+
+    case "segments": {
+      const p = primitive.points;
+      return (
+        <g>
+          <path d={segmentsPath(p)} fill="none" stroke={colour} strokeWidth={hairline} strokeDasharray={primitive.dashed ? dash : undefined} />
+          {p.length >= 4 && (
+            <Label x={p[0]!} y={p[1]! - strokeWidthFor(strokeScale, 4)} text={primitive.label} colour={colour} size={labelSize} halo={labelHalo} />
+          )}
+        </g>
+      );
+    }
 
     case "circle":
       return (
@@ -339,8 +443,8 @@ function Primitive({
           cx={primitive.cx}
           cy={primitive.cy}
           r={primitive.r}
-          fill={primitive.filled && !ring ? colour : "none"}
-          stroke={primitive.filled && !ring ? "none" : colour}
+          fill={primitive.filled && !band ? colour : "none"}
+          stroke={primitive.filled && !band ? "none" : colour}
           strokeWidth={hairline}
         />
       );
@@ -369,7 +473,7 @@ function Primitive({
               <polyline points={head.map((p) => `${p.x},${p.y}`).join(" ")} />
             </g>
           )}
-          <Label x={primitive.cx} y={primitive.cy} text={primitive.label} colour={colour} size={labelSize} />
+          <Label x={primitive.cx} y={primitive.cy} text={primitive.label} colour={colour} size={labelSize} halo={labelHalo} />
         </g>
       );
     }
@@ -384,7 +488,7 @@ function Primitive({
             strokeWidth={hairline}
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeDasharray={primitive.dashed ? `${hairline * 4} ${hairline * 3}` : undefined}
+            strokeDasharray={primitive.dashed ? dash : undefined}
           />
           {primitive.points.length >= 2 && (
             <Label
@@ -393,6 +497,7 @@ function Primitive({
               text={primitive.label}
               colour={colour}
               size={labelSize}
+              halo={labelHalo}
             />
           )}
         </g>
@@ -406,18 +511,23 @@ function Primitive({
           <line x1={geometry.extensionLine1[0].x} y1={geometry.extensionLine1[0].y} x2={geometry.extensionLine1[1].x} y2={geometry.extensionLine1[1].y} opacity={0.5} />
           <line x1={geometry.extensionLine2[0].x} y1={geometry.extensionLine2[0].y} x2={geometry.extensionLine2[1].x} y2={geometry.extensionLine2[1].y} opacity={0.5} />
           <line x1={geometry.dimensionLine[0].x} y1={geometry.dimensionLine[0].y} x2={geometry.dimensionLine[1].x} y2={geometry.dimensionLine[1].y} />
-          <text
-            x={geometry.labelAnchor.x}
-            y={geometry.labelAnchor.y}
-            fontSize={labelSize}
-            fill={colour}
-            stroke="none"
-            textAnchor="middle"
-            dominantBaseline="text-after-edge"
-            transform={`rotate(${geometry.angleDegrees} ${geometry.labelAnchor.x} ${geometry.labelAnchor.y})`}
-          >
-            {primitive.label}
-          </text>
+          {labelSize > 0 && (
+            <text
+              x={geometry.labelAnchor.x}
+              y={geometry.labelAnchor.y}
+              fontSize={labelSize}
+              fill={colour}
+              stroke={labelHalo > 0 ? HALO : "none"}
+              strokeWidth={labelHalo > 0 ? labelHalo : undefined}
+              strokeLinejoin={labelHalo > 0 ? "round" : undefined}
+              paintOrder={labelHalo > 0 ? "stroke" : undefined}
+              textAnchor="middle"
+              dominantBaseline="text-after-edge"
+              transform={`rotate(${geometry.angleDegrees} ${geometry.labelAnchor.x} ${geometry.labelAnchor.y})`}
+            >
+              {primitive.label}
+            </text>
+          )}
         </g>
       );
     }
@@ -433,16 +543,30 @@ function Label({
   text,
   colour,
   size,
+  halo,
 }: {
   x: number;
   y: number;
   text?: string | undefined;
   colour: string;
   size: number;
+  /** Width of the halo behind the glyphs; 0 draws none, and the text keeps the stroke it inherits. */
+  halo: number;
 }) {
   if (!text || !(size > 0)) return null;
   return (
-    <text x={x} y={y} fontSize={size} fill={colour} textAnchor="middle" dominantBaseline="text-after-edge">
+    <text
+      x={x}
+      y={y}
+      fontSize={size}
+      fill={colour}
+      stroke={halo > 0 ? HALO : undefined}
+      strokeWidth={halo > 0 ? halo : undefined}
+      strokeLinejoin={halo > 0 ? "round" : undefined}
+      paintOrder={halo > 0 ? "stroke" : undefined}
+      textAnchor="middle"
+      dominantBaseline="text-after-edge"
+    >
       {text}
     </text>
   );

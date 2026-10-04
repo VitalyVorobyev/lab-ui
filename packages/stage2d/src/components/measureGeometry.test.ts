@@ -9,6 +9,7 @@ import {
   dimensionGeometry,
   polygonPath,
   rotatePoint,
+  segmentsPath,
   strokeWidthFor,
 } from "./measureGeometry";
 
@@ -68,6 +69,29 @@ describe("polygonPath", () => {
   it("is empty for fewer than two points", () => {
     expect(polygonPath([])).toBe("");
     expect(polygonPath([{ x: 0, y: 0 }])).toBe("");
+  });
+});
+
+describe("segmentsPath", () => {
+  it("moves to each segment's start and draws to its end, unconnected", () => {
+    expect(segmentsPath([0, 0, 10, 0, 5, 5, 5, 15])).toBe("M0 0L10 0M5 5L5 15");
+  });
+
+  it("is empty without a whole segment", () => {
+    expect(segmentsPath([])).toBe("");
+    expect(segmentsPath([1, 2, 3])).toBe("");
+  });
+
+  it("ignores a trailing partial segment", () => {
+    expect(segmentsPath([0, 0, 1, 1, 9, 9])).toBe("M0 0L1 1");
+  });
+
+  it("skips a segment with a non-finite coordinate and keeps the ones after it", () => {
+    expect(segmentsPath([0, 0, Number.NaN, 1, 2, 2, 3, 3, 4, Infinity, 5, 5])).toBe("M2 2L3 3");
+  });
+
+  it("takes a typed array", () => {
+    expect(segmentsPath(new Float32Array([0.5, 1.5, 2.5, 3.5]))).toBe("M0.5 1.5L2.5 3.5");
   });
 });
 
