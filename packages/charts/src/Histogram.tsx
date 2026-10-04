@@ -1,130 +1,150 @@
 /**
- * Score distribution by class, with a threshold drawn on it.
+ * A single-series histogram: one distribution, from raw values or from counts already binned.
  *
- * This is the chart that makes a threshold decision legible: a confusion matrix says how
- * many were wrong, and this says *why* — two distributions that barely separate, or one
- * long normal tail crossing the line.
- *
- * Both classes share one set of bin edges, computed over the union of their scores. Binned
- * separately they would be drawn on different axes and the overlap — the only thing worth
- * looking at — would be an artefact of the binning.
+ * Raw values are binned here; counts are for the caller that cannot hand over its samples —
+ * a 20 MP image's luminance is 256 numbers, not 20 million. Either way the bars are one
+ * `<path>`, and the bin under `cursor` is a second one in the selection colour.
  */
 
-import { DEFECT_COLOUR, Frame, NORMAL_COLOUR, areaFor } from "./Frame";
-import { extent, histogram, linearScale } from "./scale";
+import type { ReactNode } from "react";
 
-// The histogram is always given a whole panel, never a column of a grid.
-const plotArea = areaFor("wide");
+import { barsPath, binAt, binValues, cleanCounts, tallest } from "./bars";
+import { FLUID_DEFAULT_HEIGHT, Frame, areaFor, seriesColour, useFluidSize, type Variant } from "./Frame";
+import { Bands, Markers, PlotInteraction, type InteractionProps } from "./interaction";
+import { linearScale, logScale } from "./scale";
 
-// Green for normal, red for defect — the verdict tokens, named once in `Frame`.
-const NORMAL_FILL = NORMAL_COLOUR;
-const DEFECT_FILL = DEFECT_COLOUR;
-
-/** Props for {@link ScoreHistogram}. */
-export interface HistogramProps {
-  /** Anomaly scores of the samples labelled normal. */
-  normal: number[];
-  /** Anomaly scores of the samples labelled defective. */
-  defect: number[];
-  /** The decision threshold, drawn as a dashed vertical rule. Omitted or non-finite: none. */
-  threshold?: number;
-  /** Number of equal-width bins over the union of both classes' scores. Default 32. */
-  bins?: number;
+/** Props every {@link Histogram} takes, whichever way its data is given. */
+export interface HistogramOptions extends InteractionProps {
   /** Accessible name of the chart (the SVG's `aria-label`). Required. */
   label: string;
+  /** x-axis title. */
+  xLabel?: string | undefined;
+  /** y-axis title. */
+  yLabel?: string | undefined;
+  /** Unit of x, appended to the x-axis title in parentheses: `luminance (DN)`. */
+  unit?: string | undefined;
+  /** Counts span decades in a long-tailed distribution; a log axis keeps the tail visible. */
+  logY?: boolean | undefined;
+  /** Where the chart is going (see {@link Variant}). Default `"panel"`. */
+  variant?: Variant | undefined;
+  /** For `variant="fluid"`: the chart's height in CSS pixels. Default 200. */
+  height?: number | undefined;
+  /** Rendered under the plot, inside the `<figcaption>`. */
+  footer?: ReactNode;
   /** Extra classes for the outer `<figure>`, merged with `cn`. */
   className?: string | undefined;
 }
 
+/** A histogram given as raw samples, binned by the chart. */
+export interface HistogramValues {
+  /** The samples. Non-finite values, and values outside `domain`, are ignored. */
+  values: ArrayLike<number>;
+  /** Number of equal-width bins. Default 32. */
+  bins?: number | undefined;
+  /** The x range the bins span. Omitted: the extent of `values`. */
+  domain?: [number, number] | undefined;
+  /** Not accepted with `values` — pass one or the other. */
+  counts?: undefined;
+}
+
+/** A histogram given as counts per bin, already binned by the caller. */
+export interface HistogramCounts {
+  /** One count per bin, left to right; the bins are equal-width and fill `domain`. */
+  counts: ArrayLike<number>;
+  /** The x range the bins span. Required: without samples there is no extent to fall back on. */
+  domain: [number, number];
+  /** Not accepted with `counts` — pass one or the other. */
+  values?: undefined;
+}
+
 /**
- * Overlaid histograms of the normal and defect score distributions, with the threshold on
- * them.
+ * Props for {@link Histogram}: {@link HistogramOptions} plus data as either
+ * {@link HistogramValues} or {@link HistogramCounts}, never both.
+ */
+export type HistogramProps = HistogramOptions & (HistogramValues | HistogramCounts);
+
+/**
+ * One distribution as a bar chart over equal-width bins.
  *
  * @remarks
- * Always the `wide` variant. Painted in the verdict tokens (`--normal`, `--defect`); the
- * legend names both classes with their counts, so the chart does not rely on colour alone.
+ * An SVG `role="img"` named by `label`. `markers` tick the x axis (a threshold), `bands`
+ * shade x ranges, `onHover` adds a crosshair and the x under it, `onPick` reports the x of a
+ * click, and `cursor` draws the bin containing an x chosen elsewhere in the selection
+ * colour (`--signal`) — no highlight when it lies outside the domain. Empty data draws an
+ * empty frame. For two classes sharing a threshold use {@link ScoreHistogram}.
  */
-export function ScoreHistogram({
-  normal,
-  defect,
-  threshold,
-  bins = 32,
-  label,
-  className,
-}: HistogramProps) {
-  const domain = extent([...normal, ...defect]);
-  const normalBins = histogram(normal, domain, bins);
-  const defectBins = histogram(defect, domain, bins);
-  const tallest = Math.max(1, ...normalBins, ...defectBins);
+export function Histogram(props: HistogramProps) {
+  const {
+    label,
+    xLabel,
+    yLabel,
+    unit,
+    logY = false,
+    variant = "panel",
+    height = FLUID_DEFAULT_HEIGHT,
+    footer,
+    className,
+    bands,
+    markers,
+    cursor,
+    onHover,
+    onPick,
+  } = props;
+
+  const { counts, domain } =
+    props.counts !== undefined
+      ? cleanCounts(props.counts, props.domain)
+      : binValues(props.values, props.bins, props.domain);
+
+  const [fluidRef, fluidSize] = useFluidSize(height);
+  const size = variant === "fluid" ? fluidSize : undefined;
+  const plotArea = areaFor(variant, size);
 
   const xScale = linearScale(domain, plotArea.x0, plotArea.x1);
-  const yScale = linearScale([0, tallest], plotArea.y0, plotArea.y1);
-  const binWidth = (plotArea.x1 - plotArea.x0) / bins;
+  const top = tallest(counts);
+  // Half a count of floor, so a bin of one is a visible bar on the log axis.
+  const yScale = logY ? logScale([0.5, top], plotArea.y0, plotArea.y1) : linearScale([0, top], plotArea.y0, plotArea.y1);
 
-  const bars = (counts: number[], fill: string, opacity: number) =>
-    counts
-      .map((count, index) => ({ count, x: plotArea.x0 + index * binWidth }))
-      .map(({ count, x }) =>
-        count === 0 ? null : (
-          <rect
-            key={`${fill}-${x}`}
-            x={x}
-            y={yScale.project(count)}
-            width={Math.max(0.5, binWidth - 0.5)}
-            height={plotArea.y0 - yScale.project(count)}
-            fill={fill}
-            opacity={opacity}
-          />
-        ),
-      );
+  const highlighted = binAt(counts.length, domain, cursor);
+  const hasHighlight = highlighted !== null && (counts[highlighted] ?? 0) > 0;
+  const xTitle = [xLabel, unit ? `(${unit})` : undefined].filter(Boolean).join(" ") || undefined;
 
   return (
     <Frame
       xScale={xScale}
       yScale={yScale}
-      xLabel="anomaly score"
-      yLabel="samples"
+      xLabel={xTitle}
+      yLabel={yLabel}
       label={label}
-      variant="wide"
+      variant={variant}
       className={className}
-      footer={
-        <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <li className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="inline-block h-2 w-3 rounded-sm"
-              style={{ backgroundColor: NORMAL_FILL, opacity: 0.75 }}
-            />
-            <span className="font-mono text-xs">normal ({normal.length})</span>
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="inline-block h-2 w-3 rounded-sm"
-              style={{ backgroundColor: DEFECT_FILL, opacity: 0.75 }}
-            />
-            <span className="font-mono text-xs">defect ({defect.length})</span>
-          </li>
-          {threshold !== undefined && (
-            <li className="font-mono text-xs">threshold {threshold.toFixed(4)}</li>
-          )}
-        </ul>
-      }
+      size={size}
+      figureRef={variant === "fluid" ? fluidRef : undefined}
+      footer={footer}
     >
-      {/* Normals first and defects over them: the defect bars are the smaller population
-          in every realistic split, so drawing them last keeps them from being buried. */}
-      {bars(normalBins, NORMAL_FILL, 0.65)}
-      {bars(defectBins, DEFECT_FILL, 0.65)}
-
-      {threshold !== undefined && Number.isFinite(threshold) && (
-        <line
-          x1={xScale.project(threshold)}
-          x2={xScale.project(threshold)}
-          y1={plotArea.y0}
-          y2={plotArea.y1}
-          stroke="currentColor"
-          strokeWidth={1.25}
-          strokeDasharray="3 2"
+      {bands && bands.length > 0 && <Bands bands={bands} xScale={xScale} area={plotArea} />}
+      <path
+        data-bars=""
+        d={barsPath(counts, yScale, plotArea, { skip: hasHighlight ? highlighted : null })}
+        fill={seriesColour(0)}
+        opacity={0.8}
+      />
+      {hasHighlight && (
+        <path
+          data-cursor-bin={highlighted}
+          d={barsPath(counts, yScale, plotArea, { only: highlighted })}
+          fill="var(--signal)"
+        />
+      )}
+      {markers && markers.length > 0 && <Markers markers={markers} xScale={xScale} area={plotArea} />}
+      {(onHover || onPick) && (
+        <PlotInteraction
+          xScale={xScale}
+          yScale={yScale}
+          area={plotArea}
+          series={[]}
+          onHover={onHover}
+          onPick={onPick}
         />
       )}
     </Frame>

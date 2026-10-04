@@ -36,7 +36,15 @@ export { LineChart, type LineChartProps, type Series } from "./LineChart";
 
 export { StackedBars, type BarRow, type StackedBarsProps } from "./BarChart";
 
-export { ScoreHistogram, type HistogramProps } from "./Histogram";
+export {
+  Histogram,
+  type HistogramCounts,
+  type HistogramOptions,
+  type HistogramProps,
+  type HistogramValues,
+} from "./Histogram";
+
+export { ScoreHistogram, type ScoreHistogramProps } from "./ScoreHistogram";
 
 export {
   LineProfile,
