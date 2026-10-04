@@ -64,11 +64,23 @@ import {
   zoomAbout,
   type Box,
   type ClampOptions,
+  type FitOptions,
   type Rect,
   type StageView,
 } from "./view";
 
 const WHEEL_SENSITIVITY = 0.0015;
+/**
+ * How long after the last view change the stage box keeps `will-change: transform`.
+ *
+ * The hint keeps a pan on the compositor (without it every overlay path is repainted each
+ * frame: 130 ms against 17 ms with 4,000 corners in view under software raster), but Chromium
+ * then keeps the layer at the raster scale it had when the hint was applied, so the stage
+ * would stay blurry after a zoom. Measured in `willChange.browser.test.ts`: always on, the
+ * edge of a zoomed image ramps over 6 px and a 1 px line smears to 10; cleared once the view
+ * has settled, both are as sharp as with no hint. Cleared, the layer re-rasterises.
+ */
+const MOVING_SETTLE_MS = 150;
 /** How far a press may travel and still count as a click rather than a pan. */
 const CLICK_SLOP = 3;
 /** The view before the viewport has been measured — nothing is on screen yet. */
@@ -221,10 +233,17 @@ export interface ImageStageProps {
   label?: string;
   /**
    * How a `null` view opens: `"auto"` (the default) at 1:1 when the image fits the viewport
-   * and fit otherwise; `"fit"` always fit, for a viewer that should show the whole frame
+   * (inside the `fit` margin) and fit otherwise; `"fit"` always fit, for a viewer that should show the whole frame
    * whatever its size.
    */
   initialView?: "auto" | "fit" | undefined;
+  /**
+   * The margin and upscale cap of every fit: `initialView="fit"`, the handle's and the
+   * context's `fit()`, the `0` key, the double-click toggle, the toolbar's Fit button, and
+   * `isFit` / `data-fit`. Defaults to filling the viewport edge to edge, upscaling freely.
+   * Each field is read by value, so an inline object does not re-fit the view.
+   */
+  fit?: FitOptions | undefined;
   /** The stage's controls for code outside it; see `StageHandle`. */
   ref?: Ref<StageHandle> | undefined;
 }
@@ -233,6 +252,10 @@ export interface ImageStageProps {
  * A pannable, zoomable viewport over a stack of layers laid out at the image's own pixel
  * size, so an overlay drawn in image coordinates stays registered with the photograph at
  * any zoom and window size. Layers read the transform through `useStage`.
+ *
+ * The transformed box (`[data-stage]`) carries `will-change: transform` and `data-moving` while
+ * the view changes and for 150 ms after, so a pan stays on the compositor and the layer
+ * re-rasterises sharp once the view settles.
  *
  * State is exposed on the viewport as `data-fit` (the view is fit), `data-panning` (a drag
  * is in progress) and `data-pan-mode` (the hand tool is on or space is held), each present
@@ -259,9 +282,11 @@ export function ImageStage({
   panKeys = true,
   label = "Image canvas",
   initialView: opening = "auto",
+  fit: fitOptions,
   ref,
 }: ImageStageProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const boxRef = useRef<HTMLDivElement | null>(null);
   const [box, setBox] = useState<Box>({ width: 0, height: 0 });
   // The measured size, readable synchronously — `setBox`'s updater must stay pure, and the
   // resize handler needs the *previous* box to re-anchor the view against.
@@ -272,9 +297,13 @@ export function ImageStage({
 
   // What the handlers attached once (and the stable callbacks below) read: the props and
   // box of the last commit, so none of them closes over stale values.
-  const latestRef = useRef({ view, box, image, clamp, onView, opening });
+  const fitOpts = useMemo<FitOptions>(
+    () => ({ padding: fitOptions?.padding, upscale: fitOptions?.upscale }),
+    [fitOptions?.padding, fitOptions?.upscale],
+  );
+  const latestRef = useRef({ view, box, image, clamp, onView, opening, fitOpts });
   useLayoutEffect(() => {
-    latestRef.current = { view, box, image, clamp, onView, opening };
+    latestRef.current = { view, box, image, clamp, onView, opening, fitOpts };
   });
   /** The view to come back to when a double-click leaves fit. */
   const previousRef = useRef<StageView | null>(null);
@@ -288,9 +317,23 @@ export function ImageStage({
   const panButtons = useMemo(() => panButtonCodes(panButton), [panButton]);
 
   const effective = useMemo(
-    () => view ?? (box.width > 0 ? openingView(opening, box, image) : UNMEASURED_VIEW),
-    [view, box, image, opening],
+    () => view ?? (box.width > 0 ? openingView(opening, box, image, fitOpts) : UNMEASURED_VIEW),
+    [view, box, image, opening, fitOpts],
   );
+
+  // `will-change: transform` (and `data-moving`) on the transformed box while the view moves, set
+  // on the element itself so a pan costs no React render; see `MOVING_SETTLE_MS`.
+  useEffect(() => {
+    const element = boxRef.current;
+    if (!element) return;
+    element.style.willChange = "transform";
+    element.dataset["moving"] = "";
+    const timer = setTimeout(() => {
+      element.style.willChange = "";
+      delete element.dataset["moving"];
+    }, MOVING_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [effective.scale, effective.tx, effective.ty]);
 
   const commit = useCallback((next: StageView) => {
     const { box: b, image: i, clamp: c, onView: report } = latestRef.current;
@@ -321,12 +364,12 @@ export function ImageStage({
       const next = { width, height };
       measuredRef.current = next;
       setBox(next);
-      const { view: v, image: i, clamp: c, onView: report, opening: o } = latestRef.current;
-      if (v === null) report(openingView(o, next, i));
+      const { view: v, image: i, clamp: c, onView: report, opening: o, fitOpts: f } = latestRef.current;
+      if (v === null) report(openingView(o, next, i, f));
       // The first measurement: there is no previous viewport to re-anchor against, so the
       // caller's view is kept — only made legal for this one.
       else if (!(current.width > 0)) report(clampView(v, next, i, c));
-      else report(preserveCenter(v, current, next, i, c));
+      else report(preserveCenter(v, current, next, i, c, f));
     };
 
     // Synchronously, so the first paint already has the right view — and as the *content*
@@ -398,10 +441,10 @@ export function ImageStage({
   }, []);
 
   const fit = useCallback(() => {
-    const { box: b, image: i, view: v, onView: report } = latestRef.current;
+    const { box: b, image: i, view: v, onView: report, fitOpts: f } = latestRef.current;
     if (!(b.width > 0)) return;
-    if (v !== null && !isFit(v, b, i)) previousRef.current = v;
-    report(fitView(b, i));
+    if (v !== null && !isFit(v, b, i, f)) previousRef.current = v;
+    report(fitView(b, i, f));
   }, []);
 
   const zoomTo = useCallback((scale: number, anchor?: Point) => {
@@ -424,7 +467,7 @@ export function ImageStage({
 
   useImperativeHandle(ref, () => ({ frame, fit, zoomTo }), [frame, fit, zoomTo]);
 
-  const atFit = box.width > 0 && isFit(effective, box, image);
+  const atFit = box.width > 0 && isFit(effective, box, image, fitOpts);
 
   const context = useMemo<StageContext>(
     () => ({
@@ -663,7 +706,7 @@ export function ImageStage({
       return;
     }
     previousRef.current = effective;
-    onView(fitView(box, image));
+    onView(fitView(box, image, fitOpts));
   };
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -746,6 +789,7 @@ export function ImageStage({
         >
           {/* One transformed box holding every layer, laid out at the image's own pixel size. */}
           <div
+            ref={boxRef}
             data-stage
             className="absolute top-0 left-0 origin-top-left"
             style={{
@@ -780,8 +824,8 @@ export function ImageStage({
 }
 
 /** The view a `null` view opens at, by the `initialView` policy. */
-function openingView(opening: "auto" | "fit", box: Box, image: Box): StageView {
-  return opening === "fit" ? fitView(box, image) : initialView(box, image);
+function openingView(opening: "auto" | "fit", box: Box, image: Box, fit: FitOptions): StageView {
+  return opening === "fit" ? fitView(box, image, fit) : initialView(box, image, fit);
 }
 
 function hoverPoint(

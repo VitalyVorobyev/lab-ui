@@ -18,6 +18,7 @@
  */
 
 import {
+  EllipseSet,
   GridLayer,
   AreaSet,
   PointSet,
@@ -25,7 +26,6 @@ import {
 } from "@vitavision/stage2d";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import { EllipseSet } from "./EllipseSet";
 import { TARGET_MARKERS } from "./glyphs";
 import { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses } from "./layerItems";
 import type { TargetDetection, TargetHit, TargetId, TargetPart } from "./model";
@@ -185,12 +185,12 @@ export function TargetOverlay({
           label="Markers"
         />
       )}
-      {bits.length > 0 && <EllipseSet items={bits} minRadius={3} dimmed={isDimmed} />}
+      {bits.length > 0 && <EllipseSet items={bits} minRadius={3} dimmed={isDimmed} pickable={false} />}
       {hasRings && (
         <>
-          <EllipseSet items={ringShapes.outer} hoveredId={hoverOf("ring")} selectedIds={selected.ring} dimmed={isDimmed} />
+          <EllipseSet items={ringShapes.outer} hoveredId={hoverOf("ring")} selectedIds={selected.ring} dimmed={isDimmed} pickable={false} />
           {ringShapes.inner.length > 0 && (
-            <EllipseSet items={ringShapes.inner} role="model" hoveredId={hoverOf("ring")} selectedIds={selected.ring} dimmed={isDimmed} />
+            <EllipseSet items={ringShapes.inner} role="model" hoveredId={hoverOf("ring")} selectedIds={selected.ring} dimmed={isDimmed} pickable={false} />
           )}
           <PointSet
             items={ringPoints}

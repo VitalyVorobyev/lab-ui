@@ -68,8 +68,8 @@ States follow the overlay grammar: hover 2 px, selected 2.5 px in the selection 
 For an app that composes the layers itself:
 
 - **Lattice**: `cornerGrid`, `gridEdges`, `idByGrid`, `gridKey`, `markerPolygons` (pure; `gridEdges` is stage2d's `latticeEdges` with positions).
-- **Glyphs**: `TARGET_MARKERS` (`directed`, `circle-white`, `circle-black`) for `PointSet`'s `markers`; `packAxes` / `unpackAxes` fold a corner's two edge directions into the one `angle` a `MarkerShape` receives; `ellipsePath`.
-- **Layers**: `EllipseSet`, a batched, non-picked set of ellipses whose size is data.
+- **Glyphs**: `TARGET_MARKERS` (`directed`, `circle-white`, `circle-black`) for `PointSet`'s `markers`; the `directed` marker reads a corner's two edge directions from `PointSetItem.angle` and `angle2`.
+- **Layers**: `EllipseSet` and `ellipsePath`, re-exported from `@vitavision/stage2d`: a batched set of ellipses whose size is data. `TargetOverlay` draws its rings with `pickable={false}`.
 - **Mapping**: `cornerNodes`, `markerAreas`, `circlePoints`, `ringCentres`, `ringEllipses`, `edgeBitEllipses` are the detection-to-layer-items functions `TargetOverlay` uses.
 
 ## License

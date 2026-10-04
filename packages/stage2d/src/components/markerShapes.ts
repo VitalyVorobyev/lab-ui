@@ -34,9 +34,11 @@ export interface MarkerShape {
    * @param y - Centre y, in image coordinates.
    * @param unit - Image pixels per screen pixel.
    * @param angle - The item's orientation in radians, `0` when it has none.
+   * @param angle2 - The item's second angle in radians, `undefined` when it has none. Most
+   *   shapes ignore it; a glyph with two axes (a corner's two edge directions) reads it.
    * @returns Path commands, absolute at the start (`M x y …`) and self-contained.
    */
-  path: (x: number, y: number, unit: number, angle: number) => string;
+  path: (x: number, y: number, unit: number, angle: number, angle2?: number) => string;
 }
 
 /** Round to 1/1000 of an image pixel: enough for any zoom, and half the characters. */

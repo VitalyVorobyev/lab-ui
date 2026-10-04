@@ -190,6 +190,28 @@ describe("view transform properties", () => {
     }
   });
 
+  it("fit options: the padded fit fits the padded box, is capped without upscale, and is fit", () => {
+    const g = generators(21);
+    for (let run = 0; run < RUNS; run += 1) {
+      const box = g.box();
+      const image = g.image();
+      const padding = g.between(0, Math.min(40, Math.min(box.width, box.height) / 2 - 1));
+      const upscale = g.random() < 0.5;
+      const options = { padding, upscale };
+      const view = fitView(box, image, options);
+      expect(isFit(view, box, image, options)).toBe(true);
+      // Never larger than the padded box, so the margin is at least `padding` on every side.
+      expect(view.tx).toBeGreaterThanOrEqual(padding - 1e-6);
+      expect(view.ty).toBeGreaterThanOrEqual(padding - 1e-6);
+      expect(box.width - view.tx - image.width * view.scale).toBeGreaterThanOrEqual(padding - 1e-6);
+      expect(box.height - view.ty - image.height * view.scale).toBeGreaterThanOrEqual(padding - 1e-6);
+      if (!upscale) expect(view.scale).toBeLessThanOrEqual(1);
+      expect(view.scale).toBeLessThanOrEqual(fitScale(box, image) + 1e-12);
+      // The image stays centred.
+      expect(view.tx - (box.width - image.width * view.scale - view.tx)).toBeCloseTo(0, 6);
+    }
+  });
+
   it("initialView never magnifies past 1:1 and never exceeds fit", () => {
     const g = generators(10);
     for (let run = 0; run < RUNS; run += 1) {

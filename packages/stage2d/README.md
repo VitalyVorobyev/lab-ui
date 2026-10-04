@@ -15,7 +15,7 @@ bun add @vitavision/stage2d @vitavision/ui
 child layer together (image, mask, measurement overlay, interactive handles) so they never
 drift apart, with `StageToolbar` / `StageReadout` as the in-canvas controls and `useStage()`
 as the way a layer reads the transform. The arithmetic behind it is pure and exported —
-`fitScale`, `fitView`, `toImage`, `toScreen`, `zoomAbout`, `clampView`, `frameRect`,
+`fitScale`, `fitView` (both take `FitOptions`), `toImage`, `toScreen`, `zoomAbout`, `clampView`, `frameRect`,
 `preserveCenter`, `steppedScale`. See "The image stage" below. `ZoomPanCanvas` is its
 deprecated predecessor, still exported unchanged.
 
@@ -25,7 +25,11 @@ the stage would magnify it, then load the full image and keep it, and it turns p
 `StageLayersMenu` is a layers button for `StageToolbar`. Code outside the stage, such as an
 inspector's "frame this", drives it through `ImageStage`'s `ref` (`StageHandle`: `frame`,
 `fit`, `zoomTo`). `initialView="fit"` opens a `null` view at fit even when the image would fit
-at 1:1.
+at 1:1. `fit={{ padding, upscale }}` gives every fit path (the initial fit, `fit()`, the `0` key, the
+double-click toggle, the toolbar button, `data-fit`) a margin in CSS pixels and, with `upscale: false`, a cap
+at 1:1. The transformed box carries `will-change: transform` (and `data-moving`) only while the view
+moves and for 150 ms after: always on, Chromium keeps the layer at the raster scale it had when the hint
+was applied and a zoomed-in image and its strokes stay blurry.
 `api/mapValues.ts` decodes the `VAM1` float32-plane wire format into indexable values
 (`decodePlane`, `valueAt`, `valuesAt`, `fractionOf`, `fetchPlane`) — it never draws;
 colour range and colormap stay the caller's decision.
@@ -85,9 +89,14 @@ ellipse being drawn, and `MarqueeRect` the rubber band; `useShapeDrag` turns a p
 image-space displacements with click slop, for select → drag → commit of manual shapes (`translatePoints`
 shifts flat coordinates).
 
+**Ellipses**: `EllipseSet` draws many ellipses whose size is data (fitted rings, edge-bit dots, drawn ellipses) as
+exact arcs in a few batched paths, with the states of `AreaSet`. It is picked like `AreaSet`: a press near an
+outline picks that ellipse, else the smallest containing it; `pickable={false}` leaves a decorative layer out.
+- **Pure functions:** `buildEllipseIndex`, `nearestEllipse`, `ellipsesInRect`, `pointInEllipse`, `ellipseBounds`, `ellipsePath`.
+
 **Hit-test**: `useStageHitTest()` answers "what is under the pointer" across layers, ranked by
 `STAGE_HIT_PRIORITY` (points above lines above areas above images). `PointSet`, `PolylineSet`,
-`AreaSet` and `GridLayer` answer it; `useStageHitLayer` registers any other layer. `ImageStage` also takes `panButton`,
+`AreaSet`, `EllipseSet` and `GridLayer` answer it; `useStageHitLayer` registers any other layer. `ImageStage` also takes `panButton`,
 `doubleClickFit` and `touchPan`, and handles two-finger pinch.
 
 **Tool model**: `StageSurface` is the one full-frame press target per stage.

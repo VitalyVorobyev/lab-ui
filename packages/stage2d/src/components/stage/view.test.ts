@@ -10,6 +10,7 @@ import {
   formatScale,
   frameRect,
   imageViewBox,
+  initialView,
   insideImage,
   isFit,
   preserveCenter,
@@ -37,6 +38,54 @@ describe("fitScale", () => {
   it("degrades to 1 rather than to NaN on a zero-sized box", () => {
     expect(fitScale({ width: 0, height: 0 }, IMAGE)).toBe(1);
     expect(fitScale(WIDE, { width: 0, height: 0 })).toBe(1);
+  });
+});
+
+describe("fit options", () => {
+  it("leaves the margin out by default: edge to edge, exactly today's numbers", () => {
+    expect(fitScale(WIDE, IMAGE, {})).toBe(fitScale(WIDE, IMAGE));
+    expect(fitView(TALL, IMAGE, { padding: 0, upscale: true })).toEqual(fitView(TALL, IMAGE));
+  });
+
+  it("takes the padding off each side of the box before it fits", () => {
+    // 1200x500 minus 2 x 25 px: the height has 450 px for 1024 image px.
+    expect(fitScale(WIDE, IMAGE, { padding: 25 })).toBeCloseTo(450 / 1024, 12);
+    const view = fitView(WIDE, IMAGE, { padding: 25 });
+    expect(view.ty).toBeCloseTo(25, 9);
+    expect(WIDE.width - (view.tx + IMAGE.width * view.scale)).toBeCloseTo(view.tx, 9);
+  });
+
+  it("ignores a padding that leaves no room", () => {
+    expect(fitScale(WIDE, IMAGE, { padding: 250 })).toBe(fitScale(WIDE, IMAGE));
+    expect(fitScale(WIDE, IMAGE, { padding: -10 })).toBe(fitScale(WIDE, IMAGE));
+  });
+
+  it("caps the scale at 1 with upscale off, and centres the small image", () => {
+    const small = { width: 100, height: 80 };
+    expect(fitScale(WIDE, small)).toBeGreaterThan(1);
+    expect(fitScale(WIDE, small, { upscale: false })).toBe(1);
+    expect(fitView(WIDE, small, { upscale: false })).toEqual({ scale: 1, tx: 550, ty: 210 });
+    // A large image is still shrunk to fit.
+    expect(fitScale(WIDE, IMAGE, { upscale: false })).toBe(fitScale(WIDE, IMAGE));
+  });
+
+  it("opens at 1:1 only when the image fits inside the margin, else at the padded fit", () => {
+    expect(initialView(WIDE, { width: 300, height: 400 }, { padding: 24 })).toEqual({ scale: 1, tx: 450, ty: 50 });
+    expect(initialView(WIDE, { width: 300, height: 480 }, { padding: 24 }).scale).toBeCloseTo(452 / 480, 12);
+    expect(initialView(WIDE, IMAGE)).toEqual(initialView(WIDE, IMAGE, {}));
+  });
+
+  it("recognises a view fitted with the options, and only with them", () => {
+    const options = { padding: 24, upscale: false };
+    const view = fitView(WIDE, IMAGE, options);
+    expect(isFit(view, WIDE, IMAGE, options)).toBe(true);
+    expect(isFit(view, WIDE, IMAGE)).toBe(false);
+  });
+
+  it("re-fits with the options when the box changes", () => {
+    const options = { padding: 24 };
+    const moved = preserveCenter(fitView(WIDE, IMAGE, options), WIDE, TALL, IMAGE, {}, options);
+    expect(moved).toEqual(fitView(TALL, IMAGE, options));
   });
 });
 

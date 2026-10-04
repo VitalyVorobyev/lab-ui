@@ -7,10 +7,8 @@
  * Pure: no React, no DOM.
  */
 
-import type { AreaSetItem, GridNode, PointSetItem } from "@vitavision/stage2d";
+import type { AreaSetItem, EllipseSetItem, GridNode, PointSetItem } from "@vitavision/stage2d";
 
-import type { EllipseSetItem } from "./EllipseSet";
-import { packAxes } from "./glyphs";
 import { markerPolygons } from "./lattice";
 import { isLatticeKind, type TargetCircle, type TargetCorner, type TargetDetection, type TargetEdgeBit, type TargetRing } from "./model";
 
@@ -45,7 +43,8 @@ export function cornerNodes(detection: TargetDetection): GridNode[] {
     };
     if (corner.angle !== undefined) {
       node.kind = "directed";
-      node.angle = packAxes(corner.angle, corner.angle2);
+      node.angle = corner.angle;
+      if (corner.angle2 !== undefined) node.angle2 = corner.angle2;
     }
     return node;
   });

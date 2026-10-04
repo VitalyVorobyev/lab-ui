@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ImageStage, imageViewBox, type StageView } from "@vitavision/stage2d";
+import { ImageStage, ellipsePath, imageViewBox, type StageView } from "@vitavision/stage2d";
 import { useState } from "react";
 import { expect, fireEvent, fn, waitFor } from "storybook/test";
 
 import { BOARD_IMAGE, FIELD_IMAGE, charuco, chessboard, directedField, markerboard, project, puzzleboard, ringgrid } from "./fixtures.stories";
-import { ellipsePath } from "./glyphs";
 import type { TargetDetection, TargetHit, TargetId } from "./model";
 import { TargetOverlay, type TargetOverlayProps } from "./TargetOverlay";
 

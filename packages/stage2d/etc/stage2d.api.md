@@ -106,6 +106,9 @@ export interface Box {
 export function buildAreaIndex(items: readonly Area[], cell?: number): AreaIndex;
 
 // @public
+export function buildEllipseIndex(items: readonly Ellipse[], cell?: number): EllipseIndex;
+
+// @public
 export function buildPointIndex(xy: ArrayLike<number>, options?: PointIndexOptions): PointIndex;
 
 // @public
@@ -262,13 +265,84 @@ export type DraftShapeSpec = {
 };
 
 // @public
+export interface Ellipse {
+    angle?: number | undefined;
+    id: EllipseId;
+    rx: number;
+    ry: number;
+    x: number;
+    y: number;
+}
+
+// @public
+export function ellipseBounds(e: Ellipse): [number, number, number, number] | null;
+
+// @public
+export interface EllipseHit {
+    distance: number;
+    id: EllipseId;
+    index: number;
+    inside: boolean;
+}
+
+// @public
+export type EllipseId = string | number;
+
+// @public
+export interface EllipseIndex {
+    readonly grid: AreaIndex;
+    readonly items: readonly Ellipse[];
+    readonly size: Float64Array;
+}
+
+// @public
+export function ellipsePath(cx: number, cy: number, rx: number, ry: number, angle?: number): string;
+
+// @public
+export function EllipseSet(input: EllipseSetProps): JSX.Element;
+
+// @public
+export interface EllipseSetItem extends Ellipse {
+    dashed?: boolean | undefined;
+    opacity?: number | undefined;
+    role?: OverlayRole | undefined;
+}
+
+// @public
+export interface EllipseSetProps {
+    dimmed?: Iterable<EllipseId> | ((id: EllipseId) => boolean) | undefined;
+    halo?: boolean | undefined;
+    hoveredId?: EllipseId | null | undefined;
+    items: readonly EllipseSetItem[];
+    label?: string | undefined;
+    layerId?: string | undefined;
+    minRadius?: number | undefined;
+    onHoverChange?: ((id: EllipseId | null) => void) | undefined;
+    onItemPress?: ((id: EllipseId, event: StagePointerEvent) => void) | undefined;
+    pickable?: boolean | undefined;
+    priority?: number | undefined;
+    role?: OverlayRole | undefined;
+    selectedIds?: Iterable<EllipseId> | undefined;
+    selectionStroke?: string | undefined;
+}
+
+// @public
+export function ellipsesInRect(index: EllipseIndex, rect: Rect): EllipseId[];
+
+// @public
 export function fetchPlane(url: string): Promise<ValuePlane>;
 
 // @public
-export function fitScale(box: Box, image: Box): number;
+export interface FitOptions {
+    padding?: number | undefined;
+    upscale?: boolean | undefined;
+}
 
 // @public
-export function fitView(box: Box, image: Box): StageView;
+export function fitScale(box: Box, image: Box, options?: FitOptions): number;
+
+// @public
+export function fitView(box: Box, image: Box, options?: FitOptions): StageView;
 
 // @public
 export function formatScale(scale: number): string;
@@ -403,6 +477,7 @@ export interface ImageStageProps {
     clamp?: ClampOptions;
     className?: string;
     doubleClickFit?: boolean | undefined;
+    fit?: FitOptions | undefined;
     image: Box;
     initialView?: "auto" | "fit" | undefined;
     label?: string;
@@ -431,13 +506,13 @@ export interface ImageTier {
 export function imageViewBox(image: Box): string;
 
 // @public
-export function initialView(box: Box, image: Box): StageView;
+export function initialView(box: Box, image: Box, options?: FitOptions): StageView;
 
 // @public
 export function insideImage(p: Point, image: Box): boolean;
 
 // @public
-export function isFit(view: StageView, box: Box, image: Box): boolean;
+export function isFit(view: StageView, box: Box, image: Box, options?: FitOptions): boolean;
 
 // @public
 export type LatticeAxis = "i" | "j";
@@ -464,7 +539,7 @@ export const MARKER_SHAPES: Readonly<Record<BuiltinMarkerKind, MarkerShape>>;
 // @public
 export interface MarkerShape {
     readonly paint: "disc" | "line";
-    path: (x: number, y: number, unit: number, angle: number) => string;
+    path: (x: number, y: number, unit: number, angle: number, angle2?: number) => string;
     readonly role?: OverlayRole | undefined;
     readonly size: number;
 }
@@ -534,6 +609,9 @@ export function nearestArea(index: AreaIndex, p: Point, radius: number): AreaHit
 
 // @public
 export function nearestContourSegment(points: Point[], point: Point): number;
+
+// @public
+export function nearestEllipse(index: EllipseIndex, p: Point, radius: number): EllipseHit | null;
 
 // @public
 export function nearestPoint(index: PointIndex, x: number, y: number, radius: number): PointHit | null;
@@ -614,6 +692,9 @@ export interface PointIndexOptions {
 }
 
 // @public
+export function pointInEllipse(e: Ellipse, x: number, y: number): boolean;
+
+// @public
 export function pointInPolygon(points: ArrayLike<number>, x: number, y: number): boolean;
 
 // @public
@@ -641,6 +722,7 @@ export function PointSet(input: PointSetProps): JSX.Element;
 // @public
 export interface PointSetItem extends PointItem {
     angle?: number | undefined;
+    angle2?: number | undefined;
     kind?: string | undefined;
     label?: string | undefined;
     role?: OverlayRole | undefined;
@@ -752,7 +834,7 @@ export interface PolylineSetProps {
 export function polylinesInRect(index: PolylineIndex, rect: Rect): PolylineId[];
 
 // @public
-export function preserveCenter(view: StageView, from: Box, to: Box, image: Box, options?: ClampOptions): StageView;
+export function preserveCenter(view: StageView, from: Box, to: Box, image: Box, options?: ClampOptions, fit?: FitOptions): StageView;
 
 // @public
 export interface PrimitiveCommon {

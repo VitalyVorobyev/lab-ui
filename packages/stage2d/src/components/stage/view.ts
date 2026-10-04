@@ -105,21 +105,61 @@ const SCALE_EPSILON = 1e-3;
 /** Absolute tolerance for "is this the same offset", in CSS pixels. */
 const OFFSET_EPSILON = 0.5;
 
-/** The scale at which the whole image is just visible inside `box`. */
-export function fitScale(box: Box, image: Box): number {
-  if (!(box.width > 0) || !(box.height > 0) || !(image.width > 0) || !(image.height > 0)) return 1;
-  return Math.min(box.width / image.width, box.height / image.height);
+/** How `fitScale` and `fitView` treat the margin and a small image. */
+export interface FitOptions {
+  /**
+   * A margin on each side of the fitted image, in CSS pixels. Defaults to 0: the image fills
+   * the box edge to edge. A margin that leaves no room (the box is smaller than twice the
+   * padding) is ignored.
+   */
+  padding?: number | undefined;
+  /**
+   * Whether fit may magnify a small image past 1:1. On by default; `false` caps the fit scale
+   * at 1, so a small image opens at its own size, centred.
+   */
+  upscale?: boolean | undefined;
 }
 
-/** Fit, centred — the view a viewer opens at and the one `0` returns to. */
-export function fitView(box: Box, image: Box): StageView {
-  const scale = fitScale(box, image);
+/**
+ * The scale at which the whole image is just visible inside `box`.
+ *
+ * @param box - The viewport, in CSS pixels.
+ * @param image - The image, in image pixels.
+ * @param options - A margin and an upscale cap; the defaults fill the box edge to edge.
+ * @returns CSS pixels per image pixel; `1` for a degenerate box or image.
+ */
+export function fitScale(box: Box, image: Box, options: FitOptions = {}): number {
+  if (!(box.width > 0) || !(box.height > 0) || !(image.width > 0) || !(image.height > 0)) return 1;
+  const pad = Math.max(0, options.padding ?? 0);
+  const room = box.width > 2 * pad && box.height > 2 * pad ? pad : 0;
+  const scale = Math.min((box.width - 2 * room) / image.width, (box.height - 2 * room) / image.height);
+  return options.upscale === false ? Math.min(1, scale) : scale;
+}
+
+/**
+ * Fit, centred: the view a viewer opens at and the one `0` returns to.
+ *
+ * @param box - The viewport, in CSS pixels.
+ * @param image - The image, in image pixels.
+ * @param options - A margin and an upscale cap; see `FitOptions`.
+ * @returns The view.
+ */
+export function fitView(box: Box, image: Box, options: FitOptions = {}): StageView {
+  const scale = fitScale(box, image, options);
   return centred(scale, box, image);
 }
 
-/** The whole image visible at 1:1 if it fits, otherwise fit — a sane opening view. */
-export function initialView(box: Box, image: Box): StageView {
-  return centred(Math.min(1, fitScale(box, image)), box, image);
+/**
+ * The whole image visible at 1:1 if it fits, otherwise fit — a sane opening view.
+ *
+ * @param box - The viewport, in CSS pixels.
+ * @param image - The image, in image pixels.
+ * @param options - Only `padding` matters here (the image must fit inside the margin to open
+ *   at 1:1, and "otherwise fit" is the padded fit); it never magnifies, so `upscale` is moot.
+ * @returns The view.
+ */
+export function initialView(box: Box, image: Box, options: FitOptions = {}): StageView {
+  return centred(Math.min(1, fitScale(box, image, { padding: options.padding })), box, image);
 }
 
 function centred(scale: number, box: Box, image: Box): StageView {
@@ -130,9 +170,9 @@ function centred(scale: number, box: Box, image: Box): StageView {
   };
 }
 
-/** Whether `view` is (indistinguishably) the fit view for this box and image. */
-export function isFit(view: StageView, box: Box, image: Box): boolean {
-  const fit = fitView(box, image);
+/** Whether `view` is (indistinguishably) the fit view for this box, image and `FitOptions`. */
+export function isFit(view: StageView, box: Box, image: Box, options: FitOptions = {}): boolean {
+  const fit = fitView(box, image, options);
   return (
     Math.abs(view.scale - fit.scale) <= fit.scale * SCALE_EPSILON &&
     Math.abs(view.tx - fit.tx) <= OFFSET_EPSILON &&
@@ -274,9 +314,10 @@ export function preserveCenter(
   to: Box,
   image: Box,
   options: ClampOptions = {},
+  fit: FitOptions = {},
 ): StageView {
-  if (!(from.width > 0) || !(from.height > 0)) return clampView(fitView(to, image), to, image, options);
-  if (isFit(view, from, image)) return fitView(to, image);
+  if (!(from.width > 0) || !(from.height > 0)) return clampView(fitView(to, image, fit), to, image, options);
+  if (isFit(view, from, image, fit)) return fitView(to, image, fit);
 
   const centre = toImage(view, { x: from.width / 2, y: from.height / 2 });
   return clampView(

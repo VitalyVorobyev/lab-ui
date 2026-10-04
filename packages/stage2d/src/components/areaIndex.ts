@@ -265,8 +265,11 @@ export function buildAreaIndex(items: readonly Area[], cell?: number): AreaIndex
   return { items, bounds, size, cell: side, x0: minX, y0: minY, cols, rows, starts, entries };
 }
 
-/** Visit each distinct area whose bounding box meets `[left, right] × [top, bottom]`, ascending by index. */
-function candidates(index: AreaIndex, left: number, top: number, right: number, bottom: number): number[] {
+/**
+ * The indices of the areas whose bounding box meets `[left, right] × [top, bottom]`, ascending.
+ * The first, cheap stage of every query; `ellipseIndex` reuses it over ellipse bounding boxes.
+ */
+export function areaCandidates(index: AreaIndex, left: number, top: number, right: number, bottom: number): number[] {
   const { cell, x0, y0, cols, rows, starts, entries, bounds } = index;
   if (entries.length === 0) return [];
   const cx0 = Math.max(0, Math.floor((left - x0) / cell));
@@ -306,7 +309,7 @@ export function nearestArea(index: AreaIndex, p: Point, radius: number): AreaHit
   const { items, size } = index;
   let edge: AreaHit | null = null;
   let inner: AreaHit | null = null;
-  for (const a of candidates(index, p.x - radius, p.y - radius, p.x + radius, p.y + radius)) {
+  for (const a of areaCandidates(index, p.x - radius, p.y - radius, p.x + radius, p.y + radius)) {
     const points = items[a]!.points;
     const distance = distanceToOutline(points, p.x, p.y);
     const inside = pointInPolygon(points, p.x, p.y);
@@ -337,7 +340,7 @@ export function areasInRect(index: AreaIndex, rect: Rect): AreaId[] {
     height: Math.abs(rect.height),
   };
   const out: AreaId[] = [];
-  for (const a of candidates(index, box.x, box.y, box.x + box.width, box.y + box.height)) {
+  for (const a of areaCandidates(index, box.x, box.y, box.x + box.width, box.y + box.height)) {
     if (polygonTouchesRect(index.items[a]!.points, box)) out.push(index.items[a]!.id);
   }
   return out;

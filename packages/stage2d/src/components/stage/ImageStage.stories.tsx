@@ -160,8 +160,14 @@ the app's tools. A tap is a press. Layers that cannot own an element (a marker a
 stage's hit-test; a press then reaches them (\`PointSet\`'s \`onItemPress\`) before the stage reads it as a pan, and
 \`useStageHitTest\` answers "what is under the pointer" across layers.
 
+**Fit** is edge to edge by default. \`fit={{ padding, upscale }}\` adds a margin (CSS px on each side) and, with
+\`upscale: false\`, never magnifies a small image past 1:1; it applies to every fit path (\`initialView="fit"\`, the
+handle's \`fit()\`, the \`0\` key, the double-click toggle, the toolbar's Fit button) and to \`data-fit\`.
+
 **State** is on the viewport as \`data-fit\`, \`data-panning\` and \`data-pan-mode\` (present or absent),
-so styling can follow it without a callback.
+so styling can follow it without a callback. The transformed box (\`[data-stage]\`) carries \`will-change: transform\`
+and \`data-moving\` while the view changes and for 150 ms after, so a pan stays on the compositor and the layers
+re-rasterise sharp once it settles.
 
 **Use** it for any image result a reader inspects — anything drawn in source-image pixel coordinates.
 A press pans only when no layer claims it: an interactive layer stops propagation on \`pointerdown\`
@@ -625,5 +631,36 @@ export const InitialViewAuto: Story = {
   args: { image: SMALL, style: SIZED },
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(stageView(canvasElement).scale).toBe(1));
+  },
+};
+
+/** The margin and the upscale cap of every fit: a 24 px border, and a small image never above 1:1. */
+export const FitOptions: Story = {
+  args: { image: SMALL, initialView: "fit", fit: { padding: 24, upscale: false }, style: SIZED },
+  play: async ({ canvas, canvasElement }) => {
+    const viewport = canvas.getByRole("application", { name: "Image canvas" });
+    await waitFor(() => expect(viewport).toHaveAttribute("data-fit"));
+    // 120 x 96 is smaller than the frame: capped at 1:1 and centred, where plain fit would be 3.75x.
+    await waitFor(() => expect(stageView(canvasElement).scale).toBe(1));
+    // Zoom in, then every fit path returns to the same view and is recognised as fit.
+    viewport.focus();
+    await userEvent.keyboard("{+}");
+    await waitFor(() => expect(viewport).not.toHaveAttribute("data-fit"));
+    await userEvent.keyboard("0");
+    await waitFor(() => expect(viewport).toHaveAttribute("data-fit"));
+    await expect(stageView(canvasElement).scale).toBe(1);
+  },
+};
+
+/** A large image fits inside the padded frame: 24 px of margin on the constrained axis. */
+export const FitPadding: Story = {
+  args: { fit: { padding: 24 }, style: SIZED },
+  play: async ({ canvas, canvasElement }) => {
+    const viewport = canvas.getByRole("application", { name: "Image canvas" });
+    await waitFor(() => expect(viewport).toHaveAttribute("data-fit"));
+    // 1280 x 1024 in the 478 x 358 content box less 2 x 24 px: the height is the constraint.
+    const { scale, ty } = stageView(canvasElement);
+    await expect(ty).toBeCloseTo(24, 0);
+    await expect(scale).toBeCloseTo((viewport.clientHeight - 48) / IMAGE.height, 4);
   },
 };

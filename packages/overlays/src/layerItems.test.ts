@@ -2,7 +2,6 @@ import { latticeEdges } from "@vitavision/stage2d";
 import { describe, expect, it } from "vitest";
 
 import { BOARD_IMAGE, charuco, chessboard, directedField, FIELD_IMAGE, markerboard, project, puzzleboard, ringgrid } from "./fixtures.stories";
-import { unpackAxes } from "./glyphs";
 import { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses } from "./layerItems";
 import { TARGET_KINDS, isLatticeKind } from "./model";
 
@@ -50,10 +49,9 @@ describe("cornerNodes", () => {
       ],
     });
     expect(nodes.map((n) => n.kind)).toEqual([undefined, "directed", "directed"]);
-    expect(unpackAxes(nodes[1]!.angle!)).toHaveLength(1);
-    const [a, b] = unpackAxes(nodes[2]!.angle!);
-    expect(a).toBeCloseTo(0.3, 6);
-    expect(b).toBeCloseTo(1.9, 6);
+    expect(nodes[1]).toMatchObject({ angle: 0.3 });
+    expect(nodes[1]!.angle2).toBeUndefined();
+    expect(nodes[2]).toMatchObject({ angle: 0.3, angle2: 1.9 });
   });
 
   it("is empty for a detection with no corners", () => {

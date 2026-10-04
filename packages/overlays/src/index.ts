@@ -9,7 +9,7 @@
 
 export { TargetOverlay, type TargetOverlayProps } from "./TargetOverlay";
 
-export { EllipseSet, type EllipseSetItem, type EllipseSetProps } from "./EllipseSet";
+export { EllipseSet, ellipsePath, type EllipseSetItem, type EllipseSetProps } from "@vitavision/stage2d";
 
 export {
   TARGET_KINDS,
@@ -48,7 +48,7 @@ export {
   type PuzzleboardEdge,
 } from "./puzzleboard";
 
-export { TARGET_MARKERS, ellipsePath, packAxes, unpackAxes } from "./glyphs";
+export { TARGET_MARKERS } from "./glyphs";
 
 export {
   circlePoints,
