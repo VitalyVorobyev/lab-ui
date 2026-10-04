@@ -17,7 +17,7 @@ import { useState } from "react";
 import { expect } from "storybook/test";
 
 /**
- * IBM Plex Sans + IBM Plex Mono (D1, ADR-0003) on an instrument screen: the ramp the packages
+ * IBM Plex Sans + IBM Plex Mono on an instrument screen: the ramp the packages
  * use, a help paragraph, the confusable glyphs, a numeric table, an inspector and a chart.
  * The fonts come from `@vitavision/ui/fonts.css`, as every app loads them.
  */
@@ -124,7 +124,7 @@ function SpecimenScreen() {
         <h2 id="type-specimen" className="text-sm font-semibold tracking-tight">
           IBM Plex Sans + IBM Plex Mono
         </h2>
-        <span className="text-xs text-fg-muted">ADR-0003</span>
+        <span className="text-xs text-fg-muted">type family</span>
       </header>
 
       <ReadoutStrip
@@ -179,10 +179,10 @@ const meta = {
   parameters: {
     docs: {
       description: {
-        component: `**IBM Plex Sans** for text, **IBM Plex Mono** for values (decision D1, ADR-0003).
+        component: `**IBM Plex Sans** for text, **IBM Plex Mono** for values.
 Load them once with \`@import "@vitavision/ui/fonts.css";\` — IBM's Plex Mono files, which keep the
 \`zero\` feature, so mono values get a slashed zero. Sans digits are tabular by default; the ramp is
-spec §3's type roles. Spec: \`docs/visual-language.md\` §2.`,
+the type roles on the Scales page.`,
       },
     },
   },

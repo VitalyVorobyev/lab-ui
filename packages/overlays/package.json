@@ -1,7 +1,7 @@
 {
   "name": "@vitavision/overlays",
   "version": "0.2.0",
-  "description": "Calibration-target overlays for the vitavision lab apps: one TargetOverlay for chessboard, ChArUco, marker board, PuzzleBoard and ring-grid detections on the stage2d image stage.",
+  "description": "Calibration-target overlays: one TargetOverlay for chessboard, ChArUco, marker board, PuzzleBoard and ring-grid detections on the stage2d image stage.",
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",

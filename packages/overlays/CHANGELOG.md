@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- cc3132a: stage2d gains a pickable ellipse layer, a second marker angle, fit options and a compositor hint; overlays follows (lab-ui#88).
+- cc3132a: stage2d gains a pickable ellipse layer, a second marker angle, fit options and a compositor hint; overlays follows.
   
   - `EllipseSet` (and `ellipsePath`) move from `@vitavision/overlays` into stage2d, next to `AreaSet`. It now registers with the stage's hit-test: `hoveredId`, `onHoverChange`, `onItemPress`, `layerId`, `priority`, and `pickable={false}` to stay out of it. The pure index is exported too: `buildEllipseIndex`, `nearestEllipse` (outline within the pointer's radius, else the smallest containing ellipse; true Euclidean distance), `ellipsesInRect`, `pointInEllipse`, `ellipseBounds`. `@vitavision/overlays` re-exports `EllipseSet`, `EllipseSetItem`, `EllipseSetProps` and `ellipsePath`, and `TargetOverlay` draws its rings and edge bits with `pickable={false}`, so its picking is unchanged. Its peer range on stage2d is now `>=0.11.0`.
   - `MarkerShape.path(x, y, unit, angle, angle2)` receives `PointSetItem.angle2` (`undefined` when the item has none); existing shapes ignore it. overlays' `directed` marker reads `angle` and `angle2` directly, so `packAxes` and `unpackAxes` are removed (breaking for overlays: put the two directions in `angle` and `angle2`).
@@ -27,7 +27,7 @@
 
 ### Minor Changes
 
-- 5e71fa8: New package: calibration-target overlays on the `@vitavision/stage2d` stage (L7-1). One `TargetOverlay` draws a chessboard, ChArUco board, marker board, PuzzleBoard, ring grid or a loose set of corners from a normalised `TargetDetection`, replacing the per-board overlays and glyph components each app wrote for itself.
+- 5e71fa8: New package: calibration-target overlays on the `@vitavision/stage2d` stage. One `TargetOverlay` draws a chessboard, ChArUco board, marker board, PuzzleBoard, ring grid or a loose set of corners from a normalised `TargetDetection`, in place of a separate overlay and glyph component per board.
   
   - **Input**: `TargetDetection` (`corners`, `markers`, `circles`, `rings`, `edgeBits`, and a `kind`) in image pixels with the pixel centre at integer coordinates. No detector package is imported. `edgeBitsFromPuzzleboard` turns a PuzzleBoard decode (observed edges and the mod-501 alignment) into `edgeBits`.
   - **Drawing**: each part goes to a batched stage2d layer (`GridLayer`, `AreaSet`, `PointSet`) or to `EllipseSet`, the new layer for ellipses whose size is data (fitted ring edges, edge-bit dots). Overlay roles only; polarity and bits are shapes. Hover, selected and dimmed states, label level-of-detail, and picking through the stage's hit-test index.

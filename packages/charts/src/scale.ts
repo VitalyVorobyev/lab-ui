@@ -2,7 +2,7 @@
  * The arithmetic behind every chart: domains, ticks, and the map from a value to a pixel.
  *
  * Hand-rolled SVG rather than a charting library: the chart types this design system needs
- * are few and simple, and a library that lags the React and Tailwind versions the lab apps
+ * are few and simple, and a library that lags the React and Tailwind versions the apps
  * are deliberately on would mean either downgrading a consumer or isolating a laggard — a
  * cost that outweighs a few hundred lines of scale maths.
  *

@@ -57,7 +57,8 @@ const meta = {
       description: {
         component: `The chrome is grey so the data can be loud: true-neutral surfaces, one accent
 (\`signal\`), and verdict colours used for verdicts only. Components use these names — never a raw
-Tailwind palette class or a hex literal (gate G5.1). Spec: \`docs/visual-language.md\` §1.`,
+Tailwind palette class or a hex literal (the \`tokensOnly\` rule of \`@vitavision/config-eslint\`
+enforces it).`,
       },
     },
   },
@@ -88,7 +89,7 @@ export const Tokens: Story = {
   ),
 };
 
-/** Each text token on each surface it is allowed on — the pairs L3-2 tests at ≥ 4.5:1. */
+/** Each text token on each surface it is allowed on — each pair holds ≥ 4.5:1 in both themes. */
 export const TextOnSurfaces: Story = {
   render: () => (
     <div className="grid grid-cols-4 gap-3">

@@ -5,12 +5,8 @@
 @source "./";
 
 /*
- * The design token layer.
- *
- * Extracted from visual-anomaly-lab's own token layer (its ADR-0021), where it was written
- * to close a real gap: eleven screens with every colour inlined as a raw `slate-*` utility
- * at 250-odd call sites — the same palette restated 250 times rather than defined once.
- * This file is that definition, shared now by every lab app rather than owned by one.
+ * The design token layer: every colour, radius and font the components use, defined once
+ * here rather than restated as raw palette utilities at each call site.
  *
  * The direction is *instrument*: the chrome is grey so the data can be loud. Anomaly maps,
  * colormaps, grayscale sensor images and vector measurement overlays are what these
@@ -70,7 +66,7 @@
  * Every value below is held by `contrast.test.ts` (WCAG 2.2 AA, both themes): text ≥ 4.5:1
  * on every surface, including each verdict colour and `signal` on its own /12 tint, and the
  * control boundary `line-strong` and `signal` (focus, checked) ≥ 3:1. `signal` and `normal`
- * are also kept apart for a tritanope (docs/visual-language.md §1) — the reason the light
+ * are also kept apart for a tritanope — the reason the light
  * accent is a deep slate-teal rather than a brighter one. Change a value only with the tests.
  */
 :root {

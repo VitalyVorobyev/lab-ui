@@ -12,7 +12,7 @@ import {
 
 /**
  * The type scale, the spacing steps, density, and radii — as the packages use them today
- * (surveyed in L3-1), named so a new component picks from the list instead of inventing.
+ * named so a new component picks from the list instead of inventing.
  */
 
 /** Each role once: its classes, its size and weight, and where it is used. */
@@ -84,8 +84,7 @@ const meta = {
     docs: {
       description: {
         component: `Type roles, spacing steps, density and radii. The sizes are the ones the
-packages already use; the spec names them so new code picks a role rather than a size.
-Spec: \`docs/visual-language.md\` §3.`,
+packages already use, named so new code picks a role rather than a size.`,
       },
     },
   },

@@ -1,5 +1,5 @@
 /*
- * The palette switch, shared by every lab app.
+ * The palette switch.
  *
  * Three states, not two, and cycled by one button rather than spread across a
  * segmented control: this sits in a header next to the thing the app is
@@ -8,8 +8,7 @@
  * silently stops following the OS the first time you touch the switch has taken
  * something away.
  *
- * Lived in visual-anomaly-lab's own `App.tsx` first. It moved here the moment a
- * second app needed it, rather than being copied: two copies of a control that
+ * One shared control rather than a copy per app: two copies of a control that
  * writes to `localStorage` is two chances to disagree about the key, the cycle
  * order, or which icon means which state.
  *

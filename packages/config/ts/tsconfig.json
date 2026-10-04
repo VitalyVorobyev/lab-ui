@@ -1,5 +1,5 @@
 {
-  // The compiler options every vitavision frontend shares (PLAN §3, ADR-0002).
+  // The compiler options every vitavision frontend shares.
   // An app extends this and adds its own `include`; a library extends tsconfig.lib.json.
   "compilerOptions": {
     "target": "ES2022",

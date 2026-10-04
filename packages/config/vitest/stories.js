@@ -1,7 +1,7 @@
 // @ts-check
 /**
- * Run every story of a package as a test: render it and run its `play` (PLAN §4.3 — the
- * stories are the fixtures). Accessibility and server rendering are checked over the same
+ * Run every story of a package as a test: render it and run its `play` (the stories are the
+ * fixtures). Accessibility and server rendering are checked over the same
  * stories by the Storybook app's harness; this is the per-package run that counts towards
  * the package's own coverage.
  *

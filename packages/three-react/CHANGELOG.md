@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- 376b38a: New package (PLAN L8-1): React Three Fiber components over `@vitavision/three`. Peers are `react`, `react-dom`, `three` (`^0.186.0`) and `@react-three/fiber` (`^9.8.1`). The package was incubated in etendue's studio and moved here with its stories.
+- 376b38a: New package: React Three Fiber components over `@vitavision/three`. Peers are `react`, `react-dom`, `three` (`^0.186.0`) and `@react-three/fiber` (`^9.8.1`).
   
   - `SceneCanvas`: a Z-up viewport in vitavision colours, with orbit controls, a ground grid and lights. `up`, `fov` and `clip` adapt it to other scenes, such as a camera-frame (CV, +Y down) one. Its camera and raycaster enable `GIZMO_LAYER`.
   - `FrameTree`, `AtFrame` and `useFrameTree`: a baked scenario as a frame graph, posed at `playhead.get()` on every rendered frame (`PlayheadSource`, e.g. a `@vitavision/workbench` playhead). Playback never re-renders React.

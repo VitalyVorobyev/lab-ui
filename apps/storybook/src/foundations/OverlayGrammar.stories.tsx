@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ReactNode, useId } from "react";
 
 /**
- * The overlay grammar (PLAN §5) on a synthetic ChArUco frame: one glyph per feature kind,
- * one colour per role, strokes in screen pixels at any zoom, and the hover / selected /
- * dimmed states. The values here are the proposal `docs/visual-language.md` §5 records;
- * `stage2d` gets them as tokens in L6-2.
+ * The overlay grammar on a synthetic ChArUco frame: one glyph per feature kind, one colour
+ * per role, strokes in screen pixels at any zoom, and the hover / selected / dimmed states.
+ * `stage2d` ships the role colours as tokens (`--stage-*`).
  */
 
 /**
@@ -224,7 +223,7 @@ const meta = {
         component: `How geometry is drawn over an image, in \`stage2d\`, \`overlays\` and \`three\`:
 strokes are **screen** pixels at every zoom (\`width / scale\`, not \`vector-effect\`, which is
 unreliable under a CSS transform), each feature kind has one glyph, and each role one colour. Every
-glyph has a dark halo so it holds on a bright or a dark image. Spec: \`docs/visual-language.md\` §5.`,
+glyph has a dark halo so it holds on a bright or a dark image.`,
       },
     },
   },

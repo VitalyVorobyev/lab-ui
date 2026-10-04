@@ -1,14 +1,14 @@
 // @ts-check
 /**
- * The shared ESLint flat config (PLAN §3/§4): typescript-eslint (type-aware), React
- * (`@eslint-react`), the hooks rules, Storybook, and the G5.1 token rule.
+ * The shared ESLint flat config: typescript-eslint (type-aware), React (`@eslint-react`), the
+ * hooks rules, Storybook, and `tokensOnly`, the rule that keeps colour in the design tokens.
  *
  *     // eslint.config.js
  *     import { recommended, tokensOnly } from "@vitavision/config-eslint";
  *     export default [...recommended({ tsconfigRootDir: import.meta.dirname }), tokensOnly(["src/editor/**"])];
  *
- * Accessibility is not linted here — `eslint-plugin-jsx-a11y` does not run on eslint 10
- * (ADR-0002 X1); axe checks every story instead.
+ * Accessibility is not linted here — `eslint-plugin-jsx-a11y` does not run on eslint 10;
+ * axe checks every story instead.
  */
 
 import eslintReact from "@eslint-react/eslint-plugin";
@@ -50,7 +50,8 @@ export function recommended({ tsconfigRootDir }) {
 }
 
 /**
- * Gate G5.1, scoped to the directories an app has migrated.
+ * Colour from the design tokens only — no raw Tailwind palette classes or hex colours — in the
+ * given directories (the ones an app has moved onto the tokens).
  * @param {string[]} files globs of the migrated directories
  * @returns {import("eslint").Linter.Config}
  */

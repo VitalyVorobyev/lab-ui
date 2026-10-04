@@ -11,8 +11,8 @@
  * `unit` (happy-dom, `src/**\/*.test.{ts,tsx}`), `stories` (Chromium via Vitest browser
  * mode, `src/stories.test.tsx`, which runs every story's `play` — see `./stories`) and
  * `browser` (Chromium, `src/**\/*.browser.test.{ts,tsx}`: logic that needs a real browser,
- * e.g. WebGL read-back or the CSS colour parser). Stories are the component fixtures
- * (PLAN §4.3), so component coverage counts them. A package without stories or browser
+ * e.g. WebGL read-back or the CSS colour parser). Stories are the component fixtures,
+ * so component coverage counts them. A package without stories or browser
  * tests uses the same preset; an empty project is skipped.
  */
 
@@ -26,7 +26,7 @@ export { dom } from "./dom.js";
 const setup = new URL("./setup.js", import.meta.url).pathname;
 
 /**
- * PLAN §4.3: at least 90 % of lines for `*.ts` logic, 80 % for components — per file, so one
+ * The coverage bar: at least 90 % of lines for `*.ts` logic, 80 % for components — per file, so one
  * well-covered module cannot carry an untested one.
  */
 export const DOD_COVERAGE = {
@@ -36,7 +36,7 @@ export const DOD_COVERAGE = {
 
 /**
  * @param {{ coverage?: Record<string, unknown> }} [options]
- *   coverage thresholds for the merged report (vitest `coverage.thresholds`); the DoD's by default
+ *   coverage thresholds for the merged report (vitest `coverage.thresholds`); `DOD_COVERAGE` by default
  */
 export function library(options = {}) {
   return defineConfig({
