@@ -488,6 +488,31 @@ describe("ImageStage — gestures and keys", () => {
     expect(off.stage().view).toEqual(fit);
   });
 
+  it("is a tab stop only while focusable, which follows shortcuts unless given", () => {
+    withLayout();
+    const on = renderWithStage();
+    expect(on.viewport.getAttribute("role")).toBe("application");
+    expect(on.viewport.getAttribute("tabindex")).toBe("0");
+    on.unmount();
+
+    const off = renderWithStage({ shortcuts: false });
+    expect(off.viewport.getAttribute("role")).toBe("group");
+    expect(off.viewport.hasAttribute("tabindex")).toBe(false);
+    expect(screen.getByRole("group", { name: "Image canvas" })).toBe(off.viewport);
+    off.unmount();
+
+    const kept = renderWithStage({ shortcuts: false, focusable: true });
+    expect(kept.viewport.getAttribute("role")).toBe("application");
+    expect(kept.viewport.getAttribute("tabindex")).toBe("0");
+    kept.unmount();
+
+    // Not a tab stop, but the keys still work from an element inside the stage.
+    const inner = renderWithStage({ focusable: false, layer: <button type="button">handle</button> });
+    expect(inner.viewport.hasAttribute("tabindex")).toBe(false);
+    fireEvent.keyDown(screen.getByRole("button", { name: "handle" }), { key: "1" });
+    expect(inner.stage().view.scale).toBe(1);
+  });
+
   it("ignores keys typed into a field inside the stage", () => {
     withLayout();
     const { stage } = renderWithStage({ layer: <input aria-label="note" /> });

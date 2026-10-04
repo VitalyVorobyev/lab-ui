@@ -45,7 +45,9 @@ const meta = {
         component: `The photograph inside an \`ImageStage\`, at its natural size. With a \`preview\` tier it shows the
 preview until the stage would magnify it — when the screen shows more pixels than the preview has — then requests
 \`src\` and keeps it (zooming out does not swap back). The preview stays underneath while the full image loads.
-Past \`pixelatedAbove\` (default 4×) pixels are drawn as blocks: the sensor's own samples, not interpolated ones.
+When the full image is costly to produce, leave \`src\` out: \`onFullNeeded\` fires once per preview when the same
+rule trips, the preview carries \`data-wants-full\` until the full image has loaded, and the full image is shown as
+soon as \`src\` arrives. Past \`pixelatedAbove\` (default 4×) pixels are drawn as blocks: the sensor's own samples, not interpolated ones.
 
 **Use** it for the image under every overlay in a stage.
 
@@ -87,6 +89,51 @@ export const PreviewThenFull: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Fit to window" }));
     await expect(canvasElement.querySelector("[data-tier=full]")).not.toBeNull();
     await expect(canvasElement.querySelector("[data-tier=preview]")).toBeNull();
+  },
+};
+
+/**
+ * The full image is costly to produce, so the app leaves `src` out and supplies it when
+ * `onFullNeeded` says the preview would be magnified. Until then the preview carries
+ * `data-wants-full`.
+ */
+function LazyStage({ layer, delay }: { layer: ImageLayerProps; delay: number }) {
+  const [src, setSrc] = useState<string | undefined>(undefined);
+  const { src: full = FULL, onFullNeeded, preview = { src: PREVIEW, width: 1024 }, ...rest } = layer;
+  return (
+    <Stage
+      layer={{
+        ...rest,
+        preview,
+        src,
+        onFullNeeded: () => {
+          onFullNeeded?.();
+          setTimeout(() => setSrc(full), delay);
+        },
+      }}
+    />
+  );
+}
+
+export const LazyFull: Story = {
+  args: { preview: { src: PREVIEW, width: 1024 }, onFullNeeded: fn() },
+  render: (args) => <LazyStage layer={args} delay={150} />,
+  play: async ({ canvas, canvasElement, args }) => {
+    const preview = () => canvasElement.querySelector("[data-tier=preview]");
+    // At fit the preview is enough: nothing is asked for.
+    await waitFor(() => expect(preview()).not.toBeNull());
+    await expect(preview()).not.toHaveAttribute("data-wants-full");
+    await expect(args.onFullNeeded).not.toHaveBeenCalled();
+    // At 100% the preview would be magnified: the app is asked once, and the preview waits.
+    await userEvent.click(canvas.getByRole("button", { name: "Actual size (100%)" }));
+    await waitFor(() => expect(args.onFullNeeded).toHaveBeenCalledOnce());
+    await expect(preview()).toHaveAttribute("data-wants-full");
+    // The URL arrives; the full image loads and replaces the preview.
+    await waitFor(() => expect(canvasElement.querySelector("[data-tier=full][data-loaded]")).not.toBeNull());
+    await waitFor(() => expect(preview()).toBeNull());
+    // Zooming further does not ask again.
+    await userEvent.click(canvas.getByRole("button", { name: "Zoom in" }));
+    await expect(args.onFullNeeded).toHaveBeenCalledOnce();
   },
 };
 

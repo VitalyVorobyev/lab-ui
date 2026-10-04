@@ -137,7 +137,10 @@ export interface StageContext {
   toViewport: (image: Point) => Point;
   /** The image-pixel length that covers `css` screen pixels — for screen-constant geometry. */
   imageLength: (css: number) => number;
-  /** Put a rect (image coordinates) on screen with a margin. */
+  /**
+   * Put a rect (image coordinates) on screen with a margin: `pad` is a fraction of the rect's
+   * own width and height added on each side (default 0.15).
+   */
   frame: (rect: Rect, pad?: number) => void;
   /** Fit the whole image. */
   fit: () => void;
@@ -162,7 +165,10 @@ export interface StageContext {
  * measured. Layers inside the stage use `useStage` instead.
  */
 export interface StageHandle {
-  /** Put a rect (image coordinates) on screen with a margin (CSS pixels, default 24). */
+  /**
+   * Put a rect (image coordinates) on screen with a margin: `pad` is a fraction of the rect's
+   * own width and height added on each side (default 0.15).
+   */
   frame: (rect: Rect, pad?: number) => void;
   /** Fit the whole image. */
   fit: () => void;
@@ -247,6 +253,14 @@ export interface ImageStageProps {
   /** Keyboard zoom/pan shortcuts. On by default; the stage takes focus to receive them. */
   shortcuts?: boolean;
   /**
+   * Whether the viewport is a tab stop (`tabIndex={0}`, `role="application"`). Defaults to
+   * `shortcuts`. Off, the viewport is a plain `role="group"` that takes no focus, for an app that
+   * owns the keyboard on an element around the stage and would otherwise have two nested tab
+   * stops. With `shortcuts` on and `focusable` off the keys still work while focus is on an
+   * element inside the stage, such as an editor's handle.
+   */
+  focusable?: boolean | undefined;
+  /**
    * Whether the arrow keys pan. On by default, and worth turning off in an app where the
    * arrows have a better job — stepping through a list of findings, say. The zoom keys
    * (`+`, `-`, `0`, `1`) are unaffected, and dragging still pans either way.
@@ -283,6 +297,9 @@ export interface ImageStageProps {
  * State is exposed on the viewport as `data-fit` (the view is fit), `data-panning` (a drag
  * is in progress) and `data-pan-mode` (the hand tool is on or space is held), each present
  * or absent.
+ *
+ * The viewport is a `role="application"` tab stop named by `label`. With `focusable` off (the
+ * default when `shortcuts` is off) it is a `role="group"` and takes no focus.
  */
 export function ImageStage({
   image,
@@ -302,6 +319,7 @@ export function ImageStage({
   onBackgroundClick,
   clamp,
   shortcuts = true,
+  focusable = shortcuts,
   panKeys = true,
   label = "Image canvas",
   initialView: opening = "auto",
@@ -834,9 +852,9 @@ export function ImageStage({
       <StageHitContext value={hits}>
         <div
           ref={attachViewport}
-          role="application"
+          role={focusable ? "application" : "group"}
           aria-label={label}
-          tabIndex={0}
+          tabIndex={focusable ? 0 : undefined}
           style={style}
           data-fit={atFit ? "" : undefined}
           data-panning={panning ? "" : undefined}

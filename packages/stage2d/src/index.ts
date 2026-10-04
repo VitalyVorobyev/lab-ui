@@ -29,7 +29,7 @@ export {
   type StageHitTestApi,
 } from "./components/stage/useStageHitTest";
 
-export { ImageLayer, type ImageLayerProps, type ImageTier } from "./components/stage/ImageLayer";
+export { ImageLayer, type ImageLayerBaseProps, type ImageLayerProps, type ImageTier } from "./components/stage/ImageLayer";
 
 export {
   StageSurface,
