@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent, type PointerEvent } from "react";
 
-import { imageViewBox } from "./stage/view";
+import { DraftShape } from "./DraftShape";
 import { useStage } from "./stage/ImageStage";
 import type { Point } from "./measureGeometry";
 
@@ -49,7 +49,11 @@ export interface MaskEditorProps {
   color?: readonly [number, number, number, number];
 }
 
-/** Render and edit a binary raster mask within the enclosing ImageStage. */
+/**
+ * Render and edit a binary raster mask within the enclosing ImageStage. While editing, a
+ * `DraftShape` brush footprint (a circle of the brush's diameter) follows the mouse or pen
+ * pointer, and the keyboard brush while the layer has keyboard focus.
+ */
 export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRadius = 3, mode = "paint", label = "Mask brush", color = [0, 190, 220, 128] }: MaskEditorProps) {
   const stage = useStage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,6 +63,8 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
   const cursorRef = useRef<Point | null>(null);
   // Where the keyboard brush is drawn, while the layer has keyboard focus.
   const [brush, setBrush] = useState<Point | null>(null);
+  // Where the pointer hovers (or paints); the footprint follows it. Not set for touch.
+  const [hover, setHover] = useState<Point | null>(null);
 
   function cursor(): Point {
     return cursorRef.current ?? { x: Math.floor(stage.image.width / 2), y: Math.floor(stage.image.height / 2) };
@@ -91,13 +97,21 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
     lastRef.current = point;
     cursorRef.current = point;
     setBrush(null);
+    if (event.pointerType !== "touch") setHover(point);
     apply(point, point);
   }
 
   function move(event: PointerEvent<HTMLCanvasElement>) {
-    if (!lastRef.current) return;
+    if (!lastRef.current) {
+      if (editable && !stage.panMode && event.pointerType !== "touch") {
+        setHover(stage.toImage({ x: event.clientX, y: event.clientY }));
+        setBrush(null);
+      }
+      return;
+    }
     event.stopPropagation();
     const point = stage.toImage({ x: event.clientX, y: event.clientY });
+    if (event.pointerType !== "touch") setHover(point);
     apply(lastRef.current, point);
     lastRef.current = point;
     cursorRef.current = point;
@@ -107,6 +121,7 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
     if (!lastRef.current) return;
     event.stopPropagation();
     lastRef.current = null;
+    if (event.pointerType === "touch") setHover(null);
     onCommit?.();
   }
 
@@ -126,12 +141,14 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
         y: Math.max(0, Math.min(stage.image.height - 1, from.y + delta.y)),
       };
       setBrush(cursorRef.current);
+      setHover(null);
     } else if (event.key === "Enter") {
       event.preventDefault();
       event.stopPropagation();
       const at = cursor();
       draftRef.current = mask;
       setBrush(at);
+      setHover(null);
       apply(at, at);
       onCommit?.();
     }
@@ -143,12 +160,8 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
 
   return (
     <>
-      <canvas ref={canvasRef} width={stage.image.width} height={stage.image.height} className={`absolute inset-0 h-full w-full ${editable ? "pointer-events-auto cursor-crosshair" : "pointer-events-none"}`} style={{ imageRendering: "pixelated" }} role={editable ? "button" : "img"} tabIndex={editable ? 0 : undefined} aria-label={label} aria-description={editable ? "Arrow keys move the brush; Enter paints or erases." : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onLostPointerCapture={up} onDoubleClick={(event) => { if (editable && !stage.panMode) event.stopPropagation(); }} onKeyDown={keyDown} onFocus={focus} onBlur={() => setBrush(null)} />
-      {brush && (
-        <svg viewBox={imageViewBox(stage.image)} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
-          <circle cx={brush.x} cy={brush.y} r={Math.max(0.75, brushRadius)} fill="none" stroke="var(--signal)" strokeWidth={stage.imageLength(1.5)} />
-        </svg>
-      )}
+      <canvas ref={canvasRef} width={stage.image.width} height={stage.image.height} className={`absolute inset-0 h-full w-full ${editable ? "pointer-events-auto cursor-crosshair" : "pointer-events-none"}`} style={{ imageRendering: "pixelated" }} role={editable ? "button" : "img"} tabIndex={editable ? 0 : undefined} aria-label={label} aria-description={editable ? "Arrow keys move the brush; Enter paints or erases." : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onLostPointerCapture={up} onDoubleClick={(event) => { if (editable && !stage.panMode) event.stopPropagation(); }} onKeyDown={keyDown} onFocus={focus} onBlur={() => setBrush(null)} onPointerLeave={() => { if (!lastRef.current) setHover(null); }} />
+      {(hover ?? brush) && editable && <DraftShape shape={{ kind: "brush", x: (hover ?? brush)!.x, y: (hover ?? brush)!.y, diameter: 2 * Math.max(0.75, brushRadius) }} stroke="var(--signal)" />}
     </>
   );
 }

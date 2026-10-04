@@ -102,4 +102,26 @@ describe("ContourEditor", () => {
     rerender(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} /></ImageStage>);
     expect(getByRole("img", { name: "Contour" })).toBeTruthy();
   });
+
+  it("clamps drags and nudges to custom bounds, reaching the image border", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const bounds = { x: -0.5, y: -0.5, width: 10, height: 10 };
+    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable bounds={bounds} /></ImageStage>);
+    const handle = getByRole("button", { name: "Contour point 1" });
+    handle.setPointerCapture = vi.fn();
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 4 });
+    fireEvent.pointerMove(handle, { clientX: -50, clientY: -50, pointerId: 4 });
+    expect(onChange.mock.lastCall?.[0][0]).toEqual({ x: -0.5, y: -0.5 });
+    fireEvent.pointerMove(handle, { clientX: 100, clientY: 100, pointerId: 4 });
+    expect(onChange.mock.lastCall?.[0][0]).toEqual({ x: 9.5, y: 9.5 });
+    fireEvent.pointerUp(handle, { pointerId: 4 });
+  });
+
+  it("nudges to a custom border and stops there", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const edge = [{ x: 9.4, y: 5 }, { x: 5, y: 2 }, { x: 5, y: 8 }];
+    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={edge} onChange={onChange} editable bounds={{ x: -0.5, y: -0.5, width: 10, height: 10 }} /></ImageStage>);
+    fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "ArrowRight" });
+    expect(onChange.mock.lastCall?.[0][0]).toEqual({ x: 9.5, y: 5 });
+  });
 });

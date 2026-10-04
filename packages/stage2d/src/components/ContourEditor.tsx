@@ -5,6 +5,7 @@ import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { imageViewBox } from "./stage/view";
 import { useStage } from "./stage/ImageStage";
 import type { Point } from "./measureGeometry";
+import type { Rect } from "./stage/view";
 
 /** An ordered, closed contour drawn in source-image pixel-center coordinates. */
 export interface ContourEditorProps {
@@ -20,6 +21,13 @@ export interface ContourEditorProps {
   label?: string;
   /** CSS stroke color. */
   stroke?: string;
+  /**
+   * The area, in image coordinates, every vertex is kept inside: a drag, a keyboard nudge and
+   * an inserted vertex are clamped to it. Defaults to the pixel centres,
+   * `{ x: 0, y: 0, width: w - 1, height: h - 1 }`. Pass `{ x: -0.5, y: -0.5, width: w, height: h }`
+   * for polygons in the area convention, which may lie exactly on the image border.
+   */
+  bounds?: Rect | undefined;
 }
 
 /** Return the index of the closest segment, with the last vertex joined to the first. */
@@ -40,7 +48,7 @@ export function nearestContourSegment(points: Point[], point: Point): number {
 }
 
 /** Edit contour vertices over an ImageStage using its shared source-image transform. */
-export function ContourEditor({ points, onChange, onCommit, editable = false, label = "Contour", stroke = "var(--signal)" }: ContourEditorProps) {
+export function ContourEditor({ points, onChange, onCommit, editable = false, label = "Contour", stroke = "var(--signal)", bounds }: ContourEditorProps) {
   const stage = useStage();
   const draggingRef = useRef<number | null>(null);
   const movedRef = useRef(false);
@@ -50,9 +58,10 @@ export function ContourEditor({ points, onChange, onCommit, editable = false, la
   const hairline = stage.imageLength(1.5);
 
   function clamp(point: Point): Point {
+    const area = bounds ?? { x: 0, y: 0, width: stage.image.width - 1, height: stage.image.height - 1 };
     return {
-      x: Math.max(0, Math.min(stage.image.width - 1, point.x)),
-      y: Math.max(0, Math.min(stage.image.height - 1, point.y)),
+      x: Math.max(area.x, Math.min(area.x + area.width, point.x)),
+      y: Math.max(area.y, Math.min(area.y + area.height, point.y)),
     };
   }
 

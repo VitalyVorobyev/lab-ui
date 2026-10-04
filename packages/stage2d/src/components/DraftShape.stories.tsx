@@ -265,3 +265,32 @@ export const MarqueeSelect: Story = {
     await waitFor(() => expect(canvas.getByTestId("picked")).toHaveTextContent("no points | a,b"));
   },
 };
+
+/** A polygon whose pointer is on the first vertex: that vertex is ringed and the closing edge is solid. */
+export const PolygonClosing: Story = {
+  args: { shape: { kind: "polygon", points: [80, 220, 120, 100, 230, 190], cursor: { x: 80, y: 220 }, closing: true } },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector("path[data-draft-first]")).not.toBeNull();
+    const closing = canvasElement.querySelector("path[data-draft-closing]")!;
+    await expect(closing.getAttribute("d")).toBe("M230 190L80 220");
+    await expect(closing.getAttribute("stroke-dasharray")).toBeNull();
+  },
+};
+
+/** A brush trail 24 image px wide, in a custom colour. */
+export const BrushStroke: Story = {
+  args: { shape: { kind: "stroke", points: new Float64Array([80, 200, 140, 120, 220, 170, 300, 90]).subarray(0, 8), width: 24 }, stroke: "var(--stage-model)" },
+  play: async ({ canvasElement }) => {
+    const trail = canvasElement.querySelector("path[data-draft-stroke]")!;
+    await expect(trail.getAttribute("stroke-width")).toBe("24");
+    await expect(trail.getAttribute("stroke")).toBe("var(--stage-model)");
+  },
+};
+
+/** A brush footprint: a light ring over a dark one. */
+export const BrushFootprint: Story = {
+  args: { shape: { kind: "brush", x: 200, y: 150, diameter: 40 } },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector("path[data-draft-brush]")!.getAttribute("d")).toBe("M220 150a20 20 0 1 0 -40 0a20 20 0 1 0 40 0Z");
+  },
+};
