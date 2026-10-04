@@ -308,6 +308,12 @@ vitavision. The last is last because of SSR and the router.
 - **L5-1 — Consolidate** VAL `CurveChart`/`CompareCurves` and calibration-rs `Histogram`
   onto `@vitavision/charts`. Done when the concept matrix shows one implementation per
   chart concept.
+  *Done 2026-10-04:* charts 0.8.0 adds `Histogram`, a single-series histogram over raw `values` or pre-binned
+  `counts` with a cursor bin and a threshold rule (#93, closes #58), and calibration-rs's ROI luminance histogram
+  is that chart (calibration-rs#145). VAL's `CurveChart` / `CompareCurves` were already `LineChart`
+  compositions; their duplicated chance diagonal is one helper now (visual-anomaly-lab#167). VAL and calibration-rs
+  have no local chart left. What the matrix still counts is caliperbench's `AlongChart` and the vm-lab / caliperbench
+  colour maps, which wait on their adoption of U-6.
 
 ### L6 — 2D stage
 
@@ -335,7 +341,18 @@ vitavision. The last is last because of SSR and the router.
   and the feature file is versioned, with a v1 import migration. The editor e2e specs pass 17/17,
   with the algorithm fixture shifted by exactly −0.5 (PuzzleBoard, which never had the offset, by 0).
   The concept matrix shows vitavision on `stage2d`, `overlays` and `forms`. The gaps it worked around
-  are lab-ui#88 (stage2d) and #89 (forms). L6-3 (calibration-rs) and L6-4 (VAL) remain.
+  are lab-ui#88 (stage2d) and #89 (forms), fixed by #94 and #95 (stage2d 0.11) and #92 (forms 0.8) and adopted by
+  vitavision#183, which deleted its own tool surface, ellipse hit layer and `will-change` rule.
+  *L6-3 done 2026-10-04:* calibration-rs#144. `FrameCanvas` is an `ImageStage`: the ROI crop is its image, the
+  residual arrows, laser overlay and epipolar markers are SVG layers batched by colour, and the overlays moved half a
+  pixel onto the pixel centre the detectors use. The Diagnose, Compare and Epipolar e2e tests pass.
+  *L6-4 done 2026-10-04:* visual-anomaly-lab#168, after a behavioural contract spec was landed on the Konva editor
+  first (#166). The annotation editor is one `ImageStage` (`AnnotationStage`), and `konva` / `react-konva` are gone.
+  The stage2d gaps it needed came first: #96 (`ContourEditor` bounds, `DraftShape` close cue, brush stroke and
+  footprint), #98 (CSS colours, fill rule and item paint order on `AreaSet`, colours on `PointSet`), #99
+  (viewport-wide `StageSurface`, `onView` causes, the null-view fix, the `RectRoiEditor` bounds fix) and #100
+  (`panBounds: "center"`), released as stage2d 0.12.0. The contract passes unchanged; the remaining editor gaps are
+  #101. L6-3..5 are done.
 
 ### L7 — Overlays
 

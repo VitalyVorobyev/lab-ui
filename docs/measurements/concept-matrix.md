@@ -24,28 +24,28 @@ Cells: **n** = files in that repo implementing the concept locally · ◆ = uses
 | [Numeric field that keeps typed text while editing](#numeric-field) | ui | 1 | **3** |  |  |  |  |  | ◆ | · |  |  |  |
 | [Popover / dropdown menu / listbox](#popover) | ui | 2 | **3** |  |  |  |  |  | ◆ | **1** |  |  |  |
 | [Keyboard shortcut hint](#kbd-hint) | ui | 2 | **1** |  |  |  |  |  | · | **1** |  |  |  |
-| [Schema-driven form](#schema-form) | forms | 3 | **2** | ◆ | ◆ | **1** | **2** |  |  |  |  |  | · |
-| [Histogram](#histogram) | charts | 3 | **1** | ◆ |  | **1** |  |  | ◆ |  |  |  | **2** |
-| [Line chart](#line-chart) | charts | 3 | **3** | **2** |  |  |  |  | ◆ | **1** |  |  |  |
+| [Schema-driven form](#schema-form) | forms | 2 | **2** | ◆ | ◆ | ◆ | **2** |  |  |  |  |  | · |
+| [Histogram](#histogram) | charts | 2 | **3** | ◆ |  | ◆ |  |  | ◆ |  |  |  | **2** |
+| [Line chart](#line-chart) | charts | 2 | **3** | ◆ |  |  |  |  | ◆ | **1** |  |  |  |
 | [Bar chart](#bar-chart) | charts | 1 | **1** | ◆ |  |  |  |  |  |  |  |  |  |
 | [Line profile](#line-profile) | charts | 2 | **1** |  |  |  |  |  | ◆ | ◆ |  |  | **2** |
 | [Chart interaction: hover readout, pick, bands, markers](#chart-interaction) | charts | 2 | **1** |  |  |  |  |  | · | **1** |  |  |  |
 | [Sequential colour map for a magnitude](#sequential-colormap) | charts | 3 | **2** |  |  |  |  |  | **1** | **1** |  |  |  |
-| [2D image stage (zoom / pan / layers)](#image-stage) | stage2d | 8 | **3** | **2** | ◆ | **2** | **1** | **1** | ◆ | ◆ | **1** | **2** | **2** |
+| [2D image stage (zoom / pan / layers)](#image-stage) | stage2d | 6 | **3** | ◆ | ◆ | ◆ | **1** | **1** | ◆ | ◆ | **1** | **2** | **2** |
 | [Stage zoom controls / toolbar](#stage-toolbar) | stage2d | 6 | **1** |  | **1** | **1** |  |  | ◆ | **2** |  | **1** | **1** |
 | [Measurement overlay](#measure-tool) | stage2d | 2 | **2** | ◆ |  |  |  |  | ◆ |  |  |  | **2** |
 | [Pixel value readout](#pixel-readout) | stage2d | 4 | **1** | **1** | **1** |  |  |  |  |  |  |  | **1** |
 | [Imperative stage handle (frame / fit from outside the stage)](#stage-handle) | stage2d | 3 | **1** |  |  |  |  |  | **2** | **2** |  |  |  |
-| [Image layer: pixelated zoom, resolution tiers](#image-layer) | stage2d | 2 | **1** |  |  |  |  |  | ◆ | **1** |  |  |  |
+| [Image layer: pixelated zoom, resolution tiers](#image-layer) | stage2d | 2 | **1** | ◆ |  | ◆ |  |  | ◆ | **1** |  |  |  |
 | [Stage layers menu](#layers-menu) | stage2d | 3 | **1** |  |  |  |  |  | **1** | **1** |  |  |  |
-| [Rectangle ROI editor](#roi-editor) | stage2d | 2 | **2** |  |  |  |  |  | ◆ |  |  |  | **1** |
-| [Selectable polyline set (hover, select, marquee)](#polyline-set) | stage2d | 2 | **2** |  |  |  |  |  | ◆ | **2** |  |  |  |
-| [Stage tool model (what a press on the stage means)](#stage-tool-model) | stage2d | 2 | **1** |  |  |  |  |  | ◆ | **2** |  |  |  |
+| [Rectangle ROI editor](#roi-editor) | stage2d | 2 | **2** | ◆ |  |  |  |  | ◆ |  |  |  | **1** |
+| [Selectable polyline set (hover, select, marquee)](#polyline-set) | stage2d | 2 | **2** | ◆ | ◆ |  |  |  | ◆ | **2** |  |  |  |
+| [Stage tool model (what a press on the stage means)](#stage-tool-model) | stage2d | 2 | **1** | ◆ | ◆ |  |  |  | ◆ | **2** |  |  |  |
 | [Heatmap / colour-scale layer](#heatmap) | stage2d | 2 | **2** | **1** | ◆ |  |  |  |  |  |  |  |  |
 | [Studio app shell (header, side panels, status)](#app-shell) | workbench | 1 | **2** |  |  |  |  |  | ◆ | · |  |  |  |
 | [Thumbnail strip / sequence navigator](#sequence-navigator) | workbench | 3 | **1** |  |  |  |  |  | **2** | **1** |  |  |  |
 | [File drop / open files](#file-drop) | workbench | 2 | **1** |  |  |  |  |  | **1** |  |  |  |  |
-| [Calibration-target / feature overlay](#target-overlay) | overlays | 6 | **1** |  | ◆ | **1** | **2** | **1** |  |  | **1** | **1** |  |
+| [Calibration-target / feature overlay](#target-overlay) | overlays | 6 | **1** |  | ◆ | **2** | **2** | **1** |  |  | **1** | **1** |  |
 | [3D scene / camera frustum / target board](#3d-frustum) | three | 1 | **3** |  |  | ◆ |  |  |  |  |  |  |  |
 | [3D point cloud](#point-cloud) | three | 1 |  |  |  | **1** |  |  |  |  |  |  |  |
 
@@ -56,9 +56,9 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 | Layer | Concepts | Local implementations | Concepts with >1 implementation |
 |---|---|---|---|
 | ui | 18 | 33 | 10 |
-| forms | 1 | 3 | 1 |
-| charts | 6 | 14 | 5 |
-| stage2d | 11 | 36 | 11 |
+| forms | 1 | 2 | 1 |
+| charts | 6 | 12 | 5 |
+| stage2d | 11 | 34 | 11 |
 | workbench | 3 | 6 | 2 |
 | overlays | 1 | 6 | 1 |
 | three | 2 | 2 | 0 |
@@ -173,7 +173,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 - **lab-ui**: `packages/ui/src/components/ui/Toggle.tsx`, `packages/ui/src/components/ui/ToggleChip.tsx`
 - **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: uses `@vitavision/ui`
-- **calibration-rs**: uses `@vitavision/ui` · _ToggleChip for toolbar toggles; lib/configForm.tsx keeps an inline checkbox until L4_
+- **calibration-rs**: uses `@vitavision/ui` · _ToggleChip for toolbar toggles_
 - **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **calib-targets-rs/demo**: `src/components/LayerToggles.tsx`
 - **vision-metrology/lab**: uses `@vitavision/ui`
@@ -211,7 +211,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 - **lab-ui**: `packages/ui/src/components/ui/Input.tsx`, `packages/ui/src/components/ui/Field.tsx`
 - **visual-anomaly-lab**: uses `@vitavision/ui`
 - **vitavision**: uses `@vitavision/ui`
-- **calibration-rs**: uses `@vitavision/ui` · _Input in the ask-user dialog; lib/configForm.tsx keeps inline inputs until L4_
+- **calibration-rs**: uses `@vitavision/ui`
 - **calib-targets-rs/studio**: uses `@vitavision/ui`
 - **vision-metrology/lab**: uses `@vitavision/ui`
 - **caliperbench**: uses `@vitavision/ui`
@@ -279,8 +279,8 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 - **lab-ui**: `packages/forms/src/components/SchemaForm.tsx`, `packages/forms/src/api/schemaForm.ts`
 - **visual-anomaly-lab**: uses `@vitavision/forms`
-- **vitavision**: uses `@vitavision/forms` · _SchemaValueForm on each detector's WASM schema, one UiSchema per algorithm (createConfigForm.tsx); schemaTools.ts folds ringgrid's $ref-with-siblings (lab-ui#89)_
-- **calibration-rs**: `src/lib/configForm.tsx`
+- **vitavision**: uses `@vitavision/forms` · _SchemaValueForm on each detector's WASM schema, one UiSchema per algorithm (createConfigForm.tsx); schemaTools.ts composes the package documents and orders tagged variants' fields by declaration_
+- **calibration-rs**: uses `@vitavision/forms` · _SchemaValueForm over the xtask-emitted config schemas (calibration-rs#143)_
 - **calib-targets-rs/studio**: `src/components/ParamForm.tsx`, `src/components/ConfigEditor.tsx`
 - **viva-genicam/studio**: _GenICam node-map editors (FeatureBrowser/editors/*): driven by the camera XML, not JSON Schema_
 
@@ -288,10 +288,10 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 ### Histogram
 
-- **lab-ui**: `packages/charts/src/Histogram.tsx`
+- **lab-ui**: `packages/charts/src/Histogram.tsx`, `packages/charts/src/ScoreHistogram.tsx`, `packages/charts/src/bars.ts`
 - **visual-anomaly-lab**: uses `@vitavision/charts`
-- **calibration-rs**: `src/components/Histogram.tsx`
-- **vision-metrology/lab**: uses `@vitavision/charts` · _ScoreHistogram with an empty defect series, i.e. a single-series histogram_
+- **calibration-rs**: uses `@vitavision/charts` · _Diagnose's ROI luminance: Histogram over 64 pre-binned counts with the cursor bin (DiagnoseWorkspace/RoiHistogram.tsx, calibration-rs#145)_
+- **vision-metrology/lab**: uses `@vitavision/charts` · _ScoreHistogram with an empty defect series; charts 0.8's single-series Histogram (#58) is the direct replacement_
 - **viva-genicam/studio**: `src/components/ImageViewer/HistogramOverlay.tsx`, `src/components/ImageViewer/histogramUtils.ts`
 
 <a id="line-chart"></a>
@@ -299,7 +299,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Line chart
 
 - **lab-ui**: `packages/charts/src/LineChart.tsx`, `packages/charts/src/Frame.tsx`, `packages/charts/src/scale.ts`
-- **visual-anomaly-lab**: `src/components/charts/CurveChart.tsx`, `src/routes/compare/CompareCurves.tsx` · _wrappers over lab-ui LineChart_
+- **visual-anomaly-lab**: uses `@vitavision/charts` · _CurveChart / CompareCurves are ROC/PR cards composing LineChart, with one chanceDiagonal underlay (visual-anomaly-lab#167)_
 - **vision-metrology/lab**: uses `@vitavision/charts`
 - **caliperbench**: `src/AlongChart.tsx` · _own responsive SVG over charts' linePath/linearScale, for hover, pick and bands_
 
@@ -340,9 +340,9 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### 2D image stage (zoom / pan / layers)
 
 - **lab-ui**: `packages/stage2d/src/components/stage/ImageStage.tsx`, `packages/stage2d/src/components/stage/view.ts`, `packages/stage2d/src/components/ZoomPanCanvas.tsx`
-- **visual-anomaly-lab**: `src/components/annotation/AnnotationCanvas.tsx`, `src/components/annotation/canvasView.ts` · _Konva annotation editor; sample/result viewers already use lab-ui ImageStage (viewer/SampleStage.tsx)_
-- **vitavision**: uses `@vitavision/stage2d` · _CanvasWorkspace composes ImageStage; annotations/ToolSurface.tsx replaces StageSurface for tool input so a touch tap is told from a pan or pinch (lab-ui#88)_
-- **calibration-rs**: `src/components/FrameCanvas.tsx`, `src/components/CompareViewer.tsx` · _raw Canvas2D_
+- **visual-anomaly-lab**: uses `@vitavision/stage2d` · _annotation/AnnotationStage.tsx (the editor, visual-anomaly-lab#168) and viewer/SampleStage.tsx compose ImageStage_
+- **vitavision**: uses `@vitavision/stage2d` · _CanvasWorkspace composes ImageStage; tool input through StageSurface (vitavision#183)_
+- **calibration-rs**: uses `@vitavision/stage2d` · _components/FrameCanvas.tsx composes ImageStage: the ROI crop as its image, linked compare panes (calibration-rs#144)_
 - **calib-targets-rs/studio**: `src/components/CanvasViewport.tsx` · _raw Canvas2D_
 - **calib-targets-rs/demo**: `src/components/CanvasViewport.tsx`
 - **vision-metrology/lab**: uses `@vitavision/stage2d` · _canvas/CanvasStage.tsx, AlignTab and BirdsEyeTab compose ImageStage_
@@ -394,6 +394,8 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Image layer: pixelated zoom, resolution tiers
 
 - **lab-ui**: `packages/stage2d/src/components/stage/ImageLayer.tsx`
+- **visual-anomaly-lab**: uses `@vitavision/stage2d`
+- **calibration-rs**: uses `@vitavision/stage2d`
 - **vision-metrology/lab**: uses `@vitavision/stage2d`
 - **caliperbench**: `src/SegmentReview.tsx`
 
@@ -410,6 +412,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Rectangle ROI editor
 
 - **lab-ui**: `packages/stage2d/src/components/RectRoiEditor.tsx`, `packages/stage2d/src/components/roiEdit.ts`
+- **visual-anomaly-lab**: uses `@vitavision/stage2d` · _the selected annotation box's corners_
 - **vision-metrology/lab**: uses `@vitavision/stage2d` · _canvas/roi.ts converts between the lab's ROI and the editor's Rect_
 - **viva-genicam/studio**: `src/components/ImageViewer/RoiOverlay.tsx`
 
@@ -418,6 +421,8 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Selectable polyline set (hover, select, marquee)
 
 - **lab-ui**: `packages/stage2d/src/components/PolylineSet.tsx`, `packages/stage2d/src/components/polylineIndex.ts`
+- **visual-anomaly-lab**: uses `@vitavision/stage2d`
+- **vitavision**: uses `@vitavision/stage2d`
 - **vision-metrology/lab**: uses `@vitavision/stage2d`
 - **caliperbench**: `src/SegmentLayer.tsx`, `src/StationLayer.tsx`
 
@@ -426,6 +431,8 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 ### Stage tool model (what a press on the stage means)
 
 - **lab-ui**: `packages/stage2d/src/components/stage/StageSurface.tsx`
+- **visual-anomaly-lab**: uses `@vitavision/stage2d`
+- **vitavision**: uses `@vitavision/stage2d`
 - **vision-metrology/lab**: uses `@vitavision/stage2d`
 - **caliperbench**: `src/SegmentLayer.tsx`, `src/SketchLayer.tsx` · _tools chosen in canvas/ToolRail.tsx; each layer handles its own presses_
 
@@ -466,7 +473,7 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 - **lab-ui**: `packages/overlays/src/TargetOverlay.tsx`
 - **vitavision**: uses `@vitavision/overlays` · _overlay/targetDetection.ts maps the editor's detection features to a TargetDetection; radsym circles go through TargetOverlay too_
-- **calibration-rs**: `src/workspaces/EpipolarWorkspace/EpipolarOverlay.tsx` · _residual arrows drawn inside FrameCanvas.tsx_
+- **calibration-rs**: `src/workspaces/EpipolarWorkspace/EpipolarOverlay.tsx`, `src/components/frameOverlayPaths.ts` · _residual arrows, the laser overlay and epipolar markers as stage layers batched by colour; residual vectors have no second consumer yet_
 - **calib-targets-rs/studio**: `src/components/overlays.ts`, `src/components/diagnoseOverlays.ts`
 - **calib-targets-rs/demo**: `src/components/overlays.ts`
 - **chess-corners-rs/demo**: `src/components/overlays.ts`
@@ -489,13 +496,13 @@ Columns from *chess-corners-rs/demo* onward are outside PLAN.md §0 (mapped, not
 
 | Repo | Frontend | Commit | In PLAN §0 |
 |---|---|---|---|
-| [lab-ui](https://github.com/VitalyVorobyev/lab-ui) | `.` | `8835f5afaf+dirty` | yes |
-| [visual-anomaly-lab](https://github.com/VitalyVorobyev/visual-anomaly-lab) | `frontend` | `d41cd6347b` | yes |
-| [vitavision](https://github.com/VitalyVorobyev/vitavision) | `.` | `f98a30cbc3` | yes |
-| [calibration-rs](https://github.com/VitalyVorobyev/calibration-rs) | `app` | `0c623a3be7` | yes |
+| [lab-ui](https://github.com/VitalyVorobyev/lab-ui) | `.` | `c9ec9e40fa+dirty` | yes |
+| [visual-anomaly-lab](https://github.com/VitalyVorobyev/visual-anomaly-lab) | `frontend` | `435218fd7d` | yes |
+| [vitavision](https://github.com/VitalyVorobyev/vitavision) | `.` | `8d87c8e973` | yes |
+| [calibration-rs](https://github.com/VitalyVorobyev/calibration-rs) | `app` | `d6187d75e3` | yes |
 | [calib-targets-rs/studio](https://github.com/VitalyVorobyev/calib-targets-rs) | `studio` | `1381645516` | yes |
 | [calib-targets-rs/demo](https://github.com/VitalyVorobyev/calib-targets-rs) | `demo` | `1381645516` | yes |
-| [vision-metrology/lab](https://github.com/VitalyVorobyev/vision-metrology) | `lab/frontend` | `7238ac8492` | yes |
+| [vision-metrology/lab](https://github.com/VitalyVorobyev/vision-metrology) | `lab/frontend` | `747e2279c3` | yes |
 | [caliperbench](https://github.com/VitalyVorobyev/caliperbench) | `frontend` | `4078f938e3` | yes |
 | [chess-corners-rs/demo](https://github.com/VitalyVorobyev/chess-corners-rs) | `demo` | `5400b8661a` | no |
 | [vision-lab/operator-ui](https://github.com/VitalyVorobyev/vision-lab) | `apps/operator-ui/ui` | `9ee2883c37+dirty` | no |
