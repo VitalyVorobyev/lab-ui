@@ -46,7 +46,7 @@ import type {
 
 import { cn } from "@vitavision/ui";
 import type { Point } from "../measureGeometry";
-import { centroid, hitRadiusPx, isTap, panButtonCodes, pinchView, type StageMouseButton } from "./gesture";
+import { CLICK_SLOP, centroid, hitRadiusPx, isTap, panButtonCodes, pinchView, type StageMouseButton } from "./gesture";
 import { StageHitContext, type StagePointerEvent } from "./hitContext";
 import { createHitRegistry } from "./hitTest";
 import {
@@ -81,8 +81,6 @@ const WHEEL_SENSITIVITY = 0.0015;
  * has settled, both are as sharp as with no hint. Cleared, the layer re-rasterises.
  */
 const MOVING_SETTLE_MS = 150;
-/** How far a press may travel and still count as a click rather than a pan. */
-const CLICK_SLOP = 3;
 /** The view before the viewport has been measured — nothing is on screen yet. */
 const UNMEASURED_VIEW: StageView = { scale: 1, tx: 0, ty: 0 };
 

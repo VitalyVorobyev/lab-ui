@@ -256,13 +256,30 @@ function distanceOutside(shape: RotatedShape, kind: "rect" | "ellipse", p: Point
 }
 
 /**
+ * How far a point inside a shape is from its outline, in image pixels; zero outside it. For an
+ * ellipse the same first-order estimate as `distanceOutside`, which grows without bound towards
+ * the centre.
+ */
+function distanceInside(shape: RotatedShape, kind: "rect" | "ellipse", p: Point): number {
+  const u = toShapeFrame(shape, p);
+  const a = Math.max(shape.width / 2, 1e-9);
+  const b = Math.max(shape.height / 2, 1e-9);
+  if (kind === "rect") return Math.max(0, Math.min(a - Math.abs(u.x), b - Math.abs(u.y)));
+  const f = (u.x / a) ** 2 + (u.y / b) ** 2;
+  if (f >= 1) return 0;
+  const g = Math.hypot(u.x / (a * a), u.y / (b * b));
+  return g > 0 ? (Math.sqrt(f) - f) / g : Infinity;
+}
+
+/**
  * What a press on an editable shape means, decided once for the whole editor so that a small
  * shape's interior never steals a press meant for its handle.
  *
  * In order:
  * 1. The nearest handle (the eight, and the rotation handle when `rotatable`) whose screen
  *    distance from the press is within `radius` plus the handle's half size: resize or rotate.
- * 2. Inside the shape, or within `radius` screen pixels of its outline: move.
+ * 2. Inside the shape (when `interior`), or within `radius` screen pixels of its outline on
+ *    either side: move.
  * 3. Otherwise `null`: the press is declined and belongs to whatever is below.
  *
  * @param shape - The shape.
@@ -271,6 +288,9 @@ function distanceOutside(shape: RotatedShape, kind: "rect" | "ellipse", p: Point
  * @param point - The press, in image coordinates.
  * @param radius - The pointer's tolerance in screen pixels: 12 for a touch, 6 for a mouse.
  * @param rotatable - Whether the rotation handle exists. Defaults to `true`.
+ * @param interior - Whether a press inside the shape, away from its outline, moves it.
+ *   Defaults to `true`; `false` leaves the inside to whatever is below, so only the handles
+ *   and the band along the outline grab the shape.
  * @returns The decision, or `null`.
  */
 export function shapePress(
@@ -280,6 +300,7 @@ export function shapePress(
   point: Point,
   radius: number,
   rotatable = true,
+  interior = true,
 ): ShapePress | null {
   const best: { press: ShapePress | null; distance: number } = { press: null, distance: Infinity };
   const consider = (candidate: ShapePress, at: Point, half: number) => {
@@ -294,5 +315,7 @@ export function shapePress(
     consider({ kind: "rotate" }, rotationHandlePoint(shape, SHAPE_ROTATE_OFFSET_PX / scale), SHAPE_ROTATE_RADIUS_PX);
   }
   if (best.press) return best.press;
-  return distanceOutside(shape, kind, point) * scale <= radius ? { kind: "move" } : null;
+  const outside = distanceOutside(shape, kind, point);
+  if (outside > 0) return outside * scale <= radius ? { kind: "move" } : null;
+  return interior || distanceInside(shape, kind, point) * scale <= radius ? { kind: "move" } : null;
 }

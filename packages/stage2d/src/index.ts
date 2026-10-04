@@ -130,7 +130,7 @@ export {
 export { useScreenPx } from "./components/stage/useScreenPx";
 
 export { ContourEditor, nearestContourSegment, type ContourEditorProps } from "./components/ContourEditor";
-export { RectRoiEditor, type RectRoiEditorProps } from "./components/RectRoiEditor";
+export { RectRoiEditor, type RectRoiEditorHandle, type RectRoiEditorProps } from "./components/RectRoiEditor";
 export {
   PolylineSet,
   type PolylineSelectMode,

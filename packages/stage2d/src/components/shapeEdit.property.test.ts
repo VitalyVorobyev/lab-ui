@@ -15,6 +15,7 @@ import {
   shapeCorner,
   shapeFromCorner,
   shapeHandlePoint,
+  shapePress,
   toShapeFrame,
   type RotatedShape,
 } from "./shapeEdit";
@@ -160,5 +161,45 @@ describe("frames and corners", () => {
       expect(close(movedCorner.x, corner.x + 7, 1e-9)).toBe(true);
       expect(close(movedCorner.y, corner.y - 9, 1e-9)).toBe(true);
     }
+  });
+});
+
+describe("shapePress without the interior", () => {
+  it("only ever gives up the inside: every other decision is the same, and what it keeps it agrees on", () => {
+    const rand = prng(23);
+    let declined = 0;
+    let kept = 0;
+    for (let n = 0; n < 4000; n++) {
+      const shape = randomShape(rand);
+      const kind = rand() < 0.5 ? "rect" : "ellipse";
+      const scale = 0.25 + rand() * 4;
+      const radius = rand() < 0.5 ? 6 : 12;
+      const rotatable = rand() < 0.5;
+      // Points near the shape: inside, on the outline and just outside it.
+      const local = { x: (rand() * 1.4 - 0.7) * shape.width, y: (rand() * 1.4 - 0.7) * shape.height };
+      const point = fromShapeFrame(shape, local);
+      const full = shapePress(shape, kind, scale, point, radius, rotatable, true);
+      const edge = shapePress(shape, kind, scale, point, radius, rotatable, false);
+      if (edge === null) {
+        // Declined only what the full editor would move by its inside, or nothing at all.
+        if (full !== null) {
+          expect(full).toEqual({ kind: "move" });
+          declined++;
+        }
+      } else {
+        expect(edge).toEqual(full);
+        kept++;
+      }
+      // Outside the shape the inside plays no part.
+      const u = toShapeFrame(shape, point);
+      const outside =
+        kind === "rect"
+          ? Math.abs(u.x) > shape.width / 2 || Math.abs(u.y) > shape.height / 2
+          : (u.x / (shape.width / 2)) ** 2 + (u.y / (shape.height / 2)) ** 2 > 1;
+      if (outside) expect(edge).toEqual(full);
+    }
+    // Both branches were exercised.
+    expect(declined).toBeGreaterThan(100);
+    expect(kept).toBeGreaterThan(100);
   });
 });

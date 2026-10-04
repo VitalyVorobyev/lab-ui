@@ -26,7 +26,7 @@ import {
   SHAPE_ROTATE_RADIUS_PX,
   type RotatedShape,
 } from "./shapeEdit";
-import { POINTER_RADIUS_PX, TOUCH_RADIUS_PX, hitRadiusPx } from "./stage/gesture";
+import { CLICK_SLOP, POINTER_RADIUS_PX, TOUCH_RADIUS_PX, hitRadiusPx } from "./stage/gesture";
 import { useStage } from "./stage/ImageStage";
 import { useCoarsePointer } from "./stage/useCoarsePointer";
 import { useScreenPx } from "./stage/useScreenPx";
@@ -34,7 +34,7 @@ import { imageViewBox } from "./stage/view";
 
 /** Outline width, in screen pixels. */
 const STROKE_PX = 1.5;
-/** The halo under the outline (visual-language §5), in screen pixels on each side. */
+/** The dark halo under the outline, in screen pixels on each side. */
 const HALO_PX = 1;
 /** Shift while rotating rounds to this step, and `[` / `]` turn by 1° (15° with Shift). */
 const SNAP = Math.PI / 12;
@@ -71,7 +71,13 @@ type Drag = (
   | { kind: "move"; from: Point }
   | { kind: "resize"; handle: RoiHandle }
   | { kind: "rotate" }
-) & { start: RotatedShape; moved: boolean; pointerId: number };
+) & {
+  start: RotatedShape;
+  /** Where the press landed, in client coordinates: a move counts once it is past the click slop. */
+  client: Point;
+  moved: boolean;
+  pointerId: number;
+};
 
 /**
  * An editable rotated rectangle or ellipse inside an `ImageStage`.
@@ -87,6 +93,8 @@ type Drag = (
  *   then the interior or outline band (move), then nothing. A small shape's interior does not
  *   steal a press meant for a handle, and a press that hits none of them is not claimed, so
  *   it reaches whatever is below, or the stage.
+ * - **Click slop.** A press becomes an edit only once the pointer has moved 3 screen pixels
+ *   from where it landed, so a jittery click changes nothing and commits nothing.
  * - **Touch.** A press that grabs the shape is claimed; a second finger landing during an edit
  *   cancels it (the shape reverts, nothing is committed) and is left to the stage.
  * - **Rotation.** The handle past the top side turns the shape about its centre; hold Shift to
@@ -163,7 +171,7 @@ export function ShapeEditor({
     } catch {
       // The pointer ended before this handler ran; the edit still follows the events the editor receives.
     }
-    const base = { start: value, moved: false, pointerId: event.pointerId };
+    const base = { start: value, client: { x: event.clientX, y: event.clientY }, moved: false, pointerId: event.pointerId };
     dragRef.current =
       decision.kind === "move"
         ? { ...base, kind: "move", from: at }
@@ -185,6 +193,8 @@ export function ShapeEditor({
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     event.stopPropagation();
+    // A jittery click is not an edit: nothing changes until the pointer leaves the click slop.
+    if (!drag.moved && Math.hypot(event.clientX - drag.client.x, event.clientY - drag.client.y) <= CLICK_SLOP) return;
     const p = stage.toImage({ x: event.clientX, y: event.clientY });
     drag.moved = true;
     if (drag.kind === "move") report(moveShape(drag.start, p.x - drag.from.x, p.y - drag.from.y));

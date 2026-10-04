@@ -212,4 +212,40 @@ describe("shapePress", () => {
     // A handle on the bounding box wins over the outline.
     expect(shapePress(ellipse, "ellipse", 1, { x: 300, y: 150 }, 6)).toEqual({ kind: "resize", handle: "e" });
   });
+
+  describe("without the interior", () => {
+    it("declines the inside of a rectangle, but keeps the band on both sides of the outline", () => {
+      expect(shapePress(BIG, "rect", 1, { x: 200, y: 150 }, 6, true, false)).toBeNull();
+      // 5 px inside the top side and 5 px outside it, away from every handle.
+      expect(shapePress(BIG, "rect", 1, { x: 150, y: 105 }, 6, true, false)).toEqual({ kind: "move" });
+      expect(shapePress(BIG, "rect", 1, { x: 150, y: 95 }, 6, true, false)).toEqual({ kind: "move" });
+      // On the outline itself.
+      expect(shapePress(BIG, "rect", 1, { x: 150, y: 100 }, 6, true, false)).toEqual({ kind: "move" });
+      // 10 px inside: past a mouse's band, inside a finger's; and in screen pixels.
+      expect(shapePress(BIG, "rect", 1, { x: 150, y: 110 }, 6, true, false)).toBeNull();
+      expect(shapePress(BIG, "rect", 1, { x: 150, y: 110 }, 12, true, false)).toEqual({ kind: "move" });
+      expect(shapePress(BIG, "rect", 2, { x: 150, y: 105 }, 6, true, false)).toBeNull();
+      // Nearer a side than the top: the left side's band.
+      expect(shapePress(BIG, "rect", 1, { x: 104, y: 120 }, 6, true, false)).toEqual({ kind: "move" });
+    });
+
+    it("still resizes from the handles, inside or out", () => {
+      expect(shapePress(BIG, "rect", 1, { x: 296, y: 196 }, 6, false, false)).toEqual({ kind: "resize", handle: "se" });
+      expect(shapePress(BIG, "rect", 1, { x: 200, y: 108 }, 6, false, false)).toEqual({ kind: "resize", handle: "n" });
+    });
+
+    it("measures the band inside an ellipse and a turned rectangle", () => {
+      const ellipse: RotatedShape = { ...BIG };
+      // Off the axes, away from the handles: about 3.4 px inside the outline, then about 15.
+      expect(shapePress(ellipse, "ellipse", 1, { x: 270, y: 182 }, 6, false, false)).toEqual({ kind: "move" });
+      expect(shapePress(ellipse, "ellipse", 1, { x: 270, y: 182 }, 3, false, false)).toBeNull();
+      expect(shapePress(ellipse, "ellipse", 1, { x: 260, y: 175 }, 6, false, false)).toBeNull();
+      // The centre is as far from the outline as an ellipse gets.
+      expect(shapePress(ellipse, "ellipse", 1, { x: 200, y: 150 }, 6, false, false)).toBeNull();
+      const turned: RotatedShape = { ...BIG, rotation: Math.PI / 2 };
+      // The quarter-turned shape spans x 150..250: 4 px inside its left side.
+      expect(shapePress(turned, "rect", 1, { x: 154, y: 120 }, 6, false, false)).toEqual({ kind: "move" });
+      expect(shapePress(turned, "rect", 1, { x: 170, y: 120 }, 6, false, false)).toBeNull();
+    });
+  });
 });
