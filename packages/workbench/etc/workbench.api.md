@@ -9,6 +9,7 @@ import { defaultToastStore } from '@vitavision/ui';
 import { JSX } from 'react';
 import { MeasureTone } from '@vitavision/ui';
 import { ReactNode } from 'react';
+import { ReadoutItem } from '@vitavision/ui';
 import { toast } from '@vitavision/ui';
 import { Toaster } from '@vitavision/ui';
 import { ToasterProps } from '@vitavision/ui';
@@ -255,6 +256,19 @@ export interface SplitPaneProps {
     sizedPane?: SizedPane | undefined;
     step?: number | undefined;
     storageKey?: string | undefined;
+}
+
+// @public
+export function StatusBar(input: StatusBarProps): JSX.Element;
+
+// @public
+export interface StatusBarProps {
+    "aria-label"?: string | undefined;
+    children?: ReactNode;
+    className?: string | undefined;
+    end?: ReadoutItem[] | undefined;
+    live?: boolean | undefined;
+    start?: ReadoutItem[] | undefined;
 }
 
 // @public

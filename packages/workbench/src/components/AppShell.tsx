@@ -45,7 +45,7 @@ export interface AppShellProps {
   main: ReactNode;
   /** The panel right of the main surface — an inspector. */
   right?: ReactNode;
-  /** The strip along the bottom, across the whole width — a `PlaybackBar`, a status line. */
+  /** The strip along the bottom, across the whole width — a `PlaybackBar`, a `StatusBar`. */
   bottom?: ReactNode;
   /** Names the left panel's landmark (`<aside>`). Defaults to "Navigator". */
   leftLabel?: string | undefined;

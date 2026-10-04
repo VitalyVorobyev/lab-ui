@@ -20,6 +20,7 @@ bun add @vitavision/workbench @vitavision/ui
 | Export | What |
 |---|---|
 | `AppShell` | Full-viewport frame: `header`, a fixed-width `rail` (an icon nav, `<nav>`), `left` \| `main` \| `right` (side panels resizable and optionally remembered), `bottom`. Landmarks included. |
+| `StatusBar` | One 24 px status line for `AppShell`'s `bottom` slot: `ReadoutItem` facts at the `start` and `end`, anything (a `ProgressBar`) between. A named group; a polite `role="status"` with `live`. |
 | `SplitPane` | Two panes, horizontal or vertical, with a draggable, keyboard-operable divider (`role="separator"`, WAI-ARIA window splitter). Sizes in px or `%`, min/max, collapsible, controlled or not, `storageKey`. Nests. |
 | `TreeView` | Data-driven tree (`TreeNode[]` with `icon`/`meta`), WAI-ARIA tree keyboard, controlled selection, controlled or uncontrolled expansion; reveals a selection made elsewhere. |
 | `PlaybackBar` | Transport for a sampled timeline: step, play/pause, markers, scrubber, `t = k · dt`, speed, loop. |
