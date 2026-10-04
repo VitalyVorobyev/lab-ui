@@ -155,7 +155,7 @@
     },
     "packages/stage2d": {
       "name": "@vitavision/stage2d",
-      "version": "0.11.0",
+      "version": "0.12.0",
       "dependencies": {
         "@vitavision/ui": "workspace:^",
         "lucide-react": "^1.48.0",
