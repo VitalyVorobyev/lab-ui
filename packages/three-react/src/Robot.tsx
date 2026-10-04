@@ -12,6 +12,7 @@ import type { MeshStandardMaterial, Object3D } from "three";
 import { useSceneColors } from "./colors";
 import { AtFrame, useFrameTree } from "./FrameTree";
 import { FrameAxes } from "./gizmos";
+import { invalidateScene } from "./sceneSignal";
 
 /** Props of {@link Robot}. */
 export interface RobotProps {
@@ -31,7 +32,8 @@ export interface RobotProps {
 
 /**
  * A robot's link meshes, attached to its link frames in the enclosing `FrameTree`, in one
- * matte material from the `fg-muted` token.
+ * matte material from the `fg-muted` token. Attaching, removing or recolouring the meshes
+ * invalidates the scene (see {@link invalidateScene}), so a `SensorImage` of it redraws.
  */
 export function Robot({ id, visuals, resolve, loader, axes = [], onLoaded }: RobotProps) {
   const runtime = useFrameTree();
@@ -66,6 +68,7 @@ export function Robot({ id, visuals, resolve, loader, axes = [], onLoaded }: Rob
       material = applyRobotMaterial(meshes.values(), "gray");
       setState({ material, failed: result.failed.map((f) => f.link) });
       onLoadedRef.current?.(result.failed);
+      invalidateScene(runtime);
     });
     return () => {
       cancelled = true;
@@ -74,12 +77,15 @@ export function Robot({ id, visuals, resolve, loader, axes = [], onLoaded }: Rob
         disposeObject(m);
       }
       material?.dispose();
+      if (meshes) invalidateScene(runtime);
     };
   }, [runtime, id, visualsKey]);
 
   useEffect(() => {
-    state.material?.color.set(colors.muted);
-  }, [state.material, colors.muted]);
+    if (!state.material) return;
+    state.material.color.set(colors.muted);
+    invalidateScene(runtime);
+  }, [runtime, state.material, colors.muted]);
 
   return (
     <>

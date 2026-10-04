@@ -1,8 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { type FrameTreeRuntime, type MeshLoader, type RemapTable, imageBorderPixels } from "@vitavision/three";
+import {
+  type FrameTreeRuntime,
+  GIZMO_LAYER,
+  type MeshLoader,
+  type RemapTable,
+  TargetBoard as TargetBoardObject,
+  imageBorderPixels,
+} from "@vitavision/three";
 import { useMemo, useState } from "react";
 import { expect, waitFor } from "storybook/test";
-import { BoxGeometry, Mesh, MeshBasicMaterial, type SphereGeometry } from "three";
+import { BoxGeometry, Color, type LineLoop, Mesh, MeshBasicMaterial, type SphereGeometry } from "three";
 
 import { AtFrame, FrameTree, type PlayheadSource } from "./FrameTree";
 import { CameraFrustum, FrameAxes, LaserFan, LightGizmo, TargetBoard } from "./gizmos";
@@ -129,6 +136,25 @@ const meta = {
   component: Cell,
   args: { sample: 0 },
   argTypes: { sample: { control: { type: "range", min: 0, max: 59, step: 1 } } },
+  parameters: {
+    docs: {
+      description: {
+        component: `A robot cell put together from the package: a \`SceneCanvas\` viewport, a \`FrameTree\` that poses a baked
+scenario at the playhead, a \`Robot\`, gizmos placed with \`AtFrame\`, and a \`SensorImage\` of the camera.
+
+- **Physical and viewer-only:** the robot and the \`TargetBoard\` are physical, so the sensor image shows them; frusta,
+  laser fans, light symbols, axes, the grid and the board's outline are viewer-only. The board is printed paper and ink
+  (\`color\`, \`edgeColor\`) in every theme; only its outline follows the theme (\`muted\`) and the selection (\`signal\`).
+- **On-demand sensor image:** \`SensorImage\` draws when the playhead's sample, the theme or the scene changes, and not
+  while it is out of view or its tab is hidden. After changing the scene outside React, call
+  \`invalidateScene(runtime)\` (or the function \`useSceneInvalidate()\` returns inside a \`FrameTree\`); \`Robot\` and
+  \`TargetBoard\` do it themselves.
+- **When not to use:** for a 2D image with overlays, use an image stage instead; a 3D view is for geometry that needs depth.
+- **Accessibility:** the sensor image is an \`img\` named by \`label\`. Selection in the 3D view is by pointer: offer the
+  same choices in a list or inspector beside it.`,
+      },
+    },
+  },
 } satisfies Meta<typeof Cell>;
 
 export default meta;
@@ -155,6 +181,11 @@ export const Default: Story = {
     // pickPadding 1.3: the pickable sphere at the optical centre is 0.3 × depth.
     const apex = runtime.frame("cam")!.getObjectByName("hitbox-apex") as Mesh<SphereGeometry>;
     await expect(apex.geometry.parameters.radius).toBeCloseTo(0.3 * 0.15, 9);
+    // The board is white paper in either theme; its outline is a viewer-only gizmo.
+    const board = runtime.frame("board")!.children.find((c) => c instanceof TargetBoardObject)!;
+    const [paper, , outline] = board.children as [Mesh, Mesh, LineLoop];
+    await expect((paper.material as MeshBasicMaterial).color.equals(new Color(0xf2f2f2))).toBe(true);
+    await expect(outline.layers.isEnabled(GIZMO_LAYER) && !outline.layers.isEnabled(0)).toBe(true);
   },
 };
 
@@ -172,14 +203,15 @@ export const Playhead: Story = {
 
 /**
  * A camera-frame (CV, +Y down) scene with an app palette instead of the tokens: `SceneCanvas`
- * with `up = −Y`, a `SceneColorsProvider`, and an emphasised laser fan and board.
+ * with `up = −Y`, a `SceneColorsProvider`, an emphasised laser fan, and a selected board printed
+ * in its own colours (`color`, `edgeColor`) with its outline in the palette's accent.
  */
 export const CameraFrame: StoryObj = {
   render: () => (
-    <SceneColorsProvider colors={{ signal: "orange", defect: "crimson", surface: "white", fg: "black" }}>
+    <SceneColorsProvider colors={{ signal: "orange", defect: "crimson" }}>
       <SceneCanvas className="h-96 w-full" eye={[0.4, -0.6, -0.6]} target={[0, 0, 0.5]} up={[0, -1, 0]} fov={40} clip={[0.001, 10]} label="Camera frame">
         <group position={[0, 0, 0.5]}>
-          <TargetBoard width={0.25} height={0.175} checker={{ cols: 10, rows: 7 }} active />
+          <TargetBoard width={0.25} height={0.175} checker={{ cols: 10, rows: 7 }} color="ivory" edgeColor="midnightblue" active />
         </group>
         <LaserFan halfAngle={0.4} length={0.6} active />
       </SceneCanvas>

@@ -1,4 +1,4 @@
-import { type RootState, useThree } from "@react-three/fiber";
+import { type RootState, useFrame, useThree } from "@react-three/fiber";
 import { render } from "@testing-library/react";
 import { StrictMode, useEffect } from "react";
 import { Vector3 } from "three";
@@ -29,9 +29,16 @@ function Probe({ onState }: { onState: (state: RootState) => void }) {
   return null;
 }
 
+/** Counts rendered frames: a click before the first one would raycast with unposed matrices. */
+function Frames({ onFrame }: { onFrame: () => void }) {
+  useFrame(onFrame);
+  return null;
+}
+
 describe("SceneCanvas", () => {
   it("picks gizmos placed in a frame on GIZMO_LAYER", async () => {
     const onSelect = vi.fn();
+    let frames = 0;
     const { container } = render(
       // Looking down −Z at the frustum of a camera at z = 1 whose optical axis is +Z.
       <SceneCanvas className="viewport" eye={[0, 0, 3]} target={[0, 0, 0]} up={[0, 1, 0]} grid={0}>
@@ -40,9 +47,10 @@ describe("SceneCanvas", () => {
             <CameraFrustum borderRays={RAYS} depth={0.5} onSelect={onSelect} />
           </AtFrame>
         </FrameTree>
+        <Frames onFrame={() => (frames += 1)} />
       </SceneCanvas>,
     );
-    await vi.waitFor(() => expect(container.querySelector("canvas")).not.toBeNull());
+    await vi.waitFor(() => expect(frames).toBeGreaterThan(1));
     await userEvent.click(container.querySelector("canvas")!);
     await vi.waitFor(() => expect(onSelect).toHaveBeenCalledOnce());
   });

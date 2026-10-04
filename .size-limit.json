@@ -97,7 +97,7 @@
     "name": "@vitavision/three-react",
     "path": "packages/three-react/dist/index.js",
     "import": "*",
-    "limit": "2.95 kB",
+    "limit": "3.2 kB",
     "ignore": [
       "@react-three/fiber",
       "@vitavision/three",
