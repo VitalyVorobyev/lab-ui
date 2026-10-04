@@ -78,6 +78,7 @@ export type FieldSpec = {
 
 // @public
 export interface FieldUi {
+    clearTo?: "null" | undefined;
     descriptionAs?: "hint" | "inline" | "none" | undefined;
     enumLabels?: Record<string, string> | undefined;
     hidden?: boolean | undefined;

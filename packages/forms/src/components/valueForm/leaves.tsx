@@ -38,6 +38,16 @@ function marked(meta: FieldMeta): boolean {
 /** Where `null` is a legal value, an empty control says so. */
 const NULL_PLACEHOLDER = "none";
 
+/**
+ * What an empty control shows: the schema default while the key is absent (that is the
+ * value the consumer will use), `none` for an explicit `null` or a nullable field with no
+ * non-null default.
+ */
+function placeholderFor(meta: FieldMeta, value: unknown, fallback: string | undefined): string | undefined {
+  if (value === null) return meta.nullable ? NULL_PLACEHOLDER : fallback;
+  return fallback ?? (meta.nullable ? NULL_PLACEHOLDER : undefined);
+}
+
 /** A number field: bounds, unit and a verdict on what was typed. */
 export function NumberLeaf({ meta }: { meta: FieldMeta }) {
   const form = useForm();
@@ -49,9 +59,11 @@ export function NumberLeaf({ meta }: { meta: FieldMeta }) {
   const fallback = meta.schema.default;
   const restore = meta.ui.restoreDefaultOnClear ?? true;
   let onClear: (() => void) | undefined;
-  if (meta.nullable) onClear = () => form.setValue(meta.path, null);
+  if (meta.nullable && meta.ui.clearTo === "null") onClear = () => form.setValue(meta.path, null);
+  else if (!meta.required) {
+    onClear = () => form.setValue(meta.path, restore && typeof fallback === "number" ? fallback : undefined);
+  } else if (meta.nullable) onClear = () => form.setValue(meta.path, null);
   else if (restore && typeof fallback === "number") onClear = () => form.setValue(meta.path, fallback);
-  else if (!meta.required) onClear = () => form.setValue(meta.path, undefined);
   else if (restore) onClear = () => form.setValue(meta.path, defaultValueForSchema(meta.schema, form.schema));
 
   const judge = (event: ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +85,7 @@ export function NumberLeaf({ meta }: { meta: FieldMeta }) {
       <NumberInput
         aria-label={meta.label}
         disabled={form.disabled}
-        placeholder={meta.nullable ? NULL_PLACEHOLDER : typeof fallback === "number" ? String(fallback) : undefined}
+        placeholder={placeholderFor(meta, value, typeof fallback === "number" ? String(fallback) : undefined)}
         value={typeof value === "number" ? value : null}
         min={spec.min}
         max={spec.max}
@@ -92,7 +104,11 @@ export function NumberLeaf({ meta }: { meta: FieldMeta }) {
   );
 }
 
-/** A string field. Where `null` is legal, emptying it means `null`. */
+/**
+ * A string field. Emptying a nullable one removes an optional key (the schema default
+ * applies) and writes `null` for a required key or under `clearTo: "null"`; a field that
+ * cannot be `null` keeps `""`.
+ */
 export function TextLeaf({ meta }: { meta: FieldMeta }) {
   const form = useForm();
   const value = getAtPath(form.value, meta.path);
@@ -113,11 +129,13 @@ export function TextLeaf({ meta }: { meta: FieldMeta }) {
         spellCheck={false}
         aria-label={meta.label}
         disabled={form.disabled}
-        placeholder={meta.nullable ? NULL_PLACEHOLDER : typeof fallback === "string" ? fallback : undefined}
+        placeholder={placeholderFor(meta, value, typeof fallback === "string" ? fallback : undefined)}
         value={typeof value === "string" ? value : ""}
         onChange={(event) => {
           const text = event.currentTarget.value;
-          form.setValue(meta.path, meta.nullable && text === "" ? null : text);
+          if (text !== "" || !meta.nullable) form.setValue(meta.path, text);
+          else if (meta.ui.clearTo === "null" || meta.required) form.setValue(meta.path, null);
+          else form.setValue(meta.path, undefined);
         }}
       />
     </Field>
@@ -179,7 +197,8 @@ export function EnumLeaf({ meta, options }: { meta: FieldMeta; options: EnumOpti
     value: String(option.value),
     label: meta.ui.enumLabels?.[String(option.value)] ?? option.label,
   }));
-  const selected = options.find((option) => option.value === value);
+  // An absent key is its schema default, so that is the option shown as chosen.
+  const selected = options.find((option) => option.value === (value === undefined ? meta.schema.default : value));
   // The chosen variant's own sentence ("No distortion; no parameter block.") under the strip.
   const explained =
     !dense && meta.ui.descriptionAs !== "none" ? firstParagraph(selected?.description) : "";

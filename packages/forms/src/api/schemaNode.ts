@@ -117,12 +117,46 @@ export function resolveRef(ref: string, root: JsonSchema): JsonSchema | undefine
 }
 
 /**
+ * Lay `over` on `base`: `over`'s keywords win, except that where both describe an object
+ * the two are combined instead of one replacing the other.
+ *
+ * `properties` keep `over`'s keys first (an internally tagged variant's discriminator reads
+ * first) and then `base`'s; a key in both has its two schemas merged the same way. `required`
+ * is the union, `over`'s entries first.
+ */
+function mergeOver(base: JsonSchema, over: JsonSchema): JsonSchema {
+  const merged: JsonSchema = { ...base, ...over };
+  if (base.properties !== undefined && over.properties !== undefined) {
+    const properties: Record<string, JsonSchema> = {};
+    for (const [key, own] of Object.entries(over.properties)) {
+      const inherited = Object.hasOwn(base.properties, key) ? base.properties[key] : undefined;
+      properties[key] = inherited === undefined ? own : mergeOver(inherited, own);
+    }
+    for (const [key, inherited] of Object.entries(base.properties)) {
+      if (!Object.hasOwn(properties, key)) properties[key] = inherited;
+    }
+    merged.properties = properties;
+  }
+  if (base.required !== undefined && over.required !== undefined) {
+    merged.required = [...new Set([...over.required, ...base.required])];
+  }
+  return merged;
+}
+
+/**
  * Follow one `$ref`, keeping what the field says about itself.
  *
  * The merge order matters and is the opposite of the obvious one. schemars and pydantic
  * write the field's `default` and `description` *beside* the `$ref`, while the target
  * carries the type's own `title` and docstring. The field's statement about itself wins;
  * the type's is the fallback.
+ *
+ * `properties` and `required` written beside the `$ref` are the exception: in draft 2020-12
+ * both the target and the siblings apply, and ringgrid writes a tagged variant as
+ * `{ "$ref": "#/$defs/HexGeometry", "properties": { "kind": { "const": "hex" } } }`. They are
+ * merged, not replaced: the sibling's properties first (the discriminator leads), then the
+ * target's; a property in both is merged with the sibling's keywords winning; `required` is
+ * the union.
  *
  * @param node - A node that may carry a `$ref`.
  * @param root - The document holding `$defs`.
@@ -137,7 +171,7 @@ export function derefNode<T extends JsonSchema>(node: T, root: JsonSchema): T {
   const rest: JsonSchema = { ...node };
   delete rest.$ref;
   // The merge of a schema over a schema is a schema of the same family as `node`.
-  return { ...target, ...rest } as T;
+  return mergeOver(target, rest) as T;
 }
 
 function isNullSchema(branch: JsonSchema): boolean {
@@ -200,7 +234,7 @@ function unwrapAllOf<T extends JsonSchema>(node: T): T {
   if (only === undefined || node.allOf?.length !== 1) return node;
   const rest: JsonSchema = { ...node };
   delete rest.allOf;
-  return { ...only, ...rest } as T;
+  return mergeOver(only, rest) as T;
 }
 
 /**
