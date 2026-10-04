@@ -226,6 +226,31 @@ describe("clampView", () => {
     expect(far.ty).toBeCloseTo(box.height - IMAGE.height * 4, 9);
   });
 
+  it("with centre bounds, leaves a narrow axis where it is and stops each edge at the centre", () => {
+    const centre = { panBounds: "center" } as const;
+    const fit = fitScale(box, IMAGE);
+    const kept = clampView({ scale: fit, tx: 40, ty: 30 }, box, IMAGE, centre);
+    expect(kept.tx).toBe(40);
+    expect(kept.ty).toBe(30);
+
+    const left = clampView({ scale: 4, tx: 99999, ty: 99999 }, box, IMAGE, centre);
+    expect(left.tx).toBeCloseTo(box.width / 2, 9);
+    expect(left.ty).toBeCloseTo(box.height / 2, 9);
+    const right = clampView({ scale: 4, tx: -99999, ty: -99999 }, box, IMAGE, centre);
+    expect(right.tx).toBeCloseTo(box.width / 2 - IMAGE.width * 4, 9);
+    expect(right.ty).toBeCloseTo(box.height / 2 - IMAGE.height * 4, 9);
+  });
+
+  it("with centre bounds, a zoom about the pointer keeps its pixel while the image is narrower than the viewport", () => {
+    const centre = { panBounds: "center" } as const;
+    const start = fitView(box, IMAGE);
+    const anchor = { x: start.tx + 20 * start.scale, y: start.ty + 30 * start.scale };
+    const zoomed = clampView(zoomAbout(start, start.scale * 1.02, anchor), box, IMAGE, centre);
+    expect(IMAGE.width * zoomed.scale).toBeLessThan(box.width);
+    expect(toImage(zoomed, anchor).x).toBeCloseTo(toImage(start, anchor).x, 9);
+    expect(toImage(zoomed, anchor).y).toBeCloseTo(toImage(start, anchor).y, 9);
+  });
+
   it("allows zooming out below fit, but not indefinitely", () => {
     const [min, max] = scaleRange(box, IMAGE);
     expect(min).toBeCloseTo(fitScale(box, IMAGE) * MIN_SCALE_VS_FIT, 12);

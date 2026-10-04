@@ -166,6 +166,7 @@ export interface CirclePrimitive extends PrimitiveCommon {
 export interface ClampOptions {
     maxScale?: number;
     minScaleVsFit?: number;
+    panBounds?: "cover" | "center" | undefined;
 }
 
 // @public
