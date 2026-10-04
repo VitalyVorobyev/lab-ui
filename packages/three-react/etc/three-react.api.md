@@ -111,6 +111,7 @@ export interface SceneCanvasProps {
     eye?: readonly [number, number, number];
     fov?: number;
     grid?: number;
+    keyboard?: boolean;
     label?: string;
     onPointerMissed?: (() => void) | undefined;
     target?: readonly [number, number, number];

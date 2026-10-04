@@ -11,8 +11,7 @@ bun add @vitavision/three-react @vitavision/three three@0.186.1 @react-three/fib
 
 Peers: `react`, `react-dom`, `three` (`^0.186.0`) and `@react-three/fiber` (`^9.8.1`). No
 stylesheet: nothing here is a Tailwind class; the colours are read from the `@vitavision/ui`
-tokens at runtime. Built in etendue (`web/packages/three-react`) with `@vitavision/three` and
-moved here as PLAN L8-1.
+tokens at runtime.
 
 ```tsx
 <SceneCanvas className="h-full">
@@ -28,9 +27,11 @@ moved here as PLAN L8-1.
 </SceneCanvas>
 ```
 
-- `SceneCanvas` — Z-up canvas in vitavision colours: orbit controls, ground grid, lights.
-  `up`, `fov` and `clip` suit other scenes (`up={[0, -1, 0]}` for a camera-frame, CV
-  scene). Its camera and raycaster enable `GIZMO_LAYER`.
+- `SceneCanvas` — Z-up canvas in the theme's scene colours: orbit controls, ground grid,
+  lights. `up`, `fov` and `clip` suit other scenes (`up={[0, -1, 0]}` for a camera-frame, CV
+  scene). Its camera and raycaster enable `GIZMO_LAYER`. The view is a labelled group and a
+  tab stop: arrow keys orbit and tilt (Shift for larger steps), `+` and `-` zoom, `0` returns
+  to the opening view. `keyboard={false}` makes it pointer-only.
 - `FrameTree` / `AtFrame` / `useFrameTree` — a baked scenario as a frame graph; children of
   `AtFrame` live in that frame.
 - `Robot`, `CameraFrustum`, `LaserFan`, `TargetBoard`, `LightGizmo`, `FrameAxes`.
