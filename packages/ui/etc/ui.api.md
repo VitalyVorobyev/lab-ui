@@ -98,6 +98,10 @@ export type Column<Row> = {
     numeric?: boolean;
     width?: string;
     cell: (row: Row) => ReactNode;
+    sortable?: boolean | undefined;
+    sortValue?: ((row: Row) => number | string | null | undefined) | undefined;
+    compare?: ((a: Row, b: Row) => number) | undefined;
+    firstSort?: SortDirection | undefined;
 };
 
 // @public
@@ -488,6 +492,12 @@ export function Slider(input: {
 }): JSX.Element;
 
 // @public
+export type SortDirection = "ascending" | "descending";
+
+// @public
+export function sortRows<Row>(rows: readonly Row[], columns: readonly Pick<Column<Row>, "key" | "sortable" | "sortValue" | "compare">[], sort: TableSort | null | undefined): Row[];
+
+// @public
 export function StatusDot(input: {
     tone: Tone;
     className?: string | undefined;
@@ -524,7 +534,17 @@ export function Table<Row>(input: {
     onRowClick?: (row: Row, index: number, event: MouseEvent_2<HTMLTableRowElement> | KeyboardEvent_2<HTMLTableRowElement>) => void;
     isRowActive?: (row: Row, index: number) => boolean;
     onRowHover?: (row: Row | null, index: number | null) => void;
+    sort?: TableSort | null | undefined;
+    defaultSort?: TableSort | null | undefined;
+    onSortChange?: ((sort: TableSort | null) => void) | undefined;
+    manualSort?: boolean | undefined;
 }): JSX.Element;
+
+// @public
+export interface TableSort {
+    direction: SortDirection;
+    key: string;
+}
 
 // @public
 export function Tabs<Id extends string>(input: {
