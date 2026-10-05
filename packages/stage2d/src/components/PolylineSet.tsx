@@ -8,7 +8,7 @@
  * keeps this layer independent of how the lines are drawn.
  */
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type Ref } from "react";
 
 import type { Point } from "./measureGeometry";
 import {
@@ -20,8 +20,9 @@ import {
   type PolylineId,
 } from "./polylineIndex";
 import { overlayRole } from "./overlayRole";
+import type { StagePointerEvent } from "./stage/hitContext";
 import { useStage } from "./stage/ImageStage";
-import { useStageDrag } from "./stage/StageSurface";
+import { useStageDrag, type StageDrag, type StagePress } from "./stage/StageSurface";
 import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
 import { useStageHitLayer, useStageHitTest } from "./stage/useStageHitTest";
 import { useScreenPx } from "./stage/useScreenPx";
@@ -38,6 +39,26 @@ export interface PolylineSetItem extends Polyline {
 
 /** How a gesture combines with the current selection. */
 export type PolylineSelectMode = "replace" | "toggle" | "add";
+
+/**
+ * What `PolylineSet`'s `ref` exposes: a rubber band started from a press somewhere else, such
+ * as the app's `StageSurface` or a region editor's inside. It works whether or not the layer
+ * is `interactive`, and ends in `onSelect` like a band started on the set itself.
+ */
+export interface PolylineSetHandle {
+  /**
+   * Start a band from a `pointerdown`: the press is claimed (the stage does not pan) and
+   * followed on `window`. `mode` defaults to `"add"` with ⌘/Ctrl held and `"replace"` without.
+   * Another event type (a touch tap reported on release) does nothing, and so does a press
+   * while the stage is in pan mode.
+   */
+  startSweep(event: StagePointerEvent, mode?: "replace" | "add"): void;
+  /**
+   * The same band as a `StageDrag`, to return from `StageSurface`'s `onPress`. `mode` defaults
+   * from the press's ⌘/Ctrl. It claims a touch, so a finger sweeps instead of panning.
+   */
+  sweepDrag(press: StagePress, mode?: "replace" | "add"): StageDrag;
+}
 
 /** Props of `PolylineSet`. */
 export interface PolylineSetProps {
@@ -77,6 +98,13 @@ export interface PolylineSetProps {
    */
   marquee?: boolean | undefined;
   /**
+   * Whether `marquee` puts a full-frame sweep target (`data-marquee-surface`) in this layer.
+   * Defaults to `true`. Off, a press on a line still starts a band, and a press on bare image
+   * reaches the layers below: the app starts a band from there with the `ref`'s `sweepDrag`
+   * or `startSweep`, so a band can begin anywhere without this layer covering the others.
+   */
+  marqueeSurface?: boolean | undefined;
+  /**
    * Whether the layer takes presses and hover. Defaults to `true` when any of `onItemPress`,
    * `onSelect`, `onHover`, `onHoverChange` or `marquee` is given. When `false` the layer
    * renders no press target at all: a press on a line falls through to whatever is below (a
@@ -95,12 +123,22 @@ export interface PolylineSetProps {
   hitWidth?: number | undefined;
   /** The zoom from which a hovered or selected line's points are drawn. Defaults to 3. */
   vertexScale?: number | undefined;
+  /**
+   * CSS colour of the point dots. Defaults to the overlay `label` role, a near-white that stands
+   * apart from both the line colours and the selection colour, so the points of a selected line
+   * show on it. Each dot sits on a dark halo.
+   */
+  vertexColor?: string | undefined;
+  /** Diameter of a point dot, in screen pixels, without its 1 px halo. Defaults to 4. */
+  vertexSize?: number | undefined;
   /** The layer's accessible name. Defaults to "Lines". */
   label?: string | undefined;
   /** The id hit-tests report for this layer. Defaults to a generated one. */
   layerId?: string | undefined;
   /** Rank against other layers in hit-tests. Defaults to `STAGE_HIT_PRIORITY.line`. */
   priority?: number | undefined;
+  /** Start a rubber band from a press elsewhere; see `PolylineSetHandle`. */
+  ref?: Ref<PolylineSetHandle> | undefined;
 }
 
 const HALO = overlayRole("halo");
@@ -116,12 +154,17 @@ const MAX_VERTEX_DOTS = 5000;
  *   - selected 2.5 px in `selectionStroke`;
  *   - dimmed at 35 % opacity.
  * - **Halo.** Every line has a halo, so it holds on any image.
- * - **Points.** Above `vertexScale`, the points of the hovered and selected lines are drawn.
+ * - **Points.** Above `vertexScale`, the points of the hovered and selected lines are drawn as
+ *   `vertexColor` dots on a dark halo, so they show on a selected line too.
  * - **Panning.** The hand tool and a held space bar still pan.
  * - **Tools.** Without a handler (or with `interactive={false}`) the layer takes no presses
  *   and only answers `useStageHitTest`, so a draw tool's surface below receives them.
+ * - **Sweeps from elsewhere.** The `ref`'s `startSweep` and `sweepDrag` start a band from a
+ *   press another target received; with `marqueeSurface={false}` the layer keeps no
+ *   full-frame target of its own.
  *
- * The SVG carries `data-hovered` (the hovered id) and `data-sweeping` while a band is drawn.
+ * The SVG carries `data-hovered` (the hovered id) and `data-sweeping` while a band is drawn;
+ * the point dots are `data-points`.
  */
 export function PolylineSet({
   items,
@@ -133,14 +176,18 @@ export function PolylineSet({
   onItemPress,
   onSelect,
   marquee = false,
+  marqueeSurface = true,
   interactive,
   stroke = overlayRole("feature"),
   selectionStroke = overlayRole("selection"),
   hitWidth = 14,
   vertexScale = 3,
+  vertexColor = overlayRole("label"),
+  vertexSize = 4,
   label = "Lines",
   layerId,
   priority = STAGE_HIT_PRIORITY.line,
+  ref,
 }: PolylineSetProps) {
   const stage = useStage();
   const startDrag = useStageDrag();
@@ -234,20 +281,33 @@ export function PolylineSet({
     onHoverChange?.(id);
   };
 
-  const sweep = (event: ReactPointerEvent<SVGElement>) => {
-    const from = stage.toImage({ x: event.clientX, y: event.clientY });
-    const additive = event.metaKey || event.ctrlKey;
+  /** A band from `from` (image coordinates): drawn as the pointer moves, selecting on release. */
+  const bandFrom = (from: Point, additive: boolean): StageDrag => {
     setBand({ x: from.x, y: from.y, width: 0, height: 0 });
     setHover(null);
-    startDrag(event, {
+    return {
       onMove: (p) => setBand(boxBetween(from, p)),
       onEnd: (p) => {
         setBand(null);
         onSelect?.(polylinesInRect(index, boxBetween(from, p)), additive ? "add" : "replace");
       },
       onCancel: () => setBand(null),
-    });
+    };
   };
+
+  const sweep = (event: StagePointerEvent, mode?: "replace" | "add") => {
+    if (event.type !== "pointerdown" || stage.panMode) return;
+    const additive = mode === undefined ? event.metaKey || event.ctrlKey : mode === "add";
+    startDrag(event, bandFrom(stage.toImage({ x: event.clientX, y: event.clientY }), additive));
+  };
+
+  useImperativeHandle(ref, () => ({
+    startSweep: sweep,
+    sweepDrag: (press, mode) => ({
+      ...bandFrom(press.point, mode === undefined ? press.metaKey : mode === "add"),
+      claimsTouch: true,
+    }),
+  }));
 
   const onLinePointerDown = (event: ReactPointerEvent<SVGPathElement>) => {
     const touch = event.pointerType === "touch";
@@ -299,7 +359,7 @@ export function PolylineSet({
       data-hovered={hoverId ?? undefined}
       data-sweeping={band ? "" : undefined}
     >
-      {takesPresses && marquee && (
+      {takesPresses && marquee && marqueeSurface && (
         <rect
           data-marquee-surface=""
           x={-0.5}
@@ -343,7 +403,12 @@ export function PolylineSet({
             />
           </>
         )}
-        {dots && <path data-points="" d={dots} stroke={selectionStroke} strokeWidth={px(3)} />}
+        {dots && (
+          <>
+            <path d={dots} stroke={HALO} strokeWidth={px(vertexSize + 2)} />
+            <path data-points="" d={dots} stroke={vertexColor} strokeWidth={px(vertexSize)} />
+          </>
+        )}
         {/* The one hit target: every line, transparent, wide. Which line it was is the
             index's answer, not the DOM's. */}
         {takesPresses && (

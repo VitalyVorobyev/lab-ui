@@ -138,6 +138,7 @@ export { RectRoiEditor, type RectRoiEditorHandle, type RectRoiEditorProps } from
 export {
   PolylineSet,
   type PolylineSelectMode,
+  type PolylineSetHandle,
   type PolylineSetItem,
   type PolylineSetProps,
 } from "./components/PolylineSet";

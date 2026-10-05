@@ -878,6 +878,12 @@ export type PolylineSelectMode = "replace" | "toggle" | "add";
 export function PolylineSet(input: PolylineSetProps): JSX.Element;
 
 // @public
+export interface PolylineSetHandle {
+    startSweep(event: StagePointerEvent, mode?: "replace" | "add"): void;
+    sweepDrag(press: StagePress, mode?: "replace" | "add"): StageDrag;
+}
+
+// @public
 export interface PolylineSetItem extends Polyline {
     dashed?: boolean | undefined;
     stroke?: string | undefined;
@@ -893,15 +899,19 @@ export interface PolylineSetProps {
     label?: string | undefined;
     layerId?: string | undefined;
     marquee?: boolean | undefined;
+    marqueeSurface?: boolean | undefined;
     onHover?: ((id: PolylineId | null) => void) | undefined;
     onHoverChange?: ((id: PolylineId | null) => void) | undefined;
     onItemPress?: ((id: PolylineId, event: PointerEvent_2<SVGPathElement>) => void) | undefined;
     onSelect?: ((ids: PolylineId[], mode: PolylineSelectMode) => void) | undefined;
     priority?: number | undefined;
+    ref?: Ref<PolylineSetHandle> | undefined;
     selected?: Iterable<PolylineId> | undefined;
     selectionStroke?: string | undefined;
     stroke?: string | undefined;
+    vertexColor?: string | undefined;
     vertexScale?: number | undefined;
+    vertexSize?: number | undefined;
 }
 
 // @public
