@@ -1,6 +1,6 @@
 /**
  * `@vitavision/workbench` — the building blocks of a studio app on `@vitavision/ui`: the
- * shell and its split panes, a tree navigator, a playback transport over a sampled timeline,
+ * shell, its split panes and status bar, a tree navigator, a playback transport over a sampled timeline,
  * file opening, and (re-exported from `@vitavision/ui`) notifications.
  *
  * Import `@vitavision/workbench/styles.css` after `@vitavision/ui/styles.css`.
@@ -9,6 +9,7 @@
  */
 
 export { AppShell, type AppShellProps, type SidePanelSize } from "./components/AppShell";
+export { StatusBar, type StatusBarProps } from "./components/StatusBar";
 export { SplitPane, type SplitPaneProps } from "./components/SplitPane";
 export {
   type PaneSize,
