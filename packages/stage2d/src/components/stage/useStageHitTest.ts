@@ -84,6 +84,12 @@ export interface StageHitLayerOptions {
    * decline one. For a touch tap this is the `pointerup`.
    */
   onPress?: ((id: HitId, event: StagePointerEvent) => boolean | void) | undefined;
+  /**
+   * A double-click landed on an item, at `point` in image coordinates, and nothing above it
+   * claimed it. The stage offers a double-click to its layers before its own double-click to
+   * fit, so a layer that handles one keeps the view where it is. Return `false` to decline it.
+   */
+  onDoubleClick?: ((id: HitId, point: Point) => boolean | void) | undefined;
 }
 
 /**
@@ -119,6 +125,11 @@ export function useStageHitLayer(options: StageHitLayerOptions): string {
       },
       get press() {
         return latestRef.current.onPress === undefined ? undefined : (hit: HitId, event: StagePointerEvent) => latestRef.current.onPress?.(hit, event);
+      },
+      get doubleClick() {
+        return latestRef.current.onDoubleClick === undefined
+          ? undefined
+          : (hit: HitId, point: Point) => latestRef.current.onDoubleClick?.(hit, point);
       },
     };
     return registry.register(layer);

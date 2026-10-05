@@ -64,6 +64,11 @@ export interface StageHitLayerSpec<E = unknown> {
   hover?: ((id: HitId | null) => void) | undefined;
   /** A press landed on an item. Return `false` to decline it. */
   press?: ((id: HitId, event: E) => boolean | void) | undefined;
+  /**
+   * A double-click landed on an item, at `point` (image coordinates). Return `false` to
+   * decline it.
+   */
+  doubleClick?: ((id: HitId, point: Point) => boolean | void) | undefined;
 }
 
 /** Options of a hit-test. */
@@ -131,6 +136,13 @@ export interface HitRegistry<E = unknown> {
    * @returns Whether a layer claimed it.
    */
   routePress: (point: Point, radius: number, event: E) => boolean;
+  /**
+   * Offer a double-click to the best item under `point` among layers that take double-clicks,
+   * then the next, until one claims it.
+   *
+   * @returns Whether a layer claimed it.
+   */
+  routeDoubleClick: (point: Point, radius: number) => boolean;
 }
 
 /** Make an empty registry. */
@@ -174,6 +186,13 @@ export function createHitRegistry<E = unknown>(): HitRegistry<E> {
     routePress(point, radius, event) {
       for (const { hit, layer } of answers(point, radius, { pressable: true })) {
         if (layer.press?.(hit.id, event) !== false) return true;
+      }
+      return false;
+    },
+    routeDoubleClick(point, radius) {
+      for (const { hit, layer } of answers(point, radius)) {
+        const doubleClick = layer.doubleClick;
+        if (doubleClick && doubleClick(hit.id, point) !== false) return true;
       }
       return false;
     },

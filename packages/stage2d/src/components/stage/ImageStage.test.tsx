@@ -17,6 +17,7 @@ import {
   type StageHandle,
   type StageViewChange,
 } from "./ImageStage";
+import type { Point } from "../measureGeometry";
 import type { StagePointerEvent } from "./hitContext";
 import type { HitId } from "./hitTest";
 import { useStageHitLayer } from "./useStageHitTest";
@@ -852,12 +853,14 @@ function PointLayer({
   priority = 300,
   onHover,
   onPress,
+  onDoubleClick,
 }: {
   x: number;
   y: number;
   priority?: number;
   onHover?: (id: HitId | null) => void;
   onPress?: (id: HitId, event: StagePointerEvent) => boolean | void;
+  onDoubleClick?: (id: HitId, point: Point) => boolean | void;
 }) {
   useStageHitLayer({
     layerId: "pt",
@@ -868,6 +871,7 @@ function PointLayer({
     },
     onHover,
     onPress,
+    onDoubleClick,
   });
   return null;
 }
@@ -912,6 +916,40 @@ describe("ImageStage — routing hover and presses to registered layers", () => 
     onHover.mockClear();
     fireEvent.pointerMove(viewport, { clientX: 400, clientY: 300, pointerType: "touch", pointerId: 9 });
     expect(onHover).not.toHaveBeenCalled();
+  });
+
+  it("offers a double-click to the item under it before toggling fit", () => {
+    withLayout();
+    const onDoubleClick = vi.fn<(id: HitId, point: Point) => boolean | void>();
+    const { viewport, stage } = withPoint({ onDoubleClick });
+    const before = stage().view;
+    fireEvent.doubleClick(viewport, { clientX: 402, clientY: 301 });
+    expect(onDoubleClick).toHaveBeenCalledTimes(1);
+    expect(onDoubleClick.mock.calls[0]![0]).toBe("p");
+    // The point it was given is where the double-click landed, in image coordinates.
+    const landed = stage().toImage({ x: 402, y: 301 });
+    expect(onDoubleClick.mock.calls[0]![1].x).toBeCloseTo(landed.x, 9);
+    expect(onDoubleClick.mock.calls[0]![1].y).toBeCloseTo(landed.y, 9);
+    expect(stage().view).toEqual(before);
+    // Away from the item, the fit toggle runs as before.
+    fireEvent.doubleClick(viewport, { clientX: 600, clientY: 500 });
+    expect(stage().isFit).toBe(true);
+  });
+
+  it("toggles fit when the item declines the double-click, and skips the layers in pan mode", () => {
+    withLayout();
+    const declines = vi.fn(() => false);
+    const first = withPoint({ onDoubleClick: declines });
+    fireEvent.doubleClick(first.viewport, { clientX: 402, clientY: 301 });
+    expect(declines).toHaveBeenCalledTimes(1);
+    expect(first.stage().isFit).toBe(true);
+    first.unmount();
+
+    const takes = vi.fn();
+    const panning = withPoint({ onDoubleClick: takes }, { panTool: true });
+    fireEvent.doubleClick(panning.viewport, { clientX: 402, clientY: 301 });
+    expect(takes).not.toHaveBeenCalled();
+    expect(panning.stage().isFit).toBe(true);
   });
 
   it("gives a press on an item to its layer instead of panning", () => {

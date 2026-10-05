@@ -1,9 +1,19 @@
-/** Reusable source-image contour overlay and vertex editor for ImageStage. */
+/**
+ * Reusable source-image contour overlay and vertex editor for ImageStage.
+ *
+ * The outline itself takes no pointer events: a press on it reaches whatever is below, and
+ * the stage pans from it when nothing is. The editor answers the stage's hit-test instead
+ * (nearest segment), which is how a double-click on the outline inserts a vertex without a
+ * wide transparent band intercepting every press near the line.
+ */
 
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 
 import { imageViewBox } from "./stage/view";
 import { useStage } from "./stage/ImageStage";
+import { CLICK_SLOP } from "./stage/gesture";
+import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
+import { useStageHitLayer } from "./stage/useStageHitTest";
 import type { Point } from "./measureGeometry";
 import type { Rect } from "./stage/view";
 
@@ -28,10 +38,19 @@ export interface ContourEditorProps {
    * for polygons in the area convention, which may lie exactly on the image border.
    */
   bounds?: Rect | undefined;
+  /** The id hit-tests report for this contour, whose items are segment indices. Defaults to a generated one. */
+  layerId?: string | undefined;
+  /** Rank against other layers in hit-tests. Defaults to `STAGE_HIT_PRIORITY.line`. */
+  priority?: number | undefined;
 }
 
 /** Return the index of the closest segment, with the last vertex joined to the first. */
 export function nearestContourSegment(points: Point[], point: Point): number {
+  return nearestSegment(points, point).index;
+}
+
+/** The closest segment (the last vertex joined to the first) and its distance from `point`. */
+function nearestSegment(points: Point[], point: Point): { index: number; distance: number } {
   let nearest = 0;
   let distance = Infinity;
   for (let i = 0; i < points.length; i++) {
@@ -44,13 +63,33 @@ export function nearestContourSegment(points: Point[], point: Point): number {
     const d = (point.x - a.x - t * dx) ** 2 + (point.y - a.y - t * dy) ** 2;
     if (d < distance) { distance = d; nearest = i; }
   }
-  return nearest;
+  return { index: nearest, distance: Math.sqrt(distance) };
 }
 
-/** Edit contour vertices over an ImageStage using its shared source-image transform. */
-export function ContourEditor({ points, onChange, onCommit, editable = false, label = "Contour", stroke = "var(--signal)", bounds }: ContourEditorProps) {
+/**
+ * Edit contour vertices over an ImageStage using its shared source-image transform.
+ *
+ * - **Vertices.** Each vertex is a focusable button: drag it (once the pointer has moved
+ *   3 screen pixels, so a jittery click edits nothing), nudge it with the arrow keys (Shift for
+ *   a tenth of a pixel), delete it with Delete or Backspace, or insert one after it with Insert.
+ * - **Outline.** The outline takes no presses, so a press on it reaches the layers below, or
+ *   pans. While `editable`, the contour answers the stage's hit-test (`STAGE_HIT_PRIORITY.line`
+ *   by default, segment indices as ids), and a double-click near the outline inserts a vertex
+ *   on the nearest segment; the stage's double-click to fit does not run then.
+ */
+export function ContourEditor({
+  points,
+  onChange,
+  onCommit,
+  editable = false,
+  label = "Contour",
+  stroke = "var(--signal)",
+  bounds,
+  layerId,
+  priority = STAGE_HIT_PRIORITY.line,
+}: ContourEditorProps) {
   const stage = useStage();
-  const draggingRef = useRef<number | null>(null);
+  const draggingRef = useRef<{ index: number; client: Point } | null>(null);
   const movedRef = useRef(false);
   const [selected, setSelected] = useState<number | null>(null);
   const line = points.map((point) => `${point.x},${point.y}`).join(" ");
@@ -76,19 +115,48 @@ export function ContourEditor({ points, onChange, onCommit, editable = false, la
     return true;
   }
 
+  /** Insert `point` (clamped) after vertex `index`, and select it. */
+  function insert(index: number, point: Point) {
+    onChange([...points.slice(0, index + 1), clamp(point), ...points.slice(index + 1)]);
+    setSelected(index + 1);
+    onCommit?.();
+  }
+
+  // The outline answers the stage's hit-test rather than owning a press target: a press on it
+  // goes to whatever is below, and a double-click near it inserts a vertex.
+  const active = editable && points.length >= 3;
+  useStageHitLayer({
+    layerId,
+    priority,
+    pick: (point, hitRadius) => {
+      if (!active) return null;
+      const hit = nearestSegment(points, point);
+      return hit.distance <= hitRadius ? { id: hit.index, dist: hit.distance } : null;
+    },
+    onDoubleClick: active
+      ? (id, point) => {
+          insert(Number(id), point);
+        }
+      : undefined,
+  });
+
   function pointerDown(event: PointerEvent<SVGCircleElement>, index: number) {
     if (!editable || stage.panMode || event.button !== 0) return;
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
-    draggingRef.current = index;
+    draggingRef.current = { index, client: { x: event.clientX, y: event.clientY } };
     movedRef.current = false;
     setSelected(index);
   }
 
   function pointerMove(event: PointerEvent<SVGCircleElement>) {
-    if (draggingRef.current === null) return;
+    const drag = draggingRef.current;
+    if (drag === null) return;
     event.stopPropagation();
-    if (move(draggingRef.current, stage.toImage({ x: event.clientX, y: event.clientY }))) movedRef.current = true;
+    // A jittery click is not an edit: the vertex stays until the pointer leaves the click slop.
+    if (!movedRef.current && Math.hypot(event.clientX - drag.client.x, event.clientY - drag.client.y) <= CLICK_SLOP) return;
+    movedRef.current = true;
+    move(drag.index, stage.toImage({ x: event.clientX, y: event.clientY }));
   }
 
   function pointerUp(event: PointerEvent<SVGCircleElement>) {
@@ -121,26 +189,13 @@ export function ContourEditor({ points, onChange, onCommit, editable = false, la
       event.preventDefault();
       event.stopPropagation();
       const next = points[(index + 1) % points.length]!;
-      onChange([...points.slice(0, index + 1), { x: (p.x + next.x) / 2, y: (p.y + next.y) / 2 }, ...points.slice(index + 1)]);
-      setSelected(index + 1);
-      onCommit?.();
+      insert(index, { x: (p.x + next.x) / 2, y: (p.y + next.y) / 2 });
     }
   }
 
   return (
     <svg viewBox={imageViewBox(stage.image)} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" role={editable ? undefined : "img"} aria-label={label}>
       <polygon points={line} fill="none" stroke={stroke} strokeWidth={hairline} />
-      {editable && points.length >= 3 && (
-        <polygon points={line} fill="none" stroke="transparent" strokeWidth={stage.imageLength(12)} className="pointer-events-auto" onDoubleClick={(event) => {
-          if (stage.panMode) return;
-          event.stopPropagation();
-          const point = clamp(stage.toImage({ x: event.clientX, y: event.clientY }));
-          const index = nearestContourSegment(points, point);
-          onChange([...points.slice(0, index + 1), point, ...points.slice(index + 1)]);
-          setSelected(index + 1);
-          onCommit?.();
-        }} />
-      )}
       {editable && points.map((point, index) => (
         // The contour API is an ordered point list without vertex IDs; indices are stable across drag edits.
         // eslint-disable-next-line @eslint-react/no-array-index-key
