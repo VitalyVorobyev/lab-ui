@@ -213,6 +213,57 @@ export interface ContourEditorProps {
 export function crossSegments(x: number, y: number, size: number): [[Point, Point], [Point, Point]];
 
 // @public
+export interface Datum {
+    angle: number;
+    origin: Point;
+}
+
+// @public
+export const DATUM_ARM_PX = 40;
+
+// @public
+export const DATUM_HANDLE_PX = 5;
+
+// @public
+export const DATUM_RING_PX = 7;
+
+// @public
+export function datumAxes(d: Datum, armLength: number): {
+    i: Point;
+    j: Point;
+};
+
+// @public
+export function DatumEditor(input: DatumEditorProps): JSX.Element;
+
+// @public
+export interface DatumEditorProps {
+    angleSnap?: number | undefined;
+    armLength?: number | undefined;
+    bounds?: Rect | undefined;
+    className?: string | undefined;
+    defaultValue?: Datum | undefined;
+    editable?: boolean | undefined;
+    label?: string | undefined;
+    onCommit?: ((value: Datum) => void) | undefined;
+    onValueChange?: ((value: Datum) => void) | undefined;
+    originSnap?: number | undefined;
+    rotatable?: boolean | undefined;
+    snapAlways?: boolean | undefined;
+    stroke?: string | undefined;
+    value?: Datum | undefined;
+}
+
+// @public
+export function datumPress(d: Datum, point: Point, scale: number, radius: number, options?: DatumPressOptions): "origin" | "arm" | null;
+
+// @public
+export interface DatumPressOptions {
+    armLength?: number | undefined;
+    rotatable?: boolean | undefined;
+}
+
+// @public
 export function decodePlane(buffer: ArrayBuffer): ValuePlane;
 
 // @public
@@ -637,6 +688,15 @@ export const MIN_SCALE_VS_FIT = 0.25;
 export const MIN_ZOOM = 1;
 
 // @public
+export function moveDatum(d: Datum, to: Point, options?: MoveDatumOptions): Datum;
+
+// @public
+export interface MoveDatumOptions {
+    bounds?: Rect | undefined;
+    grid?: number | undefined;
+}
+
+// @public
 export function moveRect(rect: Rect, dx: number, dy: number, bounds: Rect): Rect;
 
 // @public
@@ -954,6 +1014,9 @@ export type RoiHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 export function roiHandlePoint(rect: Rect, handle: RoiHandle): Point;
 
 // @public
+export function rotateDatum(d: Datum, to: Point, snap?: number): Datum;
+
+// @public
 export interface RotatedShape {
     cx: number;
     cy: number;
@@ -1042,6 +1105,9 @@ export function shapeHandleCursor(handle: RoiHandle, rotation: number): string;
 
 // @public
 export function shapeHandlePoint(shape: RotatedShape, handle: RoiHandle): Point;
+
+// @public
+export function snapAngle(angle: number, step: number): number;
 
 // @public
 export const STAGE_HIT_PRIORITY: {
