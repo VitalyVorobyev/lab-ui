@@ -1,5 +1,23 @@
 # @vitavision/overlays
 
+## 0.2.1
+
+### Patch Changes
+
+- 1914f7f: READMEs, Storybook descriptions and editor documentation no longer refer to the project's internal tickets, decision records or private apps; the text now stands on its own.
+- Updated dependencies [f2bbd10]
+- Updated dependencies [c372abc]
+- Updated dependencies [10a673a]
+- Updated dependencies [4de3793]
+- Updated dependencies [c63afbc]
+- Updated dependencies [f2ff333]
+- Updated dependencies [c372abc]
+- Updated dependencies [0cd879b]
+- Updated dependencies [c57c6ef]
+- Updated dependencies [df4dfce]
+- Updated dependencies [1914f7f]
+  - @vitavision/stage2d@0.13.0
+
 ## 0.2.0
 
 ### Minor Changes

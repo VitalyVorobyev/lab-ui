@@ -1,6 +1,6 @@
 {
   "name": "@vitavision/three",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Framework-agnostic three.js building blocks for robot-cell scenes: CV/GL conventions, frame-tree runtime, robots, frusta, laser fans, targets, light gizmos. No React.",
   "license": "MIT OR Apache-2.0",
   "repository": {
