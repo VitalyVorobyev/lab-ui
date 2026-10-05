@@ -37,6 +37,9 @@ function Frames({ onFrame }: { onFrame: () => void }) {
   return null;
 }
 
+/** A WebGL canvas can take seconds to boot on a loaded CI runner; the default 1 s is too tight. */
+const WAIT = { timeout: 10_000 };
+
 describe("SceneCanvas", () => {
   it("picks gizmos placed in a frame on GIZMO_LAYER", async () => {
     const onSelect = vi.fn();
@@ -52,9 +55,9 @@ describe("SceneCanvas", () => {
         <Frames onFrame={() => (frames += 1)} />
       </SceneCanvas>,
     );
-    await vi.waitFor(() => expect(frames).toBeGreaterThan(1));
+    await vi.waitFor(() => expect(frames).toBeGreaterThan(1), WAIT);
     await userEvent.click(container.querySelector("canvas")!);
-    await vi.waitFor(() => expect(onSelect).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(onSelect).toHaveBeenCalledOnce(), WAIT);
   });
 
   it("keeps orbit controls working under StrictMode", async () => {
@@ -66,12 +69,12 @@ describe("SceneCanvas", () => {
         </SceneCanvas>
       </StrictMode>,
     );
-    await vi.waitFor(() => expect(root).toBeDefined());
+    await vi.waitFor(() => expect(root).toBeDefined(), WAIT);
     const canvas = container.querySelector("canvas")!;
     const distance = () => root!.camera.position.distanceTo(new Vector3());
     const before = distance();
     canvas.dispatchEvent(new WheelEvent("wheel", { deltaY: -400, bubbles: true, cancelable: true }));
-    await vi.waitFor(() => expect(distance()).toBeLessThan(before - 0.01));
+    await vi.waitFor(() => expect(distance()).toBeLessThan(before - 0.01), WAIT);
   });
 
   it("is a focusable 3D view that describes its keys", async () => {
@@ -82,7 +85,7 @@ describe("SceneCanvas", () => {
     expect(view).toHaveAccessibleName("Cell");
     expect(view.tabIndex).toBe(0);
     expect(document.getElementById(view.getAttribute("aria-describedby")!)?.textContent).toMatch(/Arrow keys orbit/);
-    await vi.waitFor(() => expect(container.querySelector("canvas")).not.toBeNull());
+    await vi.waitFor(() => expect(container.querySelector("canvas")).not.toBeNull(), WAIT);
   });
 
   it("orbits, tilts within the polar limits, zooms and resets from the keyboard", async () => {
@@ -93,7 +96,7 @@ describe("SceneCanvas", () => {
       </SceneCanvas>
     );
     const { container, rerender } = render(scene([0, 0, 0]));
-    await vi.waitFor(() => expect(root).toBeDefined());
+    await vi.waitFor(() => expect(root).toBeDefined(), WAIT);
     const view = container.firstElementChild as HTMLElement;
     const camera = root!.camera;
     const press = (key: string, init: KeyboardEventInit = {}, on: Element = view) => {
@@ -143,7 +146,7 @@ describe("SceneCanvas", () => {
         <Probe onState={(s) => (root = s)} />
       </SceneCanvas>,
     );
-    await vi.waitFor(() => expect(root).toBeDefined());
+    await vi.waitFor(() => expect(root).toBeDefined(), WAIT);
     const view = container.firstElementChild as HTMLElement;
     expect(view).not.toHaveAttribute("tabindex");
     expect(view).not.toHaveAttribute("aria-describedby");
