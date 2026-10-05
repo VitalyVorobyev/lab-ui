@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
-import { expect, userEvent, waitFor } from "storybook/test";
+import { useMemo, useState } from "react";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 
 import { MeasureOverlay, type MeasureOverlayProps, type MeasurePrimitive } from "./MeasureOverlay";
 import { ImageStage, useStage } from "./stage/ImageStage";
@@ -98,14 +98,21 @@ measures. Pass the live scale (\`useStage().view.scale\`) as \`strokeScale\`: st
 stay a constant size on screen at any zoom. In these stories the overlay is wired exactly that way, so
 the \`strokeScale\` arg is replaced by the stage's scale — zoom with the toolbar to see it.
 
-**Don't** use it for interactive geometry (it is \`pointer-events-none\` and holds no state — build a
-layer on \`useStage()\` for handles), for raster results (a mask or value plane is its own layer), or for
-a verdict (\`Badge\`'s tones are a separate vocabulary).
+**Picking**: give it \`onHoverChange\` or \`onItemPress\` and it answers the stage's hit-test by primitive
+\`id\` — the nearest primitive with an id under the pointer; a dot, a filled circle and a caliper box by their
+inside, every other kind by its strokes. The hovered one is drawn in the hover state (\`hoveredId\` when the app
+controls hover); a press is claimed unless \`onItemPress\` returns \`false\`. The SVG itself still takes no pointer
+events, and without a handler the overlay needs no \`ImageStage\` at all.
+
+**Don't** use it for editable geometry (it has no handles — \`ShapeEditor\` and \`RectRoiEditor\` have), for
+raster results (a mask or value plane is its own layer), or for a verdict (\`Badge\`'s tones are a separate
+vocabulary).
 
 **Accessibility**: the \`<svg>\` is \`role="presentation"\` and \`aria-hidden\` — the overlay is a picture
 of results, and labels drawn in it are not read out. State every measurement that matters in text
 beside the image (a table, a \`ReadoutStrip\`). Tone is colour: pair it with a label or a textual
-verdict, never let colour alone carry pass/fail.`,
+verdict, never let colour alone carry pass/fail. Picking is by pointer only, so every pick must also be possible
+from that list.`,
       },
     },
   },
@@ -402,5 +409,115 @@ export const RoleHalo: Story = {
       await expect(text).toHaveAttribute("stroke", "var(--stage-halo)");
     }
     await expect([...svg.querySelectorAll("text")].find((t) => t.textContent === "680.0 px")).toHaveAttribute("stroke", "none");
+  },
+};
+
+/** Calipers on the plate's edges, each with an id: the inventory rows a pick selects. */
+const PICKABLE: MeasurePrimitive[] = [
+  { kind: "caliper", id: "c1", cx: 240, cy: 400, width: 80, height: 32, angle: 0, tone: "normal", label: "c1" },
+  { kind: "caliper", id: "c2", cx: 1040, cy: 400, width: 80, height: 32, angle: Math.PI, tone: "normal", label: "c2" },
+  { kind: "caliper", id: "c3", cx: 640, cy: 192, width: 80, height: 32, angle: Math.PI / 2, tone: "defect", label: "c3" },
+  { kind: "circle", id: "b1", cx: 440, cy: 400, r: 90, role: "model" },
+  // No id: drawn, never picked.
+  { kind: "segment", x1: 240, y1: 860, x2: 1040, y2: 860, tone: "muted", dashed: true },
+];
+
+const PICK_VIEW: StageView = { scale: 0.5, tx: 0, ty: 0 };
+const pickHover = fn();
+const pickPress = fn();
+
+/** A pickable overlay: hover reported, a press selects (and a press on `c3` is declined). */
+function PickableStage() {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const primitives = useMemo(
+    () => PICKABLE.map((p) => (p.id !== undefined && p.id === selected ? { ...p, state: "selected" as const } : p)),
+    [selected],
+  );
+  return (
+    <div>
+      <div>
+        {/* A fixed view at 50 %, so the play can aim at image points. */}
+        <ImageStage image={IMAGE} view={PICK_VIEW} onView={() => {}} style={{ width: 642, height: 514 }}>
+          <img src={INSPECTION_IMAGE} alt="" draggable={false} className="absolute inset-0 h-full w-full" />
+          <LiveOverlay
+            nativeWidth={IMAGE.width}
+            nativeHeight={IMAGE.height}
+            primitives={primitives}
+            strokeScale={1}
+            onHoverChange={(id) => {
+              pickHover(id);
+              setHovered(id);
+            }}
+            onItemPress={(id) => {
+              pickPress(id);
+              // Declined: the press falls through to the stage, which pans.
+              if (id === "c3") return false;
+              setSelected(id);
+            }}
+          />
+        </ImageStage>
+      </div>
+      <output data-testid="picked">
+        hovered {hovered ?? "none"}, selected {selected ?? "none"}
+      </output>
+    </div>
+  );
+}
+
+/**
+ * Client position of image point `p` (a pixel centre) on the story's stage, at its fixed 50 % view: from the
+ * viewport's content box, as the stage itself converts.
+ */
+function client(root: Element, p: { x: number; y: number }, extra: Record<string, unknown> = {}) {
+  const viewport = root.querySelector("[role=application]")!;
+  const rect = viewport.getBoundingClientRect();
+  const scale = PICK_VIEW.scale;
+  return {
+    clientX: rect.left + viewport.clientLeft + (p.x + 0.5) * scale,
+    clientY: rect.top + viewport.clientTop + (p.y + 0.5) * scale,
+    pointerId: 1,
+    button: 0,
+    ...extra,
+  };
+}
+
+/**
+ * Hover and pick by `id`: the overlay answers the stage's hit-test, so it takes no pointer events
+ * itself. Hover draws the primitive in its hover state; a press on `c3` is declined and pans.
+ */
+export const Pickable: Story = {
+  render: () => <PickableStage />,
+  play: async ({ canvas, canvasElement }) => {
+    pickHover.mockClear();
+    pickPress.mockClear();
+    const viewport = canvasElement.querySelector("[role=application]")!;
+    const svg = overlay(canvasElement);
+    await expect(svg).toHaveAttribute("aria-hidden", "true");
+    await expect(svg).toHaveClass("pointer-events-none");
+    // Inside the c1 box.
+    await fireEvent.pointerMove(viewport, client(canvasElement, { x: 250, y: 405 }));
+    await expect(pickHover).toHaveBeenLastCalledWith("c1");
+    await waitFor(() => expect(svg).toHaveAttribute("data-hovered", "c1"));
+    await expect(svg.querySelector("g[data-id='c1']")).toHaveAttribute("data-state", "hover");
+    // On the bore's rim, which is a model circle with an id.
+    await fireEvent.pointerMove(viewport, client(canvasElement, { x: 530, y: 400 }));
+    await expect(pickHover).toHaveBeenLastCalledWith("b1");
+    // The dashed segment has no id: hovering it is bare image.
+    await fireEvent.pointerMove(viewport, client(canvasElement, { x: 640, y: 860 }));
+    await expect(pickHover).toHaveBeenLastCalledWith(null);
+    // A press on c2 selects it and is not a pan.
+    await fireEvent.pointerDown(viewport, client(canvasElement, { x: 1040, y: 400 }));
+    await expect(pickPress).toHaveBeenLastCalledWith("c2");
+    await expect(viewport).not.toHaveAttribute("data-panning");
+    await waitFor(() => expect(canvas.getByTestId("picked")).toHaveTextContent("selected c2"));
+    await expect(svg.querySelector("g[data-id='c2']")).toHaveAttribute("data-state", "selected");
+    await fireEvent.pointerUp(viewport, client(canvasElement, { x: 1040, y: 400 }));
+    // A press on c3 is declined: it falls through, and the stage pans.
+    await fireEvent.pointerDown(viewport, client(canvasElement, { x: 640, y: 192 }));
+    await expect(pickPress).toHaveBeenLastCalledWith("c3");
+    await expect(viewport).toHaveAttribute("data-panning");
+    await fireEvent.pointerUp(viewport, client(canvasElement, { x: 640, y: 192 }));
+    await expect(canvas.getByTestId("picked")).toHaveTextContent("selected c2");
   },
 };

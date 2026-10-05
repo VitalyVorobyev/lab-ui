@@ -8,14 +8,23 @@
  * or pan. The overlay never touches the DOM to find out where it is; it is told, in
  * `nativeWidth` × `nativeHeight` pixel coordinates, via `primitives`.
  *
- * This component holds **no app state**: no fetch, no selection, no hover tracking. It is a
- * pure function of its props, on purpose — the app decides what a "caliper box" or a
- * "detected edge" *is*; this only knows how to draw one. The one piece of arithmetic it
- * owns is `strokeScale` compensation (see `measureGeometry.ts`'s `strokeWidthFor`), because
- * getting that wrong is invisible on screen until someone zooms in and a "1px" edge marker
- * has silently become 8px wide.
+ * This component holds **no app state**: no fetch, no selection. It draws its props, on
+ * purpose — the app decides what a "caliper box" or a "detected edge" *is*; this only knows
+ * how to draw one. The one piece of arithmetic it owns is `strokeScale` compensation (see
+ * `measureGeometry.ts`'s `strokeWidthFor`), because getting that wrong is invisible on screen
+ * until someone zooms in and a "1px" edge marker has silently become 8px wide.
+ *
+ * Given a hover or press handler it becomes pickable: it answers the stage's hit-test with
+ * `measureHit.ts`'s geometry and tracks the hover the app does not control, while its SVG
+ * still takes no pointer events.
  */
 
+import { useEffect, useState } from "react";
+
+import { nearestMeasurePrimitive } from "./measureHit";
+import type { StagePointerEvent } from "./stage/hitContext";
+import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
+import { useStageHitLayer } from "./stage/useStageHitTest";
 import { imageViewBox } from "./stage/view";
 import {
   arcPath,
@@ -24,6 +33,10 @@ import {
   caliperCorners,
   crossSegments,
   dimensionGeometry,
+  MEASURE_ARROW_HEAD_PX,
+  MEASURE_CROSS_PX,
+  MEASURE_DIMENSION_OFFSET,
+  MEASURE_POINT_RADIUS_PX,
   polygonPath,
   segmentsPath,
   strokeWidthFor,
@@ -214,9 +227,6 @@ export type MeasurePrimitive =
   | PolylinePrimitive;
 
 const DEFAULT_LABEL_SIZE = 11;
-const DEFAULT_POINT_RADIUS = 3;
-const DEFAULT_CROSS_SIZE = 5;
-const DEFAULT_DIMENSION_OFFSET = 16;
 /** How much wider than the mark above it a halo is, in screen pixels. */
 const HALO_PX = 2;
 const HALO_OPACITY = 0.6;
@@ -251,6 +261,31 @@ export interface MeasureOverlayProps {
    * - `"none"`: none.
    */
   halo?: "role" | "all" | "none" | undefined;
+  /**
+   * The hovered primitive's `id`, when the app controls hover (a table beside the stage hovers
+   * rows too). That primitive is drawn in the hover state unless it is selected. Without it, a
+   * pickable overlay tracks the pointer's hover itself.
+   */
+  hoveredId?: string | null | undefined;
+  /**
+   * Called when the primitive under the pointer changes: its `id`, or `null` when the pointer
+   * leaves every primitive. Only primitives with an `id` are picked.
+   *
+   * Setting this or `onItemPress` makes the overlay pickable: it answers the stage's hit-test,
+   * so it must then sit inside an `ImageStage`. Its SVG still takes no pointer events.
+   */
+  onHoverChange?: ((id: string | null) => void) | undefined;
+  /**
+   * A press landed on a primitive with an `id`: the nearest within the pointer's tolerance, the
+   * later one on a tie. The press is claimed, so the stage does not pan from it. Return `false`
+   * to decline it: the press then goes to the next layer under the pointer, or to the stage.
+   * The event is the `pointerdown` (the `pointerup` for a touch tap).
+   */
+  onItemPress?: ((id: string, event: StagePointerEvent) => boolean | void) | undefined;
+  /** The id hit-tests report for this layer. Defaults to a generated one. */
+  layerId?: string | undefined;
+  /** Rank against other layers in hit-tests. Defaults to `STAGE_HIT_PRIORITY.line`. */
+  priority?: number | undefined;
   /** Merged onto the `<svg>` with `cn`. */
   className?: string;
 }
@@ -266,9 +301,16 @@ export interface MeasureOverlayProps {
  * A primitive's colour is its `role` (overlay grammar) if given, else its verdict `tone`.
  * Its `state` follows the overlay grammar: `hover` thickens it, `selected` thickens it and
  * rings it in the selection colour, and `dimmed` fades it. A primitive with a `role` is drawn
- * over a halo, and so is its label; `halo` widens or drops that. Each primitive is a `<g>`
- * carrying `data-kind`, plus `data-id` and `data-state` when given; its halo is the
- * `<g data-halo>` inside it.
+ * over a halo, and so is its label; `halo` widens or drops that.
+ *
+ * **Picking.** With `onHoverChange` or `onItemPress` the overlay answers the stage's hit-test
+ * (`useStageHitTest` finds its primitives too): the pointer picks the nearest primitive with
+ * an `id`, a dot, a filled circle and a caliper box by their inside, every other kind by its
+ * strokes. The hovered one is drawn in the hover state.
+ *
+ * Each primitive is a `<g>` carrying `data-kind`, plus `data-id` and `data-state` (`hover`
+ * while hovered) when given; its halo is the `<g data-halo>` inside it. The SVG carries
+ * `data-hovered` (the hovered id).
  */
 export function MeasureOverlay({
   nativeWidth,
@@ -276,88 +318,153 @@ export function MeasureOverlay({
   primitives,
   strokeScale,
   halo = "role",
+  hoveredId,
+  onHoverChange,
+  onItemPress,
+  layerId,
+  priority = STAGE_HIT_PRIORITY.line,
   className,
 }: MeasureOverlayProps) {
+  const pickable = onHoverChange !== undefined || onItemPress !== undefined;
+  const [ownHover, setOwnHover] = useState<string | null>(null);
+  const hoverId = hoveredId !== undefined ? hoveredId : pickable ? ownHover : null;
   const hairline = strokeWidthFor(strokeScale, 1);
   const thick = strokeWidthFor(strokeScale, 1.5);
   const labelSize = strokeWidthFor(strokeScale, DEFAULT_LABEL_SIZE);
   const labelHalo = strokeWidthFor(strokeScale, LABEL_HALO_PX);
 
   return (
-    <svg
-      role="presentation"
-      aria-hidden
-      viewBox={imageViewBox({ width: nativeWidth, height: nativeHeight })}
-      preserveAspectRatio="none"
-      className={cn("pointer-events-none absolute inset-0 h-full w-full overflow-visible", className)}
-    >
-      {primitives.map((primitive, index) => {
-        const state = primitive.state ?? "default";
-        const colour = primitive.role ? overlayRole(primitive.role) : toneColor(primitive.tone);
-        // Hover and selected widen the strokes by the overlay grammar's ratios (2 and 2.5 to the
-        // default's 1.5).
-        const widen = state === "hover" ? 2 / 1.5 : state === "selected" ? 2.5 / 1.5 : 1;
-        const haloed = halo === "all" || (halo === "role" && primitive.role !== undefined);
-        // Measured off the mark's own width, so the bands under a dashed mark break where it does.
-        const dash = `${hairline * widen * 4} ${hairline * widen * 3}`;
-        // A selected mark's outermost band is its ring: the halo goes under that and outgrows it.
-        const ring = state === "selected";
-        const haloPx = (ring ? RING_PX : 0) + HALO_PX;
-        return (
-          <g
-            // Primitives carry no required identity; a position is the only stable key.
-            // eslint-disable-next-line @eslint-react/no-array-index-key
-            key={index}
-            data-kind={primitive.kind}
-            data-id={primitive.id}
-            data-state={primitive.state}
-            opacity={OVERLAY_STATE_OPACITY[state] === 1 ? undefined : OVERLAY_STATE_OPACITY[state]}
-          >
-            {haloed && (
-              <g data-halo="" opacity={HALO_OPACITY}>
-                <Primitive
-                  primitive={primitive}
-                  colour={HALO}
-                  hairline={hairline * widen + strokeWidthFor(strokeScale, haloPx)}
-                  thick={thick * widen + strokeWidthFor(strokeScale, haloPx)}
-                  dash={dash}
-                  labelSize={0}
-                  labelHalo={0}
-                  strokeScale={strokeScale}
-                  grow={(ring ? RING_GROW_PX : 0) + HALO_PX / 2}
-                />
-              </g>
-            )}
-            {ring && (
-              <g opacity={0.6}>
-                <Primitive
-                  primitive={primitive}
-                  colour={overlayRole("selection")}
-                  hairline={hairline * widen + strokeWidthFor(strokeScale, RING_PX)}
-                  thick={thick * widen + strokeWidthFor(strokeScale, RING_PX)}
-                  dash={dash}
-                  labelSize={0}
-                  labelHalo={0}
-                  strokeScale={strokeScale}
-                  grow={RING_GROW_PX}
-                />
-              </g>
-            )}
-            <Primitive
-              primitive={primitive}
-              colour={colour}
-              hairline={hairline * widen}
-              thick={thick * widen}
-              dash={dash}
-              labelSize={labelSize}
-              labelHalo={haloed ? labelHalo : 0}
-              strokeScale={strokeScale}
-            />
-          </g>
-        );
-      })}
-    </svg>
+    <>
+      {pickable && (
+        <MeasureHitLayer
+          primitives={primitives}
+          strokeScale={strokeScale}
+          layerId={layerId}
+          priority={priority}
+          setOwnHover={setOwnHover}
+          onHoverChange={onHoverChange}
+          onItemPress={onItemPress}
+        />
+      )}
+      <svg
+        role="presentation"
+        aria-hidden
+        viewBox={imageViewBox({ width: nativeWidth, height: nativeHeight })}
+        preserveAspectRatio="none"
+        className={cn("pointer-events-none absolute inset-0 h-full w-full overflow-visible", className)}
+        data-hovered={hoverId ?? undefined}
+      >
+        {primitives.map((primitive, index) => {
+          // Hover is drawn on any primitive but a selected one, which keeps its selection.
+          const hovered = hoverId !== null && primitive.id === hoverId && primitive.state !== "selected";
+          const shown = hovered ? "hover" : primitive.state;
+          const state = shown ?? "default";
+          const colour = primitive.role ? overlayRole(primitive.role) : toneColor(primitive.tone);
+          // Hover and selected widen the strokes by the overlay grammar's ratios (2 and 2.5 to the
+          // default's 1.5).
+          const widen = state === "hover" ? 2 / 1.5 : state === "selected" ? 2.5 / 1.5 : 1;
+          const haloed = halo === "all" || (halo === "role" && primitive.role !== undefined);
+          // Measured off the mark's own width, so the bands under a dashed mark break where it does.
+          const dash = `${hairline * widen * 4} ${hairline * widen * 3}`;
+          // A selected mark's outermost band is its ring: the halo goes under that and outgrows it.
+          const ring = state === "selected";
+          const haloPx = (ring ? RING_PX : 0) + HALO_PX;
+          return (
+            <g
+              // Primitives carry no required identity; a position is the only stable key.
+              // eslint-disable-next-line @eslint-react/no-array-index-key
+              key={index}
+              data-kind={primitive.kind}
+              data-id={primitive.id}
+              data-state={shown}
+              opacity={OVERLAY_STATE_OPACITY[state] === 1 ? undefined : OVERLAY_STATE_OPACITY[state]}
+            >
+              {haloed && (
+                <g data-halo="" opacity={HALO_OPACITY}>
+                  <Primitive
+                    primitive={primitive}
+                    colour={HALO}
+                    hairline={hairline * widen + strokeWidthFor(strokeScale, haloPx)}
+                    thick={thick * widen + strokeWidthFor(strokeScale, haloPx)}
+                    dash={dash}
+                    labelSize={0}
+                    labelHalo={0}
+                    strokeScale={strokeScale}
+                    grow={(ring ? RING_GROW_PX : 0) + HALO_PX / 2}
+                  />
+                </g>
+              )}
+              {ring && (
+                <g opacity={0.6}>
+                  <Primitive
+                    primitive={primitive}
+                    colour={overlayRole("selection")}
+                    hairline={hairline * widen + strokeWidthFor(strokeScale, RING_PX)}
+                    thick={thick * widen + strokeWidthFor(strokeScale, RING_PX)}
+                    dash={dash}
+                    labelSize={0}
+                    labelHalo={0}
+                    strokeScale={strokeScale}
+                    grow={RING_GROW_PX}
+                  />
+                </g>
+              )}
+              <Primitive
+                primitive={primitive}
+                colour={colour}
+                hairline={hairline * widen}
+                thick={thick * widen}
+                dash={dash}
+                labelSize={labelSize}
+                labelHalo={haloed ? labelHalo : 0}
+                strokeScale={strokeScale}
+              />
+            </g>
+          );
+        })}
+      </svg>
+    </>
   );
+}
+
+/**
+ * The overlay's registration with the stage's hit-test. A component of its own so that it is
+ * mounted only when the overlay is pickable: a plain overlay needs no `ImageStage` around it.
+ */
+function MeasureHitLayer({
+  primitives,
+  strokeScale,
+  layerId,
+  priority,
+  setOwnHover,
+  onHoverChange,
+  onItemPress,
+}: {
+  primitives: readonly MeasurePrimitive[];
+  strokeScale: number;
+  layerId: string | undefined;
+  priority: number;
+  setOwnHover: (id: string | null) => void;
+  onHoverChange: ((id: string | null) => void) | undefined;
+  onItemPress: ((id: string, event: StagePointerEvent) => boolean | void) | undefined;
+}) {
+  useStageHitLayer({
+    layerId,
+    priority,
+    pick: (point, radius) => {
+      const hit = nearestMeasurePrimitive(primitives, point, radius, strokeScale);
+      return hit ? { id: hit.id, dist: hit.distance } : null;
+    },
+    onHover: (id) => {
+      const next = id === null ? null : String(id);
+      setOwnHover(next);
+      onHoverChange?.(next);
+    },
+    onPress: onItemPress ? (id, event) => onItemPress(String(id), event) : undefined,
+  });
+  // A hover tracked here ends with the layer, so it is not drawn when the overlay is made pickable again.
+  useEffect(() => () => setOwnHover(null), [setOwnHover]);
+  return null;
 }
 
 function Primitive({
@@ -393,7 +500,7 @@ function Primitive({
   switch (primitive.kind) {
     case "point": {
       if (primitive.cross) {
-        const size = strokeWidthFor(strokeScale, DEFAULT_CROSS_SIZE);
+        const size = strokeWidthFor(strokeScale, MEASURE_CROSS_PX);
         const [h, v] = crossSegments(primitive.x, primitive.y, size);
         return (
           <g stroke={colour} strokeWidth={hairline}>
@@ -403,7 +510,7 @@ function Primitive({
           </g>
         );
       }
-      const radius = strokeWidthFor(strokeScale, (primitive.radius ?? DEFAULT_POINT_RADIUS) + (grow ?? 0));
+      const radius = strokeWidthFor(strokeScale, (primitive.radius ?? MEASURE_POINT_RADIUS_PX) + (grow ?? 0));
       return (
         <g>
           <circle cx={primitive.x} cy={primitive.y} r={radius} fill={colour} />
@@ -463,7 +570,7 @@ function Primitive({
     case "caliper": {
       const corners = caliperCorners(primitive.cx, primitive.cy, primitive.width, primitive.height, primitive.angle);
       const arrow = caliperArrow(primitive.cx, primitive.cy, primitive.width, primitive.angle);
-      const head = arrowHeadPoints(arrow.to, primitive.angle, strokeWidthFor(strokeScale, 4));
+      const head = arrowHeadPoints(arrow.to, primitive.angle, strokeWidthFor(strokeScale, MEASURE_ARROW_HEAD_PX));
       return (
         <g>
           <path d={polygonPath(corners)} fill="none" stroke={colour} strokeWidth={hairline} />
@@ -504,7 +611,7 @@ function Primitive({
       );
 
     case "dimension": {
-      const offset = primitive.offset ?? DEFAULT_DIMENSION_OFFSET;
+      const offset = primitive.offset ?? MEASURE_DIMENSION_OFFSET;
       const geometry = dimensionGeometry(primitive.x1, primitive.y1, primitive.x2, primitive.y2, offset);
       return (
         <g stroke={colour} strokeWidth={hairline}>
