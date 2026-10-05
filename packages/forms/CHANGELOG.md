@@ -1,5 +1,15 @@
 # @vitavision/forms
 
+## 0.8.1
+
+### Patch Changes
+
+- 1914f7f: READMEs, Storybook descriptions and editor documentation no longer refer to the project's internal tickets, decision records or private apps; the text now stands on its own.
+- Updated dependencies [c91bc50]
+- Updated dependencies [d224648]
+- Updated dependencies [1914f7f]
+  - @vitavision/ui@0.12.0
+
 ## 0.8.0
 
 ### Minor Changes

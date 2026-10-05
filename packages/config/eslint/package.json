@@ -1,6 +1,6 @@
 {
   "name": "@vitavision/config-eslint",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared ESLint flat config for vitavision frontends, including a rule that keeps colour in the design tokens.",
   "license": "MIT OR Apache-2.0",
   "repository": {

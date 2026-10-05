@@ -1,5 +1,12 @@
 # @vitavision/config-vitest
 
+## 0.4.1
+
+### Patch Changes
+
+- 8776588: Each config package now has a README with its setup and options. `tokensOnly`'s messages now point to the Foundations / Colour page of the component Storybook, which lists the design tokens to use instead.
+- 8bec84f: `dom()` no longer picks up browser tests. It now excludes `src/**/*.browser.test.{ts,tsx}` and the stories runner `src/stories.test.tsx` (on top of Vitest's default exclusions), which need Chromium and failed when run in happy-dom. A `test.exclude` passed to `dom()` adds to this list rather than replacing it. To run such a file anyway, use `library()`, whose `browser` and `stories` projects run them in Chromium.
+
 ## 0.4.0
 
 ### Minor Changes

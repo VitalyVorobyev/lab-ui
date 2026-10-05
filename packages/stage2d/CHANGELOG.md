@@ -1,5 +1,102 @@
 # @vitavision/stage2d
 
+## 0.13.0
+
+### Minor Changes
+
+- f2bbd10: New `CompareLayer`: two registered images of the same size compared in place inside an `ImageStage`, as a checkerboard, a wipe or their difference.
+  
+  - `<CompareLayer a={referenceUrl} b={foundUrl} mode="checker" | "wipe" | "difference" alt="…" />`. Both images are laid out at the stage's pixel size, like `ImageLayer`, so they stay registered with each other and with every overlay.
+  - **`checker`**: alternate squares of A and B, `cell` image pixels across (default 32), A at the top-left.
+  - **`wipe`**: A before a divider and B after it. `orientation` is `"vertical"` (A on the left, the default) or `"horizontal"` (A above). The divider's place is `split` / `defaultSplit` / `onSplitChange`, the fraction of the image before it (default 0.5, clamped to 0..1). Drag the divider or its knob, which stays in the middle of the visible part of the divider; the drag is claimed, so the stage does not pan.
+  - **`difference`**: B blended over A with `mix-blend-mode: difference` in an isolated group, brightened by `gain` (default 1). Identical pixels are black. It is the per-channel difference of the sRGB-encoded values the browser composites, not of linear light: use it to see where the images differ, not to measure by how much.
+  - Everything is CSS on the second image (a mask, a clip, a blend), never a canvas. Past `pixelatedAbove` (default 4×) both images are drawn as blocks.
+  - **Accessibility**: the two images are one picture, `role="img"` named by `alt`. In wipe mode the knob is a slider from 0 to 100, the share of A, read as e.g. "40 % A". Arrow keys move it 1 % (10 % with Shift), Page Up and Page Down 10 %, and Home and End go to either edge; these keys do not pan the stage. `labels` (default `["A", "B"]`) names the two images for the slider and for the tags beside the knob.
+  - `CompareMode` and `CompareOrientation` are exported with it.
+- c372abc: `ContourEditor` gains a brush and an eraser.
+  
+  - **`mode?: "vertex" | "brush" | "erase"`** (default `"vertex"`, as before) and **`brushRadius?: number`** (image pixels, default 20). In `"brush"` and `"erase"` mode an editable contour covers the image with its own press target (`data-tool-surface`), shows the brush's footprint under a hovering mouse or pen, and hides its vertex handles. A press whose brush does not reach the contour is declined, so the stage pans. Both gestures start only once the pointer has moved 3 screen pixels.
+  - **Brush.** A drag pushes the contour with a soft round brush centred where the press landed (`deformContour`, always from the contour as it was at the press), held inside `bounds`. `onChange` follows the drag and `onCommit` fires once on release.
+  - **Erase.** A drag along the contour previews the stretch it would remove, dashed in the defect colour (`data-erase-preview`). On release, the new **`onErase?: (pieces, range) => void`** receives the pieces that are left (open polylines, see `eraseArc`) and the erased stretch as arc lengths `{ start, end }`. The editor does not change `points` itself; the app replaces the contour with the pieces. On a closed contour the stretch runs the shorter way round, and what is left is one open piece: pass it back as `points` with `closed={false}` to keep editing it.
+  - The SVG carries `data-mode` while editable.
+- 10a673a: `ContourEditor`'s outline no longer intercepts presses, and layers can take double-clicks through the stage's hit-test.
+  
+  - **Double-clicks through the hit-test.** `useStageHitLayer` takes `onDoubleClick?: (id, point) => boolean | void`. `ImageStage` offers a double-click to the best item under it among layers that take one (return `false` to decline, and the next is asked) before its own double-click to fit; when a layer takes it, the view stays where it is. Not offered while the hand tool is on or space is held.
+  - **`ContourEditor` answers the hit-test.** While `editable`, it registers its outline with the stage's hit-test: `pick` finds the nearest segment (the id is the segment's index), and a double-click near the outline inserts a vertex there, as before. New `layerId?: string` and `priority?: number` (default `STAGE_HIT_PRIORITY.line`) place it among other layers.
+  - **Click slop on vertices.** A vertex drag starts only once the pointer has moved 3 screen pixels, so a jittery click on a vertex no longer changes the contour or calls `onCommit`.
+  
+  **Behaviour changes:**
+  
+  - The transparent band along an editable contour's outline is gone. A press on the outline now reaches the layers below it (a region's `onItemPress`, a `StageSurface`), or pans the stage when nothing takes it; it used to be swallowed by the editor. The vertices still take their own presses.
+  - A double-click within the pointer's tolerance of an editable contour's outline inserts a vertex and does not toggle fit; a double-click elsewhere toggles fit as before. With `doubleClickFit={false}` the insertion works the same. The double-click event now bubbles on past the stage, as every other double-click on it does.
+  - A press on a vertex that moves less than 3 screen pixels is a click: no `onChange`, no `onCommit`.
+- 4de3793: New `DatumEditor`: a frame on the image, an origin and the direction of its i axis, moved and turned like an object.
+  
+  - **Value**: `Datum { origin: { x, y }; angle }`, the angle in radians, clockwise on screen from `+x` (the same convention as `RotatedShape.rotation`). It takes `value` / `defaultValue` / `onValueChange`, and `onCommit` once a drag is released or a key pressed. Without a value it starts at the image's centre, pointing along `+x`.
+  - **Glyph**: a ring (7 screen px) at the origin, the i axis as an arm (`armLength`, 40 screen px by default) ending in a rotation handle, and the j axis at half the length, a quarter turn clockwise on screen. All of it is drawn over a halo, at a constant size on screen, in the overlay `model` colour unless `stroke` is given.
+  - **Pointer**: drag the ring to move the origin, or the arm or its handle to turn the datum about the origin. A press grabs whichever is nearer, and nothing moves until the pointer has travelled 3 px, so a click does not nudge it. A turn keeps the point of the arm that was grabbed under the pointer, so it does not jump. Shift rounds the angle to `angleSnap` (π/12, i.e. 15°); `snapAlways` rounds every turn. `originSnap` rounds the origin to a grid of that many image pixels, and `bounds` keeps it inside a rectangle (the image by default). `rotatable={false}` fixes the angle, and `editable={false}` only draws the datum.
+  - **Keyboard**: the origin is a focusable button (`aria-roledescription="datum"`, named with its numbers, e.g. "Datum: origin 200, 150, angle 0°"). Arrow keys move it one image pixel (ten with Shift, or grid steps with `originSnap`), and `[` / `]` turn it by 1° (15° with Shift). These keys do not pan the stage.
+  - The arithmetic is exported for apps that draw their own: `datumAxes`, `moveDatum`, `rotateDatum`, `datumPress` and the glyph sizes `DATUM_RING_PX`, `DATUM_ARM_PX` and `DATUM_HANDLE_PX`.
+  - New `snapAngle(angle, step)`: rounds an angle to a multiple of a step. `rotateShape` now uses it and behaves as before.
+- c63afbc: `MeasureOverlay` draws a halo under role-coloured marks, and gains a `segments` primitive for many unconnected segments in one element.
+  
+  - **Halo.** A primitive with a `role` (`feature`, `model`, `structure`) is now drawn over a dark band in the overlay's halo colour: the same geometry, 2 screen px wider, at 60 % opacity. Its label gets a 3 px halo behind the glyphs (`paint-order: stroke`). A role-coloured mark and its label therefore hold on a bright part of the image, where they used to wash out. A selected mark's halo sits under its selection ring and is 2 px wider than the ring.
+  - **`halo` prop**: `"role"` (the default) as above; `"all"` gives every primitive a halo, verdict tones included; `"none"` turns them off. Primitives with a `tone` and no `role` look exactly as before under the default, so pass `halo="none"` to keep role-coloured marks without a halo too.
+  - **`segments` primitive** (`SegmentsPrimitive`): `{ kind: "segments", points: [x1, y1, x2, y2, …] }`, with the usual `tone` / `role`, `dashed`, `label`, `id` and `state`. Every segment is drawn in one path, so thousands of ticks cost one element; use it for marks stored in no particular order, which a `polyline` would join. A trailing partial segment is ignored, and a segment with a non-finite coordinate is skipped rather than breaking the path. The path builder is exported as `segmentsPath(points)`.
+  - **The `MeasurePrimitive` union has a new member.** Code that switches over `primitive.kind` and checks the switch is exhaustive needs a `"segments"` case (or a default case) to compile.
+  - The selection ring under a selected dashed mark now breaks where the mark does, and a dimension's value is no longer written a second time, invisibly, into its selection ring.
+- f2ff333: `MeasureOverlay` can be hovered and picked by primitive `id`, so an app no longer hit-tests caliper boxes or contours itself.
+  
+  - **`onHoverChange(id | null)`** and **`onItemPress(id, event)`** make the overlay pickable. It then answers the stage's hit-test: the pointer picks the nearest primitive that has an `id`, within the stage's pointer tolerance (6 screen px for a mouse, 12 for a touch). A dot, a filled circle and a caliper box are picked anywhere inside; every other kind by its strokes (a circle's or an arc's rim, a dimension's lines, a caliper's arrow). On a tie the later primitive, drawn on top, wins. Primitives without an `id` are drawn but never picked.
+  - A press on a primitive is claimed, so the stage does not pan from it. Return `false` from `onItemPress` to decline it: the press then goes to the next layer under the pointer, or to the stage.
+  - The hovered primitive is drawn in the hover state (a selected one stays selected). Pass **`hoveredId`** when the app controls hover, for example from a table beside the stage; otherwise the overlay tracks the pointer's hover itself. The SVG carries `data-hovered`, and the hovered primitive's `<g>` carries `data-state="hover"`.
+  - **`layerId`** and **`priority`** (default `STAGE_HIT_PRIORITY.line`) place the overlay among the stage's other layers, and `useStageHitTest` finds its primitives too.
+  - The SVG still takes no pointer events and is still hidden from assistive technology. Without a handler nothing changes, and the overlay still renders outside an `ImageStage`. With one it must sit inside an `ImageStage`.
+  - The geometry is exported: `measurePrimitiveDistance(primitive, point, strokeScale)` (image pixels, 0 inside a dot, a filled circle or a caliper box) and `nearestMeasurePrimitive(primitives, point, radius, strokeScale)`. The latter grids the primitives by bounding box once per `primitives` array and keeps the grid while the array lives, so pass a new array when the primitives change rather than editing one in place. A pick among 10,000 primitives takes microseconds.
+- c372abc: Open contours, and arc-length helpers for measuring and editing a contour along its length.
+  
+  - **`ContourEditor` `closed?: boolean`** (default `true`, as before). With `closed={false}` the contour is drawn as an open polyline (no segment from the last vertex back to the first), Delete keeps at least two vertices (three for a closed contour), Insert on the last vertex adds one midway to the vertex before it, and a double-click near the gap between the ends adds nothing.
+  - **`nearestContourSegment(points, point, closed = true)`** takes an optional third argument; `false` leaves out the closing segment.
+  - **Arc-length helpers**, pure functions over `Point[]` that work open (the default) or closed:
+    - `arcLengths(points, closed)`: the cumulative length at each vertex (a closed path has one more entry, its perimeter).
+    - `pointAtArc(points, s, closed)`: the point at distance `s` along the path, clamped on an open path and wrapped on a closed one.
+    - `projectToArc(points, p, closed)`: the nearest place on the path to `p`, as `{ s, point, distance }`.
+    - `subPath(points, s0, s1, closed)`: the stretch between two distances; on a closed path with `s0 > s1` it runs on past the first vertex.
+    - `normalAtArc(points, s, closed)`: the unit normal, the tangent turned a quarter turn clockwise on screen (image `y` points down), so it points inward on a contour whose vertices run clockwise.
+    - `deformContour(points, centre, delta, radius, closed)`: a soft round brush push with a cosine falloff, dividing the segments under the brush first so the path bends smoothly.
+    - `eraseArc(points, s0, s1, closed)`: the pieces left after erasing a stretch; an open path leaves up to two, a closed one a single open piece.
+- 0cd879b: `PolylineSet` points that show on a selected line, and rubber bands that can start outside the set.
+  
+  - **Point dots.** Above `vertexScale`, the points of hovered and selected lines are now drawn as dots on a dark halo in a colour of their own, so they show on a selected line (they were drawn in the selection colour on a line of the same colour, and disappeared). New `vertexColor?: string` (default: the overlay `label` role, a near-white) and `vertexSize?: number` (the dot's diameter in screen pixels, default 4; the halo adds 1 px on each side). **Behaviour change:** the dots are near-white and slightly larger than before; pass `vertexColor` and `vertexSize={3}` to come close to the old look.
+  - **`marqueeSurface?: boolean`** (default `true`). With `marquee` on, the layer used to cover the whole frame with its own sweep target, which hid the layers below it. With `marqueeSurface={false}` it does not: a press on a line still starts a band, and a press on bare image reaches the layers below.
+  - **`ref?: Ref<PolylineSetHandle>`**, so a band can start from a press another target received: `startSweep(event, mode?)` from any `pointerdown` handler, or `sweepDrag(press, mode?)` returned from `StageSurface`'s `onPress` (for instance on a Shift-press inside a region editor whose `interior` is `"none"`). `mode` is `"replace"` or `"add"`, and defaults to `"add"` while ⌘/Ctrl is held. Both work whether or not the layer is interactive; `startSweep` ignores any event but a `pointerdown`, and a press while the stage is in pan mode.
+- c57c6ef: `RectRoiEditor` decides each press once, can leave its inside to the layers below, ignores jitter, and can be drawn from the app's own press target.
+  
+  - **`interior?: "move" | "none"`** (default `"move"`). With `"none"`, a press inside the region is not taken: it reaches the layers below, so a region the box encloses can be selected through it. The handles and a new band along the outline (`data-roi-band`, as wide as the pointer's tolerance on both sides of the outline) still grab the box, and the region stays a focusable button that the arrow keys move.
+  - **One press decision.** A press on a handle, the band or the interior is resolved the way `ShapeEditor` resolves it: the nearest handle first, then the outline band, then the interior. A press inside a small region near a corner now resizes from that corner instead of moving the region.
+  - **`drawSurface?: boolean`** (default `true`) and **`ref?: Ref<RectRoiEditorHandle>`**. With `drawSurface={false}` the editor puts no full-frame draw target in its layer; the app's `StageSurface` returns `ref.current.drawDrag(press)` from `onPress`, or calls `ref.current.startDraw(event)` from a `pointerdown` of its own, so other layers can sit between that surface and the region's handles.
+  - **`fill?: string`** (default: the outline colour) and **`fillOpacity?: number`** (default 0.06; `0` draws no tint).
+  - The data attributes are documented: `data-editable` and `data-drawing` on the SVG, `data-draw-surface`, `data-roi-interior`, `data-roi-band`, and `data-handle` (`nw`, `n`, `ne`, `e`, `se`, `s`, `sw`, `w`).
+  
+  **Behaviour changes:**
+  
+  - **Click slop.** `RectRoiEditor` and `ShapeEditor` start an edit only once the pointer has moved 3 screen pixels from the press, the same slop the stage uses before a press becomes a pan. A jittery click on a handle or the interior used to call `onValueChange` and `onCommit` (an edit and an undo step in the app); it now calls neither. There is no option to restore the old behaviour; a deliberate drag is unaffected beyond the first 3 pixels.
+  - **An interrupted drag reverts.** A `RectRoiEditor` drag ended by `pointercancel` now puts the region back (one `onValueChange` with the starting value) and commits nothing; it used to commit the last value.
+- df4dfce: Stage chrome: a stage that is not a tab stop, richer layer menus, and a full image fetched only when needed.
+  
+  - **`ImageStage` `focusable`.** New `focusable?: boolean`, defaulting to the value of `shortcuts`. When it is off, the viewport has no `tabIndex` and is a `role="group"` (named by `label`) instead of a `role="application"`, so an app that handles the keyboard on its own wrapper no longer gets two nested tab stops. With `shortcuts` on and `focusable` off, the keys still work while focus is on an element inside the stage. **Behaviour change:** a stage rendered with `shortcuts={false}` is no longer a tab stop and is announced as a group; pass `focusable` to keep the old tab stop and role.
+  - **`frame`'s margin is documented as it behaves.** The `pad` argument of `StageHandle.frame` and of the stage context's `frame` is a fraction of the rect's own width and height added on each side, default 0.15, as `frameRect` has always applied it. The docs said CSS pixels, default 24; nothing changes at runtime.
+  - **`StageLayersMenu` labels, swatches and heading.** `StageLayer.label` takes any `ReactNode` (a name and a count, say), and the new `StageLayer.swatch` is a CSS colour drawn as a small dot before the label (`aria-hidden`, so the label must still name the layer). The new `StageLayersMenuProps.heading` titles the menu and defaults to `label`; `label` stays the trigger's accessible name and tooltip.
+  - **`ImageLayer` fetches the full image on demand.** With a `preview`, `src` is now optional: the new `onFullNeeded` callback fires once per `preview.src` when the stage would magnify the preview (the rule that already decides when the full image is shown), and the full image is drawn as soon as `src` arrives. While the full image is wanted but not yet loaded, the preview carries `data-wants-full`. `ImageLayerProps` is now a union (the full image's `src`, a `preview`, or both) over the new `ImageLayerBaseProps`; apps that pass `src` see no change.
+
+### Patch Changes
+
+- 1914f7f: READMEs, Storybook descriptions and editor documentation no longer refer to the project's internal tickets, decision records or private apps; the text now stands on its own.
+- Updated dependencies [c91bc50]
+- Updated dependencies [d224648]
+- Updated dependencies [1914f7f]
+  - @vitavision/ui@0.12.0
+
 ## 0.12.0
 
 ### Minor Changes
