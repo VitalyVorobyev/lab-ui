@@ -13,6 +13,9 @@ import { ReactNode } from 'react';
 import { Ref } from 'react';
 
 // @public
+export function arcLengths(points: readonly Point[], closed?: boolean): number[];
+
+// @public
 export function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string;
 
 // @public
@@ -227,11 +230,18 @@ export function ContourEditor(input: ContourEditorProps): JSX.Element;
 // @public
 export interface ContourEditorProps {
     bounds?: Rect | undefined;
+    brushRadius?: number | undefined;
+    closed?: boolean | undefined;
     editable?: boolean;
     label?: string;
     layerId?: string | undefined;
+    mode?: "vertex" | "brush" | "erase" | undefined;
     onChange: (points: Point[]) => void;
     onCommit?: () => void;
+    onErase?: ((pieces: Point[][], range: {
+        start: number;
+        end: number;
+    }) => void) | undefined;
     points: Point[];
     priority?: number | undefined;
     stroke?: string;
@@ -293,6 +303,9 @@ export interface DatumPressOptions {
 
 // @public
 export function decodePlane(buffer: ArrayBuffer): ValuePlane;
+
+// @public
+export function deformContour(points: readonly Point[], centre: Point, delta: Point, radius: number, closed?: boolean): Point[];
 
 // @public
 export interface DimensionGeometry {
@@ -430,6 +443,9 @@ export interface EllipseSetProps {
 
 // @public
 export function ellipsesInRect(index: EllipseIndex, rect: Rect): EllipseId[];
+
+// @public
+export function eraseArc(points: readonly Point[], s0: number, s1: number, closed?: boolean): Point[][];
 
 // @public
 export function fetchPlane(url: string): Promise<ValuePlane>;
@@ -737,7 +753,7 @@ export function nativeZoomFor(sourceWidth: number, boxWidth: number): number;
 export function nearestArea(index: AreaIndex, p: Point, radius: number): AreaHit | null;
 
 // @public
-export function nearestContourSegment(points: Point[], point: Point): number;
+export function nearestContourSegment(points: Point[], point: Point, closed?: boolean): number;
 
 // @public
 export function nearestEllipse(index: EllipseIndex, p: Point, radius: number): EllipseHit | null;
@@ -753,6 +769,9 @@ export function nearestPoint(index: PointIndex, x: number, y: number, radius: nu
 
 // @public
 export function nearestPolyline(index: PolylineIndex, p: Point, radius: number): PolylineHit | null;
+
+// @public
+export function normalAtArc(points: readonly Point[], s: number, closed?: boolean): Point;
 
 // @public
 export function normalizeAngle(angle: number): number;
@@ -792,6 +811,9 @@ export interface Point {
     x: number;
     y: number;
 }
+
+// @public
+export function pointAtArc(points: readonly Point[], s: number, closed?: boolean): Point;
 
 // @public
 export interface PointHit {
@@ -988,6 +1010,13 @@ export interface PrimitiveCommon {
     role?: OverlayRole | undefined;
     state?: OverlayState | undefined;
 }
+
+// @public
+export function projectToArc(points: readonly Point[], p: Point, closed?: boolean): {
+    s: number;
+    point: Point;
+    distance: number;
+};
 
 // @public
 export function rasterizePlane(plane: ValuePlane, colormap: Colormap, range?: ValueRange, channel?: number): Uint8ClampedArray;
@@ -1325,6 +1354,9 @@ export function steppedScale(scale: number, direction: 1 | -1, min: number, max:
 
 // @public
 export function strokeWidthFor(strokeScale: number, screenPixels?: number): number;
+
+// @public
+export function subPath(points: readonly Point[], s0: number, s1: number, closed?: boolean): Point[];
 
 // @public
 export function thinPoints(xy: ArrayLike<number>, minDist: number, order?: Iterable<number>): number[];

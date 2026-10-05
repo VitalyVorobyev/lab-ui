@@ -17,6 +17,47 @@ describe("ContourEditor", () => {
     expect(nearestContourSegment(points, { x: 7.8, y: 5 })).toBe(1);
   });
 
+  it("has a closing segment only when closed", () => {
+    // Left of the square: the closing segment, from (2, 8) back to (2, 2).
+    expect(nearestContourSegment(points, { x: 1, y: 5 })).toBe(3);
+    expect(nearestContourSegment(points, { x: 1, y: 5 }, true)).toBe(3);
+    // Open, the nearest of the remaining three: the top and the bottom are as near, the first wins.
+    expect(nearestContourSegment(points, { x: 1, y: 5 }, false)).toBe(0);
+    expect(nearestContourSegment(points, { x: 1, y: 7 }, false)).toBe(2);
+    expect(nearestContourSegment([], { x: 1, y: 7 }, false)).toBe(0);
+  });
+
+  it("draws an open contour as a polyline that keeps two vertices, and edits it without wrapping", () => {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const line = [{ x: 10, y: 10 }, { x: 50, y: 10 }];
+    const render2 = (pts: Point[]) => (
+      <ImageStage image={{ width: 100, height: 100 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={pts} closed={false} onChange={onChange} editable />
+      </ImageStage>
+    );
+    const { container, getByRole, rerender } = render(render2(line));
+    expect(container.querySelector("polyline")).not.toBeNull();
+    expect(container.querySelector("polygon")).toBeNull();
+    // Two vertices are the fewest an open contour keeps.
+    fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "Delete" });
+    expect(onChange).not.toHaveBeenCalled();
+    // Insert on the last vertex goes midway to the one before it.
+    fireEvent.keyDown(getByRole("button", { name: "Contour point 2" }), { key: "Insert" });
+    expect(onChange).toHaveBeenLastCalledWith([{ x: 10, y: 10 }, { x: 30, y: 10 }, { x: 50, y: 10 }]);
+    // A double-click past the open end's gap is not on a segment.
+    const three = [{ x: 10, y: 10 }, { x: 50, y: 10 }, { x: 50, y: 50 }];
+    rerender(render2(three));
+    onChange.mockClear();
+    fireEvent.doubleClick(viewportOf(container), { clientX: 28.5, clientY: 32.5 });
+    expect(onChange).not.toHaveBeenCalled();
+    // On the second segment it inserts after its start.
+    fireEvent.doubleClick(viewportOf(container), { clientX: 52.5, clientY: 30.5 });
+    expect(onChange).toHaveBeenLastCalledWith([{ x: 10, y: 10 }, { x: 50, y: 10 }, { x: 52, y: 30 }, { x: 50, y: 50 }]);
+    // Three vertices: one may go.
+    fireEvent.keyDown(getByRole("button", { name: "Contour point 2" }), { key: "Delete" });
+    expect(onChange).toHaveBeenLastCalledWith([{ x: 10, y: 10 }, { x: 50, y: 50 }]);
+  });
+
   it("registers pixel-center geometry and keyboard editing", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const { container, getByRole } = render(<ImageStage image={{ width: 100, height: 80 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable /></ImageStage>);
@@ -197,5 +238,145 @@ describe("ContourEditor", () => {
     rerender(stage({ editable: false }));
     fireEvent.doubleClick(viewport, { clientX: 50.5, clientY: 84.5 });
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("ContourEditor — brush and erase", () => {
+  /** A 100 px horizontal line at y = 50, in a 200 × 100 image at 1:1. */
+  const LINE: Point[] = [{ x: 50, y: 50 }, { x: 150, y: 50 }];
+  /** At 1:1 with the viewport at the origin, client = image + 0.5. */
+  const at = (p: Point) => ({ clientX: p.x + 0.5, clientY: p.y + 0.5, pointerId: 1, button: 0 });
+
+  function setup(props: Partial<Parameters<typeof ContourEditor>[0]> & { mode: "brush" | "erase" }, panTool = false) {
+    const onChange = vi.fn<(points: Point[]) => void>();
+    const onCommit = vi.fn();
+    const onErase = vi.fn<(pieces: Point[][], range: { start: number; end: number }) => void>();
+    const outer = vi.fn();
+    const result = render(
+      <div onPointerDown={outer} onDoubleClick={outer}>
+        <ImageStage image={{ width: 200, height: 100 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} panTool={panTool}>
+          <ContourEditor points={LINE} closed={false} onChange={onChange} onCommit={onCommit} onErase={onErase} editable brushRadius={10} {...props} />
+        </ImageStage>
+      </div>,
+    );
+    const surface = result.container.querySelector("[data-tool-surface]")!;
+    return { ...result, onChange, onCommit, onErase, outer, surface };
+  }
+
+  it("covers the image with a tool surface and hides the vertex handles", () => {
+    const { container, surface, queryByRole } = setup({ mode: "brush" });
+    expect(surface).not.toBeNull();
+    expect(container.querySelector("svg[data-mode='brush']")).not.toBeNull();
+    expect(queryByRole("button", { name: /Contour point/ })).toBeNull();
+  });
+
+  it("pushes the contour from a snapshot past the slop, live, and commits on release", () => {
+    const { surface, onChange, onCommit, outer } = setup({ mode: "brush" });
+    fireEvent.pointerDown(surface, at({ x: 100, y: 50 }));
+    expect(outer).not.toHaveBeenCalled();
+    fireEvent.pointerMove(window, at({ x: 100, y: 52 }));
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.pointerMove(window, at({ x: 100, y: 56 }));
+    fireEvent.pointerMove(window, at({ x: 100, y: 58 }));
+    const pushed = onChange.mock.lastCall![0];
+    // Divided under the brush every 2.5 px, the centre pushed the whole 8 px, the ends untouched.
+    expect(pushed.find((p) => p.x === 100)).toEqual({ x: 100, y: 58 });
+    expect(pushed[0]).toEqual({ x: 50, y: 50 });
+    expect(pushed.at(-1)).toEqual({ x: 150, y: 50 });
+    // Every move starts again from the contour as it was at the press: one push, not two.
+    expect(Math.max(...pushed.map((p) => p.y))).toBe(58);
+    expect(onCommit).not.toHaveBeenCalled();
+    fireEvent.pointerUp(window, at({ x: 100, y: 58 }));
+    expect(onCommit).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the pushed contour inside the bounds, and puts it back when interrupted", () => {
+    const { surface, onChange, onCommit } = setup({ mode: "brush", bounds: { x: 0, y: 0, width: 199, height: 54 } });
+    fireEvent.pointerDown(surface, at({ x: 100, y: 50 }));
+    fireEvent.pointerMove(window, at({ x: 100, y: 70 }));
+    expect(Math.max(...onChange.mock.lastCall![0].map((p) => p.y))).toBe(54);
+    fireEvent.pointerCancel(window);
+    expect(onChange).toHaveBeenLastCalledWith(LINE);
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it("declines a press whose brush does not reach the contour, a jitter, and presses in pan mode", () => {
+    const far = setup({ mode: "brush" });
+    fireEvent.pointerDown(far.surface, at({ x: 100, y: 75 }));
+    expect(far.outer).toHaveBeenCalledOnce();
+    fireEvent.pointerMove(window, at({ x: 100, y: 90 }));
+    expect(far.onChange).not.toHaveBeenCalled();
+    fireEvent.pointerDown(far.surface, at({ x: 100, y: 50 }));
+    fireEvent.pointerMove(window, at({ x: 101, y: 51 }));
+    fireEvent.pointerUp(window, at({ x: 101, y: 51 }));
+    expect(far.onChange).not.toHaveBeenCalled();
+    expect(far.onCommit).not.toHaveBeenCalled();
+    far.unmount();
+
+    const panning = setup({ mode: "erase" }, true);
+    fireEvent.pointerDown(panning.surface, at({ x: 100, y: 50 }));
+    fireEvent.pointerMove(window, at({ x: 130, y: 50 }));
+    fireEvent.pointerUp(window, at({ x: 130, y: 50 }));
+    expect(panning.onErase).not.toHaveBeenCalled();
+  });
+
+  it("previews the swept stretch and reports what is left on release", () => {
+    const { container, surface, onErase, onChange } = setup({ mode: "erase" });
+    fireEvent.pointerDown(surface, at({ x: 70, y: 52 }));
+    fireEvent.pointerMove(window, at({ x: 110, y: 47 }));
+    const preview = container.querySelector("[data-erase-preview]")!;
+    expect(preview.getAttribute("points")).toBe("70,50 110,50");
+    expect(preview.getAttribute("stroke")).toBe("var(--defect)");
+    // Backwards past the press: the stretch still runs forward.
+    fireEvent.pointerMove(window, at({ x: 60, y: 50 }));
+    expect(container.querySelector("[data-erase-preview]")!.getAttribute("points")).toBe("60,50 70,50");
+    fireEvent.pointerMove(window, at({ x: 120, y: 50 }));
+    fireEvent.pointerUp(window, at({ x: 120, y: 50 }));
+    expect(onErase).toHaveBeenCalledWith(
+      [
+        [{ x: 50, y: 50 }, { x: 70, y: 50 }],
+        [{ x: 120, y: 50 }, { x: 150, y: 50 }],
+      ],
+      { start: 20, end: 70 },
+    );
+    expect(container.querySelector("[data-erase-preview]")).toBeNull();
+    // The editor leaves the points to the app.
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("erases the shorter way round a closed contour, leaving one open piece", () => {
+    const square = [{ x: 50, y: 20 }, { x: 150, y: 20 }, { x: 150, y: 80 }, { x: 50, y: 80 }];
+    const { surface, onErase } = setup({ mode: "erase", points: square, closed: true });
+    // From the left side just below the first vertex, up across it and along the top.
+    fireEvent.pointerDown(surface, at({ x: 50, y: 30 }));
+    fireEvent.pointerMove(window, at({ x: 70, y: 20 }));
+    fireEvent.pointerUp(window, at({ x: 70, y: 20 }));
+    // Perimeter 320. The press is at 310 (on the left side, 10 below the first vertex), the
+    // release at 20: 30 forward across the first vertex, not 290 back.
+    expect(onErase).toHaveBeenCalledOnce();
+    const [pieces, range] = onErase.mock.calls[0]!;
+    expect(range).toEqual({ start: 310, end: 20 });
+    expect(pieces).toEqual([[{ x: 70, y: 20 }, { x: 150, y: 20 }, { x: 150, y: 80 }, { x: 50, y: 80 }, { x: 50, y: 30 }]]);
+  });
+
+  it("does nothing on release for a jitter, and draws the footprint under a hovering pointer", () => {
+    const { container, surface, onErase, outer } = setup({ mode: "erase" });
+    fireEvent.pointerDown(surface, at({ x: 100, y: 50 }));
+    fireEvent.pointerMove(window, at({ x: 101, y: 51 }));
+    fireEvent.pointerUp(window, at({ x: 101, y: 51 }));
+    expect(onErase).not.toHaveBeenCalled();
+    fireEvent.pointerMove(surface, at({ x: 30, y: 30 }));
+    const brush = container.querySelector("[data-draft-brush]")!;
+    expect(brush).not.toBeNull();
+    expect(brush.getAttribute("stroke")).toBe("var(--defect)");
+    fireEvent.pointerLeave(surface);
+    expect(container.querySelector("[data-draft-brush]")).toBeNull();
+    // A touch does not hover.
+    fireEvent.pointerMove(surface, { ...at({ x: 30, y: 30 }), pointerType: "touch" });
+    expect(container.querySelector("[data-draft-brush]")).toBeNull();
+    // A double-click on the tool surface is the tool's, not the stage's.
+    outer.mockClear();
+    fireEvent.doubleClick(surface, at({ x: 100, y: 50 }));
+    expect(outer).not.toHaveBeenCalled();
   });
 });

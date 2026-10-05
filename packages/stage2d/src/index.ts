@@ -134,6 +134,15 @@ export {
 export { useScreenPx } from "./components/stage/useScreenPx";
 
 export { ContourEditor, nearestContourSegment, type ContourEditorProps } from "./components/ContourEditor";
+export {
+  arcLengths,
+  deformContour,
+  eraseArc,
+  normalAtArc,
+  pointAtArc,
+  projectToArc,
+  subPath,
+} from "./components/contourArc";
 export { RectRoiEditor, type RectRoiEditorHandle, type RectRoiEditorProps } from "./components/RectRoiEditor";
 export {
   PolylineSet,
