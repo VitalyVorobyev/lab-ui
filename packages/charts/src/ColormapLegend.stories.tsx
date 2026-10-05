@@ -10,8 +10,7 @@ const meta = {
     docs: {
       description: {
         component: `The scale of a sequential colour map — \`viridis\` or \`cividis\` — as one line: what the colour encodes,
-the low end, the bar, the high end, with units. Every map drawn over an image or in a table needs one (visual-language
-§4). Colour a value with \`colormapValue(map, value, domain)\`.
+the low end, the bar, the high end, with units. Every map drawn over an image or in a table needs one. Colour a value with \`colormapValue(map, value, domain)\`.
 
 **Use** it for a magnitude: an error in px, a validity fraction, a confidence.
 

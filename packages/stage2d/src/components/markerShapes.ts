@@ -1,6 +1,5 @@
 /**
- * Marker glyphs for `PointSet`: one path generator per feature kind (overlay grammar,
- * `docs/visual-language.md` §5).
+ * Marker glyphs for `PointSet`: one path generator per feature kind (the overlay grammar).
  *
  * A glyph is a function from a position to SVG path data, so a layer can append thousands of
  * them into one `<path>` per state and style. Sizes are screen pixels: a generator receives

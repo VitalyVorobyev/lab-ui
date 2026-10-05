@@ -48,7 +48,7 @@ export interface TargetBoardOptions {
 
 /**
  * A planar target: a `width × height` rectangle centred on the local origin in the `z = 0`
- * plane, facing +Z (the etendue target frame), optionally with a checkerboard pattern.
+ * plane, facing +Z (the target frame), optionally with a checkerboard pattern.
  *
  * The surface and squares are physical (the default layer): a sensor image shows them in
  * their fixed colours. The outline is on {@link GIZMO_LAYER}: only a viewport that enables

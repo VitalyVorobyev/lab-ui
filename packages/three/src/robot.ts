@@ -1,7 +1,7 @@
 /**
  * Robot visuals: one mesh per link, attached to the link frames of a
- * {@link FrameTreeRuntime}. Link meshes are glTF binaries in the link frame (etendue
- * `robot.json` `visuals`; URDF convention, +Z up, no glTF Y-up conversion), so they need no
+ * {@link FrameTreeRuntime}. Link meshes are glTF binaries in the link frame
+ * (URDF convention, +Z up, no glTF Y-up conversion), so they need no
  * transform of their own — the baked link pose places them.
  */
 
@@ -11,7 +11,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { disposeMaterial } from "./dispose";
 import type { FrameTreeRuntime } from "./frameTree";
 
-/** A link's visual mesh (etendue `ManifestVisual`). */
+/** A link's visual mesh. */
 export interface RobotVisual {
   /** URDF link name. */
   link: string;

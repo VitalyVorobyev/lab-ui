@@ -1,10 +1,10 @@
 /**
- * Framework-agnostic three.js building blocks for robot-cell scenes (etendue PLAN P2-2):
+ * Framework-agnostic three.js building blocks for robot-cell scenes:
  * conventions, a runtime that applies baked scenarios, robot visuals, and gizmos for
  * cameras, lasers, targets, and lights. No React — see `@vitavision/three-react`.
  *
  * No kinematics and no camera-model math live here: poses come baked, and camera fields of
- * view come as back-projected rays from the host (e.g. `@etendue/wasm`).
+ * view come as back-projected rays from the host's camera model.
  *
  * @packageDocumentation
  */

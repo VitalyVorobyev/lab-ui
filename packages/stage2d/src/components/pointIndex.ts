@@ -3,9 +3,8 @@
  * caught, and which ones are far enough apart to carry a label.
  *
  * The same uniform grid as `polylineIndex.ts`, in CSR layout (cell `c`'s entries are
- * `starts[c] .. starts[c + 1]`, no per-cell arrays), generalised from the L0-3 benchmark's
- * `grid.ts`. It answers in microseconds whichever engine draws the markers
- * (`docs/measurements/stage2d-bench-analysis.md`), and it imports neither React nor the DOM.
+ * `starts[c] .. starts[c + 1]`, no per-cell arrays). It answers in microseconds whichever engine
+ * draws the markers, and it imports neither React nor the DOM.
  *
  * Points are flat `[x0, y0, x1, y1, …]` arrays in image coordinates, the form a detector
  * returns and the cheapest to keep. A point with a non-finite coordinate is not indexed.

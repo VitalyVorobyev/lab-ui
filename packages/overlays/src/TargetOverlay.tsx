@@ -5,10 +5,10 @@
  * It replaces the per-board overlays of vitavision (`ChessboardOverlay`, `CharucoOverlay`,
  * `MarkerboardOverlay`, `PuzzleboardOverlay`) and the glyph components behind them. Each part of
  * a `TargetDetection` goes to the stage2d layer that fits it, so a detection of thousands of
- * items is a few dozen DOM nodes (ADR-0004), and the pointer is resolved by the stage's hit-test
+ * items is a few dozen DOM nodes and the pointer is resolved by the stage's hit-test
  * registry, not the DOM:
  *
- * | Part | Layer | Glyph (visual-language §5) |
+ * | Part | Layer | Glyph |
  * |---|---|---|
  * | `corners` | `GridLayer` | plus; edge directions when `angle` is set; lattice edges and `i,j` labels |
  * | `markers` | `AreaSet` | quad outline and 12 % fill, corner 0 ticked, id inside |

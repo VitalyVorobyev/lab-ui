@@ -9,7 +9,7 @@ import {
 
 import { GIZMO_LAYER, setLayer } from "../layers";
 
-/** A light's emitter shape (etendue `LightShape`), tagged on `type`. */
+/** A light's emitter shape, tagged on `type`. */
 export type LightShapeLike =
   | { type: "point"; radius_m?: number }
   | { type: "spot"; cone_angle: number; blend?: number }

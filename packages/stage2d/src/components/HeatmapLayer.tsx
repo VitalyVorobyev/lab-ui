@@ -1,7 +1,7 @@
 /**
  * A scalar field or a pre-coloured buffer, drawn as one image over (or under) the overlays.
  *
- * A heatmap is a raster, not vector geometry (ADR-0004 rule 5): it is rendered once into an
+ * A heatmap is a raster, not vector geometry : it is rendered once into an
  * offscreen canvas, handed to the browser as an object URL, and shown by an `<img>` the stage
  * positions and scales like the photograph. Nothing is drawn per pixel by React, so a 4-megapixel
  * map costs one element. It takes no pointer events; to read the numbers under the pointer, use

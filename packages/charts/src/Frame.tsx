@@ -304,7 +304,7 @@ export function Legend({ items, className }: LegendProps) {
  * a neutral grey as the sixth — and only its lightness changes, so every colour holds 3:1
  * against the panel in both. The six stay distinguishable under simulated protanopia,
  * deuteranopia and tritanopia, and none of them is a verdict colour (`--normal`,
- * `--defect`, `--warn`): a series is never read as a verdict (PLAN §5).
+ * `--defect`, `--warn`): a series is never read as a verdict.
  *
  * Before 0.6 these were fixed hex strings; the names are unchanged.
  */

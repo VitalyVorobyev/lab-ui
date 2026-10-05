@@ -2,9 +2,9 @@
  * A spatial index over many polylines: which one is under the pointer, and which ones a
  * rubber band caught.
  *
- * Asking the DOM is too slow at scale. The L0-3 benchmark measured `elementFromPoint` over
- * 20k elements at p95 ≈ 2.1 ms, over the 2 ms gate. A uniform grid of segments answers in
- * microseconds whichever engine draws the lines (`docs/measurements/stage2d-bench-analysis.md`).
+ * Asking the DOM is too slow at scale. Measured, `elementFromPoint` over
+ * 20k elements takes about 2.1 ms at p95, over a 2 ms budget. A uniform grid of segments answers in
+ * microseconds whichever engine draws the lines.
  *
  * Points are flat `[x0, y0, x1, y1, …]` arrays in image coordinates, the form a backend
  * returns and the cheapest to keep.

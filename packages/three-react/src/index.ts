@@ -1,5 +1,5 @@
 /**
- * React Three Fiber components over `@vitavision/three` (etendue PLAN P2-3). Per-frame
+ * React Three Fiber components over `@vitavision/three`. Per-frame
  * updates go through `useFrame` and refs, never React state: playback is read from a
  * {@link PlayheadSource} once per rendered frame.
  *

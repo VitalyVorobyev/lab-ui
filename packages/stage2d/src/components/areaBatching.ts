@@ -1,7 +1,7 @@
 /**
  * How `AreaSet` groups its regions into batched paths: by appearance (state, role, colours),
  * either one batch per appearance or consecutive runs in item order. Pure, so the keys are
- * unit-tested without a DOM (ADR-0004 rule 1).
+ * unit-tested without a DOM.
  */
 
 import { areaPath, type Area, type AreaId } from "./areaIndex";

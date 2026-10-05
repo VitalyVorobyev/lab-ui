@@ -1,6 +1,5 @@
 /**
- * The scale of a colour map, shown beside the map: visual-language §4 requires every chart or
- * map to show its scale, with units.
+ * The scale of a colour map, shown beside the map: every chart or map shows its scale, with units.
  */
 
 import { cn } from "@vitavision/ui";

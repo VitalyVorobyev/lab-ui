@@ -2,7 +2,7 @@
 
 The vitavision *instrument* design system: true-neutral greys, one accent, and verdict colours
 reserved for verdicts. Tailwind v4 design tokens, a theme controller, and the React primitives
-every lab app shares. React 19, no CSS-in-JS, no runtime theme engine.
+every vitavision app shares. React 19, no CSS-in-JS, no runtime theme engine.
 
 ## Install
 
@@ -31,7 +31,7 @@ Each stylesheet ships **unprocessed** — Tailwind v4 *source*, resolved by your
 declares its own `@source "./"`, which Tailwind resolves against that stylesheet: the package's
 class names are found without an `@source` line of yours.
 
-`fonts.css` serves the type pair, IBM Plex Sans and IBM Plex Mono (ADR-0003), from files in this
+`fonts.css` serves the type pair, IBM Plex Sans and IBM Plex Mono, from files in this
 package (SIL Open Font License). Its Plex Mono is IBM's own build, which keeps the `zero` feature,
 so values get a slashed zero; `unicode-range` means a page fetches only the subsets its text
 uses (about 80 KB for Latin). Drop any fontsource or Google Fonts Plex you loaded before — their

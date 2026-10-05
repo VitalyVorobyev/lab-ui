@@ -13,7 +13,7 @@ import type { UiSchema } from "../api/uiSchema";
 import { SchemaValueForm, type SchemaValueFormProps } from "./SchemaValueForm";
 
 /*
- * The schemas are the real thing: the four calibration-rs ones are what `cargo xtask
+ * The schemas are the real thing: the four calibration ones are what `cargo xtask
  * emit-schemas` writes (schemars 1.x), and the detector one is hand-written in the same shape
  * for what they lack (newtype variants, `x-unit`, a tuple of objects). `JsonSchema` is the
  * form's own loose type, so a JSON import needs the one cast.
@@ -135,7 +135,7 @@ button is "About <label>", and an invalid number or JSON value is announced as a
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Nested structs, `$ref` into `$defs`, a plain enum, booleans and a serde enum — a calibration-rs config as it comes. */
+/** Nested structs, `$ref` into `$defs`, a plain enum, booleans and a serde enum — a calibration config as it comes. */
 export const NestedObjects: Story = {
   play: async ({ canvas, args }) => {
     const iterations = canvas.getByRole("spinbutton", { name: "Max iters" });
@@ -345,7 +345,7 @@ export const OptionWithDefault: Story = {
   },
 };
 
-/** A calibration-rs rig config: a `kind`-tagged `SensorMode` whose Scheimpflug variant brings its own fields. */
+/** A calibration rig config: a `kind`-tagged `SensorMode` whose Scheimpflug variant brings its own fields. */
 export const KindTagged: Story = {
   args: { schema: RIG, value: defaultValueForSchema(RIG) },
   play: async ({ canvas }) => {

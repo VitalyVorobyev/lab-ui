@@ -1,6 +1,5 @@
 /**
- * Which labels a layer draws: the level-of-detail rule of the overlay grammar
- * (`docs/visual-language.md` §5), shared by `PointSet`, `AreaSet` and `GridLayer`.
+ * Which labels a layer draws: the level-of-detail rule of the overlay grammar, shared by `PointSet`, `AreaSet` and `GridLayer`.
  *
  * Labels are 11 px mono. They are shown only where their anchors are at least 24 screen
  * pixels apart (so a zoomed-out scene shows none and a zoomed-in one shows all), at most 200 at
@@ -14,7 +13,7 @@ import { useStage } from "./stage/ImageStage";
 import { useScreenPx } from "./stage/useScreenPx";
 import type { Rect } from "./stage/view";
 
-/** Labels need this much room between anchors, in screen pixels (overlay grammar §5). */
+/** Labels need this much room between anchors, in screen pixels (overlay grammar). */
 export const LABEL_SPACING = 24;
 /** The most label elements drawn at once. */
 export const MAX_LABELS = 200;

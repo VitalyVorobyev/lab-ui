@@ -1,6 +1,6 @@
 # @vitavision/charts
 
-Small, hand-rolled SVG charts for the vitavision lab apps, on `@vitavision/ui` tokens.
+Small, hand-rolled SVG charts for the vitavision apps, on `@vitavision/ui` tokens.
 
 ```bash
 bun add @vitavision/charts @vitavision/ui
@@ -35,8 +35,7 @@ along a scan line or caliper axis, with detected edges drawn as labelled vertica
 
 **Sequential colour maps**: `colormap("viridis" | "cividis", t)` and
 `colormapValue(map, value, domain)`, for a magnitude such as an error, a validity or a
-confidence. `ColormapLegend` shows the scale with its units; a map is never shown without one
-(visual-language §4).
+confidence. `ColormapLegend` shows the scale with its units; a map is never shown without one.
 
 ## License
 
