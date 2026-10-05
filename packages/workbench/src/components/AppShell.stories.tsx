@@ -36,7 +36,7 @@ const FRAMES: TreeNode[] = [
 function Header() {
   return (
     <div className="flex h-11 items-center gap-3 px-3">
-      <span className="text-sm font-semibold tracking-tight">etendue studio</span>
+      <span className="text-sm font-semibold tracking-tight">Studio</span>
       <span className="ml-auto" />
       <FileDrop overlay accept=".json" onFiles={fn()} />
     </div>
@@ -125,7 +125,7 @@ export const Studio3Pane: Story = {
   name: "Studio",
   play: async ({ canvas }) => {
     // The shell's header is the first banner (a `Panel`'s header is only one to Testing Library).
-    await expect(canvas.getAllByRole("banner")[0]).toHaveTextContent("etendue studio");
+    await expect(canvas.getAllByRole("banner")[0]).toHaveTextContent("Studio");
     await expect(canvas.getByRole("main")).toHaveTextContent("3D viewport");
     await expect(canvas.getByRole("complementary", { name: "Navigator" })).toBeInTheDocument();
     await expect(canvas.getByRole("complementary", { name: "Inspector" })).toHaveTextContent("tool0");

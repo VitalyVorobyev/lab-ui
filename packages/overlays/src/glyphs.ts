@@ -2,7 +2,7 @@
  * The glyphs of a calibration-target overlay, as path generators.
  *
  * A glyph is a `MarkerShape` for `@vitavision/stage2d`'s `PointSet`: a pure function from a
- * position to SVG path data, so a layer appends thousands of them into one `<path>` (ADR-0004).
+ * position to SVG path data, so a layer appends thousands of them into one `<path>`.
  * They are registered under the names in `TARGET_MARKERS`, which `TargetOverlay` passes as
  * `markers`. Sizes are screen pixels, from `unit` (image pixels per screen pixel).
  *

@@ -50,8 +50,7 @@ batched paths and picks through a spatial index, not the DOM.
 - **Selecting:** click selects, ⌘/Ctrl-click toggles, and Shift-drag or `marquee` draws a
   rubber band.
 - **Pure functions:** `buildPolylineIndex`, `nearestPolyline`, `polylinesInRect` and
-  `polylinePath` are pure; hit-testing is microseconds at 100k segments
-  (`docs/measurements/stage2d-layer-budgets.md`).
+  `polylinePath` are pure; hit-testing is microseconds at 100k segments.
 
 **Points**: `PointSet` draws many points (corners, ring centres, keypoints, labelled landmarks) as
 a few batched paths, with a marker per kind (`dot`, `plus`, `cross`, `square`, `hollow`,
@@ -59,16 +58,14 @@ a few batched paths, with a marker per kind (`dot`, `plus`, `cross`, `square`, `
 selected. Labels appear where points are 24 screen px apart.
 - **Pointer:** `onHoverChange` and `onItemPress` come from the stage's pointer handling and the
   layer's index, not from per-point elements.
-- **Pure functions:** `buildPointIndex`, `nearestPoint`, `pointsInRect` and `thinPoints`
-  (`docs/measurements/stage2d-layer-budgets.md`).
+- **Pure functions:** `buildPointIndex`, `nearestPoint`, `pointsInRect` and `thinPoints`.
 
 **Areas**: `AreaSet` draws many closed regions (marker quads, drawn polygons, region annotations) as a
 few batched paths, each an outline with its 12 % fill, in a role (`feature`, `model`, `structure`).
 - **Pointer:** a press near an outline picks that region, else the smallest region containing it;
   `onHoverChange` and `onItemPress` as `PointSet`.
 - **Quads:** `firstVertexTick` ticks corner 0; labels sit at the centre, where regions are 24 screen px apart.
-- **Pure functions:** `buildAreaIndex`, `nearestArea`, `areasInRect`, `pointInPolygon`, `areaPath`
-  (`docs/measurements/stage2d-layer-budgets.md`).
+- **Pure functions:** `buildAreaIndex`, `nearestArea`, `areasInRect`, `pointInPolygon`, `areaPath`.
 
 **Grids**: `GridLayer` draws a detected lattice: nodes `{ id, i, j, x, y }` as a `PointSet` (`plus` by default)
 and the edges between lattice neighbours as two batched paths, each axis restyled through `edges`.

@@ -3,9 +3,9 @@
  * region annotations, defect outlines.
  *
  * Drawn as a handful of batched paths, one per (state, role, colours), each outline with its 12 % fill
- * in one element (ADR-0004 rule 1); the pointer is resolved by `nearestArea` through the
- * stage's hit registry, never by the DOM (rule 2); strokes and labels are sized in screen
- * pixels (rule 4). A scene of 5,000 quads is a dozen DOM nodes plus at most 200 labels.
+ * in one element; the pointer is resolved by `nearestArea` through the
+ * stage's hit registry, never by the DOM; strokes and labels are sized in screen
+ * pixels. A scene of 5,000 quads is a dozen DOM nodes plus at most 200 labels.
  */
 
 import { useMemo, useState } from "react";
@@ -119,7 +119,7 @@ const TICK_PX = 8;
  *   `stroke` / `fill` colours (`fillOpacity`, `fillRule`, `paintOrder` and `selectionFill` tune the fill).
  *   Rings are wound alike before they are batched, so overlapping regions never cut a hole in
  *   each other.
- * - **States**, from visual-language §5: default 1.5 screen px (1 for `model` and
+ * - **States**: default 1.5 screen px (1 for `model` and
  *   `structure`), hover 2, selected 2.5 in the selection colour, dimmed at 35 % opacity. Every
  *   outline has a halo. A region has no ring: its outline at 2.5 px is the mark.
  * - **Labels** at the centre of a region, only where regions are at least 24 screen px apart,

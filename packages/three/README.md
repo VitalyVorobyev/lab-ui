@@ -9,20 +9,19 @@ bun add @vitavision/three three@0.186.1
 ```
 
 `three` is a peer (`^0.186.0`): three breaks on minor releases, so the app owns the one copy.
-Built in etendue (`web/packages/three`) for its studio and moved here as PLAN L8-1.
 
 ```ts
 import { FrameTreeRuntime, CameraFrustum, imageBorderPixels } from "@vitavision/three";
 
-const runtime = new FrameTreeRuntime(baked); // an etendue BakedScenario
+const runtime = new FrameTreeRuntime(baked); // a baked scenario
 scene.add(runtime.root);
 runtime.frame("cam_left")!.add(new CameraFrustum({ borderRays, depth: 0.12, color }));
 runtime.apply(k); // per animation frame: poses only, no kinematics
 ```
 
-**No kinematics and no camera math here.** Poses arrive baked (etendue ADR 0003), and a
+**No kinematics and no camera math here.** Poses arrive baked, and a
 camera's field of view arrives as back-projected border rays from the host, e.g.
-`@etendue/wasm`'s `backprojectPixels(imageBorderPixels(w, h))` — so distortion shows and
+your camera model's back-projection of `imageBorderPixels(w, h)` — so distortion shows and
 nothing re-implements a camera model.
 
 | Module | What |
@@ -32,7 +31,7 @@ nothing re-implements a camera model.
 | `robot` | `loadRobotVisuals` (per-link GLB, failures reported not thrown), `attachRobotVisuals`, `applyRobotMaterial` |
 | primitives | `CameraFrustum` (with `pickPadding`: a padded pick hull and a pickable optical centre), `LaserFan` and `TargetBoard` (`setActive`; the board also `setOpacity`; their outlines never take picks), `LightGizmo`, `Axes` |
 | `layers` | `PHYSICAL_LAYER` (0, what a sensor sees) and `GIZMO_LAYER` (1, viewer-only); every gizmo above except `TargetBoard` (a physical target a sensor sees) is on `GIZMO_LAYER`; `setLayer` |
-| `SensorView` | a calibrated camera's image: renders the canonical pinhole (physical layer only), then resamples it through a host-supplied remap LUT (`RemapTable`, e.g. `@etendue/wasm` `remap`), so distortion, skew and Scheimpflug geometry appear with no camera math in the shader |
+| `SensorView` | a calibrated camera's image: renders the canonical pinhole (physical layer only), then resamples it through a host-supplied remap LUT (`RemapTable`, from your camera model), so distortion, skew and Scheimpflug geometry appear with no camera math in the shader |
 | `theme` | `readSceneColors` / `observeSceneColors`: scene colours from the `@vitavision/ui` tokens (including `canvas`), normalised by `normalizeColor` so three parses modern CSS colours (`oklch()`, space-separated `hsl()`, `color-mix()`) |
 
 A viewport camera and its raycaster must enable `GIZMO_LAYER` to show and pick gizmos

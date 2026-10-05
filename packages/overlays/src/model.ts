@@ -66,7 +66,7 @@ export interface TargetCorner {
   j?: number | undefined;
   /**
    * The detector's confidence. It is carried for the app (a list, a filter) and never drawn as a
-   * colour: a score is not a verdict (visual-language §5).
+   * colour: a score is not a verdict.
    */
   score?: number | undefined;
   /** Orientation of the first edge through the corner, radians. Axes are lines, so `angle` and `angle + π` are the same. */

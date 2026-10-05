@@ -2,11 +2,10 @@
  * Many polylines over the image, selectable: contours a model may be built from, a
  * document's segments, a batch's matches.
  *
- * Drawn as a handful of batched paths, one per state and colour, not one element per line. The
- * L0-3 benchmark shows the per-element form failing the 2 ms hit-test gate at scale, while the
- * batched form plus a spatial index passes on every candidate engine
- * (`docs/measurements/stage2d-bench-analysis.md`). The pointer is resolved to a line by
- * `nearestPolyline`, not by the DOM, which keeps this layer engine-agnostic for L6-1.
+ * Drawn as a handful of batched paths, one per state and colour, not one element per line. A
+ * per-element form fails a 2 ms hit-test budget at scale, while the batched form plus a spatial
+ * index meets it. The pointer is resolved to a line by `nearestPolyline`, not by the DOM, which
+ * keeps this layer independent of how the lines are drawn.
  */
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
@@ -111,7 +110,7 @@ const MAX_VERTEX_DOTS = 5000;
 /**
  * A selectable set of polylines inside an `ImageStage`.
  *
- * - **States**, from visual-language §5:
+ * - **States**:
  *   - default 1.5 screen px;
  *   - hover 2 px;
  *   - selected 2.5 px in `selectionStroke`;

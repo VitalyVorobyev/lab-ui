@@ -29,7 +29,7 @@ export interface LaserFanOptions {
 
 /**
  * A line laser's light sheet: a translucent circular sector in the laser's local `x = 0`
- * plane, opening symmetrically about +Z (the etendue laser frame), with its outline.
+ * plane, opening symmetrically about +Z (the laser frame), with its outline.
  */
 export class LaserFan extends Group {
   readonly #fill: MeshBasicMaterial;

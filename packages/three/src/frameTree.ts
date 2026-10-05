@@ -1,5 +1,5 @@
 /**
- * Apply a baked scenario (etendue ADR 0003) to a three.js object graph.
+ * Apply a baked scenario to a three.js object graph.
  *
  * Kinematics ran once, upstream: every sample of a baked scenario already holds
  * `world_se3_frame` for every frame of the scene. This runtime only copies those poses into
@@ -20,7 +20,7 @@ export interface BakedSampleLike {
   readonly capture?: { readonly id: string } | null | undefined;
 }
 
-/** A baked scenario (etendue `BakedScenario`) — the fields this runtime reads. */
+/** A baked scenario: the fields this runtime reads. */
 export interface BakedScenarioLike {
   /** Sample period in seconds. */
   readonly dt: number;

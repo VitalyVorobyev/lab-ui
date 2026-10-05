@@ -1,9 +1,8 @@
 /**
- * A calibrated camera's image in the browser (etendue ADR 0004, PLAN P2-2): render the
+ * A calibrated camera's image in the browser: render the
  * canonical pinhole into a render target, then resample it through the remap LUT, so the
  * result carries the target camera's distortion, skew, principal point and Scheimpflug
- * geometry — with no camera-model math in the shader. The LUT comes from the host (e.g.
- * `@etendue/wasm` `remap`).
+ * geometry — with no camera-model math in the shader. The LUT comes from the host's camera model.
  */
 
 import {
@@ -32,7 +31,7 @@ import {
 import { glCameraMatrix } from "./conventions";
 import { PHYSICAL_LAYER } from "./layers";
 
-/** Which image coordinate names a pixel's centre (decided by etendue probe P4-2). */
+/** Which image coordinate names a pixel's centre (the convention of the host's camera model). */
 export type PixelCentre = "integer" | "half";
 
 /** The canonical pinhole: centred, square pixels. */

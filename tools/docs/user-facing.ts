@@ -37,11 +37,25 @@ export const RULES: Rule[] = [
   },
 ];
 
-/** The files package users read. Globs are relative to the repository root. */
-export const USER_FACING: string[] = [".changeset/*.md"];
+/** The files package users read, whole. Globs are relative to the repository root. */
+export const USER_FACING: string[] = [
+  ".changeset/*.md",
+  "README.md",
+  "packages/*/README.md",
+  "packages/*/src/**/*.stories.tsx",
+  "apps/storybook/src/**/*.{mdx,stories.tsx}",
+];
+
+/**
+ * Source files whose TSDoc blocks (`/** ... *\/`) appear in users' editors. Ordinary `//` comments are
+ * internal and are not scanned. Tests are not published.
+ */
+export const TSDOC_SOURCES: string[] = ["packages/*/src/**/*.{ts,tsx}"];
 
 /** Files a glob above matches but that are not user-facing. */
 const NOT_USER_FACING = new Set([".changeset/README.md"]);
+
+const NOT_SOURCE = /\.(?:test|browser\.test|stories)\.tsx?$|\.d\.ts$|\/node_modules\//;
 
 /** A line of user-facing text that uses an internal term. */
 export interface Finding {
@@ -62,6 +76,18 @@ export function scanText(text: string): { line: number; rule: string; text: stri
   return found;
 }
 
+/** The text of every `/** ... *\/` block in `source`, kept at its original line numbers. */
+export function tsdocOnly(source: string): string {
+  const lines = source.split("\n").map(() => "");
+  for (const block of source.matchAll(/\/\*\*[\s\S]*?\*\//g)) {
+    const first = source.slice(0, block.index).split("\n").length - 1;
+    block[0].split("\n").forEach((line, i) => {
+      lines[first + i] = line;
+    });
+  }
+  return lines.join("\n");
+}
+
 /** Scan every user-facing file under `root`. */
 export function scan(root: string): Finding[] {
   const findings: Finding[] = [];
@@ -71,6 +97,16 @@ export function scan(root: string): Finding[] {
       if (NOT_USER_FACING.has(file)) continue;
       for (const hit of scanText(readFileSync(join(root, file), "utf8"))) findings.push({ file, ...hit });
     }
+  }
+  for (const pattern of TSDOC_SOURCES) {
+    for (const path of new Glob(pattern).scanSync({ cwd: root })) {
+      if (NOT_SOURCE.test(path)) continue;
+      for (const hit of scanText(tsdocOnly(readFileSync(join(root, path), "utf8")))) findings.push({ file: path, ...hit });
+    }
+  }
+  for (const path of new Glob("packages/*/package.json").scanSync({ cwd: root })) {
+    const { description } = JSON.parse(readFileSync(join(root, path), "utf8")) as { description?: string };
+    for (const hit of scanText(description ?? "")) findings.push({ file: path, ...hit });
   }
   return findings;
 }

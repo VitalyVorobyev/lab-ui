@@ -2,7 +2,7 @@ import { dirname, resolve } from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { scan, scanText } from "./user-facing";
+import { scan, scanText, tsdocOnly } from "./user-facing";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname), "../..");
 
@@ -23,6 +23,11 @@ describe("scanText", () => {
     expect(scanText("A CSS colour such as `#f2f2f2` or `#235159`, at 1.5 px.")).toEqual([]);
     expect(scanText("`AreaSet` takes `fillRule`; Level 2 is fine, and so is A4 paper.")).toEqual([]);
     expect(scanText("# Heading\n\n- a list")).toEqual([]);
+  });
+
+  test("tsdocOnly keeps doc blocks at their line numbers and drops other comments", () => {
+    const source = "// see PLAN\nconst a = 1;\n/**\n * see ADR-0004\n */\nexport {};";
+    expect(scanText(tsdocOnly(source))).toEqual([{ line: 4, rule: "ADR number", text: "* see ADR-0004" }]);
   });
 
   test("reports 1-based line numbers", () => {

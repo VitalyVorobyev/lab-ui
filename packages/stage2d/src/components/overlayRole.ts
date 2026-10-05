@@ -1,5 +1,5 @@
 /**
- * The overlay grammar's roles and states (docs/visual-language.md §5), for layers that paint
+ * The overlay grammar's roles and states for layers that paint
  * through SVG attributes rather than class names.
  */
 

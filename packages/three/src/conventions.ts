@@ -1,8 +1,8 @@
 /**
- * Frame and pose conventions (etendue PLAN §3), in exactly one place.
+ * Frame and pose conventions, in exactly one place.
  *
  * - World: right-handed, **+Z up**, metres.
- * - Camera frames are calibration-rs/OpenCV: +Z forward, +X right, +Y down. A three.js
+ * - Camera frames are OpenCV's: +Z forward, +X right, +Y down. A three.js
  *   (OpenGL) camera looks down −Z with +Y up; the two differ by a fixed rotation of π about
  *   X ({@link CV_TO_GL}).
  * - Transforms are named `a_se3_b` (maps b coordinates into a). On the wire an SE(3) is

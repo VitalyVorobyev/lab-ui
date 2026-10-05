@@ -4,9 +4,9 @@
  *
  * A `MarkerShape` is sized in screen pixels, so it cannot draw a ring whose radius is a
  * measurement. This layer draws exact ellipses (two arcs each) in image pixels, batched by
- * appearance into a handful of `<path>`s (ADR-0004 rule 1). Strokes stay screen-sized (rule 4).
+ * appearance into a handful of `<path>`s Strokes stay screen-sized.
  * The pointer is resolved by `nearestEllipse` through the stage's hit registry, never by the
- * DOM (rule 2); `pickable={false}` leaves a decorative layer out of it.
+ * DOM; `pickable={false}` leaves a decorative layer out of it.
  */
 
 import { useMemo, useState } from "react";
@@ -136,7 +136,7 @@ interface Batch {
  *
  * - **Geometry** is data: `rx`, `ry` and the centre are image pixels and scale with the image;
  *   the stroke is a screen constant.
- * - **States** follow visual-language §5: 1.5 screen px (1 for `model` and `structure`), hover
+ * - **States**: 1.5 screen px (1 for `model` and `structure`), hover
  *   2, selected 2.5 in the selection colour, dimmed at 35 % opacity. Every stroke has a halo.
  * - **Batching** is by (role, dash, opacity, dimming): a thousand rings are a dozen elements.
  * - **Picking** goes through the stage's hit registry: a press within the pointer's tolerance of

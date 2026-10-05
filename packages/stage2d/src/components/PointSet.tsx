@@ -3,9 +3,9 @@
  * keypoints, labelled landmarks.
  *
  * Drawn as a handful of batched paths, one per (state, style, colour, marker kind), never one element
- * per point (ADR-0004 rules 1 and 3); the pointer is resolved by `nearestPoint` through the
- * stage's hit registry, never by the DOM (rule 2); markers are sized in screen pixels (rule
- * 4). A scene of 20,000 points is under a dozen DOM nodes plus at most 200 labels.
+ * per point; the pointer is resolved by `nearestPoint` through the stage's hit registry, never by
+ * the DOM; markers are sized in screen pixels. A scene of 20,000 points is under a dozen DOM nodes
+ * plus at most 200 labels.
  */
 
 import { useMemo, useState } from "react";
@@ -112,7 +112,7 @@ interface Batch {
  *
  * - **Markers** by kind, from the overlay grammar: `dot`, `plus` (corner), `cross`, `square`,
  *   `hollow` (predicted), `directed`. Add your own through `markers`.
- * - **States**, from visual-language §5: default 1.5 screen px, hover 2, selected 2.5 in the
+ * - **States**: default 1.5 screen px, hover 2, selected 2.5 in the
  *   selection colour with a ring, dimmed at 35 % opacity. Every mark has a halo.
  * - **Labels** only where points are at least 24 screen px apart, at most 200 at a time.
  * - **Picking** goes through the stage's hit registry: `onHoverChange` and `onItemPress` here,

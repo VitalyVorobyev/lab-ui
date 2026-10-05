@@ -1,5 +1,5 @@
 /**
- * Sequential colour maps for a magnitude (visual-language §4): a residual's size, a per-cell
+ * Sequential colour maps for a magnitude: a residual's size, a per-cell
  * error, a confidence, a validity fraction.
  *
  * Only perceptually uniform maps ship, so equal steps in the data look like equal steps.

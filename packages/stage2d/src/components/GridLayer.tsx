@@ -3,8 +3,7 @@
  * column edges between neighbours, and optional `(i, j)` labels.
  *
  * Nodes are a `PointSet` (batched markers, the point index, hover and selection), so a grid of
- * 20,000 corners is a dozen DOM nodes; the edges are two more batched paths (ADR-0004 rules 1
- * and 4). Edges are not picked: a person points at a corner.
+ * 20,000 corners is a dozen DOM nodes; the edges are two more batched paths. Edges are not picked: a person points at a corner.
  */
 
 import { useMemo } from "react";

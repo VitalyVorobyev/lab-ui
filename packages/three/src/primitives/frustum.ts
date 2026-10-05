@@ -23,7 +23,7 @@ const NO_RAYCAST: Object3D["raycast"] = () => undefined;
  * at point indices `0, perEdge, 2·perEdge, 3·perEdge`. The border is the outer image rectangle
  * `[0, width] × [0, height]`.
  *
- * Back-project these (`@etendue/wasm` `backprojectPixels`) to get the border rays of a camera's
+ * Back-project these with your camera model to get the border rays of a camera's
  * true field of view, distortion included.
  */
 export function imageBorderPixels(width: number, height: number, perEdge = 8): Float64Array {

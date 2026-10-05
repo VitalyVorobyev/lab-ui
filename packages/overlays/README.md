@@ -1,6 +1,6 @@
 # @vitavision/overlays
 
-Calibration-target overlays for the vitavision lab apps, on the `@vitavision/stage2d` image stage: one `TargetOverlay` for a chessboard, ChArUco board, marker board, PuzzleBoard, ring grid or a loose set of corners.
+Calibration-target overlays for the vitavision apps, on the `@vitavision/stage2d` image stage: one `TargetOverlay` for a chessboard, ChArUco board, marker board, PuzzleBoard, ring grid or a loose set of corners.
 
 ```bash
 bun add @vitavision/overlays @vitavision/stage2d @vitavision/ui
@@ -47,7 +47,7 @@ Positions are image pixels with the **centre of pixel `i` at coordinate `i`**, w
 
 ## What is drawn
 
-Each part goes to the stage2d layer that fits it, batched by appearance (ADR-0004), so a detection of thousands of items is a few dozen DOM nodes and the pointer is resolved by the stage's hit-test index.
+Each part goes to the stage2d layer that fits it, batched by appearance, so a detection of thousands of items is a few dozen DOM nodes and the pointer is resolved by the stage's hit-test index.
 
 | Part | Drawn as | Layer |
 |---|---|---|
