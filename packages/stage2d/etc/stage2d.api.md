@@ -182,6 +182,32 @@ export function clampView(view: StageView, box: Box, image: Box, options?: Clamp
 export type Colormap = (t: number) => readonly [number, number, number];
 
 // @public
+export function CompareLayer(input: CompareLayerProps): JSX.Element;
+
+// @public
+export interface CompareLayerProps {
+    a: string;
+    alt: string;
+    b: string;
+    cell?: number | undefined;
+    className?: string | undefined;
+    defaultSplit?: number | undefined;
+    gain?: number | undefined;
+    labels?: readonly [string, string] | undefined;
+    mode: CompareMode;
+    onSplitChange?: ((split: number) => void) | undefined;
+    orientation?: CompareOrientation | undefined;
+    pixelatedAbove?: number | undefined;
+    split?: number | undefined;
+}
+
+// @public
+export type CompareMode = "checker" | "wipe" | "difference";
+
+// @public
+export type CompareOrientation = "vertical" | "horizontal";
+
+// @public
 export function contentUnder(view: View, pointer: {
     clientX: number;
     clientY: number;

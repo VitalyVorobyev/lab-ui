@@ -29,6 +29,9 @@ export {
   type StageHitTestApi,
 } from "./components/stage/useStageHitTest";
 
+export { CompareLayer, type CompareLayerProps } from "./components/stage/CompareLayer";
+export type { CompareMode, CompareOrientation } from "./components/stage/compareStyle";
+
 export { ImageLayer, type ImageLayerBaseProps, type ImageLayerProps, type ImageTier } from "./components/stage/ImageLayer";
 
 export {
