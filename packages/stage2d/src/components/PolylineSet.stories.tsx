@@ -1,13 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { expect, fireEvent, fn, waitFor } from "storybook/test";
 
-import { PolylineSet, type PolylineSelectMode, type PolylineSetItem, type PolylineSetProps } from "./PolylineSet";
+import {
+  PolylineSet,
+  type PolylineSelectMode,
+  type PolylineSetHandle,
+  type PolylineSetItem,
+  type PolylineSetProps,
+} from "./PolylineSet";
 import type { PolylineId } from "./polylineIndex";
+import { RectRoiEditor } from "./RectRoiEditor";
 import { ImageStage } from "./stage/ImageStage";
 import { StageSurface } from "./stage/StageSurface";
 import { useStageHitTest } from "./stage/useStageHitTest";
-import type { StageView } from "./stage/view";
+import type { Rect, StageView } from "./stage/view";
 
 const IMAGE = { width: 400, height: 300 };
 const VIEW: StageView = { scale: 1, tx: 0, ty: 0 };
@@ -62,6 +69,36 @@ function Harness(props: Partial<PolylineSetProps>) {
 }
 
 const surfacePress = fn();
+
+/**
+ * Lines inside a region of interest whose inside is left to the layers below: a Shift-press
+ * there reaches the app's `StageSurface`, which starts the lines' band through their `ref`.
+ */
+function SweepInsideRegion() {
+  const linesRef = useRef<PolylineSetHandle>(null);
+  const [selected, setSelected] = useState<Set<PolylineId>>(() => new Set());
+  const [region, setRegion] = useState<Rect | null>({ x: 40, y: 30, width: 320, height: 240 });
+  return (
+    <div>
+      <ImageStage image={IMAGE} view={VIEW} onView={() => {}} style={{ width: IMAGE.width + 2, height: IMAGE.height + 2 }}>
+        <div className="absolute inset-0 bg-canvas" />
+        <StageSurface onPress={(press) => (press.shiftKey ? linesRef.current?.sweepDrag(press) : undefined)} />
+        <PolylineSet
+          ref={linesRef}
+          items={ITEMS}
+          selected={selected}
+          onSelect={(ids, mode) => {
+            select(ids, mode);
+            setSelected((current) => applySelect(current, ids, mode));
+          }}
+        />
+        <RectRoiEditor value={region} onValueChange={setRegion} interior="none" fillOpacity={0} />
+      </ImageStage>
+      <output data-testid="selected">{[...selected].sort().join(",") || "none"}</output>
+      <output data-testid="region">{region ? `${region.x},${region.y},${region.width},${region.height}` : "none"}</output>
+    </div>
+  );
+}
 
 /** A draw tool's surface below a polyline layer that takes no presses; the line is still found by the hit-test. */
 function DrawOverLines({ interactive }: { interactive?: boolean }) {
@@ -119,7 +156,12 @@ stay smooth and a hover costs microseconds.
 - **Clicks:** a click on a line selects it, and ⌘/Ctrl-click toggles it.
 - **Rubber band:** Shift-drag from a line, or any drag with \`marquee\`, draws a band. On release it selects every
   line the band touches; with ⌘/Ctrl it adds them; an empty band clears the selection.
-- **Points:** above \`vertexScale\`, the hovered and selected lines show their points.
+- **Points:** above \`vertexScale\`, the hovered and selected lines show their points as \`vertexColor\` dots (the
+  near-white \`label\` role by default) of \`vertexSize\` screen pixels on a dark halo, so they show on a selected line.
+- **Sweeps from elsewhere:** with \`marqueeSurface={false}\` the \`marquee\` tool keeps no full-frame target of its own
+  (a press on a line still sweeps); the app starts a band from its own \`StageSurface\` with
+  \`ref.current.sweepDrag(press)\`, or from any \`pointerdown\` with \`ref.current.startSweep(event)\`, whether or not the
+  layer is interactive.
 - **Callbacks and hit-test:** \`onHoverChange\` and \`onItemPress\` use the names \`PointSet\` uses, and the layer answers
   \`useStageHitTest\` at \`STAGE_HIT_PRIORITY.line\`. A \`PointSet\` marker over a line takes the press.
 
@@ -300,5 +342,74 @@ export const TouchSelectsOnTap: Story = {
     await fireEvent.pointerUp(viewport, touch({ x: 340, y: 150 }));
     await fireEvent.pointerUp(viewport, touch({ x: 240, y: 150 }, 6));
     await expect(select).not.toHaveBeenCalled();
+  },
+};
+
+/**
+ * The points of selected lines at 4×: near-white dots on a dark halo, drawn over the selection
+ * colour so they show on a selected line.
+ */
+export const SelectedVertices: Story = {
+  render: () => (
+    <ImageStage image={IMAGE} view={{ scale: 4, tx: -200, ty: -160 }} onView={() => {}} style={{ width: 402, height: 302 }}>
+      <div className="absolute inset-0 bg-canvas" />
+      <PolylineSet items={ITEMS} selected={[1, 2]} />
+    </ImageStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const dots = canvasElement.querySelector("[data-points]")!;
+    await expect(dots).toHaveAttribute("stroke", "var(--stage-label)");
+    // 4 screen px at 4×; the halo under it is 1 px wider on each side.
+    await expect(dots).toHaveAttribute("stroke-width", "1");
+    const halo = dots.previousElementSibling!;
+    await expect(halo).toHaveAttribute("stroke", "var(--stage-halo)");
+    await expect(halo).toHaveAttribute("stroke-width", "1.5");
+    // Drawn after the selected lines, so on top of them.
+    const lines = canvasElement.querySelector("[data-selected-lines]")!;
+    await expect(lines.compareDocumentPosition(dots) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  },
+};
+
+/** \`marquee\` without its full-frame target: a drag from a line still sweeps, and bare image is left to the layers below. */
+export const MarqueeWithoutSurface: Story = {
+  render: () => <Harness marquee marqueeSurface={false} />,
+  play: async ({ canvas, canvasElement }) => {
+    select.mockClear();
+    await expect(canvasElement.querySelector("[data-marquee-surface]")).toBeNull();
+    const hit = canvasElement.querySelector("[data-hit]")!;
+    // From the right side of square 1 (no Shift needed with the tool on), across line 3.
+    await fireEvent.pointerDown(hit, at(hit, { x: 160, y: 100 }));
+    await fireEvent.pointerMove(window, at(hit, { x: 100, y: 260 }));
+    await fireEvent.pointerUp(window, at(hit, { x: 100, y: 260 }));
+    await expect(select).toHaveBeenLastCalledWith([1, 3], "replace");
+    await waitFor(() => expect(canvas.getByTestId("selected")).toHaveTextContent("1,3"));
+  },
+};
+
+/**
+ * A Shift-drag that starts inside a region editor (\`interior="none"\`) sweeps the lines: the
+ * press reaches the app's \`StageSurface\`, which returns the lines' \`sweepDrag\`.
+ */
+export const SweepFromRegionInside: Story = {
+  render: () => <SweepInsideRegion />,
+  play: async ({ canvas, canvasElement }) => {
+    select.mockClear();
+    const inside = canvasElement.querySelector("[data-roi-interior]")!;
+    const start = { x: 200, y: 160 };
+    // Where the stylesheet is loaded, the region's inside is not what a press there lands on.
+    if (getComputedStyle(inside).pointerEvents === "none") {
+      const { clientX, clientY } = at(inside, start);
+      await expect(document.elementFromPoint(clientX, clientY)?.closest("[data-roi-interior]")).toBeNull();
+    }
+    const surface = canvasElement.querySelector("[data-stage-surface]")!;
+    // A band from inside the region up to the top right: over lines 2 and 4.
+    await fireEvent.pointerDown(surface, at(surface, start, { shiftKey: true }));
+    await waitFor(() => expect(canvasElement.querySelector("svg[data-sweeping]")).not.toBeNull());
+    await fireEvent.pointerMove(window, at(surface, { x: 390, y: 20 }));
+    await fireEvent.pointerUp(window, at(surface, { x: 390, y: 20 }));
+    await expect(select).toHaveBeenLastCalledWith([2, 4], "replace");
+    await waitFor(() => expect(canvas.getByTestId("selected")).toHaveTextContent("2,4"));
+    // The region is untouched.
+    await expect(canvas.getByTestId("region")).toHaveTextContent("40,30,320,240");
   },
 };
