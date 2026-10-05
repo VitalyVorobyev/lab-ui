@@ -232,9 +232,23 @@ export {
   shapeFromCorner,
   shapeHandleCursor,
   shapeHandlePoint,
+  snapAngle,
   toShapeFrame,
   type RotatedShape,
 } from "./components/shapeEdit";
+export { DatumEditor, type DatumEditorProps } from "./components/DatumEditor";
+export {
+  DATUM_ARM_PX,
+  DATUM_HANDLE_PX,
+  DATUM_RING_PX,
+  datumAxes,
+  datumPress,
+  moveDatum,
+  rotateDatum,
+  type Datum,
+  type DatumPressOptions,
+  type MoveDatumOptions,
+} from "./components/datumEdit";
 export {
   DraftShape,
   MarqueeRect,

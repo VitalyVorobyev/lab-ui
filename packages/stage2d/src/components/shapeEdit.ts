@@ -139,9 +139,19 @@ export function resizeShape(shape: RotatedShape, handle: RoiHandle, to: Point, m
  */
 export function rotateShape(shape: RotatedShape, to: Point, snap = 0): RotatedShape {
   // The handle sits along the shape's own up direction, which is at angle `rotation - π/2`.
-  let rotation = Math.atan2(to.y - shape.cy, to.x - shape.cx) + Math.PI / 2;
-  if (snap > 0) rotation = Math.round(rotation / snap) * snap;
-  return { ...shape, rotation: normalizeAngle(rotation) };
+  const rotation = Math.atan2(to.y - shape.cy, to.x - shape.cx) + Math.PI / 2;
+  return { ...shape, rotation: normalizeAngle(snapAngle(rotation, snap)) };
+}
+
+/**
+ * An angle rounded to the nearest multiple of a step: what Shift does to a rotation.
+ *
+ * @param angle - Radians.
+ * @param step - The step, in radians (`Math.PI / 12` for 15°). 0 or less leaves the angle as it is.
+ * @returns The rounded angle. It is not brought into `(-π, π]`; pass it through `normalizeAngle` for that.
+ */
+export function snapAngle(angle: number, step: number): number {
+  return step > 0 ? Math.round(angle / step) * step : angle;
 }
 
 /**
