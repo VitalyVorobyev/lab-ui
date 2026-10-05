@@ -138,5 +138,6 @@ describe("will-change: transform on the stage box", () => {
     // The settled-only variant must be as sharp as the baseline.
     expect(results.moving.edge).toBeLessThanOrEqual(results.none.edge + 1);
     expect(results.moving.line).toBeLessThanOrEqual(results.none.line + 1);
-  });
+    // Three variants, a screenshot each: more than the default 15 s on a loaded CI runner.
+  }, 60_000);
 });
