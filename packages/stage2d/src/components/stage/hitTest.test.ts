@@ -170,4 +170,31 @@ describe("the registry", () => {
       expect(registry.routePress({ x: 0, y: 0 }, 1, "event")).toBe(false);
     });
   });
+
+  describe("double-clicks", () => {
+    it("offers a double-click to the layers that take one, best first, until one claims it", () => {
+      const registry = createHitRegistry<string>();
+      const declines = vi.fn(() => false);
+      const claims = vi.fn();
+      const unreached = vi.fn();
+      // The best hit takes no double-clicks: it is passed over, not a wall.
+      registry.register(layerOver("marker", 400, { m: [0, 0] }, { pressable: true, press: () => true }));
+      registry.register(layerOver("top", 300, { t: [1, 0] }, { doubleClick: declines }));
+      registry.register(layerOver("middle", 200, { c: [0, 1] }, { doubleClick: claims }));
+      registry.register(layerOver("bottom", 100, { b: [0, 0] }, { doubleClick: unreached }));
+      expect(registry.routeDoubleClick({ x: 0, y: 0 }, 2)).toBe(true);
+      expect(declines).toHaveBeenCalledWith("t", { x: 0, y: 0 });
+      expect(claims).toHaveBeenCalledWith("c", { x: 0, y: 0 });
+      expect(unreached).not.toHaveBeenCalled();
+    });
+
+    it("reports no claim when nothing that takes double-clicks is under the point, or every layer declines", () => {
+      const registry = createHitRegistry<string>();
+      registry.register(layerOver("quiet", 300, { a: [0, 0] }));
+      registry.register(layerOver("far", 200, { b: [90, 90] }, { doubleClick: () => true }));
+      expect(registry.routeDoubleClick({ x: 0, y: 0 }, 1)).toBe(false);
+      registry.register(layerOver("declines", 100, { c: [0, 0] }, { doubleClick: () => false }));
+      expect(registry.routeDoubleClick({ x: 0, y: 0 }, 1)).toBe(false);
+    });
+  });
 });

@@ -224,7 +224,8 @@ export interface ImageStageProps {
   panButton?: StageMouseButton | readonly StageMouseButton[] | undefined;
   /**
    * Whether a double-click toggles fit and the previous view. On by default; turn it off in
-   * an app whose tools use double-click, such as closing a polygon.
+   * an app whose tools use double-click, such as closing a polygon. A double-click a layer
+   * takes through the hit-test (an editable `ContourEditor` inserting a vertex) never toggles.
    */
   doubleClickFit?: boolean | undefined;
   /**
@@ -788,8 +789,12 @@ export function ImageStage({
    * Fit ↔ **the view you were just at**, which is the gesture a reader actually wants: a
    * double-click to see the whole part, another to go back to the corner they were working
    * in. Toggling against 1:1 instead (the predecessor's behaviour) throws that place away.
+   *
+   * A layer that registered for double-clicks hears one first (inserting a vertex on a
+   * contour, say); when it takes it, the view stays where it is.
    */
   const onDoubleClick = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!panMode && hits.routeDoubleClick(clientToImage({ x: event.clientX, y: event.clientY }), hitRadius(event))) return;
     if (!doubleClickFit || !(box.width > 0)) return;
     if (atFit) {
       const restore = previousRef.current;

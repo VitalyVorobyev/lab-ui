@@ -229,9 +229,11 @@ export interface ContourEditorProps {
     bounds?: Rect | undefined;
     editable?: boolean;
     label?: string;
+    layerId?: string | undefined;
     onChange: (points: Point[]) => void;
     onCommit?: () => void;
     points: Point[];
+    priority?: number | undefined;
     stroke?: string;
 }
 
@@ -1207,6 +1209,7 @@ export interface StageHit extends HitCandidate {
 // @public
 export interface StageHitLayerOptions {
     layerId?: string | undefined;
+    onDoubleClick?: ((id: HitId, point: Point) => boolean | void) | undefined;
     onHover?: ((id: HitId | null) => void) | undefined;
     onPress?: ((id: HitId, event: StagePointerEvent) => boolean | void) | undefined;
     pick: (point: Point, radius: number) => HitCandidate | null;
