@@ -1,7 +1,8 @@
 /**
  * `@vitavision/workbench` — the building blocks of a studio app on `@vitavision/ui`: the
- * shell, its split panes, workspace rail and status bar, a tree navigator, a playback transport over a sampled timeline,
- * file opening, and (re-exported from `@vitavision/ui`) notifications.
+ * shell, its split panes, workspace rail and status bar, a tree navigator, a stepper, a
+ * playback transport over a sampled timeline, file opening, and (re-exported from
+ * `@vitavision/ui`) notifications.
  *
  * Import `@vitavision/workbench/styles.css` after `@vitavision/ui/styles.css`.
  *
@@ -70,6 +71,9 @@ export {
   type SequenceNavigatorProps,
 } from "./components/SequenceNavigator";
 export { stepIndex } from "./components/sequence";
+
+export { Stepper, type StepperProps, type StepperStep } from "./components/Stepper";
+export { type StepGate, type StepState, type StepView, stepStates } from "./components/stepperModel";
 
 // Notifications moved to `@vitavision/ui` (a second app needed them). These are re-exports of
 // the same bindings, so there is still one default store; prefer importing from `@vitavision/ui`.

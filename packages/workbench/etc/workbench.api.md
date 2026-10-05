@@ -304,7 +304,49 @@ export interface StatusBarProps {
 }
 
 // @public
+export interface StepGate {
+    blockedBy?: string | undefined;
+    complete?: boolean | undefined;
+    id: string;
+}
+
+// @public
 export function stepIndex(length: number, index: number, delta: 1 | -1, wrap?: boolean): number | null;
+
+// @public
+export function Stepper(input: StepperProps): JSX.Element;
+
+// @public
+export interface StepperProps {
+    "aria-label": string;
+    className?: string | undefined;
+    defaultValue?: string | undefined;
+    onValueChange?: ((id: string) => void) | undefined;
+    orientation?: "horizontal" | "vertical" | undefined;
+    steps: readonly StepperStep[];
+    value?: string | null | undefined;
+}
+
+// @public
+export interface StepperStep {
+    blockedBy?: string | undefined;
+    complete?: boolean | undefined;
+    id: string;
+    label: ReactNode;
+}
+
+// @public
+export type StepState = "current" | "complete" | "blocked" | "upcoming";
+
+// @public
+export function stepStates(steps: readonly StepGate[], current: string | null): StepView[];
+
+// @public
+export interface StepView {
+    canActivate: boolean;
+    id: string;
+    state: StepState;
+}
 
 export { toast }
 
