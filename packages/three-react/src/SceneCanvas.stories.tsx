@@ -106,9 +106,12 @@ export const PointerOnly: Story = {
     await expect(view).not.toHaveAttribute("aria-describedby");
     await waitFor(() => expect(CAMERAS.get(args.label)).toBeDefined());
     const camera = CAMERAS.get(args.label)!;
+    // Let the opening frames (damped controls re-derive the eye) settle before measuring.
+    await new Promise((resolve) => setTimeout(resolve, 300));
     const start = camera.position.clone();
     view.focus();
     await userEvent.keyboard("{ArrowRight}+");
-    await expect(camera.position.equals(start)).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect(camera.position.distanceTo(start)).toBeLessThan(1e-6);
   },
 };
