@@ -8,6 +8,7 @@ import { createToastStore } from '@vitavision/ui';
 import { defaultToastStore } from '@vitavision/ui';
 import { JSX } from 'react';
 import { MeasureTone } from '@vitavision/ui';
+import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { ReadoutItem } from '@vitavision/ui';
 import { toast } from '@vitavision/ui';
@@ -114,6 +115,37 @@ export interface FileDropProps {
 
 // @public
 export function formatSeconds(seconds: number): string;
+
+// @public
+export function NavRail(input: NavRailProps): JSX.Element;
+
+// @public
+export function NavRailItem(input: NavRailItemProps): JSX.Element;
+
+// @public
+export interface NavRailItemProps {
+    asChild?: boolean | undefined;
+    badge?: ReactNode | number;
+    children?: ReactElement | undefined;
+    className?: string | undefined;
+    disabled?: boolean | undefined;
+    icon: ReactNode;
+    label: string;
+    value: string;
+}
+
+// @public
+export type NavRailLabels = "visible" | "tooltip";
+
+// @public
+export interface NavRailProps {
+    children: ReactNode;
+    className?: string | undefined;
+    defaultValue?: string | undefined;
+    labels?: NavRailLabels | undefined;
+    onValueChange?: ((value: string) => void) | undefined;
+    value?: string | null | undefined;
+}
 
 // @public
 export type PaneSize = number | `${number}%`;

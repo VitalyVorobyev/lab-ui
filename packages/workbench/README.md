@@ -18,6 +18,7 @@ bun add @vitavision/workbench @vitavision/ui
 | Export | What |
 |---|---|
 | `AppShell` | Full-viewport frame: `header`, a fixed-width `rail` (an icon nav, `<nav>`), `left` \| `main` \| `right` (side panels resizable and optionally remembered), `bottom`. Landmarks included. |
+| `NavRail`, `NavRailItem` | The workspaces of an app as an icon column for `AppShell`'s `rail` slot, one current (`aria-current="page"`): labels under the icons or in tooltips, count badges, disabled items, and `asChild` to render each item as a router's link. Controlled or not. |
 | `StatusBar` | One 24 px status line for `AppShell`'s `bottom` slot: `ReadoutItem` facts at the `start` and `end`, anything (a `ProgressBar`) between. A named group; a polite `role="status"` with `live`. |
 | `SplitPane` | Two panes, horizontal or vertical, with a draggable, keyboard-operable divider (`role="separator"`, WAI-ARIA window splitter). Sizes in px or `%`, min/max, collapsible, controlled or not, `storageKey`. Nests. |
 | `TreeView` | Data-driven tree (`TreeNode[]` with `icon`/`meta`), WAI-ARIA tree keyboard, controlled selection, controlled or uncontrolled expansion; reveals a selection made elsewhere. |
