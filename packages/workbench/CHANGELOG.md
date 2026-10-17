@@ -1,5 +1,15 @@
 # @vitavision/workbench
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [d36cb3c]
+- Updated dependencies [d36cb3c]
+- Updated dependencies [d36cb3c]
+- Updated dependencies [d36cb3c]
+  - @vitavision/ui@0.13.0
+
 ## 0.3.0
 
 ### Minor Changes
