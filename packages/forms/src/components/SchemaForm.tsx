@@ -135,6 +135,7 @@ function SchemaField({
     >
       {field.kind === "json" ? (
         <Textarea
+          mono
           rows={2}
           aria-label={field.label}
           placeholder={field.placeholder}

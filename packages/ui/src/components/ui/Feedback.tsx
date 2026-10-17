@@ -143,6 +143,9 @@ export function SkeletonRows({
  * A `role="progressbar"` with `aria-valuenow` in percent. Its accessible name is
  * `aria-label` if given, else `label`, else "Progress" — pass one that names the job when
  * a screen shows more than one bar.
+ *
+ * @deprecated Use `Progress`: a value out of a `max` with a "412 of 2,556" value text, an
+ * indeterminate state, and a track that follows the density.
  */
 export function ProgressBar({
   fraction,

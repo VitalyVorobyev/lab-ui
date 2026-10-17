@@ -208,6 +208,9 @@ export function Field(input: {
 }): JSX.Element;
 
 // @public
+export function findSpans(text: string, rules: readonly HighlightRule[]): HighlightSpan[];
+
+// @public
 export const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal";
 
 // @public
@@ -215,6 +218,34 @@ export const focusRingInset = "focus-visible:outline-2 focus-visible:outline-off
 
 // @public
 export function formatNumber(value: number, precision: number): string;
+
+// @public
+export function HighlightedText(input: HighlightedTextProps): JSX.Element;
+
+// @public
+export type HighlightedTextProps = Omit<ComponentProps<"span">, "children"> & {
+    text: string;
+    spans?: readonly HighlightSpan[] | undefined;
+    labels?: Partial<Record<HighlightKind, string | null>> | undefined;
+};
+
+// @public
+export type HighlightKind = "placeholder" | "tag" | "protected-term" | "mismatch";
+
+// @public
+export interface HighlightRule {
+    kind: HighlightKind;
+    label?: string | undefined;
+    pattern: RegExp;
+}
+
+// @public
+export interface HighlightSpan {
+    end: number;
+    kind: HighlightKind;
+    label?: string | undefined;
+    start: number;
+}
 
 // @public
 export function InfoHint(input: {
@@ -379,12 +410,25 @@ export interface PoseValue {
 }
 
 // @public
+export function Progress(input: ProgressProps): JSX.Element;
+
+// @public @deprecated
 export function ProgressBar(input: {
     fraction: number;
     label?: string | undefined;
     "aria-label"?: string | undefined;
     className?: string | undefined;
 }): JSX.Element;
+
+// @public
+export type ProgressProps = Omit<ComponentProps<"div">, "children" | "role"> & {
+    value?: number | null | undefined;
+    max?: number | undefined;
+    valueText?: string | undefined;
+};
+
+// @public
+export function progressText(value: number | null | undefined, max?: number): string | null;
 
 // @public
 export type Quaternion = readonly [number, number, number, number];
@@ -538,12 +582,20 @@ export function Table<Row>(input: {
     defaultSort?: TableSort | null | undefined;
     onSortChange?: ((sort: TableSort | null) => void) | undefined;
     manualSort?: boolean | undefined;
+    windowed?: TableWindowing | undefined;
 }): JSX.Element;
 
 // @public
 export interface TableSort {
     direction: SortDirection;
     key: string;
+}
+
+// @public
+export interface TableWindowing {
+    height?: number | undefined;
+    overscan?: number | undefined;
+    rowHeight: number;
 }
 
 // @public
@@ -557,7 +609,16 @@ export function Tabs<Id extends string>(input: {
 }): JSX.Element;
 
 // @public
-export function Textarea(input: ComponentProps<"textarea">): JSX.Element;
+export function Textarea(input: TextareaProps): JSX.Element;
+
+// @public
+export type TextareaProps = ComponentProps<"textarea"> & {
+    onValueChange?: ((value: string) => void) | undefined;
+    invalid?: boolean | undefined;
+    mono?: boolean | undefined;
+    minRows?: number | undefined;
+    maxRows?: number | undefined;
+};
 
 // @public
 export type ThemeChoice = "light" | "dark" | "system";

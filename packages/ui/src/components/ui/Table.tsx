@@ -8,14 +8,20 @@
  * Sorting is per column and follows the sortable-table pattern of the ARIA Authoring
  * Practices: the header's content is a button, and only the sorted header carries
  * `aria-sort`. The order itself lives in `tableSort.ts`.
+ *
+ * `windowed` renders only the rows in view, between two spacer rows that keep the scroll
+ * height, so a table of thousands of rows scrolls as fast as one of thirty. It stays a real
+ * `<table>`: the rows that are rendered carry `aria-rowindex` and the table `aria-rowcount`, so
+ * a reader still hears "row 2,041 of 5,001". The arithmetic lives in `tableWindow.ts`.
  */
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import { type KeyboardEvent, type MouseEvent, type ReactNode, useMemo, useState } from "react";
+import { type KeyboardEvent, type MouseEvent, type ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { byDensity, useDensity } from "./Density";
-import { cn, focusRing } from "./cn";
+import { cn, focusRing, focusRingInset } from "./cn";
 import { isSortable, nextSort, type SortDirection, sortOrder, type TableSort } from "./tableSort";
+import { navigate, rowWindow, scrollTopFor } from "./tableWindow";
 
 /** One column of a `Table`: its header and how to render a row's cell. */
 export type Column<Row> = {
@@ -55,6 +61,29 @@ export type Column<Row> = {
   firstSort?: SortDirection | undefined;
 };
 
+/**
+ * Windowed rendering for a long table: only the rows in view, plus `overscan` on each side,
+ * are in the DOM. The rows scroll under a sticky header drawn on `surface`, the panel colour.
+ */
+export interface TableWindowing {
+  /**
+   * Every body row's height in px. Rows are drawn exactly this tall and cells keep to one line
+   * (longer content is cut with an ellipsis), so it must be at least the density's own row
+   * height: 36 px comfortable, 22 px compact.
+   */
+  rowHeight: number;
+  /**
+   * The scroll area's height in px, header included. Leave it out to fill the height of the
+   * container, which must then have one (a flex child with `min-h-0`, a fixed-height panel).
+   */
+  height?: number | undefined;
+  /** Rows rendered beyond each edge of the view, so a fast scroll shows no gap. Defaults to 8. */
+  overscan?: number | undefined;
+}
+
+/** Rows per screen before a windowed table has measured itself (a server render, the first paint). */
+const INITIAL_ROWS = 20;
+
 /** The header icon for a sort state: the direction when sorted, both arrows when only sortable. */
 const SORT_ICONS = { ascending: ArrowUp, descending: ArrowDown, none: ArrowUpDown } as const;
 
@@ -72,6 +101,10 @@ const SORT_ICONS = { ascending: ArrowUp, descending: ArrowDown, none: ArrowUpDow
  * `defaultSort`) or controlled (`sort` with `onSortChange`); with `manualSort` the headers
  * show it and the rows render as given. Row callbacks always receive a row's index in `rows`,
  * whatever the order on screen.
+ *
+ * Activatable rows also move focus with the arrow keys, Page Up / Page Down and Home / End.
+ * With `windowed` the table scrolls itself (vertically, under a sticky header), renders only the
+ * rows in view, and uses a fixed layout: give columns a `width` where the content needs it.
  */
 export function Table<Row>({
   columns,
@@ -87,6 +120,7 @@ export function Table<Row>({
   defaultSort = null,
   onSortChange,
   manualSort = false,
+  windowed,
 }: {
   /** The columns, in order. */
   columns: Column<Row>[];
@@ -130,6 +164,12 @@ export function Table<Row>({
    * and the rows render exactly as given. Mark the columns it can sort `sortable: true`.
    */
   manualSort?: boolean | undefined;
+  /**
+   * Render only the rows in view, for a long table: every row `rowHeight` tall, in a scroll
+   * area of `height` (or the container's height) under a sticky header. Sorting, row
+   * callbacks and keyboard navigation work as without it.
+   */
+  windowed?: TableWindowing | undefined;
 }) {
   const density = useDensity();
   const [ownSort, setOwnSort] = useState<TableSort | null>(defaultSort);
@@ -147,16 +187,97 @@ export function Table<Row>({
     onSortChange?.(next);
   };
 
+  const rowHeight = windowed?.rowHeight ?? 0;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLTableSectionElement>(null);
+  const bodyRef = useRef<HTMLTableSectionElement>(null);
+  // The row to focus once it is rendered: a key press may scroll to a row that is not in the DOM yet.
+  const pendingFocus = useRef<number | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [measured, setMeasured] = useState<{ viewport: number; header: number } | null>(null);
+  const viewportHeight = measured?.viewport ?? windowed?.height ?? INITIAL_ROWS * rowHeight;
+  const headerHeight = measured?.header ?? 0;
+  const range = windowed
+    ? rowWindow({ rowCount: order.length, rowHeight, scrollTop, viewportHeight, headerHeight, overscan: windowed.overscan ?? 8 })
+    : { start: 0, end: order.length, before: 0, after: 0 };
+
+  const isWindowed = windowed !== undefined;
+  useLayoutEffect(() => {
+    const scroller = scrollRef.current;
+    if (!isWindowed || !scroller || typeof ResizeObserver === "undefined") return;
+    const measure = () => {
+      const next = { viewport: scroller.clientHeight, header: headRef.current?.offsetHeight ?? 0 };
+      setMeasured((last) => (last?.viewport === next.viewport && last.header === next.header ? last : next));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(scroller);
+    return () => observer.disconnect();
+  }, [isWindowed]);
+
+  useLayoutEffect(() => {
+    const target = pendingFocus.current;
+    if (target === null) return;
+    const row = bodyRef.current?.querySelector<HTMLElement>(`tr[data-position="${target}"]`);
+    if (!row) return;
+    pendingFocus.current = null;
+    row.focus({ preventScroll: isWindowed });
+  });
+
+  /** Moves focus from the row at `position` for a navigation key; `true` when the key was one. */
+  const moveFocus = (key: string, position: number): boolean => {
+    const page = windowed ? Math.floor((viewportHeight - headerHeight) / rowHeight) : 10;
+    const target = navigate(key, position, order.length, page);
+    if (target === null) return false;
+    pendingFocus.current = target;
+    const scroller = scrollRef.current;
+    if (windowed && scroller) {
+      const top = scrollTopFor(target, { rowHeight, scrollTop: scroller.scrollTop, viewportHeight, headerHeight });
+      scroller.scrollTop = top;
+      // Render the target's window now rather than on the scroll event, so it can take focus.
+      setScrollTop(scroller.scrollTop);
+    }
+    const row = bodyRef.current?.querySelector<HTMLElement>(`tr[data-position="${target}"]`);
+    if (row && !windowed) {
+      pendingFocus.current = null;
+      row.focus();
+    }
+    return true;
+  };
+
   if (rows.length === 0) {
     return <p className={cn("text-center text-fg-muted", byDensity(density, "py-6 text-sm", "py-3 text-xs"), className)}>{empty}</p>;
   }
 
+  const spacer = (height: number) => (
+    // Stands in for the rows outside the window. Hidden: it is no row of the table.
+    <tr aria-hidden="true" style={{ height }}>
+      <td colSpan={columns.length} className="p-0" />
+    </tr>
+  );
+
+  // A scroll area must be reachable from the keyboard: through its rows or header buttons when
+  // it has them, else as a tab stop of its own.
+  const scrollStop = windowed !== undefined && !onRowClick && !columns.some(isSortable);
+
   return (
-    <div className={cn("w-full overflow-x-auto", className)}>
-      <table className={cn("w-full text-left", byDensity(density, "text-sm", "text-[11px]"))}>
+    <div
+      ref={scrollRef}
+      className={cn("w-full", windowed ? scrollStop && focusRingInset : "overflow-x-auto", className)}
+      // What the window arithmetic relies on is inline rather than a class, so it holds under
+      // any stylesheet: the scroll area, the fixed layout, the sticky header, the row height.
+      style={windowed ? { overflow: "auto", height: windowed.height ?? "100%" } : undefined}
+      onScroll={windowed ? (event) => setScrollTop(event.currentTarget.scrollTop) : undefined}
+      {...(scrollStop ? { tabIndex: 0, role: "region", "aria-label": caption ?? "Table" } : {})}
+    >
+      <table
+        className={cn("w-full text-left", byDensity(density, "text-sm", "text-[11px]"))}
+        style={windowed ? { tableLayout: "fixed" } : undefined}
+        aria-rowcount={windowed ? order.length + 1 : undefined}
+      >
         {caption && <caption className="sr-only">{caption}</caption>}
-        <thead>
-          <tr className="border-b border-line">
+        <thead ref={headRef}>
+          <tr className="border-b border-line" aria-rowindex={windowed ? 1 : undefined}>
             {columns.map((column) => {
               const sortable = isSortable(column);
               const direction = sortable && sort?.key === column.key ? sort.direction : undefined;
@@ -165,7 +286,13 @@ export function Table<Row>({
                 <th
                   key={column.key}
                   scope="col"
-                  style={column.width ? { width: column.width } : undefined}
+                  style={
+                    windowed
+                      ? { position: "sticky", top: 0, zIndex: 1, ...(column.width ? { width: column.width } : {}) }
+                      : column.width
+                        ? { width: column.width }
+                        : undefined
+                  }
                   // Only the sorted header: `aria-sort="none"` on every other one would be
                   // announced on each, and tells a reader nothing.
                   aria-sort={direction}
@@ -176,6 +303,8 @@ export function Table<Row>({
                     "font-medium text-fg-muted last:pr-0",
                     byDensity(density, "pb-2 pr-3 text-xs", "pb-1 pr-2 text-[10px]"),
                     column.numeric && "text-right",
+                    // A sticky cell leaves its row's border behind: it draws its own rule.
+                    windowed && "bg-surface shadow-[inset_0_-1px_0_var(--line)]",
                   )}
                 >
                   {sortable ? (
@@ -210,16 +339,23 @@ export function Table<Row>({
             })}
           </tr>
         </thead>
-        <tbody>
-          {order.map((index) => {
+        <tbody ref={bodyRef}>
+          {range.before > 0 && spacer(range.before)}
+          {order.slice(range.start, range.end).map((index, offset) => {
             const row = rows[index]!;
             const active = isRowActive?.(row, index) ?? false;
+            const position = range.start + offset;
             return (
               <tr
                 key={rowKey(row, index)}
+                data-position={position}
+                aria-rowindex={windowed ? position + 2 : undefined}
+                style={windowed ? { height: rowHeight } : undefined}
                 data-state={active ? "active" : undefined}
                 className={cn(
-                  "border-b border-line/60 last:border-0",
+                  // A windowed row's rule is a shadow on its cells: a collapsed border would add
+                  // half a pixel to every row, and the arithmetic counts whole rows.
+                  !windowed && "border-b border-line/60 last:border-0",
                   onRowClick && "cursor-pointer hover:bg-raised",
                   active && "bg-signal/10",
                 )}
@@ -238,7 +374,8 @@ export function Table<Row>({
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
                           onRowClick(row, index, event);
-                        }
+                          // Navigation keys belong to a control inside the row while it has focus.
+                        } else if (event.target === event.currentTarget && moveFocus(event.key, position)) event.preventDefault();
                       }
                     : undefined
                 }
@@ -252,7 +389,10 @@ export function Table<Row>({
                       "align-middle text-fg last:pr-0",
                       byDensity(density, "py-2 pr-3", "py-0.5 pr-2"),
                       column.numeric && "text-right font-mono tabular-nums",
+                      windowed && "shadow-[inset_0_-1px_0_color-mix(in_oklab,var(--line)_60%,transparent)]",
                     )}
+                    // One line per row keeps every row `rowHeight` tall.
+                    style={windowed ? { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } : undefined}
                   >
                     {column.cell(row)}
                   </td>
@@ -260,6 +400,7 @@ export function Table<Row>({
               </tr>
             );
           })}
+          {range.after > 0 && spacer(range.after)}
         </tbody>
       </table>
     </div>
