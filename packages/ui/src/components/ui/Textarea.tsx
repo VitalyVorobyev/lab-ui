@@ -80,6 +80,7 @@ export function Textarea({
   minRows,
   maxRows,
   rows,
+  value,
   onChange,
   onValueChange,
   ref,
@@ -100,10 +101,10 @@ export function Textarea({
     [ref],
   );
 
-  // Every render: a controlled value may have changed from outside.
+  // On mount, and when a controlled value changes from outside (typing refits in `change`).
   useLayoutEffect(() => {
     if (grows && node.current) fit(node.current, floor, cap);
-  });
+  }, [grows, floor, cap, mono, value]);
 
   // A change of width rewraps the text.
   useLayoutEffect(() => {
@@ -131,6 +132,7 @@ export function Textarea({
       aria-invalid={isInvalid || undefined}
       data-invalid={isInvalid ? "" : undefined}
       {...rest}
+      {...(value === undefined ? {} : { value })}
       ref={setNode}
       rows={grows ? floor : rows}
       onChange={change}

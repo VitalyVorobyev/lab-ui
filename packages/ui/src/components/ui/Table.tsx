@@ -63,7 +63,7 @@ export type Column<Row> = {
 
 /**
  * Windowed rendering for a long table: only the rows in view, plus `overscan` on each side,
- * are in the DOM.
+ * are in the DOM. The rows scroll under a sticky header drawn on `surface`, the panel colour.
  */
 export interface TableWindowing {
   /**
@@ -205,7 +205,10 @@ export function Table<Row>({
   useLayoutEffect(() => {
     const scroller = scrollRef.current;
     if (!isWindowed || !scroller || typeof ResizeObserver === "undefined") return;
-    const measure = () => setMeasured({ viewport: scroller.clientHeight, header: headRef.current?.offsetHeight ?? 0 });
+    const measure = () => {
+      const next = { viewport: scroller.clientHeight, header: headRef.current?.offsetHeight ?? 0 };
+      setMeasured((last) => (last?.viewport === next.viewport && last.header === next.header ? last : next));
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(scroller);
