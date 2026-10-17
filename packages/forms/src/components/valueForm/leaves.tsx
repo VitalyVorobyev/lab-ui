@@ -307,6 +307,7 @@ export function JsonLeaf({ meta }: { meta: FieldMeta }) {
       className={spanClass(form.columns, meta.ui, 2)}
     >
       <Textarea
+        mono
         rows={Math.min(Math.max(draft.text.split("\n").length, 3), 12)}
         spellCheck={false}
         aria-label={meta.label}

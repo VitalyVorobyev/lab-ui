@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ComponentProps, useState } from "react";
-import { expect, fn, userEvent } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { DensityProvider } from "./Density";
 import { type Column, Table } from "./Table";
@@ -92,6 +92,23 @@ function ServerSorted(props: ComponentProps<typeof Table<Match>>) {
   );
 }
 
+const LABELS = ["scratch", "dent", "stain", "chip", "burr", "pit"];
+
+/** 5,000 matches, spread deterministically (no random numbers: the screenshots must not move). */
+const MANY: Match[] = Array.from({ length: 5000 }, (_, i) => ({
+  id: i + 1,
+  frame: `frame ${(i * 37) % 997}`,
+  label: LABELS[i % LABELS.length]!,
+  score: i % 50 === 7 ? null : ((i * 7919) % 10000) / 10000,
+  x: ((i * 131) % 1920) + 0.25,
+  y: ((i * 71) % 1080) + 0.5,
+}));
+
+/** The rendered body rows: what is in the DOM, not what the table holds. */
+function renderedRows(root: HTMLElement): HTMLTableRowElement[] {
+  return Array.from(root.querySelectorAll<HTMLTableRowElement>("tbody tr:not([aria-hidden])"));
+}
+
 const meta = {
   title: "ui/Table",
   component: Table<Match>,
@@ -116,9 +133,20 @@ outside the table.
 **Don't** use it for layout, or for a two-column key/value list of a single record. Don't make
 a column sortable when its order tells a reader nothing, such as a row number.
 
+**Long tables**: \`windowed={{ rowHeight, height }}\` renders only the rows in view (plus
+\`overscan\`, 8 by default) in a scroll area of \`height\` px — or the container's height when
+\`height\` is left out — under a sticky header. Every row is \`rowHeight\` tall (at least 36 px
+comfortable, 22 px compact) and cells keep to one line, cut with an ellipsis; the layout is
+fixed, so give columns a \`width\` where content needs it. Sorting, callbacks and the keyboard
+work over all the rows.
+
 **Accessibility**: a real \`<table>\` with \`<th scope="col">\`; \`caption\` is visually hidden but
 names the table. Activatable rows are focusable (\`tabIndex=0\`) and keep their \`row\` role, so the
-cells stay announced as cells; the active row carries \`aria-current\`. A sortable header's
+cells stay announced as cells; the active row carries \`aria-current\`. From a focused row the
+arrow keys, Page Up / Page Down and Home / End move to another row, scrolling a windowed table
+to it. A windowed table carries \`aria-rowcount\` and each rendered row its \`aria-rowindex\`, so a
+reader hears a row's place among all of them; a windowed table with nothing focusable in it is
+a tab stop itself, so it can be scrolled from the keyboard. A sortable header's
 content is a button, reachable with Tab and pressed with Enter or Space; the sorted header
 carries \`aria-sort\`, and the arrows are hidden from assistive technology.`,
       },
@@ -309,5 +337,111 @@ export const CustomCompare: Story = {
     await userEvent.click(button);
     await expect(header).toHaveAttribute("aria-sort", "descending");
     await expect(ids(canvasElement)).toEqual([2, 3, 1, 4]);
+  },
+};
+
+/** Arrow keys, Page Up / Page Down and Home / End move between activatable rows. */
+export const KeyboardNavigation: Story = {
+  args: { columns: SORT_COLUMNS, rows: SORT_ROWS, onRowClick: fn() },
+  play: async ({ canvas, args }) => {
+    const rows = canvas.getAllByRole("row").slice(1);
+    rows[0]!.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(rows[1]).toHaveFocus();
+    await userEvent.keyboard("{End}");
+    await expect(rows[3]).toHaveFocus();
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(rows[3]).toHaveFocus();
+    await userEvent.keyboard("{Home}");
+    await expect(rows[0]).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[0], 0, expect.anything());
+  },
+};
+
+/**
+ * 5,000 matches in a 400 px scroll area: only the rows in view are in the DOM, and the header
+ * stays put. Sorting orders all 5,000.
+ */
+export const Windowed: Story = {
+  args: {
+    columns: SORT_COLUMNS.map((column) => (column.key === "frame" ? { ...column, width: "8rem" } : column)),
+    rows: MANY,
+    caption: "Matches",
+    windowed: { rowHeight: 36, height: 400 },
+  },
+  play: async ({ canvas, canvasElement }) => {
+    const table = canvas.getByRole("table", { name: "Matches" });
+    const scroller = table.parentElement!;
+    await expect(table).toHaveAttribute("aria-rowcount", "5001");
+    await expect(renderedRows(canvasElement).length).toBeLessThan(30);
+    await expect(renderedRows(canvasElement)[0]).toHaveAttribute("aria-rowindex", "2");
+    // Every row is the height the window counts with, so the scroll height is exact.
+    await expect(renderedRows(canvasElement)[0]!.getBoundingClientRect().height).toBe(36);
+
+    // Halfway down, the rows there are rendered, and the header is still at the top.
+    scroller.scrollTop = 2500 * 36;
+    await waitFor(() => expect(canvasElement.querySelector('tr[aria-rowindex="2502"]')).not.toBeNull());
+    await expect(renderedRows(canvasElement).length).toBeLessThan(30);
+    const header = canvas.getByRole("columnheader", { name: "Frame" });
+    await expect(Math.round(header.getBoundingClientRect().top)).toBe(Math.round(scroller.getBoundingClientRect().top));
+
+    // Sorting orders every row, not just the rendered ones: the best score is first.
+    scroller.scrollTop = 0;
+    await userEvent.click(canvas.getByRole("button", { name: "Score" }));
+    const best = Math.max(...MANY.map((row) => row.score ?? -1));
+    await waitFor(() => expect(renderedRows(canvasElement)[0]).toHaveTextContent(best.toFixed(4)));
+  },
+};
+
+/** The keyboard reaches every row: End jumps to row 5,000, scrolling it into view. */
+export const WindowedKeyboard: Story = {
+  args: { rows: MANY, caption: "Matches", windowed: { rowHeight: 36, height: 320 }, onRowClick: fn() },
+  render: (args) => <Selectable {...args} />,
+  play: async ({ canvas, canvasElement, args }) => {
+    const first = renderedRows(canvasElement)[0]!;
+    first.focus();
+    await userEvent.keyboard("{End}");
+    await waitFor(() => expect(document.activeElement).toHaveAttribute("aria-rowindex", "5001"));
+    await userEvent.keyboard("{Enter}");
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(MANY[4999], 4999, expect.anything());
+    await expect(document.activeElement).toHaveAttribute("aria-current", "true");
+
+    // A page is the rows that fit under the header.
+    const scroller = canvas.getByRole("table").parentElement!;
+    const page = Math.floor((scroller.clientHeight - canvasElement.querySelector("thead")!.offsetHeight) / 36);
+    await userEvent.keyboard("{PageUp}");
+    await waitFor(() => expect(document.activeElement).toHaveAttribute("aria-rowindex", String(5001 - page)));
+    await userEvent.keyboard("{Home}");
+    await waitFor(() => expect(document.activeElement).toHaveAttribute("aria-rowindex", "2"));
+    await expect(scroller.scrollTop).toBe(0);
+  },
+};
+
+/** Without `height` the scroll area fills its container, here a 240 px panel. */
+export const WindowedFill: Story = {
+  args: { rows: MANY, caption: "Matches", windowed: { rowHeight: 22 } },
+  decorators: [
+    (Story) => (
+      <DensityProvider value="compact">
+        <div
+          className="rounded-panel bg-surface p-2.5 ring-1 ring-line"
+          style={{ display: "flex", flexDirection: "column", height: 240, padding: 10 }}
+        >
+          <div style={{ minHeight: 0, flex: 1 }}>
+            <Story />
+          </div>
+        </div>
+      </DensityProvider>
+    ),
+  ],
+  play: async ({ canvas, canvasElement }) => {
+    // Nothing in it is focusable, so the scroll area is a tab stop of its own.
+    const region = canvas.getByRole("region", { name: "Matches" });
+    await expect(region).toHaveAttribute("tabindex", "0");
+    // It is as tall as the panel's content box, not as tall as 5,000 rows.
+    await expect(region.getBoundingClientRect().height).toBe(region.parentElement!.getBoundingClientRect().height);
+    await expect(region.getBoundingClientRect().height).toBeLessThanOrEqual(240);
+    await expect(renderedRows(canvasElement).length).toBeLessThan(30);
   },
 };

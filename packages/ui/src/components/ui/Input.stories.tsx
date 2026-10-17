@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
 import { DensityProvider } from "./Density";
-import { Input, NumberInput, Textarea } from "./Input";
+import { Input, NumberInput } from "./Input";
+import { Textarea } from "./Textarea";
 
 const meta = {
   title: "ui/Input",
@@ -71,7 +72,7 @@ export const NumberEntry: Story = {
 };
 
 export const MultiLine: Story = {
-  render: () => <Textarea aria-label="Notes" rows={4} defaultValue={"frame 7: out of focus\nframe 12: glare"} />,
+  render: () => <Textarea aria-label="Notes" mono rows={4} defaultValue={"frame 7: out of focus\nframe 12: glare"} />,
   play: async ({ canvas }) => {
     const textarea = canvas.getByRole("textbox", { name: "Notes" });
     await userEvent.type(textarea, "{enter}frame 15: ok");

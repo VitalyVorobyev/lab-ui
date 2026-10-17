@@ -15,7 +15,8 @@ const meta = {
 **Use** \`Callout\` for a message in a tone (\`info\`, \`warning\`, \`error\`, \`success\`), with an
 optional title and actions; \`ErrorBox\` is its common error shape. \`Empty\` is an invitation to
 act, so it carries the action rather than describing it. Loading is a shape, not a word:
-\`Skeleton\`/\`SkeletonRows\` for content that is on its way, \`ProgressBar\` when the fraction is known.
+\`Skeleton\`/\`SkeletonRows\` for content that is on its way, \`Progress\` for an operation that takes a while
+(\`ProgressBar\` is its deprecated predecessor).
 
 **Don't** apologise or stay vague in an error — say what happened and what to do. Don't put
 "Loading…" text where a skeleton keeps the layout from jumping.

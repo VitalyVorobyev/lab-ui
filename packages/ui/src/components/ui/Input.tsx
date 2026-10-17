@@ -242,11 +242,3 @@ function UnitNumberInput({ unit, style, "aria-describedby": describedBy, ...rest
     </span>
   );
 }
-
-/**
- * Multi-line text — set in mono, for JSON and lists. Takes every `<textarea>` prop, `ref`
- * included.
- */
-export function Textarea({ className, "aria-describedby": describedBy, ...rest }: ComponentProps<"textarea">) {
-  return <textarea {...useFieldDescription(describedBy)} {...rest} className={cn(controlClasses, "py-1.5 font-mono", className)} />;
-}

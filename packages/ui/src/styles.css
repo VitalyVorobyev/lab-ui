@@ -58,6 +58,20 @@
   --radius-panel: 0.625rem;
 }
 
+/* `Progress` while the amount is unknown: a third of the track sweeping across it. */
+@theme {
+  --animate-progress-sweep: progress-sweep 1.4s ease-in-out infinite;
+
+  @keyframes progress-sweep {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
+}
+
 /*
  * Light is the default so a document with no class still renders legibly -- a consumer's
  * own no-flash script sets `.dark` before first paint (see `theme.ts` and the README), but
