@@ -11,14 +11,7 @@
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type Ref } from "react";
 
 import type { Point } from "./measureGeometry";
-import {
-  buildPolylineIndex,
-  nearestPolyline,
-  polylinePath,
-  polylinesInRect,
-  type Polyline,
-  type PolylineId,
-} from "./polylineIndex";
+import { buildPolylineIndex, nearestPolyline, polylinePath, polylinesInRect, type Polyline, type PolylineId } from "./polylineIndex";
 import { overlayRole } from "./overlayRole";
 import type { StagePointerEvent } from "./stage/hitContext";
 import { useStage } from "./stage/ImageStage";
@@ -195,8 +188,7 @@ export function PolylineSet({
   // A touch still being watched when the layer goes away is cancelled, not left listening.
   useEffect(() => () => watchRef.current?.(), []);
   const takesPresses =
-    interactive ??
-    (onItemPress !== undefined || onSelect !== undefined || onHover !== undefined || onHoverChange !== undefined || marquee);
+    interactive ?? (onItemPress !== undefined || onSelect !== undefined || onHover !== undefined || onHoverChange !== undefined || marquee);
   const px = useScreenPx();
   const { hitTestAll } = useStageHitTest();
 

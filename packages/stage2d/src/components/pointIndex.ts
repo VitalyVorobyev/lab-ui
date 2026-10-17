@@ -122,8 +122,18 @@ export function buildPointIndex(xy: ArrayLike<number>, options: PointIndexOption
   }
   if (live === 0) {
     return {
-      count, xy, ids: ids, radii, maxRadius, cell: 1, x0: 0, y0: 0, cols: 1, rows: 1,
-      starts: new Uint32Array(2), items: new Uint32Array(0),
+      count,
+      xy,
+      ids: ids,
+      radii,
+      maxRadius,
+      cell: 1,
+      x0: 0,
+      y0: 0,
+      cols: 1,
+      rows: 1,
+      starts: new Uint32Array(2),
+      items: new Uint32Array(0),
     };
   }
 

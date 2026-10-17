@@ -120,7 +120,10 @@ describe("datum properties", () => {
       const s = Math.sin(d.angle);
       const start = Math.min(DATUM_RING_PX, armLength);
       const q = closestOnSegment({ x: sx, y: sy }, start * c, start * s, armLength * c, armLength * s);
-      const arm = Math.min(Math.hypot(q.x - sx, q.y - sy), Math.max(0, Math.hypot(sx - armLength * c, sy - armLength * s) - DATUM_HANDLE_PX));
+      const arm = Math.min(
+        Math.hypot(q.x - sx, q.y - sy),
+        Math.max(0, Math.hypot(sx - armLength * c, sy - armLength * s) - DATUM_HANDLE_PX),
+      );
       const expected = origin <= radius && origin <= arm ? "origin" : arm <= radius ? "arm" : null;
       expect(decision).toBe(expected);
       if (decision === "origin") expect(origin).toBeLessThanOrEqual(arm);

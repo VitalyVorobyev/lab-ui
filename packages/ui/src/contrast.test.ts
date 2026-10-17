@@ -53,7 +53,12 @@ function pairs(t: Tokens): Pair[] {
     }
   }
   // Danger button: defect text on defect/10 over a panel.
-  list.push({ what: "defect text on defect/10 over surface", fg: hex("defect"), bg: composite(hex("defect"), 0.1, hex("surface")), min: 4.5 });
+  list.push({
+    what: "defect text on defect/10 over surface",
+    fg: hex("defect"),
+    bg: composite(hex("defect"), 0.1, hex("surface")),
+    min: 4.5,
+  });
   // Boundaries (1.4.11): a control's border against what surrounds it, and the signal
   // colour as focus outline and as the checked fill, against every surface.
   for (const surface of ["ground", "surface", "overlay"]) {

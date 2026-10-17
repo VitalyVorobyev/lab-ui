@@ -38,9 +38,7 @@ describe("LineChart", () => {
   });
 
   it("renders an empty series without throwing, so a pending term is visible", () => {
-    const { container } = render(
-      <LineChart label="Empty" series={[{ name: "loss_st", points: [] }]} />,
-    );
+    const { container } = render(<LineChart label="Empty" series={[{ name: "loss_st", points: [] }]} />);
 
     expect(paths(container)).toHaveLength(1);
     expect(paths(container)[0]?.getAttribute("d")).toEqual("");
@@ -48,9 +46,7 @@ describe("LineChart", () => {
   });
 
   it("draws a single point as a dot rather than as nothing", () => {
-    const { container } = render(
-      <LineChart label="One point" series={[{ name: "lr", points: [{ x: 0, y: 0.0001 }] }]} />,
-    );
+    const { container } = render(<LineChart label="One point" series={[{ name: "lr", points: [{ x: 0, y: 0.0001 }] }]} />);
 
     expect(paths(container)).toHaveLength(0);
     expect(container.querySelectorAll("circle")).toHaveLength(1);

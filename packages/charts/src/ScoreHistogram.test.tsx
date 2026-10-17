@@ -5,15 +5,7 @@ import { ScoreHistogram } from "./ScoreHistogram";
 
 describe("ScoreHistogram", () => {
   it("bins both classes on one axis and marks the threshold", () => {
-    const { container } = render(
-      <ScoreHistogram
-        label="Scores"
-        normal={[0.1, 0.2, 0.15]}
-        defect={[0.8, 0.9]}
-        threshold={0.5}
-        bins={4}
-      />,
-    );
+    const { container } = render(<ScoreHistogram label="Scores" normal={[0.1, 0.2, 0.15]} defect={[0.8, 0.9]} threshold={0.5} bins={4} />);
 
     expect(container.querySelectorAll("path[data-bars]")).toHaveLength(2);
     expect(container.querySelectorAll("line[stroke-dasharray]")).toHaveLength(1);

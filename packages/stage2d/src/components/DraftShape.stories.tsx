@@ -174,13 +174,19 @@ export const DrawPolygon: Story = {
   render: () => <DrawPolygonDemo />,
   play: async ({ canvas, canvasElement }) => {
     const surface = canvasElement.querySelector("[data-stage-surface]")!;
-    for (const p of [{ x: 100, y: 200 }, { x: 160, y: 80 }, { x: 260, y: 140 }]) {
+    for (const p of [
+      { x: 100, y: 200 },
+      { x: 160, y: 80 },
+      { x: 260, y: 140 },
+    ]) {
       await fireEvent.pointerDown(surface, at(canvasElement, p));
       await fireEvent.pointerUp(window, at(canvasElement, p));
     }
     await waitFor(() => expect(canvas.getByTestId("drawn")).toHaveTextContent("3 placed, 0 drawn"));
     await fireEvent.pointerMove(surface, at(canvasElement, { x: 300, y: 220 }));
-    await waitFor(() => expect(canvasElement.querySelector("path[data-draft-outline]")!.getAttribute("d")).toBe("M100 200L160 80L260 140L300 220"));
+    await waitFor(() =>
+      expect(canvasElement.querySelector("path[data-draft-outline]")!.getAttribute("d")).toBe("M100 200L160 80L260 140L300 220"),
+    );
     // A click back on the first vertex closes the polygon: the draft ends and the region is a layer.
     await fireEvent.pointerDown(surface, at(canvasElement, { x: 102, y: 201 }));
     await fireEvent.pointerUp(window, at(canvasElement, { x: 102, y: 201 }));
@@ -222,7 +228,13 @@ function MarqueeSelectDemo() {
   );
 }
 
-function MarqueeTool({ onBand, onPick }: { onBand: (rect: Rect | null) => void; onPick: (picked: { points: PointId[]; areas: PointId[] }) => void }) {
+function MarqueeTool({
+  onBand,
+  onPick,
+}: {
+  onBand: (rect: Rect | null) => void;
+  onPick: (picked: { points: PointId[]; areas: PointId[] }) => void;
+}) {
   const { hitTest } = useStageHitTest();
   return (
     <StageSurface
@@ -279,7 +291,10 @@ export const PolygonClosing: Story = {
 
 /** A brush trail 24 image px wide, in a custom colour. */
 export const BrushStroke: Story = {
-  args: { shape: { kind: "stroke", points: new Float64Array([80, 200, 140, 120, 220, 170, 300, 90]).subarray(0, 8), width: 24 }, stroke: "var(--stage-model)" },
+  args: {
+    shape: { kind: "stroke", points: new Float64Array([80, 200, 140, 120, 220, 170, 300, 90]).subarray(0, 8), width: 24 },
+    stroke: "var(--stage-model)",
+  },
   play: async ({ canvasElement }) => {
     const trail = canvasElement.querySelector("path[data-draft-stroke]")!;
     await expect(trail.getAttribute("stroke-width")).toBe("24");
@@ -291,6 +306,8 @@ export const BrushStroke: Story = {
 export const BrushFootprint: Story = {
   args: { shape: { kind: "brush", x: 200, y: 150, diameter: 40 } },
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.querySelector("path[data-draft-brush]")!.getAttribute("d")).toBe("M220 150a20 20 0 1 0 -40 0a20 20 0 1 0 40 0Z");
+    await expect(canvasElement.querySelector("path[data-draft-brush]")!.getAttribute("d")).toBe(
+      "M220 150a20 20 0 1 0 -40 0a20 20 0 1 0 40 0Z",
+    );
   },
 };

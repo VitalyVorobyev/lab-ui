@@ -1,13 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  PlaneFormatError,
-  decodePlane,
-  fetchPlane,
-  fractionOf,
-  valueAt,
-  valuesAt,
-} from "./mapValues";
+import { PlaneFormatError, decodePlane, fetchPlane, fractionOf, valueAt, valuesAt } from "./mapValues";
 
 /** The encoder's output, built here so the two ends are checked against each other. */
 function encode(planes: number[][][], stride = 1): ArrayBuffer {
@@ -60,13 +53,7 @@ describe("decodePlane", () => {
      * which — channel count is data, so the header carries it and both are the same code
      * path.
      */
-    const plane = decodePlane(
-      encode([
-        [[1, 2]],
-        [[3, 4]],
-        [[5, 6]],
-      ]),
-    );
+    const plane = decodePlane(encode([[[1, 2]], [[3, 4]], [[5, 6]]]));
 
     expect(plane.channels).toBe(3);
     expect(valuesAt(plane, 0.0, 0.0)).toEqual([1, 3, 5]);
@@ -153,7 +140,10 @@ describe("fetchPlane", () => {
   });
 
   it("fails on an error status rather than decoding an error page", async () => {
-    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response("nope", { status: 404 }))));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(new Response("nope", { status: 404 }))),
+    );
     await expect(fetchPlane("/values/missing")).rejects.toThrow("404 fetching values");
   });
 });

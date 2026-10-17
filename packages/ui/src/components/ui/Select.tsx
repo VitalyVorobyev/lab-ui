@@ -119,17 +119,9 @@ export function Select({
           )}
         >
           <RadixSelect.Viewport className="p-1">
-            {unsetLabel !== undefined && (
-              <SelectItem value={UNSET_SENTINEL} label={unsetLabel} muted />
-            )}
+            {unsetLabel !== undefined && <SelectItem value={UNSET_SENTINEL} label={unsetLabel} muted />}
             {options.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                label={option.label}
-                note={option.note}
-                disabled={option.disabled}
-              />
+              <SelectItem key={option.value} value={option.value} label={option.label} note={option.note} disabled={option.disabled} />
             ))}
           </RadixSelect.Viewport>
         </RadixSelect.Content>

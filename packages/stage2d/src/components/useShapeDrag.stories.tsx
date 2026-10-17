@@ -55,7 +55,8 @@ function Scene({ slop }: { slop?: number }) {
         onEnd: (delta, moved) => {
           setDrag(null);
           ended(id, moved);
-          if (moved) setShapes((all) => all.map((shape) => (shape.id === id ? { ...shape, points: translatePoints(shape.points, delta) } : shape)));
+          if (moved)
+            setShapes((all) => all.map((shape) => (shape.id === id ? { ...shape, points: translatePoints(shape.points, delta) } : shape)));
         },
         onCancel: () => setDrag(null),
       },
@@ -67,9 +68,21 @@ function Scene({ slop }: { slop?: number }) {
 
   return (
     <>
-      <AreaSet items={of("area").map((shape) => ({ id: shape.id, points: shifted(shape) }))} selectedIds={selection} onItemPress={(id, event) => press(String(id), event)} />
-      <PolylineSet items={of("line").map((shape) => ({ id: shape.id, points: shifted(shape) }))} selected={selection} onItemPress={(id, event) => press(String(id), event)} />
-      <PointSet items={of("point").map((shape) => ({ id: shape.id, kind: "plus", x: shifted(shape)[0]!, y: shifted(shape)[1]! }))} selectedIds={selection} onItemPress={(id, event) => press(String(id), event)} />
+      <AreaSet
+        items={of("area").map((shape) => ({ id: shape.id, points: shifted(shape) }))}
+        selectedIds={selection}
+        onItemPress={(id, event) => press(String(id), event)}
+      />
+      <PolylineSet
+        items={of("line").map((shape) => ({ id: shape.id, points: shifted(shape) }))}
+        selected={selection}
+        onItemPress={(id, event) => press(String(id), event)}
+      />
+      <PointSet
+        items={of("point").map((shape) => ({ id: shape.id, kind: "plus", x: shifted(shape)[0]!, y: shifted(shape)[1]! }))}
+        selectedIds={selection}
+        onItemPress={(id, event) => press(String(id), event)}
+      />
       <output data-testid="geometry" className="absolute bottom-0 left-0 text-xs text-ink">
         {shapes.map((shape) => `${shape.id}:${shape.points.join(" ")}`).join(" | ")}
       </output>
@@ -137,7 +150,9 @@ export const SelectDragCommit: Story = {
     await waitFor(() => expect(canvasElement.querySelector("[data-selected-areas]")).not.toBeNull());
     await fireEvent.pointerMove(window, at(canvasElement, { x: 130, y: 115 }));
     // The preview: the polygon is drawn shifted, the app's geometry has not changed.
-    await waitFor(() => expect(canvasElement.querySelector("[data-selected-areas]")!.getAttribute("d")).toBe("M80 75L180 75L180 145L80 145Z"));
+    await waitFor(() =>
+      expect(canvasElement.querySelector("[data-selected-areas]")!.getAttribute("d")).toBe("M80 75L180 75L180 145L80 145Z"),
+    );
     await expect(geometry(canvasElement)).toContain("region:60 60 160 60 160 130 60 130");
     await fireEvent.pointerMove(window, at(canvasElement, { x: 150, y: 130 }));
     await fireEvent.pointerUp(window, at(canvasElement, { x: 150, y: 130 }));
@@ -182,9 +197,13 @@ export const CancelledDrag: Story = {
     const stage = canvasElement.querySelector("[role=application]")!;
     await fireEvent.pointerDown(stage, at(canvasElement, { x: 110, y: 100 }));
     await fireEvent.pointerMove(window, at(canvasElement, { x: 150, y: 130 }));
-    await waitFor(() => expect(canvasElement.querySelector("[data-selected-areas]")!.getAttribute("d")).not.toBe("M60 60L160 60L160 130L60 130Z"));
+    await waitFor(() =>
+      expect(canvasElement.querySelector("[data-selected-areas]")!.getAttribute("d")).not.toBe("M60 60L160 60L160 130L60 130Z"),
+    );
     await fireEvent.pointerCancel(window, at(canvasElement, { x: 150, y: 130 }));
-    await waitFor(() => expect(canvasElement.querySelector("[data-selected-areas]")!.getAttribute("d")).toBe("M60 60L160 60L160 130L60 130Z"));
+    await waitFor(() =>
+      expect(canvasElement.querySelector("[data-selected-areas]")!.getAttribute("d")).toBe("M60 60L160 60L160 130L60 130Z"),
+    );
     await expect(geometry(canvasElement)).toContain("region:60 60 160 60 160 130 60 130");
   },
 };

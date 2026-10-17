@@ -134,7 +134,13 @@ describe("nearestArea", () => {
   });
 
   it("indexes a polygon in every cell its box covers, so a large region is found from any of them", () => {
-    const wide = buildAreaIndex([{ id: "wide", points: [0, 0, 1000, 0, 1000, 20, 0, 20] }, ...Array.from({ length: 20 }, (_, n): Area => ({ id: n, points: [n * 40 + 500, 200, n * 40 + 510, 200, n * 40 + 510, 210] }))], 16);
+    const wide = buildAreaIndex(
+      [
+        { id: "wide", points: [0, 0, 1000, 0, 1000, 20, 0, 20] },
+        ...Array.from({ length: 20 }, (_, n): Area => ({ id: n, points: [n * 40 + 500, 200, n * 40 + 510, 200, n * 40 + 510, 210] })),
+      ],
+      16,
+    );
     expect(nearestArea(wide, { x: 990, y: 10 }, 1)?.id).toBe("wide");
     expect(nearestArea(wide, { x: 7, y: 10 }, 1)?.id).toBe("wide");
   });

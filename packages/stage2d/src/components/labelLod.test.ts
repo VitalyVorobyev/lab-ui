@@ -28,7 +28,11 @@ describe("pickLabelIndices", () => {
   it("caps the labels at 200, and the forced ones at 50", () => {
     const many = Array.from({ length: 500 }, (_, i) => i);
     expect(pickLabelIndices(many, [], all)).toHaveLength(MAX_LABELS);
-    const forced = pickLabelIndices(many, many.slice(0, 100).map((i) => i + 1000), all);
+    const forced = pickLabelIndices(
+      many,
+      many.slice(0, 100).map((i) => i + 1000),
+      all,
+    );
     expect(forced.filter((i) => i >= 1000)).toHaveLength(MAX_FORCED_LABELS);
     expect(forced).toHaveLength(MAX_LABELS);
   });

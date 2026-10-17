@@ -18,14 +18,7 @@ import type { KeyboardEvent, MouseEvent } from "react";
 
 import { byDensity, cn, useDensity } from "@vitavision/ui";
 
-import {
-  type TreeNode,
-  type TreeRow,
-  ancestorIds,
-  parentIds,
-  treeKeyAction,
-  visibleRows,
-} from "./treeModel";
+import { type TreeNode, type TreeRow, ancestorIds, parentIds, treeKeyAction, visibleRows } from "./treeModel";
 
 /** Props of `TreeView`. */
 export interface TreeViewProps {
@@ -162,12 +155,7 @@ export function TreeView({
   };
 
   return (
-    <div
-      role="tree"
-      aria-label={ariaLabel}
-      onKeyDown={onKeyDown}
-      className={cn("flex flex-col py-1 select-none", className)}
-    >
+    <div role="tree" aria-label={ariaLabel} onKeyDown={onKeyDown} className={cn("flex flex-col py-1 select-none", className)}>
       {rows.map((row) => {
         const { node } = row;
         const selected = node.id === selectedId;
@@ -211,9 +199,7 @@ export function TreeView({
                 onClick={(event) => onChevron(event, row)}
                 className="grid size-4 shrink-0 place-items-center rounded-sm text-fg-subtle hover:text-fg"
               >
-                <ChevronRight
-                  className={cn("size-3.5 transition-transform", row.isExpanded && "rotate-90")}
-                />
+                <ChevronRight className={cn("size-3.5 transition-transform", row.isExpanded && "rotate-90")} />
               </span>
             ) : (
               <span aria-hidden className="size-4 shrink-0" />
@@ -221,10 +207,7 @@ export function TreeView({
             {node.icon !== undefined && (
               <span
                 aria-hidden
-                className={cn(
-                  "grid shrink-0 place-items-center [&>svg]:size-3.5",
-                  selected ? "text-signal" : "text-fg-muted",
-                )}
+                className={cn("grid shrink-0 place-items-center [&>svg]:size-3.5", selected ? "text-signal" : "text-fg-muted")}
               >
                 {node.icon}
               </span>
@@ -232,9 +215,7 @@ export function TreeView({
             <span className="min-w-0 flex-1 truncate">{node.label}</span>
             {node.meta !== undefined && (
               // On the selected row's tint both `fg-subtle` and `fg-muted` fall below AA at this size.
-              <span className={cn("shrink-0 font-mono text-[11px]", selected ? "text-fg" : "text-fg-subtle")}>
-                {node.meta}
-              </span>
+              <span className={cn("shrink-0 font-mono text-[11px]", selected ? "text-fg" : "text-fg-subtle")}>{node.meta}</span>
             )}
           </div>
         );

@@ -88,9 +88,7 @@ export const Default: Story = {
     const list = canvas.getByRole("listbox", { name: "Frames" });
     await expect(canvas.getByRole("option", { name: /dome_0002/ })).toHaveAttribute("aria-selected", "true");
     // The cursor starts on the selected option.
-    await expect(list.getAttribute("aria-activedescendant")).toBe(
-      canvas.getByRole("option", { name: /dome_0002/ }).id,
-    );
+    await expect(list.getAttribute("aria-activedescendant")).toBe(canvas.getByRole("option", { name: /dome_0002/ }).id);
   },
 };
 
@@ -100,18 +98,14 @@ export const Keyboard: Story = {
     list.focus();
     // Down from 2 skips the disabled 3 and lands on 4.
     await userEvent.keyboard("{ArrowDown}");
-    await expect(list.getAttribute("aria-activedescendant")).toBe(
-      canvas.getByRole("option", { name: /dome_0004/ }).id,
-    );
+    await expect(list.getAttribute("aria-activedescendant")).toBe(canvas.getByRole("option", { name: /dome_0004/ }).id);
     await userEvent.keyboard("{Enter}");
     await expect(args.onValueChange).toHaveBeenLastCalledWith("f4");
     await userEvent.keyboard("{Home}");
     await userEvent.keyboard(" ");
     await expect(args.onValueChange).toHaveBeenLastCalledWith("f1");
     await userEvent.keyboard("{End}{PageUp}{PageDown}");
-    await expect(list.getAttribute("aria-activedescendant")).toBe(
-      canvas.getByRole("option", { name: /dome_0004/ }).id,
-    );
+    await expect(list.getAttribute("aria-activedescendant")).toBe(canvas.getByRole("option", { name: /dome_0004/ }).id);
   },
 };
 

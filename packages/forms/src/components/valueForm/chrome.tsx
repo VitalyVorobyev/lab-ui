@@ -54,10 +54,7 @@ export function Grid({ children }: { children: ReactNode }) {
         "grid min-w-0",
         dense
           ? "grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2"
-          : cn(
-              byDensity(density, "gap-x-5 gap-y-4", "gap-x-4 gap-y-2.5"),
-              columns === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1",
-            ),
+          : cn(byDensity(density, "gap-x-5 gap-y-4", "gap-x-4 gap-y-2.5"), columns === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"),
       )}
     >
       {children}

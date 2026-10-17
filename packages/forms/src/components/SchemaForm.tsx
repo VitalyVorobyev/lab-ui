@@ -20,16 +20,7 @@
  * JSON object, a statement with a switch — still span both columns.
  */
 
-import {
-  Disclosure,
-  Field,
-  NumberInput,
-  SegmentedControl,
-  Select,
-  Switch,
-  Textarea,
-  Input,
-} from "@vitavision/ui";
+import { Disclosure, Field, NumberInput, SegmentedControl, Select, Switch, Textarea, Input } from "@vitavision/ui";
 import { displayValue, type FieldSpec, type RawValues } from "../api/schemaForm";
 
 /**
@@ -50,27 +41,14 @@ const WIDE: ReadonlySet<FieldSpec["kind"]> = new Set(["json", "boolean"]);
  * options to send with `toOptions`, and gate a run on `missingRequired`, `outOfRange` and
  * `jsonErrors`.
  */
-export function SchemaForm({
-  fields,
-  values,
-  onChange,
-}: {
-  fields: FieldSpec[];
-  values: RawValues;
-  onChange: (next: RawValues) => void;
-}) {
+export function SchemaForm({ fields, values, onChange }: { fields: FieldSpec[]; values: RawValues; onChange: (next: RawValues) => void }) {
   if (fields.length === 0) {
     return <p className="text-sm text-fg-muted">This plugin takes no options.</p>;
   }
 
   const set = (name: string, value: string | boolean) => onChange({ ...values, [name]: value });
   const render = (field: FieldSpec) => (
-    <SchemaField
-      key={field.name}
-      field={field}
-      value={values[field.name] ?? ""}
-      onChange={(value) => set(field.name, value)}
-    />
+    <SchemaField key={field.name} field={field} value={values[field.name] ?? ""} onChange={(value) => set(field.name, value)} />
   );
 
   const primary = fields.filter((field) => !field.advanced);
@@ -116,50 +94,25 @@ function SchemaField({
   if (field.kind === "boolean") {
     return (
       <div className={span}>
-        <Switch
-          checked={value === true}
-          onCheckedChange={onChange}
-          label={field.label}
-          description={field.description}
-        />
+        <Switch checked={value === true} onCheckedChange={onChange} label={field.label} description={field.description} />
       </div>
     );
   }
 
   const text = typeof value === "string" ? value : "";
-  const fallback = field.fallback === undefined || field.fallback === null
-    ? undefined
-    : displayValue(field.fallback);
+  const fallback = field.fallback === undefined || field.fallback === null ? undefined : displayValue(field.fallback);
 
   if (field.kind === "choice-inline") {
     return (
-      <Field
-        as="group"
-        label={field.label}
-        description={field.description}
-        required={field.required}
-        className={span}
-      >
-        <SegmentedControl
-          aria-label={field.label}
-          value={text}
-          defaultValue={fallback}
-          options={field.options}
-          onValueChange={onChange}
-        />
+      <Field as="group" label={field.label} description={field.description} required={field.required} className={span}>
+        <SegmentedControl aria-label={field.label} value={text} defaultValue={fallback} options={field.options} onValueChange={onChange} />
       </Field>
     );
   }
 
   if (field.kind === "choice") {
     return (
-      <Field
-        as="group"
-        label={field.label}
-        description={field.description}
-        required={field.required}
-        className={span}
-      >
+      <Field as="group" label={field.label} description={field.description} required={field.required} className={span}>
         <Select
           aria-label={field.label}
           value={text}
@@ -175,11 +128,7 @@ function SchemaField({
   return (
     <Field
       label={field.label}
-      description={
-        field.kind === "string-list"
-          ? [field.description, "Comma-separated."].filter(Boolean).join(" ")
-          : field.description
-      }
+      description={field.kind === "string-list" ? [field.description, "Comma-separated."].filter(Boolean).join(" ") : field.description}
       required={field.required}
       annotation={field.range}
       className={span}

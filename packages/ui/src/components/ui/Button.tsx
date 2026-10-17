@@ -111,11 +111,7 @@ export function Button({
 
   if (asChild) {
     return (
-      <Slot
-        {...rest}
-        data-variant={variant}
-        className={buttonClasses({ variant, size: resolved, className })}
-      >
+      <Slot {...rest} data-variant={variant} className={buttonClasses({ variant, size: resolved, className })}>
         {icon && <ButtonIcon icon={icon} />}
         <Slottable>{children}</Slottable>
       </Slot>
@@ -132,11 +128,7 @@ export function Button({
       {...rest}
       className={buttonClasses({ variant, size: resolved, className })}
     >
-      {loading ? (
-        <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
-      ) : (
-        icon && <ButtonIcon icon={icon} />
-      )}
+      {loading ? <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden /> : icon && <ButtonIcon icon={icon} />}
       {children}
     </button>
   );
@@ -179,11 +171,7 @@ export function ButtonLink({
   const Comp = asChild ? Slot : "a";
 
   return (
-    <Comp
-      {...rest}
-      data-variant={variant}
-      className={buttonClasses({ variant, size: resolved, className })}
-    >
+    <Comp {...rest} data-variant={variant} className={buttonClasses({ variant, size: resolved, className })}>
       {icon && <ButtonIcon icon={icon} />}
       <Slottable>{children}</Slottable>
     </Comp>

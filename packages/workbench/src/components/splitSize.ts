@@ -44,12 +44,7 @@ export function resolveSize(size: PaneSize, length: number): number {
  * @param collapsible - Whether the pane may close below `minSize`.
  * @returns The resolved limits.
  */
-export function resolveLimits(
-  length: number,
-  minSize: PaneSize = 0,
-  maxSize: PaneSize = "100%",
-  collapsible = false,
-): SplitLimits {
+export function resolveLimits(length: number, minSize: PaneSize = 0, maxSize: PaneSize = "100%", collapsible = false): SplitLimits {
   const max = Math.min(resolveSize(maxSize, length), Math.max(0, length));
   const min = Math.min(resolveSize(minSize, length), max);
   return { min, max, collapsible };
@@ -75,9 +70,7 @@ export type SplitOrientation = "horizontal" | "vertical";
 export type SizedPane = "start" | "end";
 
 /** What a key press on the divider asks for. */
-export type SplitKeyAction =
-  | { type: "resize"; size: number }
-  | { type: "toggle-collapse" };
+export type SplitKeyAction = { type: "resize"; size: number } | { type: "toggle-collapse" };
 
 /**
  * The divider's keyboard (the WAI-ARIA window-splitter pattern).
@@ -100,8 +93,7 @@ export function splitKeyAction(
   options: { orientation: SplitOrientation; sizedPane: SizedPane; step: number; limits: SplitLimits },
 ): SplitKeyAction | null {
   const { orientation, sizedPane, step, limits } = options;
-  const [back, forward] =
-    orientation === "horizontal" ? ["ArrowLeft", "ArrowRight"] : ["ArrowUp", "ArrowDown"];
+  const [back, forward] = orientation === "horizontal" ? ["ArrowLeft", "ArrowRight"] : ["ArrowUp", "ArrowDown"];
   const grow = sizedPane === "start" ? 1 : -1;
   const delta = shift ? step * 4 : step;
 

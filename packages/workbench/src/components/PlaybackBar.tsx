@@ -10,17 +10,7 @@
  * named for what they do, the time in mono so it does not jitter as digits change.
  */
 
-import {
-  ChevronFirst,
-  ChevronLast,
-  Pause,
-  Play,
-  Repeat,
-  SkipBack,
-  SkipForward,
-  StepBack,
-  StepForward,
-} from "lucide-react";
+import { ChevronFirst, ChevronLast, Pause, Play, Repeat, SkipBack, SkipForward, StepBack, StepForward } from "lucide-react";
 import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 
 import { type MeasureTone, Select, Slider, byDensity, cn, focusRing, toneColor, useDensity } from "@vitavision/ui";
@@ -131,11 +121,7 @@ export function PlaybackBar({
       data-playing={playing ? "" : undefined}
       data-empty={empty ? "" : undefined}
       onKeyDown={onKeyDown}
-      className={cn(
-        "flex w-full min-w-0 items-center bg-surface",
-        byDensity(density, "gap-3 px-3 py-2", "gap-2 px-2 py-1"),
-        className,
-      )}
+      className={cn("flex w-full min-w-0 items-center bg-surface", byDensity(density, "gap-3 px-3 py-2", "gap-2 px-2 py-1"), className)}
     >
       <div className="flex shrink-0 items-center gap-0.5">
         <BarButton label="Jump to start" onClick={() => seek(0)} disabled={empty || index === 0}>
@@ -151,22 +137,13 @@ export function PlaybackBar({
         <BarButton label="Step back" onClick={() => seek(index - 1)} disabled={empty || index === 0}>
           <StepBack className="size-4" aria-hidden />
         </BarButton>
-        <BarButton
-          label={playing ? "Pause" : "Play"}
-          onClick={() => onPlayingChange(!playing)}
-          disabled={empty}
-          className="text-fg"
-        >
+        <BarButton label={playing ? "Pause" : "Play"} onClick={() => onPlayingChange(!playing)} disabled={empty} className="text-fg">
           {playing ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
         </BarButton>
         <BarButton label="Step forward" onClick={() => seek(index + 1)} disabled={empty || index >= last}>
           <StepForward className="size-4" aria-hidden />
         </BarButton>
-        <BarButton
-          label="Next marker"
-          onClick={() => nextMarker && seek(nextMarker.index)}
-          disabled={nextMarker === undefined}
-        >
+        <BarButton label="Next marker" onClick={() => nextMarker && seek(nextMarker.index)} disabled={nextMarker === undefined}>
           <SkipForward className="size-4" aria-hidden />
         </BarButton>
         <BarButton label="Jump to end" onClick={() => seek(last)} disabled={empty || index >= last}>
@@ -194,15 +171,7 @@ export function PlaybackBar({
             ))}
           </div>
         )}
-        <Slider
-          value={index}
-          onValueChange={seek}
-          min={0}
-          max={last}
-          step={1}
-          disabled={empty}
-          aria-label="Playback position"
-        />
+        <Slider value={index} onValueChange={seek} min={0} max={last} step={1} disabled={empty} aria-label="Playback position" />
       </div>
 
       {/* Not an <output>: that is a live region, and this changes every frame. */}
@@ -270,8 +239,7 @@ function MarkerTick({
 }
 
 /** Props of the bar's icon button. */
-interface BarButtonProps
-  extends Omit<ComponentPropsWithRef<"button">, "type" | "title" | "aria-label" | "aria-pressed" | "children"> {
+interface BarButtonProps extends Omit<ComponentPropsWithRef<"button">, "type" | "title" | "aria-label" | "aria-pressed" | "children"> {
   label: string;
   pressed?: boolean | undefined;
   children: ReactNode;

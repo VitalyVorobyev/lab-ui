@@ -67,11 +67,7 @@ export interface ShapeEditorProps {
   stroke?: string | undefined;
 }
 
-type Drag = (
-  | { kind: "move"; from: Point }
-  | { kind: "resize"; handle: RoiHandle }
-  | { kind: "rotate" }
-) & {
+type Drag = ({ kind: "move"; from: Point } | { kind: "resize"; handle: RoiHandle } | { kind: "rotate" }) & {
   start: RotatedShape;
   /** Where the press landed, in client coordinates: a move counts once it is past the click slop. */
   client: Point;
@@ -265,7 +261,9 @@ export function ShapeEditor({
       data-editable={editable ? "" : undefined}
     >
       {value && <Outline kind={kind} shape={value} fill="none" stroke={HALO} strokeWidth={px(STROKE_PX + 2 * HALO_PX)} />}
-      {value && <Outline kind={kind} shape={value} data-shape={kind} fill={stroke} fillOpacity={0.12} stroke={stroke} strokeWidth={px(STROKE_PX)} />}
+      {value && (
+        <Outline kind={kind} shape={value} data-shape={kind} fill={stroke} fillOpacity={0.12} stroke={stroke} strokeWidth={px(STROKE_PX)} />
+      )}
       {kind === "ellipse" && value && (
         <rect
           x={value.cx - value.width / 2}
@@ -364,7 +362,14 @@ type OutlineProps = Omit<SVGProps<SVGElement>, "ref"> & Record<`data-${string}`,
 function Outline({ kind, shape, ...rest }: OutlineProps & { kind: "rect" | "ellipse"; shape: RotatedShape }) {
   const transform = turned(shape);
   return kind === "rect" ? (
-    <rect x={shape.cx - shape.width / 2} y={shape.cy - shape.height / 2} width={shape.width} height={shape.height} transform={transform} {...rest} />
+    <rect
+      x={shape.cx - shape.width / 2}
+      y={shape.cy - shape.height / 2}
+      width={shape.width}
+      height={shape.height}
+      transform={transform}
+      {...rest}
+    />
   ) : (
     <ellipse cx={shape.cx} cy={shape.cy} rx={shape.width / 2} ry={shape.height / 2} transform={transform} {...rest} />
   );

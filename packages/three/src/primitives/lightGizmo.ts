@@ -1,11 +1,4 @@
-import {
-  BufferGeometry,
-  type ColorRepresentation,
-  Float32BufferAttribute,
-  Group,
-  LineBasicMaterial,
-  LineSegments,
-} from "three";
+import { BufferGeometry, type ColorRepresentation, Float32BufferAttribute, Group, LineBasicMaterial, LineSegments } from "three";
 
 import { GIZMO_LAYER, setLayer } from "../layers";
 

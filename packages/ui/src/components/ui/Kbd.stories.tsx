@@ -34,8 +34,7 @@ export const Key: Story = {
 export const InHint: Story = {
   render: () => (
     <p className="text-xs text-fg-muted">
-      Step frames with <Kbd>[</Kbd> and <Kbd>]</Kbd>, frame the selection with <Kbd>F</Kbd>, open the palette with{" "}
-      <Kbd>⌘K</Kbd>.
+      Step frames with <Kbd>[</Kbd> and <Kbd>]</Kbd>, frame the selection with <Kbd>F</Kbd>, open the palette with <Kbd>⌘K</Kbd>.
     </p>
   ),
   play: async ({ canvas }) => {

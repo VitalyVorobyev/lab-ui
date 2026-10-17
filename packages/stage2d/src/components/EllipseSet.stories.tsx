@@ -182,7 +182,12 @@ export const ControlledHover: Story = {
 /** A dot whose data size would vanish at this zoom is still drawn at `minRadius` screen pixels. */
 export const MinRadius: Story = {
   render: () => (
-    <ImageStage image={{ width: 2000, height: 1500 }} view={{ scale: 0.2, tx: 0, ty: 0 }} onView={() => {}} style={{ width: 402, height: 302 }}>
+    <ImageStage
+      image={{ width: 2000, height: 1500 }}
+      view={{ scale: 0.2, tx: 0, ty: 0 }}
+      onView={() => {}}
+      style={{ width: 402, height: 302 }}
+    >
       <div className="absolute inset-0 bg-canvas" />
       <EllipseSet items={[{ id: "tiny", x: 1000, y: 750, rx: 1, ry: 1 }]} minRadius={3} />
     </ImageStage>
@@ -241,9 +246,12 @@ function NotPickableDemo() {
     <div>
       <Frame>
         <EllipseSet items={[{ id: "ring", x: 200, y: 150, rx: 40, ry: 40 }]} pickable={false} onHoverChange={hover} />
-        <PointSet items={[{ id: "c", kind: "plus", x: 200, y: 150 }]} onItemPress={(id) => {
+        <PointSet
+          items={[{ id: "c", kind: "plus", x: 200, y: 150 }]}
+          onItemPress={(id) => {
             pressedOnPoint(id);
-          }} />
+          }}
+        />
         <Ask point={{ x: 240, y: 150 }} onAnswer={setAnswer} />
       </Frame>
       <output data-testid="answer">{answer}</output>

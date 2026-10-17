@@ -11,13 +11,7 @@
 
 export { AppShell, type AppShellProps, type SidePanelSize } from "./components/AppShell";
 export { StatusBar, type StatusBarProps } from "./components/StatusBar";
-export {
-  NavRail,
-  NavRailItem,
-  type NavRailItemProps,
-  type NavRailLabels,
-  type NavRailProps,
-} from "./components/NavRail";
+export { NavRail, NavRailItem, type NavRailItemProps, type NavRailLabels, type NavRailProps } from "./components/NavRail";
 export { SplitPane, type SplitPaneProps } from "./components/SplitPane";
 export {
   type PaneSize,
@@ -40,36 +34,14 @@ export {
   visibleRows,
 } from "./components/treeModel";
 
-export {
-  DEFAULT_SPEEDS,
-  PlaybackBar,
-  type PlaybackBarProps,
-  type PlaybackMarker,
-} from "./components/PlaybackBar";
-export {
-  type AdvanceResult,
-  advance,
-  clampIndex,
-  createPlayhead,
-  formatSeconds,
-  type Playhead,
-} from "./components/playhead";
-export {
-  type PlaybackClockOptions,
-  usePlaybackClock,
-  usePlayhead,
-  usePlayheadTimeline,
-} from "./components/usePlayback";
+export { DEFAULT_SPEEDS, PlaybackBar, type PlaybackBarProps, type PlaybackMarker } from "./components/PlaybackBar";
+export { type AdvanceResult, advance, clampIndex, createPlayhead, formatSeconds, type Playhead } from "./components/playhead";
+export { type PlaybackClockOptions, usePlaybackClock, usePlayhead, usePlayheadTimeline } from "./components/usePlayback";
 
 export { FileDrop, type FileDropProps, type PathSource } from "./components/FileDrop";
 export { acceptsFile, acceptsPath, collectDroppedFiles, type DropEntry } from "./components/dropFiles";
 
-export {
-  SequenceNavigator,
-  type SequenceItem,
-  type SequenceItemStatus,
-  type SequenceNavigatorProps,
-} from "./components/SequenceNavigator";
+export { SequenceNavigator, type SequenceItem, type SequenceItemStatus, type SequenceNavigatorProps } from "./components/SequenceNavigator";
 export { stepIndex } from "./components/sequence";
 
 export { Stepper, type StepperProps, type StepperStep } from "./components/Stepper";

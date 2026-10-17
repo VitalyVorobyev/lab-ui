@@ -85,10 +85,7 @@ export function Field({
   const density = useDensity();
 
   const hasError = error !== undefined && error !== null && error !== false;
-  const describedBy =
-    [description ? descriptionId : undefined, hasError ? errorId : undefined]
-      .filter(Boolean)
-      .join(" ") || undefined;
+  const describedBy = [description ? descriptionId : undefined, hasError ? errorId : undefined].filter(Boolean).join(" ") || undefined;
 
   // A group carries the description itself; its controls would only repeat it.
   const control = useMemo(
@@ -109,9 +106,7 @@ export function Field({
             </span>
           )}
         </span>
-        {annotation && (
-          <span className="ml-auto font-mono text-[11px] text-fg-subtle">{annotation}</span>
-        )}
+        {annotation && <span className="ml-auto font-mono text-[11px] text-fg-subtle">{annotation}</span>}
       </span>
       <FieldContext value={control}>{children}</FieldContext>
     </>
@@ -122,17 +117,11 @@ export function Field({
       className={cn("flex min-w-0 flex-col", gap, className)}
       data-invalid={hasError ? "" : undefined}
       data-required={required ? "" : undefined}
-      {...(as === "group"
-        ? { role: "group", "aria-label": label, "aria-describedby": describedBy }
-        : {})}
+      {...(as === "group" ? { role: "group", "aria-label": label, "aria-describedby": describedBy } : {})}
     >
       {/* The description and the error sit outside the <label>: inside it they would be read
           as part of the control's name as well as its description. */}
-      {as === "label" ? (
-        <label className={cn("flex min-w-0 flex-col", gap)}>{labelled}</label>
-      ) : (
-        labelled
-      )}
+      {as === "label" ? <label className={cn("flex min-w-0 flex-col", gap)}>{labelled}</label> : labelled}
 
       {description && (
         <span id={descriptionId} className="text-xs leading-snug text-fg-muted">

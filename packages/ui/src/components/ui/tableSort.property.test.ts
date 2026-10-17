@@ -64,7 +64,10 @@ describe("sortRows (properties)", () => {
     forAll(1, (random) => {
       const rows = anyRows(random);
       const out = sorted(rows, anyDirection(random));
-      expect(out.map((row) => row.id).sort((a, b) => a - b), JSON.stringify(rows)).toEqual(rows.map((row) => row.id));
+      expect(
+        out.map((row) => row.id).sort((a, b) => a - b),
+        JSON.stringify(rows),
+      ).toEqual(rows.map((row) => row.id));
     });
   });
 
@@ -139,9 +142,10 @@ describe("sortRows (properties)", () => {
         key: "label",
         direction: "ascending",
       });
-      expect(out.map((row) => row.label), JSON.stringify(numbers)).toEqual(
-        [...numbers].sort((a, b) => a - b).map((n) => `frame ${n}`),
-      );
+      expect(
+        out.map((row) => row.label),
+        JSON.stringify(numbers),
+      ).toEqual([...numbers].sort((a, b) => a - b).map((n) => `frame ${n}`));
     });
   });
 });

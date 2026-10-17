@@ -107,10 +107,7 @@ export function valuesAt(plane: ValuePlane, u: number, v: number): number[] {
 }
 
 /** Where a value sits in a range, as a fraction — `null` for a degenerate range. */
-export function fractionOf(
-  value: number,
-  range: { low: number; high: number } | null | undefined,
-): number | null {
+export function fractionOf(value: number, range: { low: number; high: number } | null | undefined): number | null {
   if (!range || range.high <= range.low) return null;
   return (value - range.low) / (range.high - range.low);
 }

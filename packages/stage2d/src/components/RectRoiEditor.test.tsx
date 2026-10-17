@@ -183,7 +183,15 @@ describe("RectRoiEditor — drawing", () => {
 
   it("draws through drawDrag for a StageSurface, past the slop and clamped to the bounds", () => {
     const { ref, onValueChange, onCommit, container } = setup({ value: null, bounds: { x: 0, y: 0, width: 200, height: 100 } });
-    const press: StagePress = { point: { x: 20, y: 30 }, client: { x: 20.5, y: 30.5 }, touch: false, radius: 6, shiftKey: false, altKey: false, metaKey: false };
+    const press: StagePress = {
+      point: { x: 20, y: 30 },
+      client: { x: 20.5, y: 30.5 },
+      touch: false,
+      radius: 6,
+      shiftKey: false,
+      altKey: false,
+      metaKey: false,
+    };
     const move = (p: Point) => new PointerEvent("pointermove", { clientX: p.x + 0.5, clientY: p.y + 0.5 });
     const drag = ref.current!.drawDrag(press);
     expect(drag.claimsTouch).toBe(true);
@@ -208,7 +216,15 @@ describe("RectRoiEditor — drawing", () => {
 
   it("draws nothing through the ref while read-only or panning", () => {
     const readOnly = setup({ value: null, editable: false });
-    const press: StagePress = { point: { x: 20, y: 30 }, client: { x: 20.5, y: 30.5 }, touch: false, radius: 6, shiftKey: false, altKey: false, metaKey: false };
+    const press: StagePress = {
+      point: { x: 20, y: 30 },
+      client: { x: 20.5, y: 30.5 },
+      touch: false,
+      radius: 6,
+      shiftKey: false,
+      altKey: false,
+      metaKey: false,
+    };
     expect(readOnly.ref.current!.drawDrag(press)).toEqual({});
     const own = render(<div data-testid="own" onPointerDown={(e) => readOnly.ref.current?.startDraw(e)} />);
     fireEvent.pointerDown(own.getByTestId("own"), at({ x: 20, y: 30 }));

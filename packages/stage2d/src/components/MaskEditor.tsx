@@ -7,9 +7,18 @@ import { useStage } from "./stage/ImageStage";
 import type { Point } from "./measureGeometry";
 
 /** Paint a continuous round stroke into a copied binary mask. Pixel centers are integers. */
-export function paintMask(mask: Uint8Array, width: number, height: number, from: Point, to: Point, radius: number, value: 0 | 1): Uint8Array {
+export function paintMask(
+  mask: Uint8Array,
+  width: number,
+  height: number,
+  from: Point,
+  to: Point,
+  radius: number,
+  value: 0 | 1,
+): Uint8Array {
   if (mask.length !== width * height) throw new RangeError("Mask dimensions do not match its pixel data.");
-  if (![from.x, from.y, to.x, to.y, radius].every(Number.isFinite) || radius < 0) throw new RangeError("Brush coordinates and radius must be finite and nonnegative.");
+  if (![from.x, from.y, to.x, to.y, radius].every(Number.isFinite) || radius < 0)
+    throw new RangeError("Brush coordinates and radius must be finite and nonnegative.");
   const next = mask.slice();
   const clamp = (value: number, limit: number) => Math.max(0, Math.min(limit - 1, value));
   const start = { x: clamp(from.x, width), y: clamp(from.y, height) };
@@ -18,8 +27,8 @@ export function paintMask(mask: Uint8Array, width: number, height: number, from:
   // A click between four pixel centers must still affect the nearest pixels.
   const r = Math.max(0.75, radius);
   for (let step = 0; step <= steps; step++) {
-    const x = start.x + (end.x - start.x) * step / steps;
-    const y = start.y + (end.y - start.y) * step / steps;
+    const x = start.x + ((end.x - start.x) * step) / steps;
+    const y = start.y + ((end.y - start.y) * step) / steps;
     for (let row = Math.max(0, Math.ceil(y - r)); row <= Math.min(height - 1, Math.floor(y + r)); row++) {
       for (let col = Math.max(0, Math.ceil(x - r)); col <= Math.min(width - 1, Math.floor(x + r)); col++) {
         if ((col - x) ** 2 + (row - y) ** 2 <= r * r) next[row * width + col] = value;
@@ -54,7 +63,16 @@ export interface MaskEditorProps {
  * `DraftShape` brush footprint (a circle of the brush's diameter) follows the mouse or pen
  * pointer, and the keyboard brush while the layer has keyboard focus.
  */
-export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRadius = 3, mode = "paint", label = "Mask brush", color = [0, 190, 220, 128] }: MaskEditorProps) {
+export function MaskEditor({
+  mask,
+  onChange,
+  onCommit,
+  editable = false,
+  brushRadius = 3,
+  mode = "paint",
+  label = "Mask brush",
+  color = [0, 190, 220, 128],
+}: MaskEditorProps) {
   const stage = useStage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const draftRef = useRef(mask);
@@ -128,8 +146,10 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
   function keyDown(event: KeyboardEvent<HTMLCanvasElement>) {
     if (!editable || stage.panMode) return;
     const shift: Record<string, Point> = {
-      ArrowLeft: { x: -1, y: 0 }, ArrowRight: { x: 1, y: 0 },
-      ArrowUp: { x: 0, y: -1 }, ArrowDown: { x: 0, y: 1 },
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 },
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
     };
     const delta = shift[event.key];
     if (delta) {
@@ -160,8 +180,36 @@ export function MaskEditor({ mask, onChange, onCommit, editable = false, brushRa
 
   return (
     <>
-      <canvas ref={canvasRef} width={stage.image.width} height={stage.image.height} className={`absolute inset-0 h-full w-full ${editable ? "pointer-events-auto cursor-crosshair" : "pointer-events-none"}`} style={{ imageRendering: "pixelated" }} role={editable ? "button" : "img"} tabIndex={editable ? 0 : undefined} aria-label={label} aria-description={editable ? "Arrow keys move the brush; Enter paints or erases." : undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onLostPointerCapture={up} onDoubleClick={(event) => { if (editable && !stage.panMode) event.stopPropagation(); }} onKeyDown={keyDown} onFocus={focus} onBlur={() => setBrush(null)} onPointerLeave={() => { if (!lastRef.current) setHover(null); }} />
-      {(hover ?? brush) && editable && <DraftShape shape={{ kind: "brush", x: (hover ?? brush)!.x, y: (hover ?? brush)!.y, diameter: 2 * Math.max(0.75, brushRadius) }} stroke="var(--signal)" />}
+      <canvas
+        ref={canvasRef}
+        width={stage.image.width}
+        height={stage.image.height}
+        className={`absolute inset-0 h-full w-full ${editable ? "pointer-events-auto cursor-crosshair" : "pointer-events-none"}`}
+        style={{ imageRendering: "pixelated" }}
+        role={editable ? "button" : "img"}
+        tabIndex={editable ? 0 : undefined}
+        aria-label={label}
+        aria-description={editable ? "Arrow keys move the brush; Enter paints or erases." : undefined}
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onLostPointerCapture={up}
+        onDoubleClick={(event) => {
+          if (editable && !stage.panMode) event.stopPropagation();
+        }}
+        onKeyDown={keyDown}
+        onFocus={focus}
+        onBlur={() => setBrush(null)}
+        onPointerLeave={() => {
+          if (!lastRef.current) setHover(null);
+        }}
+      />
+      {(hover ?? brush) && editable && (
+        <DraftShape
+          shape={{ kind: "brush", x: (hover ?? brush)!.x, y: (hover ?? brush)!.y, diameter: 2 * Math.max(0.75, brushRadius) }}
+          stroke="var(--signal)"
+        />
+      )}
     </>
   );
 }

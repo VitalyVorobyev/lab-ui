@@ -136,11 +136,7 @@ export function Checkbox({
       )}
     >
       <RadixCheckbox.Indicator className="text-signal-fg">
-        {checked === "indeterminate" ? (
-          <Minus className="size-3" strokeWidth={3} />
-        ) : (
-          <Check className="size-3" strokeWidth={3} />
-        )}
+        {checked === "indeterminate" ? <Minus className="size-3" strokeWidth={3} /> : <Check className="size-3" strokeWidth={3} />}
       </RadixCheckbox.Indicator>
     </RadixCheckbox.Root>
   );

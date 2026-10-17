@@ -164,7 +164,10 @@ export function TargetBoard({ width, height, checker, color, edgeColor, active =
     ),
   );
   useEffect(() => {
-    object.setColors(color === undefined ? undefined : normalizeColor(color), edgeColor === undefined ? undefined : normalizeColor(edgeColor));
+    object.setColors(
+      color === undefined ? undefined : normalizeColor(color),
+      edgeColor === undefined ? undefined : normalizeColor(edgeColor),
+    );
     if (runtime) invalidateScene(runtime);
   }, [object, color, edgeColor, runtime]);
   // A board leaving the scene changes what a sensor sees, too.

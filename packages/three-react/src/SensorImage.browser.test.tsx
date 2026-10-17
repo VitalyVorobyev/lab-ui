@@ -68,7 +68,12 @@ afterEach(() => {
 
 function mount() {
   const runtime = new FrameTreeRuntime(baked);
-  const playhead = { sample: 0, get() { return this.sample; } };
+  const playhead = {
+    sample: 0,
+    get() {
+      return this.sample;
+    },
+  };
   const view = render(<SensorImage runtime={runtime} frame="cam" canonical={CANONICAL} lut={LUT} playhead={playhead} />);
   return { runtime, playhead, view };
 }

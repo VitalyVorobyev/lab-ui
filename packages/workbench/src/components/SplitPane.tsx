@@ -12,12 +12,7 @@
  */
 
 import { useCallback, useId, useRef, useState } from "react";
-import type {
-  CSSProperties,
-  KeyboardEvent,
-  PointerEvent as ReactPointerEvent,
-  ReactNode,
-} from "react";
+import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 
 import { cn, focusRing } from "@vitavision/ui";
 
@@ -117,9 +112,7 @@ export function SplitPane({
 
   const limits = length === null ? null : resolveLimits(length, minSize, maxSize, collapsible);
   const size =
-    controlledSize ??
-    internalSize ??
-    (length === null || limits === null ? null : clampSize(resolveSize(defaultSize, length), limits));
+    controlledSize ?? internalSize ?? (length === null || limits === null ? null : clampSize(resolveSize(defaultSize, length), limits));
   const collapsed = size === 0;
   const controlled = controlledSize !== undefined;
 
@@ -227,8 +220,7 @@ export function SplitPane({
   // Before the first measurement (and on the server) the pane is sized by CSS alone, from
   // the default; afterwards by the measured size. The limits stay in CSS too, so a window
   // resize never pushes the pane outside them between two measurements.
-  const basis =
-    size !== null ? `${size}px` : typeof defaultSize === "number" ? `${defaultSize}px` : defaultSize;
+  const basis = size !== null ? `${size}px` : typeof defaultSize === "number" ? `${defaultSize}px` : defaultSize;
   const cssSize = (value: PaneSize) => (typeof value === "number" ? `${value}px` : value);
   const sizedStyle: CSSProperties = {
     flex: `0 0 ${basis}`,
@@ -254,9 +246,7 @@ export function SplitPane({
       {sizedPane === "start" ? first : second}
     </div>
   );
-  const rest = (
-    <div className={cn(paneClasses, "flex-1 basis-0")}>{sizedPane === "start" ? second : first}</div>
-  );
+  const rest = <div className={cn(paneClasses, "flex-1 basis-0")}>{sizedPane === "start" ? second : first}</div>;
 
   return (
     <div

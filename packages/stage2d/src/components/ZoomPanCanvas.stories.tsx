@@ -59,12 +59,7 @@ function StatefulCanvas(args: ComponentProps<typeof ZoomPanCanvas>) {
         draggable={false}
         className="h-full w-full"
       />
-      <MeasureOverlay
-        nativeWidth={IMAGE.width}
-        nativeHeight={IMAGE.height}
-        primitives={PRIMITIVES}
-        strokeScale={view.zoom * fit}
-      />
+      <MeasureOverlay nativeWidth={IMAGE.width} nativeHeight={IMAGE.height} primitives={PRIMITIVES} strokeScale={view.zoom * fit} />
     </ZoomPanCanvas>
   );
 }

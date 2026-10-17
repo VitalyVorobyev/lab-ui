@@ -61,10 +61,7 @@ export function StageToolbar({ children, className }: StageToolbarProps) {
   return (
     <div
       data-fit={stage.isFit ? "" : undefined}
-      className={cn(
-        "flex items-center gap-0.5 rounded-panel border border-line bg-overlay/85 p-1 shadow-lg backdrop-blur",
-        className,
-      )}
+      className={cn("flex items-center gap-0.5 rounded-panel border border-line bg-overlay/85 p-1 shadow-lg backdrop-blur", className)}
       // Every press here is a control, never the start of a pan.
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
@@ -88,18 +85,12 @@ export function StageToolbar({ children, className }: StageToolbarProps) {
           aria-expanded={menuOpen}
           data-state={menuOpen ? "open" : "closed"}
           onClick={() => setMenuOpen((open) => !open)}
-          className={cn(
-            "h-7 min-w-14 rounded-control px-2 font-mono text-xs text-fg tabular-nums hover:bg-raised",
-            focusRing,
-          )}
+          className={cn("h-7 min-w-14 rounded-control px-2 font-mono text-xs text-fg tabular-nums hover:bg-raised", focusRing)}
         >
           {stage.isFit ? "Fit" : formatScale(stage.view.scale)}
         </button>
         {menuOpen && (
-          <div
-            role="menu"
-            className="absolute bottom-9 left-0 z-20 min-w-28 rounded-panel border border-line bg-overlay p-1 shadow-lg"
-          >
+          <div role="menu" className="absolute bottom-9 left-0 z-20 min-w-28 rounded-panel border border-line bg-overlay p-1 shadow-lg">
             <MenuItem
               onClick={() => {
                 stage.fit();
@@ -159,8 +150,10 @@ export function StageToolbar({ children, className }: StageToolbarProps) {
 }
 
 /** Props of `StageButton`: a `<button>`'s, less the ones it sets itself. */
-export interface StageButtonProps
-  extends Omit<ComponentPropsWithRef<"button">, "type" | "title" | "aria-label" | "aria-pressed" | "children"> {
+export interface StageButtonProps extends Omit<
+  ComponentPropsWithRef<"button">,
+  "type" | "title" | "aria-label" | "aria-pressed" | "children"
+> {
   /** The accessible name, also shown as the tooltip. */
   label: string;
   /** A toggle's state; omit for a plain action button. */
@@ -311,15 +304,7 @@ export function StageToolbarDivider({ className }: StageToolbarDividerProps) {
   return <span className={cn("mx-0.5 h-5 w-px bg-line", className)} aria-hidden />;
 }
 
-function MenuItem({
-  onClick,
-  active,
-  children,
-}: {
-  onClick: () => void;
-  active?: boolean;
-  children: ReactNode;
-}) {
+function MenuItem({ onClick, active, children }: { onClick: () => void; active?: boolean; children: ReactNode }) {
   return (
     <button
       type="button"
@@ -356,12 +341,7 @@ export interface StageReadoutProps {
 export function StageReadout({ cursor, extra, className }: StageReadoutProps) {
   const stage = useStage();
   return (
-    <span
-      className={cn(
-        "rounded-control bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white tabular-nums",
-        className,
-      )}
-    >
+    <span className={cn("rounded-control bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white tabular-nums", className)}>
       {cursor ? `${cursor.x.toFixed(1)}, ${cursor.y.toFixed(1)} px` : `${stage.image.width}×${stage.image.height}`}
       {" · "}
       {stage.isFit ? "fit" : formatScale(stage.view.scale)}

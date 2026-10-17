@@ -165,14 +165,7 @@ export function Chooser({
   const size = byDensity(useDensity(), "md", "sm");
   const strip = widget === "segmented" || (widget !== "select" && options.length <= 3 && unsetLabel === undefined);
   return strip ? (
-    <SegmentedControl
-      aria-label={label}
-      size={size}
-      disabled={disabled}
-      value={value}
-      options={options}
-      onValueChange={onChoose}
-    />
+    <SegmentedControl aria-label={label} size={size} disabled={disabled} value={value} options={options} onValueChange={onChoose} />
   ) : (
     <Select
       aria-label={label}
@@ -200,8 +193,7 @@ export function EnumLeaf({ meta, options }: { meta: FieldMeta; options: EnumOpti
   // An absent key is its schema default, so that is the option shown as chosen.
   const selected = options.find((option) => option.value === (value === undefined ? meta.schema.default : value));
   // The chosen variant's own sentence ("No distortion; no parameter block.") under the strip.
-  const explained =
-    !dense && meta.ui.descriptionAs !== "none" ? firstParagraph(selected?.description) : "";
+  const explained = !dense && meta.ui.descriptionAs !== "none" ? firstParagraph(selected?.description) : "";
   const description: ReactNode =
     explained !== "" && chrome.description !== undefined ? (
       <>
@@ -346,7 +338,15 @@ function syncIds(rows: RowIds, length: number): RowIds {
  * Each row has an id of its own, so removing the second of three keeps the focus and the
  * cursor of the others instead of re-keying them by position.
  */
-export function StringListLeaf({ meta, minItems, maxItems }: { meta: FieldMeta; minItems?: number | undefined; maxItems?: number | undefined }) {
+export function StringListLeaf({
+  meta,
+  minItems,
+  maxItems,
+}: {
+  meta: FieldMeta;
+  minItems?: number | undefined;
+  maxItems?: number | undefined;
+}) {
   const form = useForm();
   const value = getAtPath(form.value, meta.path);
   const chrome = useChrome(meta);

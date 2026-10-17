@@ -2,13 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
 import { expect, fireEvent, fn, waitFor } from "storybook/test";
 
-import {
-  PolylineSet,
-  type PolylineSelectMode,
-  type PolylineSetHandle,
-  type PolylineSetItem,
-  type PolylineSetProps,
-} from "./PolylineSet";
+import { PolylineSet, type PolylineSelectMode, type PolylineSetHandle, type PolylineSetItem, type PolylineSetProps } from "./PolylineSet";
 import type { PolylineId } from "./polylineIndex";
 import { RectRoiEditor } from "./RectRoiEditor";
 import { ImageStage } from "./stage/ImageStage";

@@ -100,9 +100,7 @@ export function Histogram(props: HistogramProps) {
   } = props;
 
   const { counts, domain } =
-    props.counts !== undefined
-      ? cleanCounts(props.counts, props.domain)
-      : binValues(props.values, props.bins, props.domain);
+    props.counts !== undefined ? cleanCounts(props.counts, props.domain) : binValues(props.values, props.bins, props.domain);
 
   const [fluidRef, fluidSize] = useFluidSize(height);
   const size = variant === "fluid" ? fluidSize : undefined;
@@ -138,23 +136,12 @@ export function Histogram(props: HistogramProps) {
         opacity={0.8}
       />
       {hasHighlight && (
-        <path
-          data-cursor-bin={highlighted}
-          d={barsPath(counts, yScale, plotArea, { only: highlighted })}
-          fill="var(--signal)"
-        />
+        <path data-cursor-bin={highlighted} d={barsPath(counts, yScale, plotArea, { only: highlighted })} fill="var(--signal)" />
       )}
       <ThresholdRule value={threshold} xScale={xScale} area={plotArea} />
       {markers && markers.length > 0 && <Markers markers={markers} xScale={xScale} area={plotArea} />}
       {(onHover || onPick) && (
-        <PlotInteraction
-          xScale={xScale}
-          yScale={yScale}
-          area={plotArea}
-          series={[]}
-          onHover={onHover}
-          onPick={onPick}
-        />
+        <PlotInteraction xScale={xScale} yScale={yScale} area={plotArea} series={[]} onHover={onHover} onPick={onPick} />
       )}
     </Frame>
   );

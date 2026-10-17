@@ -42,8 +42,7 @@ export interface StepView {
  */
 export function stepStates(steps: readonly StepGate[], current: string | null): StepView[] {
   return steps.map(({ id, blockedBy, complete }) => {
-    const state: StepState =
-      id === current ? "current" : blockedBy ? "blocked" : complete ? "complete" : "upcoming";
+    const state: StepState = id === current ? "current" : blockedBy ? "blocked" : complete ? "complete" : "upcoming";
     return { id, state, canActivate: state === "complete" || state === "upcoming" };
   });
 }

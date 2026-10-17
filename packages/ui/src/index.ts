@@ -7,14 +7,7 @@
  * @packageDocumentation
  */
 
-export {
-  DEFAULT_THEME_STORAGE_KEY,
-  initTheme,
-  readThemeChoice,
-  resolveTheme,
-  setThemeChoice,
-  type ThemeChoice,
-} from "./theme";
+export { DEFAULT_THEME_STORAGE_KEY, initTheme, readThemeChoice, resolveTheme, setThemeChoice, type ThemeChoice } from "./theme";
 
 export { toneColor, type MeasureTone } from "./tone";
 

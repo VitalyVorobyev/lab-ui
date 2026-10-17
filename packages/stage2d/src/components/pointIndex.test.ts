@@ -196,9 +196,7 @@ describe("properties against an exhaustive search", () => {
       const orphans: number[] = [];
       for (let i = 0; i < n; i++) {
         if (keptSet.has(i)) continue;
-        const close = kept.some(
-          (k) => k < i && Math.hypot(xy[2 * k]! - xy[2 * i]!, xy[2 * k + 1]! - xy[2 * i + 1]!) < minDist,
-        );
+        const close = kept.some((k) => k < i && Math.hypot(xy[2 * k]! - xy[2 * i]!, xy[2 * k + 1]! - xy[2 * i + 1]!) < minDist);
         if (!close) orphans.push(i);
       }
       expect(orphans).toEqual([]);

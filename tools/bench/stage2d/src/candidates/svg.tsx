@@ -33,19 +33,13 @@ const Overlay = memo(function Overlay({ scene, perElement }: { scene: Scene; per
   });
   const p = scene.points;
   return (
-    <svg
-      viewBox={`0 0 ${IMAGE.width} ${IMAGE.height}`}
-      className="absolute inset-0 h-full w-full"
-      style={{ overflow: "visible" }}
-    >
+    <svg viewBox={`0 0 ${IMAGE.width} ${IMAGE.height}`} className="absolute inset-0 h-full w-full" style={{ overflow: "visible" }}>
       <g fill="none" stroke="#4cc9f0" strokeWidth={STROKE_PX} strokeLinejoin="round" style={STROKE}>
         {perElement ? lines.map((d, i) => <path key={i} d={d} style={STROKE} />) : <path d={lines.join("")} style={STROKE} />}
       </g>
       <g fill="none" stroke="#f5a524" strokeWidth={MARKER_DIAMETER_PX} strokeLinecap="round">
         {perElement ? (
-          Array.from({ length: p.length / 2 }, (_, i) => (
-            <path key={i} data-i={i} d={`M${p[2 * i]} ${p[2 * i + 1]}h0`} style={STROKE} />
-          ))
+          Array.from({ length: p.length / 2 }, (_, i) => <path key={i} data-i={i} d={`M${p[2 * i]} ${p[2 * i + 1]}h0`} style={STROKE} />)
         ) : (
           <path d={Array.from({ length: p.length / 2 }, (_, i) => `M${p[2 * i]} ${p[2 * i + 1]}h0`).join("")} style={STROKE} />
         )}

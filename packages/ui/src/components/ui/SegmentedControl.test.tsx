@@ -32,7 +32,7 @@ describe("SegmentedControl size", () => {
     expect(segment.classList.contains("py-1")).toBe(true);
   });
 
-  it("renders the same classes with `size` omitted as with size=\"sm\"", () => {
+  it('renders the same classes with `size` omitted as with size="sm"', () => {
     const omitted = renderStrip();
     const omittedClasses = [omitted.strip.className, omitted.segment.className];
     cleanup();

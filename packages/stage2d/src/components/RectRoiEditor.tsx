@@ -16,15 +16,7 @@ import { useImperativeHandle, useState, type KeyboardEvent, type PointerEvent, t
 
 import { cn } from "@vitavision/ui";
 import type { Point } from "./measureGeometry";
-import {
-  ROI_HANDLES,
-  ROI_HANDLE_CURSOR,
-  clampRect,
-  moveRect,
-  rectFromCorners,
-  resizeRect,
-  roiHandlePoint,
-} from "./roiEdit";
+import { ROI_HANDLES, ROI_HANDLE_CURSOR, clampRect, moveRect, rectFromCorners, resizeRect, roiHandlePoint } from "./roiEdit";
 import { overlayRole } from "./overlayRole";
 import { shapePress, type RotatedShape } from "./shapeEdit";
 import { CLICK_SLOP, POINTER_RADIUS_PX, TOUCH_RADIUS_PX, hitRadiusPx } from "./stage/gesture";

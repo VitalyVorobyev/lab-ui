@@ -85,8 +85,14 @@ describe("lattice builders, for any sparse board", () => {
       expect(ids.size, `run ${run}`).toBe(grid.nodes.length);
       for (const [key, position] of grid.byIndex) expect(ids.get(key), `run ${run}`).toBe(grid.nodes[position]!.id);
       // Every position appears in exactly one row and one column.
-      expect(grid.rows.flat().sort((a, b) => a - b), `run ${run}`).toEqual(grid.nodes.map((_, p) => p));
-      expect(grid.cols.flat().sort((a, b) => a - b), `run ${run}`).toEqual(grid.nodes.map((_, p) => p));
+      expect(
+        grid.rows.flat().sort((a, b) => a - b),
+        `run ${run}`,
+      ).toEqual(grid.nodes.map((_, p) => p));
+      expect(
+        grid.cols.flat().sort((a, b) => a - b),
+        `run ${run}`,
+      ).toEqual(grid.nodes.map((_, p) => p));
     }
   });
 });

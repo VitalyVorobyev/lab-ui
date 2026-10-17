@@ -16,7 +16,14 @@ interface TraceEvent {
   pid: number;
   ts: number;
   cat?: string;
-  args?: { frame_reporter?: { state?: string; checkerboarded_needs_raster?: boolean; checkerboarded_needs_record?: boolean; has_missing_content?: boolean } };
+  args?: {
+    frame_reporter?: {
+      state?: string;
+      checkerboarded_needs_raster?: boolean;
+      checkerboarded_needs_record?: boolean;
+      has_missing_content?: boolean;
+    };
+  };
 }
 
 export interface FrameReport {

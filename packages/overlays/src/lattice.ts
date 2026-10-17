@@ -127,9 +127,7 @@ export function cornerGrid(corners: readonly TargetCorner[]): CornerGrid {
   }
 
   const ordered = (groups: Map<number, number[]>, by: "i" | "j") =>
-    [...groups.entries()]
-      .sort(([a], [b]) => a - b)
-      .map(([, group]) => group.sort((p, q) => nodes[p]![by] - nodes[q]![by]));
+    [...groups.entries()].sort(([a], [b]) => a - b).map(([, group]) => group.sort((p, q) => nodes[p]![by] - nodes[q]![by]));
   return { nodes, byIndex, rows: ordered(rowMap, "j"), cols: ordered(colMap, "i"), bounds };
 }
 

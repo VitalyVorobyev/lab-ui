@@ -35,7 +35,11 @@ describe("edgeBitsFromPuzzleboard", () => {
       { id: "a", x: 0, y: 0, i: 100, j: 3 },
       { id: "b", x: 4, y: 0, i: 100, j: 2 },
     ];
-    const [bit] = edgeBitsFromPuzzleboard([{ row: 0, col: 0, orientation: "horizontal", bit: 1, confidence: 1 }], corners, PUZZLE_ALIGNMENT);
+    const [bit] = edgeBitsFromPuzzleboard(
+      [{ row: 0, col: 0, orientation: "horizontal", bit: 1, confidence: 1 }],
+      corners,
+      PUZZLE_ALIGNMENT,
+    );
     expect(bit).toMatchObject({ x: 2, y: 0, radius: 1 });
     // A negative image of the map wraps into [0, 501): local (0, 0) is master (100, -1 + 501) and local (1, 0) is (100, -2 + 501).
     const wrapped: TargetCorner[] = [
@@ -43,7 +47,9 @@ describe("edgeBitsFromPuzzleboard", () => {
       { id: "b", x: 4, y: 0, i: 100, j: 499 },
     ];
     const shifted: PuzzleboardAlignment = { transform: { a: 0, b: 1, c: -1, d: 0 }, translation: [100, -1] };
-    expect(edgeBitsFromPuzzleboard([{ row: 0, col: 0, orientation: "horizontal", bit: 1, confidence: 1 }], wrapped, shifted)).toHaveLength(1);
+    expect(edgeBitsFromPuzzleboard([{ row: 0, col: 0, orientation: "horizontal", bit: 1, confidence: 1 }], wrapped, shifted)).toHaveLength(
+      1,
+    );
   });
 
   it("honours a different period", () => {

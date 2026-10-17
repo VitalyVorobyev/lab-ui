@@ -85,13 +85,7 @@ async function readRemote(repo: Repo): Promise<{ sha: string; manifests: (Manife
   return { sha: sha.slice(0, 10), manifests };
 }
 
-export function collect(
-  id: string,
-  sha: string,
-  manifests: (Manifest | null)[],
-  names: string[],
-  baseline: Baseline,
-): RepoDeps {
+export function collect(id: string, sha: string, manifests: (Manifest | null)[], names: string[], baseline: Baseline): RepoDeps {
   const deps = new Map<string, Declared>();
   const missing: string[] = [];
   manifests.forEach((manifest, i) => {
@@ -138,9 +132,7 @@ function render(inventory: Inventory, baseline: Baseline, repos: RepoDeps[], sou
   for (const repo of repos) {
     const exceptions = [...repo.deps.values()].filter((d) => d.exception && DEVIATIONS.has(d.status)).length;
     const missing = repo.missing.length ? ` (missing: ${repo.missing.join(", ")})` : "";
-    lines.push(
-      `| ${labelOf(inventory, repo.id)} | \`${repo.sha}\` | ${undocumented(repo).length}${missing} | ${exceptions} |`,
-    );
+    lines.push(`| ${labelOf(inventory, repo.id)} | \`${repo.sha}\` | ${undocumented(repo).length}${missing} | ${exceptions} |`);
   }
   lines.push("");
 

@@ -63,8 +63,6 @@ describe("FrameTreeRuntime", () => {
   it("rejects malformed scenarios", () => {
     expect(() => new FrameTreeRuntime({ ...baked, frames: ["base", "world"] })).toThrow(/world/);
     expect(() => new FrameTreeRuntime({ ...baked, samples: [] })).toThrow(/sample/);
-    expect(
-      () => new FrameTreeRuntime({ ...baked, samples: [{ t: 0, world_se3_frame: [I] }] }),
-    ).toThrow(/1 poses for 3 frames/);
+    expect(() => new FrameTreeRuntime({ ...baked, samples: [{ t: 0, world_se3_frame: [I] }] })).toThrow(/1 poses for 3 frames/);
   });
 });

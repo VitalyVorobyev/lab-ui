@@ -1,14 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import {
-  Button,
-  type Column,
-  DensityProvider,
-  Field,
-  Input,
-  Panel,
-  Table,
-  type Density,
-} from "@vitavision/ui";
+import { Button, type Column, DensityProvider, Field, Input, Panel, Table, type Density } from "@vitavision/ui";
 
 /**
  * The type scale, the spacing steps, density, and radii — as the packages use them today
@@ -22,7 +13,12 @@ const TYPE_ROLES: { role: string; className: string; spec: string; use: string }
   { role: "body", className: "text-sm", spec: "14 / 400", use: "Values, table cells, prose" },
   { role: "label", className: "text-xs font-medium", spec: "12 / 500", use: "Field labels, buttons (sm), segments" },
   { role: "meta", className: "text-xs text-fg-muted", spec: "12 / 400", use: "Hints, descriptions, captions, legends" },
-  { role: "eyebrow", className: "text-[11px] font-semibold uppercase tracking-wider text-fg-muted", spec: "11 / 600 caps", use: "Compact panel titles only" },
+  {
+    role: "eyebrow",
+    className: "text-[11px] font-semibold uppercase tracking-wider text-fg-muted",
+    spec: "11 / 600 caps",
+    use: "Compact panel titles only",
+  },
   { role: "micro", className: "text-[10px] text-fg-muted", spec: "10 / 400", use: "Chart ticks, compact table headers" },
 ];
 
@@ -100,16 +96,26 @@ export const TypeRoles: Story = {
       <caption className="sr-only">Type roles</caption>
       <thead>
         <tr className="text-xs text-fg-muted">
-          <th scope="col" className="pb-2 pr-4 font-medium">Role</th>
-          <th scope="col" className="pb-2 pr-4 font-medium">Specimen</th>
-          <th scope="col" className="pb-2 pr-4 font-medium">px / weight</th>
-          <th scope="col" className="pb-2 font-medium">Used for</th>
+          <th scope="col" className="pb-2 pr-4 font-medium">
+            Role
+          </th>
+          <th scope="col" className="pb-2 pr-4 font-medium">
+            Specimen
+          </th>
+          <th scope="col" className="pb-2 pr-4 font-medium">
+            px / weight
+          </th>
+          <th scope="col" className="pb-2 font-medium">
+            Used for
+          </th>
         </tr>
       </thead>
       <tbody>
         {TYPE_ROLES.map(({ role, className, spec, use }) => (
           <tr key={role} className="border-t border-line">
-            <th scope="row" className="py-2 pr-4 font-mono text-xs font-normal text-fg-muted">{role}</th>
+            <th scope="row" className="py-2 pr-4 font-mono text-xs font-normal text-fg-muted">
+              {role}
+            </th>
             <td className={`py-2 pr-4 ${className}`}>Reprojection error</td>
             <td className="py-2 pr-4 font-mono text-xs">{spec}</td>
             <td className="py-2 text-xs text-fg-muted">{use}</td>

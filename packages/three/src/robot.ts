@@ -70,11 +70,7 @@ export async function loadRobotVisuals(
  * Add each link mesh to frame `"<robotId>/<link>"` of `runtime`. Returns the links that have
  * no such frame (none, for a runtime baked from the same scene).
  */
-export function attachRobotVisuals(
-  runtime: FrameTreeRuntime,
-  robotId: string,
-  meshes: ReadonlyMap<string, Object3D>,
-): string[] {
+export function attachRobotVisuals(runtime: FrameTreeRuntime, robotId: string, meshes: ReadonlyMap<string, Object3D>): string[] {
   const missing: string[] = [];
   for (const [link, object] of meshes) {
     const frame = runtime.frame(`${robotId}/${link}`);

@@ -87,11 +87,7 @@ export function InfoHint({
 }) {
   return (
     <Tooltip content={children}>
-      <button
-        type="button"
-        aria-label={label}
-        className={cn("rounded-full text-fg-subtle transition-colors hover:text-fg", focusRing)}
-      >
+      <button type="button" aria-label={label} className={cn("rounded-full text-fg-subtle transition-colors hover:text-fg", focusRing)}>
         <Icon className="size-3.5" />
       </button>
     </Tooltip>

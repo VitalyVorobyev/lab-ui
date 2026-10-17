@@ -93,10 +93,21 @@ export function DraftShape({ shape, role = "selection", stroke, halo = true }: D
           {parts.outline && halo && <path d={parts.outline} stroke={HALO} strokeWidth={width + px(2)} opacity={0.6} />}
           {parts.outline && parts.region && <path d={parts.outline} fill={colour} fillOpacity={0.12} stroke="none" />}
           {parts.outline && <path data-draft-outline="" d={parts.outline} stroke={colour} strokeWidth={width} strokeDasharray={dash} />}
-          {parts.trail && <path data-draft-stroke="" d={parts.trail.d} stroke={colour} strokeWidth={Math.max(parts.trail.width, px(1))} opacity={0.4} />}
+          {parts.trail && (
+            <path data-draft-stroke="" d={parts.trail.d} stroke={colour} strokeWidth={Math.max(parts.trail.width, px(1))} opacity={0.4} />
+          )}
           {parts.footprint && halo && <path d={parts.footprint} stroke={HALO} strokeWidth={px(3.5)} opacity={0.6} />}
           {parts.footprint && <path data-draft-brush="" d={parts.footprint} stroke={colour} strokeWidth={px(1.5)} />}
-          {parts.closing && <path data-draft-closing="" d={parts.closing} stroke={colour} strokeWidth={parts.armed ? width : px(1)} strokeDasharray={parts.armed ? undefined : dash} opacity={parts.armed ? 1 : 0.5} />}
+          {parts.closing && (
+            <path
+              data-draft-closing=""
+              d={parts.closing}
+              stroke={colour}
+              strokeWidth={parts.armed ? width : px(1)}
+              strokeDasharray={parts.armed ? undefined : dash}
+              opacity={parts.armed ? 1 : 0.5}
+            />
+          )}
           {parts.first && <path data-draft-first="" d={parts.first} stroke={colour} strokeWidth={width} fill={colour} fillOpacity={0.35} />}
           {parts.vertices && <path data-draft-vertices="" d={parts.vertices} stroke={colour} strokeWidth={px(VERTEX_PX)} />}
         </g>
@@ -125,7 +136,16 @@ interface DraftParts {
   footprint: string | null;
 }
 
-const NONE: DraftParts = { outline: null, region: false, closing: null, vertices: null, armed: false, first: null, trail: null, footprint: null };
+const NONE: DraftParts = {
+  outline: null,
+  region: false,
+  closing: null,
+  vertices: null,
+  armed: false,
+  first: null,
+  trail: null,
+  footprint: null,
+};
 
 /** An ellipse with the given centre and radii as two arcs. */
 function ellipsePath(cx: number, cy: number, rx: number, ry: number): string {
@@ -148,7 +168,10 @@ function draftParts(shape: DraftShapeSpec, unit: number): DraftParts {
       return { ...NONE, outline, region: true };
     }
     case "brush":
-      return { ...NONE, footprint: ellipsePath(shape.x, shape.y, Math.max(shape.diameter, 2 * unit) / 2, Math.max(shape.diameter, 2 * unit) / 2) };
+      return {
+        ...NONE,
+        footprint: ellipsePath(shape.x, shape.y, Math.max(shape.diameter, 2 * unit) / 2, Math.max(shape.diameter, 2 * unit) / 2),
+      };
     case "stroke": {
       const n = Math.floor(shape.points.length / 2);
       if (n === 0) return NONE;
@@ -213,7 +236,16 @@ export function MarqueeRect({ rect, stroke = overlayRole("selection") }: Marquee
       data-marquee={rect ? "" : undefined}
     >
       {rect && (
-        <rect x={rect.x} y={rect.y} width={rect.width} height={rect.height} fill={stroke} fillOpacity={0.12} stroke={stroke} strokeWidth={px(1)} />
+        <rect
+          x={rect.x}
+          y={rect.y}
+          width={rect.width}
+          height={rect.height}
+          fill={stroke}
+          fillOpacity={0.12}
+          stroke={stroke}
+          strokeWidth={px(1)}
+        />
       )}
     </svg>
   );

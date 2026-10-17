@@ -35,12 +35,7 @@ function PanelledTabs(props: ComponentProps<typeof Tabs<View>>) {
   return (
     <div className="flex flex-col gap-3">
       <Tabs {...props} active={active} onSelect={setActive} />
-      <div
-        role="tabpanel"
-        id={`${prefix}-panel-${active}`}
-        aria-labelledby={`${prefix}-tab-${active}`}
-        className="text-sm text-fg-muted"
-      >
+      <div role="tabpanel" id={`${prefix}-panel-${active}`} aria-labelledby={`${prefix}-tab-${active}`} className="text-sm text-fg-muted">
         The {active} view.
       </div>
     </div>

@@ -53,9 +53,7 @@ describe("toast", () => {
 
   it("writes to the default store", () => {
     const id = toast({ title: "Hello", tone: "warn", duration: 100 });
-    expect(defaultToastStore.getSnapshot()).toEqual([
-      { id, title: "Hello", description: undefined, tone: "warn", duration: 100 },
-    ]);
+    expect(defaultToastStore.getSnapshot()).toEqual([{ id, title: "Hello", description: undefined, tone: "warn", duration: 100 }]);
     toast.dismiss(id);
     expect(defaultToastStore.getSnapshot()).toEqual([]);
   });

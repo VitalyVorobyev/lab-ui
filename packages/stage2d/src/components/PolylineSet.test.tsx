@@ -20,7 +20,13 @@ const ITEMS = [
 ];
 
 /** At 1:1 with the viewport at the origin (happy-dom lays nothing out), client = image + 0.5. */
-const at = (p: Point, extra: Record<string, unknown> = {}) => ({ clientX: p.x + 0.5, clientY: p.y + 0.5, pointerId: 1, button: 0, ...extra });
+const at = (p: Point, extra: Record<string, unknown> = {}) => ({
+  clientX: p.x + 0.5,
+  clientY: p.y + 0.5,
+  pointerId: 1,
+  button: 0,
+  ...extra,
+});
 
 function setup(props: Partial<PolylineSetProps> = {}, view: StageView = { scale: 1, tx: 0, ty: 0 }, panTool = false) {
   const onSelect = vi.fn<(ids: PolylineId[], mode: PolylineSelectMode) => void>();
@@ -36,7 +42,9 @@ function setup(props: Partial<PolylineSetProps> = {}, view: StageView = { scale:
 
 /** An element of the app's own that starts a band through the ref on `pointerdown`. */
 function ownTarget(ref: RefObject<PolylineSetHandle | null>, mode?: "replace" | "add") {
-  const { getByTestId } = render(<div data-testid="own" onPointerDown={(e) => ref.current?.startSweep(e, mode)} onPointerUp={(e) => ref.current?.startSweep(e, mode)} />);
+  const { getByTestId } = render(
+    <div data-testid="own" onPointerDown={(e) => ref.current?.startSweep(e, mode)} onPointerUp={(e) => ref.current?.startSweep(e, mode)} />,
+  );
   return getByTestId("own");
 }
 

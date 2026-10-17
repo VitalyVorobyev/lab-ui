@@ -20,10 +20,26 @@ describe("seriesValueAt", () => {
     expect(seriesValueAt(points, -1)).toBeNull();
     expect(seriesValueAt(points, 21)).toBeNull();
     expect(seriesValueAt([], 0)).toBeNull();
-    expect(seriesValueAt([{ x: 0, y: 1 }, { x: 2, y: Number.NaN }], 1)).toBeNull();
+    expect(
+      seriesValueAt(
+        [
+          { x: 0, y: 1 },
+          { x: 2, y: Number.NaN },
+        ],
+        1,
+      ),
+    ).toBeNull();
     expect(seriesValueAt([{ x: 3, y: 7 }], 3)).toBe(7);
     expect(seriesValueAt([{ x: 3, y: 7 }], 4)).toBeNull();
-    expect(seriesValueAt([{ x: 1, y: 2 }, { x: 1, y: 4 }], 1)).toBe(2);
+    expect(
+      seriesValueAt(
+        [
+          { x: 1, y: 2 },
+          { x: 1, y: 4 },
+        ],
+        1,
+      ),
+    ).toBe(2);
   });
 });
 

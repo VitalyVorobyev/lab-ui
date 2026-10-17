@@ -14,12 +14,7 @@ function fromEuler([roll, pitch, yaw]: Vec3): Quaternion {
   const [cr, sr] = [Math.cos(roll / 2), Math.sin(roll / 2)];
   const [cp, sp] = [Math.cos(pitch / 2), Math.sin(pitch / 2)];
   const [cy, sy] = [Math.cos(yaw / 2), Math.sin(yaw / 2)];
-  return [
-    sr * cp * cy - cr * sp * sy,
-    cr * sp * cy + sr * cp * sy,
-    cr * cp * sy - sr * sp * cy,
-    cr * cp * cy + sr * sp * sy,
-  ];
+  return [sr * cp * cy - cr * sp * sy, cr * sp * cy + sr * cp * sy, cr * cp * sy - sr * sp * cy, cr * cp * cy + sr * sp * sy];
 }
 
 function toEuler([x, y, z, w]: Quaternion): Vec3 {

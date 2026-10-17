@@ -46,13 +46,7 @@ export function useControlHeight(): string {
  * is described by the field's description and error.
  */
 export function Input({ className, "aria-describedby": describedBy, ...rest }: ComponentProps<"input">) {
-  return (
-    <input
-      {...useFieldDescription(describedBy)}
-      {...rest}
-      className={cn(controlClasses, useControlHeight(), className)}
-    />
-  );
+  return <input {...useFieldDescription(describedBy)} {...rest} className={cn(controlClasses, useControlHeight(), className)} />;
 }
 
 /**
@@ -126,11 +120,7 @@ export function NumberInput({ onValueChange, onClear, precision, ...props }: Num
   const { unit, ...rest } = props;
   // A `null` text value is an empty field, not a switch to uncontrolled.
   const text = (rest.value === null ? { ...rest, value: "" } : rest) as TextNumberInputProps;
-  return unit === undefined || unit === "" ? (
-    <PlainNumberInput {...text} />
-  ) : (
-    <UnitNumberInput unit={unit} {...text} />
-  );
+  return unit === undefined || unit === "" ? <PlainNumberInput {...text} /> : <UnitNumberInput unit={unit} {...text} />;
 }
 
 type TextNumberInputProps = Omit<NumberInputProps, "unit" | "value" | "onValueChange" | "onClear" | "precision"> & {
@@ -153,8 +143,7 @@ function ValueNumberInput({
   ...rest
 }: Omit<NumberInputProps, "onValueChange"> & { onValueChange: (value: number) => void }) {
   const numeric = typeof value === "number" ? value : null;
-  const show = (v: number | null) =>
-    v === null ? "" : precision === undefined ? String(v) : formatNumber(v, precision);
+  const show = (v: number | null) => (v === null ? "" : precision === undefined ? String(v) : formatNumber(v, precision));
   // Non-null while the field is being edited: the text as typed, and the value on focus.
   const [draft, setDraft] = useState<{ text: string; initial: number | null } | null>(null);
 
@@ -214,11 +203,7 @@ function ValueNumberInput({
   );
 }
 
-function PlainNumberInput({
-  className,
-  "aria-describedby": describedBy,
-  ...rest
-}: TextNumberInputProps) {
+function PlainNumberInput({ className, "aria-describedby": describedBy, ...rest }: TextNumberInputProps) {
   return (
     <input
       {...useFieldDescription(describedBy)}
@@ -235,12 +220,7 @@ function PlainNumberInput({
  * `NumberInput` stays byte-identical to the one before `unit` existed, down to the ids React
  * hands the elements rendered after it.
  */
-function UnitNumberInput({
-  unit,
-  style,
-  "aria-describedby": describedBy,
-  ...rest
-}: TextNumberInputProps & { unit: string }) {
+function UnitNumberInput({ unit, style, "aria-describedby": describedBy, ...rest }: TextNumberInputProps & { unit: string }) {
   const unitId = useId();
   return (
     <span data-unit={unit} className="relative flex w-full min-w-0 items-center">
@@ -267,16 +247,6 @@ function UnitNumberInput({
  * Multi-line text — set in mono, for JSON and lists. Takes every `<textarea>` prop, `ref`
  * included.
  */
-export function Textarea({
-  className,
-  "aria-describedby": describedBy,
-  ...rest
-}: ComponentProps<"textarea">) {
-  return (
-    <textarea
-      {...useFieldDescription(describedBy)}
-      {...rest}
-      className={cn(controlClasses, "py-1.5 font-mono", className)}
-    />
-  );
+export function Textarea({ className, "aria-describedby": describedBy, ...rest }: ComponentProps<"textarea">) {
+  return <textarea {...useFieldDescription(describedBy)} {...rest} className={cn(controlClasses, "py-1.5 font-mono", className)} />;
 }

@@ -112,9 +112,7 @@ export const MARKER_SHAPES: Readonly<Record<BuiltinMarkerKind, MarkerShape>> = {
     path: (x, y, u, angle) => {
       const c = Math.cos(angle);
       const s = Math.sin(angle);
-      return (
-        `${circlePath(x, y, 2 * u)}M${n(x + 2 * u * c)} ${n(y + 2 * u * s)}L${n(x + 8 * u * c)} ${n(y + 8 * u * s)}`
-      );
+      return `${circlePath(x, y, 2 * u)}M${n(x + 2 * u * c)} ${n(y + 2 * u * s)}L${n(x + 8 * u * c)} ${n(y + 8 * u * s)}`;
     },
   },
 };

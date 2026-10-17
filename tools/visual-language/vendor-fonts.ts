@@ -50,7 +50,13 @@ function sansFaces(): Face[] {
     const file = `ibm-plex-sans-${subset}-wght-normal.woff2`;
     const block = blocks(css).find((b) => b.includes(`/${file}`));
     if (!block) throw new Error(`fontsource has no ${file}`);
-    return { family: "IBM Plex Sans Variable", weight: "100 700", file, format: "woff2-variations", unicodeRange: field(block, "unicode-range") };
+    return {
+      family: "IBM Plex Sans Variable",
+      weight: "100 700",
+      file,
+      format: "woff2-variations",
+      unicodeRange: field(block, "unicode-range"),
+    };
   });
 }
 

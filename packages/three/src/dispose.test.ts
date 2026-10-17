@@ -11,7 +11,12 @@ describe("disposeObject", () => {
     const other = [new MeshBasicMaterial(), new MeshBasicMaterial()];
     const root = new Group();
     root.add(new Mesh(geometry, material), new Mesh(new BoxGeometry(), other));
-    const spies = [vi.spyOn(texture, "dispose"), vi.spyOn(material, "dispose"), vi.spyOn(geometry, "dispose"), vi.spyOn(other[1]!, "dispose")];
+    const spies = [
+      vi.spyOn(texture, "dispose"),
+      vi.spyOn(material, "dispose"),
+      vi.spyOn(geometry, "dispose"),
+      vi.spyOn(other[1]!, "dispose"),
+    ];
     disposeObject(root);
     for (const s of spies) expect(s).toHaveBeenCalledOnce();
   });

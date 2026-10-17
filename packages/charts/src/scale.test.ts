@@ -1,15 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  extent,
-  formatTick,
-  histogram,
-  linePath,
-  linearScale,
-  logScale,
-  niceStep,
-  padDomain,
-} from "./scale";
+import { extent, formatTick, histogram, linePath, linearScale, logScale, niceStep, padDomain } from "./scale";
 
 describe("niceStep", () => {
   it("rounds up to a step a reader can hold in their head", () => {

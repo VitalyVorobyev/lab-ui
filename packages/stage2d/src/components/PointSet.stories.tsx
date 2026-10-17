@@ -193,9 +193,7 @@ export const ControlledHover: Story = {
 export const LabelsNeedRoom: Story = {
   render: () => (
     <Frame>
-      <PointSet
-        items={Array.from({ length: 10 }, (_, n): PointSetItem => ({ id: n, x: 40 + 14 * n, y: 150, label: `L${n}` }))}
-      />
+      <PointSet items={Array.from({ length: 10 }, (_, n): PointSetItem => ({ id: n, x: 40 + 14 * n, y: 150, label: `L${n}` }))} />
     </Frame>
   ),
   play: async ({ canvasElement }) => {
@@ -349,7 +347,11 @@ export const DrawOrSelect: Story = {
 
 export const Colours: Story = {
   parameters: {
-    docs: { description: { story: "`color` overrides the role: include and exclude prompts, or an error ramp. Points of one colour share a batch." } },
+    docs: {
+      description: {
+        story: "`color` overrides the role: include and exclude prompts, or an error ramp. Points of one colour share a batch.",
+      },
+    },
   },
   render: () => (
     <Frame>
@@ -368,7 +370,9 @@ export const Colours: Story = {
   play: async ({ canvasElement }) => {
     // Colour splits batches: dot|green, dot|defect, plus|green, dot|default are 4 (one point is selected).
     const batches = [...canvasElement.querySelectorAll("path[data-batch]")];
-    await expect(batches.map((b) => b.getAttribute("stroke")).sort()).toEqual(["#16a34a", "#16a34a", "var(--defect)", "var(--stage-feature)"].sort());
+    await expect(batches.map((b) => b.getAttribute("stroke")).sort()).toEqual(
+      ["#16a34a", "#16a34a", "var(--defect)", "var(--stage-feature)"].sort(),
+    );
     await expect(canvasElement.querySelector("path[data-selected-points]")).not.toBeNull();
   },
 };

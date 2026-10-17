@@ -8,9 +8,7 @@ import { useStageHitTest, type StageHitTestApi } from "./stage/useStageHitTest";
 
 describe("MeasureOverlay", () => {
   it("sets the viewBox to the native image size, so primitives are drawn in image pixels", () => {
-    const { container } = render(
-      <MeasureOverlay nativeWidth={640} nativeHeight={480} primitives={[]} strokeScale={1} />,
-    );
+    const { container } = render(<MeasureOverlay nativeWidth={640} nativeHeight={480} primitives={[]} strokeScale={1} />);
 
     // Shifted by half a pixel, not `0 0 640 480`: image results name pixel *centres* while
     // SVG names a pixel's leading edge, and drawing a measured point at the raw coordinate
@@ -24,9 +22,7 @@ describe("MeasureOverlay", () => {
       { kind: "segment", x1: 0, y1: 0, x2: 10, y2: 10, tone: "defect" },
       { kind: "circle", cx: 5, cy: 5, r: 3, tone: "normal" },
     ];
-    const { container } = render(
-      <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={1} />,
-    );
+    const { container } = render(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={1} />);
 
     const line = container.querySelector("line");
     const circle = container.querySelector("circle");
@@ -36,12 +32,8 @@ describe("MeasureOverlay", () => {
 
   it("shrinks stroke width as the screen scale grows, so a 1px line stays 1px", () => {
     const primitive: MeasurePrimitive = { kind: "segment", x1: 0, y1: 0, x2: 10, y2: 0 };
-    const { container: at1 } = render(
-      <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[primitive]} strokeScale={1} />,
-    );
-    const { container: at4 } = render(
-      <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[primitive]} strokeScale={4} />,
-    );
+    const { container: at1 } = render(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[primitive]} strokeScale={1} />);
+    const { container: at4 } = render(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[primitive]} strokeScale={4} />);
 
     const widthAt1 = Number(at1.querySelector("line")?.getAttribute("stroke-width"));
     const widthAt4 = Number(at4.querySelector("line")?.getAttribute("stroke-width"));
@@ -57,9 +49,7 @@ describe("MeasureOverlay", () => {
       height: 8,
       angle: 0,
     };
-    const { container } = render(
-      <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[primitive]} strokeScale={1} />,
-    );
+    const { container } = render(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[primitive]} strokeScale={1} />);
 
     const box = container.querySelector("path");
     expect(box?.getAttribute("d")).toContain("Z");
@@ -86,18 +76,14 @@ describe("MeasureOverlay", () => {
 
   it("marks a cross point with two segments rather than a dot", () => {
     const primitive: MeasurePrimitive = { kind: "point", x: 10, y: 10, cross: true };
-    const { container } = render(
-      <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[primitive]} strokeScale={1} />,
-    );
+    const { container } = render(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[primitive]} strokeScale={1} />);
 
     expect(container.querySelectorAll("line")).toHaveLength(2);
     expect(container.querySelector("circle")).toBeNull();
   });
 
   it("renders nothing for an empty primitive list without throwing", () => {
-    const { container } = render(
-      <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[]} strokeScale={1} />,
-    );
+    const { container } = render(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[]} strokeScale={1} />);
 
     expect(container.querySelector("svg")).toBeTruthy();
   });
@@ -107,9 +93,8 @@ describe("MeasureOverlay", () => {
     const toneDot: MeasurePrimitive = { kind: "point", x: 30, y: 30, tone: "normal", label: "t1" };
 
     function draw(primitives: MeasurePrimitive[], halo?: "role" | "all" | "none", strokeScale = 1) {
-      return render(
-        <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={strokeScale} halo={halo} />,
-      ).container;
+      return render(<MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={primitives} strokeScale={strokeScale} halo={halo} />)
+        .container;
     }
 
     it("draws one under a primitive with a role and not under a tone, by default", () => {
@@ -119,7 +104,7 @@ describe("MeasureOverlay", () => {
       expect(halos[0]!.closest("g[data-kind]")?.querySelector("text")?.textContent).toBe("m1");
     });
 
-    it("draws one under every primitive with \"all\" and under none with \"none\"", () => {
+    it('draws one under every primitive with "all" and under none with "none"', () => {
       expect(draw([roleCross, toneDot], "all").querySelectorAll("[data-halo]")).toHaveLength(2);
       expect(draw([roleCross, toneDot], "none").querySelectorAll("[data-halo]")).toHaveLength(0);
     });
@@ -217,7 +202,12 @@ describe("MeasureOverlay", () => {
 
     it("draws no label without a whole segment", () => {
       const { container } = render(
-        <MeasureOverlay nativeWidth={100} nativeHeight={100} primitives={[{ kind: "segments", points: [1, 2], label: "x" }]} strokeScale={1} />,
+        <MeasureOverlay
+          nativeWidth={100}
+          nativeHeight={100}
+          primitives={[{ kind: "segments", points: [1, 2], label: "x" }]}
+          strokeScale={1}
+        />,
       );
       expect(container.querySelector("text")).toBeNull();
       expect(container.querySelector("path")?.getAttribute("d")).toBe("");

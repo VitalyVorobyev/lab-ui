@@ -71,10 +71,7 @@ export function useLabelIndices({ enabled, xy, labelled, forced }: LabelAnchors)
   const stage = useStage();
   const unit = useScreenPx()(1);
   const spacing = LABEL_SPACING * unit;
-  const spaced = useMemo(
-    () => (enabled && labelled.length > 0 ? thinPoints(xy, spacing, labelled) : []),
-    [enabled, labelled, xy, spacing],
-  );
+  const spaced = useMemo(() => (enabled && labelled.length > 0 ? thinPoints(xy, spacing, labelled) : []), [enabled, labelled, xy, spacing]);
   return useMemo(() => {
     if (!enabled || (spaced.length === 0 && forced.length === 0)) return [];
     const view = visibleRect(stage.view, stage.box);

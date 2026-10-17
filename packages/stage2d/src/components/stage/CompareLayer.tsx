@@ -124,7 +124,10 @@ export function CompareLayer({
   const extent = vertical ? image.width : image.height;
   const at = current * extent;
   const visible = visibleRect(stage.view, stage.box);
-  const along = knobPosition(visible === null ? null : vertical ? [visible.y, visible.y + visible.height] : [visible.x, visible.x + visible.width], length);
+  const along = knobPosition(
+    visible === null ? null : vertical ? [visible.y, visible.y + visible.height] : [visible.x, visible.x + visible.width],
+    length,
+  );
   const knob = vertical ? { x: at, y: along } : { x: along, y: at };
   const line = vertical ? { x1: at, y1: 0, x2: at, y2: image.height } : { x1: 0, y1: at, x2: image.width, y2: at };
 

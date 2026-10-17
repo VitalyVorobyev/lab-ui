@@ -99,10 +99,7 @@ export function glCameraMatrix(worldSe3Cv: Matrix4, target = new Matrix4()): Mat
  * convention: fixed axes X, Y, Z, i.e. `R = Rz(yaw) · Ry(pitch) · Rx(roll)`.
  */
 export function rpyFromQuaternion(rotation: ArrayLike<number>): [number, number, number] {
-  const e = new Euler().setFromQuaternion(
-    new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]),
-    "ZYX",
-  );
+  const e = new Euler().setFromQuaternion(new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]), "ZYX");
   return [e.x, e.y, e.z];
 }
 

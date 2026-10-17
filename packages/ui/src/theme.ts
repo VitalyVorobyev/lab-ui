@@ -36,9 +36,7 @@ export const DEFAULT_THEME_STORAGE_KEY = "vitavision-theme";
 // Every DOM access here is inside a function, and guarded: this module is imported on the
 // server too.
 const query = () =>
-  typeof window !== "undefined" && typeof window.matchMedia === "function"
-    ? window.matchMedia("(prefers-color-scheme: dark)")
-    : null;
+  typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
 /**
  * The stored preference.
@@ -81,10 +79,7 @@ function paint(choice: ThemeChoice): void {
  * @param choice - The new preference.
  * @param storageKey - The `localStorage` key. Defaults to `DEFAULT_THEME_STORAGE_KEY`.
  */
-export function setThemeChoice(
-  choice: ThemeChoice,
-  storageKey: string = DEFAULT_THEME_STORAGE_KEY,
-): void {
+export function setThemeChoice(choice: ThemeChoice, storageKey: string = DEFAULT_THEME_STORAGE_KEY): void {
   try {
     window.localStorage.setItem(storageKey, choice);
   } catch {

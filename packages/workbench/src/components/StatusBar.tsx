@@ -40,14 +40,7 @@ export interface StatusBarProps {
  * operation finished), not for ones that change many times a second. The line does not wrap;
  * keep it to a few short facts.
  */
-export function StatusBar({
-  start,
-  end,
-  children,
-  "aria-label": ariaLabel = "Status",
-  live = false,
-  className,
-}: StatusBarProps) {
+export function StatusBar({ start, end, children, "aria-label": ariaLabel = "Status", live = false, className }: StatusBarProps) {
   const hasChildren = children !== undefined && children !== null && children !== false;
   return (
     <div

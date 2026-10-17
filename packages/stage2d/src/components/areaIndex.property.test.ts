@@ -5,16 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  areaPath,
-  areasInRect,
-  buildAreaIndex,
-  distanceToOutline,
-  nearestArea,
-  pointInPolygon,
-  polygonArea,
-  type Area,
-} from "./areaIndex";
+import { areaPath, areasInRect, buildAreaIndex, distanceToOutline, nearestArea, pointInPolygon, polygonArea, type Area } from "./areaIndex";
 
 /** mulberry32: a small, fast, seedable PRNG — deterministic runs without a dependency. */
 function prng(seed: number): () => number {
@@ -103,7 +94,8 @@ describe("areasInRect against a scan of every area", () => {
           const p = item.points;
           let vertexInside = false;
           for (let i = 0; i + 1 < p.length; i += 2) {
-            if (p[i]! >= rect.x && p[i]! <= rect.x + rect.width && p[i + 1]! >= rect.y && p[i + 1]! <= rect.y + rect.height) vertexInside = true;
+            if (p[i]! >= rect.x && p[i]! <= rect.x + rect.width && p[i + 1]! >= rect.y && p[i + 1]! <= rect.y + rect.height)
+              vertexInside = true;
           }
           const centreInside = pointInPolygon(p, rect.x + rect.width / 2, rect.y + rect.height / 2);
           // Anything with a vertex in the band, or enclosing its centre, must be found.
@@ -139,14 +131,18 @@ describe("pointInPolygon and areaPath", () => {
       const cx = rand() * 100;
       const cy = rand() * 100;
       const r = 5 + rand() * 40;
-      const points = Array.from({ length: k }, (_, i) => [cx + r * Math.cos((2 * Math.PI * i) / k), cy + r * Math.sin((2 * Math.PI * i) / k)]).flat();
+      const points = Array.from({ length: k }, (_, i) => [
+        cx + r * Math.cos((2 * Math.PI * i) / k),
+        cy + r * Math.sin((2 * Math.PI * i) / k),
+      ]).flat();
       for (let q = 0; q < 20; q++) {
         const x = cx + (rand() * 2 - 1) * r * 1.2;
         const y = cy + (rand() * 2 - 1) * r * 1.2;
         let inside = true;
         for (let i = 0; i < k; i++) {
           const j = (i + 1) % k;
-          const cross = (points[2 * j]! - points[2 * i]!) * (y - points[2 * i + 1]!) - (points[2 * j + 1]! - points[2 * i + 1]!) * (x - points[2 * i]!);
+          const cross =
+            (points[2 * j]! - points[2 * i]!) * (y - points[2 * i + 1]!) - (points[2 * j + 1]! - points[2 * i + 1]!) * (x - points[2 * i]!);
           if (cross < 0) inside = false;
         }
         if (inside !== pointInPolygon(points, x, y)) wrong++;

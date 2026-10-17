@@ -98,8 +98,14 @@ describe("segmentsPath", () => {
 describe("crossSegments", () => {
   it("draws a horizontal and a vertical segment centred on the point", () => {
     const [horizontal, vertical] = crossSegments(5, 5, 2);
-    expect(horizontal).toEqual([{ x: 3, y: 5 }, { x: 7, y: 5 }]);
-    expect(vertical).toEqual([{ x: 5, y: 3 }, { x: 5, y: 7 }]);
+    expect(horizontal).toEqual([
+      { x: 3, y: 5 },
+      { x: 7, y: 5 },
+    ]);
+    expect(vertical).toEqual([
+      { x: 5, y: 3 },
+      { x: 5, y: 7 },
+    ]);
   });
 });
 

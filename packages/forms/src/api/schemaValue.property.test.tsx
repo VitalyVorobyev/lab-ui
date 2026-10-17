@@ -63,7 +63,12 @@ function leaf(rng: Rng): JsonSchema {
     case 5:
       return { type: "string", enum: ["alpha", "beta", "gamma", "delta"].slice(0, 2 + below(rng, 3)) };
     case 6:
-      return { oneOf: [{ const: "one", type: "string", title: "One" }, { const: "two", type: "string", description: "Second." }] };
+      return {
+        oneOf: [
+          { const: "one", type: "string", title: "One" },
+          { const: "two", type: "string", description: "Second." },
+        ],
+      };
     default:
       return { type: "integer", enum: [256, 512, 1024], default: 512 };
   }
@@ -111,7 +116,12 @@ function build(ctx: Ctx, depth: number): JsonSchema {
         description: "A serde external enum.",
         oneOf: [
           { const: "Off", type: "string", description: "Nothing." },
-          { type: "object", properties: { Fixed: { type: "integer", format: "uint32", minimum: 1 } }, required: ["Fixed"], additionalProperties: false },
+          {
+            type: "object",
+            properties: { Fixed: { type: "integer", format: "uint32", minimum: 1 } },
+            required: ["Fixed"],
+            additionalProperties: false,
+          },
           { type: "object", properties: { Tuned: object(ctx, depth + 1) }, required: ["Tuned"], additionalProperties: false },
         ],
       };
@@ -125,13 +135,16 @@ function build(ctx: Ctx, depth: number): JsonSchema {
     case 10:
       return { type: "array", items: { type: "string" } };
     case 11:
-      return { type: "array", items: leaf(rng).type === "string" ? { type: "number" } : { type: "integer", minimum: 0 }, minItems: 3, maxItems: 3 };
+      return {
+        type: "array",
+        items: leaf(rng).type === "string" ? { type: "number" } : { type: "integer", minimum: 0 },
+        minItems: 3,
+        maxItems: 3,
+      };
     case 12:
       return { type: "array", items: object(ctx, depth + 1), minItems: 2, maxItems: 2 };
     default:
-      return chance(rng, 0.5)
-        ? { type: "array", items: { type: "number" } }
-        : { type: "object", additionalProperties: { type: "string" } };
+      return chance(rng, 0.5) ? { type: "array", items: { type: "number" } } : { type: "object", additionalProperties: { type: "string" } };
   }
 }
 
@@ -249,7 +262,18 @@ describe("the harness", () => {
 
   it("generates every shape the form has to handle", () => {
     const all = SEEDS.map((seed) => JSON.stringify(generate(seed))).join("\n");
-    for (const needle of ['"$ref"', '"anyOf"', '["integer","null"]', '"Fixed"', '"kind"', '"minItems"', '"enum"', '"oneOf"', '"x-unit"', '"additionalProperties":{"type":"string"}']) {
+    for (const needle of [
+      '"$ref"',
+      '"anyOf"',
+      '["integer","null"]',
+      '"Fixed"',
+      '"kind"',
+      '"minItems"',
+      '"enum"',
+      '"oneOf"',
+      '"x-unit"',
+      '"additionalProperties":{"type":"string"}',
+    ]) {
       expect(all, needle).toContain(needle);
     }
   });
@@ -272,7 +296,10 @@ describe("defaultValueForSchema", () => {
       const schema = generate(seed);
       const value = defaultValueForSchema(schema) as Record<string, unknown>;
       const known = new Set(Object.keys(schema.properties ?? {}));
-      expect(Object.keys(value).every((key) => known.has(key)), `seed ${seed}`).toBe(true);
+      expect(
+        Object.keys(value).every((key) => known.has(key)),
+        `seed ${seed}`,
+      ).toBe(true);
     }
   });
 
@@ -292,7 +319,10 @@ describe("shapeOf and fieldsAt", () => {
     for (const seed of SEEDS) {
       const schema = generate(seed);
       expect(shapeOf(schema, schema).kind, `seed ${seed}`).toBe("object");
-      expect(fieldsAt(schema, "").map((field) => field.key), `seed ${seed}`).toEqual(Object.keys(schema.properties ?? {}));
+      expect(
+        fieldsAt(schema, "").map((field) => field.key),
+        `seed ${seed}`,
+      ).toEqual(Object.keys(schema.properties ?? {}));
       for (const field of fieldsAt(schema, "")) expect(() => shapeOf(field.schema, schema)).not.toThrow();
     }
   });

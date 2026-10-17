@@ -36,10 +36,7 @@ export function isSortable<Row>(column: Pick<Column<Row>, "sortable" | "sortValu
 }
 
 /** The sort after a click on `column`'s header: its first direction, then the other, then none. */
-export function nextSort<Row>(
-  current: TableSort | null,
-  column: Pick<Column<Row>, "key" | "firstSort">,
-): TableSort | null {
+export function nextSort<Row>(current: TableSort | null, column: Pick<Column<Row>, "key" | "firstSort">): TableSort | null {
   const first = column.firstSort ?? "ascending";
   if (current?.key !== column.key) return { key: column.key, direction: first };
   if (current.direction !== first) return null;
@@ -65,11 +62,7 @@ function compareValues(a: number | string, b: number | string): number {
  * The display order of `rows` under `sort`, as indices into `rows`. `Table` renders through it
  * so each row keeps its original index for the row callbacks.
  */
-export function sortOrder<Row>(
-  rows: readonly Row[],
-  columns: readonly SortColumn<Row>[],
-  sort: TableSort | null | undefined,
-): number[] {
+export function sortOrder<Row>(rows: readonly Row[], columns: readonly SortColumn<Row>[], sort: TableSort | null | undefined): number[] {
   const order = rows.map((_, index) => index);
   if (!sort) return order;
   const column = columns.find((candidate) => candidate.key === sort.key);

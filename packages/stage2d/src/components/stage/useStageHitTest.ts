@@ -8,13 +8,7 @@ import { use, useId, useLayoutEffect, useMemo, useRef } from "react";
 import type { Point } from "../measureGeometry";
 import { useStage } from "./ImageStage";
 import { StageHitContext, type StagePointerEvent } from "./hitContext";
-import {
-  type HitCandidate,
-  type HitId,
-  type StageHit,
-  type StageHitLayerSpec,
-  type StageHitOptions,
-} from "./hitTest";
+import { type HitCandidate, type HitId, type StageHit, type StageHitLayerSpec, type StageHitOptions } from "./hitTest";
 
 /** The default pointer tolerance of `hitTest`, in screen pixels. */
 const DEFAULT_RADIUS_PX = 6;
@@ -53,10 +47,8 @@ export function useStageHitTest(): StageHitTestApi {
   const { imageLength } = useStage();
   return useMemo(
     () => ({
-      hitTest: (point, radiusScreenPx = DEFAULT_RADIUS_PX, options) =>
-        registry.hitTest(point, imageLength(radiusScreenPx), options),
-      hitTestAll: (point, radiusScreenPx = DEFAULT_RADIUS_PX, options) =>
-        registry.hitTestAll(point, imageLength(radiusScreenPx), options),
+      hitTest: (point, radiusScreenPx = DEFAULT_RADIUS_PX, options) => registry.hitTest(point, imageLength(radiusScreenPx), options),
+      hitTestAll: (point, radiusScreenPx = DEFAULT_RADIUS_PX, options) => registry.hitTestAll(point, imageLength(radiusScreenPx), options),
     }),
     [registry, imageLength],
   );
@@ -124,7 +116,9 @@ export function useStageHitLayer(options: StageHitLayerOptions): string {
         return latestRef.current.onHover === undefined ? undefined : (hovered: HitId | null) => latestRef.current.onHover?.(hovered);
       },
       get press() {
-        return latestRef.current.onPress === undefined ? undefined : (hit: HitId, event: StagePointerEvent) => latestRef.current.onPress?.(hit, event);
+        return latestRef.current.onPress === undefined
+          ? undefined
+          : (hit: HitId, event: StagePointerEvent) => latestRef.current.onPress?.(hit, event);
       },
       get doubleClick() {
         return latestRef.current.onDoubleClick === undefined

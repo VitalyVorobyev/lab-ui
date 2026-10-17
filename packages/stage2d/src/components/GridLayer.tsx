@@ -181,7 +181,13 @@ export function GridLayer({
               return (
                 <g key={batch.key} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>
                   {halo && <path d={batch.d} stroke={HALO} strokeWidth={width + px(2)} opacity={0.6} />}
-                  <path data-edge-batch={batch.key} d={batch.d} stroke={overlayRole(style.role)} strokeWidth={width} strokeDasharray={dash} />
+                  <path
+                    data-edge-batch={batch.key}
+                    d={batch.d}
+                    stroke={overlayRole(style.role)}
+                    strokeWidth={width}
+                    strokeDasharray={dash}
+                  />
                 </g>
               );
             })}

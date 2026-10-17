@@ -17,13 +17,7 @@
  * | `edgeBits` | `EllipseSet` | dot on the edge: solid for 1, dashed for 0, opacity from confidence |
  */
 
-import {
-  EllipseSet,
-  GridLayer,
-  AreaSet,
-  PointSet,
-  type StagePointerEvent,
-} from "@vitavision/stage2d";
+import { EllipseSet, GridLayer, AreaSet, PointSet, type StagePointerEvent } from "@vitavision/stage2d";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { TARGET_MARKERS } from "./glyphs";
@@ -139,21 +133,24 @@ export function TargetOverlay({
   useLayoutEffect(() => {
     onHoverChangeRef.current = onHoverChange;
   });
-  const hoverFrom = useCallback((part: TargetPart) => (id: TargetId | null) => {
-    if (id !== null) hoverRef.current = { id, part };
-    else if (hoverRef.current?.part === part) hoverRef.current = null;
-    setOwnHover(hoverRef.current);
-    if (scheduledRef.current) return;
-    scheduledRef.current = true;
-    queueMicrotask(() => {
-      scheduledRef.current = false;
-      const now = hoverRef.current;
-      const before = reportedRef.current;
-      if (now?.id === before?.id && now?.part === before?.part) return;
-      reportedRef.current = now;
-      onHoverChangeRef.current?.(now);
-    });
-  }, []);
+  const hoverFrom = useCallback(
+    (part: TargetPart) => (id: TargetId | null) => {
+      if (id !== null) hoverRef.current = { id, part };
+      else if (hoverRef.current?.part === part) hoverRef.current = null;
+      setOwnHover(hoverRef.current);
+      if (scheduledRef.current) return;
+      scheduledRef.current = true;
+      queueMicrotask(() => {
+        scheduledRef.current = false;
+        const now = hoverRef.current;
+        const before = reportedRef.current;
+        if (now?.id === before?.id && now?.part === before?.part) return;
+        reportedRef.current = now;
+        onHoverChangeRef.current?.(now);
+      });
+    },
+    [],
+  );
   const hoverOf = (part: TargetPart): TargetId | null => {
     if (hoveredId !== undefined) return hoveredId !== null && ids[part].has(hoveredId) ? hoveredId : null;
     return ownHover?.part === part ? ownHover.id : null;
@@ -190,7 +187,14 @@ export function TargetOverlay({
         <>
           <EllipseSet items={ringShapes.outer} hoveredId={hoverOf("ring")} selectedIds={selected.ring} dimmed={isDimmed} pickable={false} />
           {ringShapes.inner.length > 0 && (
-            <EllipseSet items={ringShapes.inner} role="model" hoveredId={hoverOf("ring")} selectedIds={selected.ring} dimmed={isDimmed} pickable={false} />
+            <EllipseSet
+              items={ringShapes.inner}
+              role="model"
+              hoveredId={hoverOf("ring")}
+              selectedIds={selected.ring}
+              dimmed={isDimmed}
+              pickable={false}
+            />
           )}
           <PointSet
             items={ringPoints}

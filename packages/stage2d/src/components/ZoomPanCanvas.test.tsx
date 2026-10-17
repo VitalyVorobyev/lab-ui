@@ -104,11 +104,7 @@ describe("contentUnder", () => {
     const view = { zoom: 2.5, x: -40, y: 25 };
     const content = { x: -30, y: 12 };
     const screenPoint = project(view, content);
-    const under = contentUnder(
-      view,
-      { clientX: screenPoint.x + RECT.width / 2, clientY: screenPoint.y + RECT.height / 2 },
-      RECT,
-    );
+    const under = contentUnder(view, { clientX: screenPoint.x + RECT.width / 2, clientY: screenPoint.y + RECT.height / 2 }, RECT);
     expect(under?.u).toBeCloseTo(content.x / RECT.width + 0.5, 9);
     expect(under?.v).toBeCloseTo(content.y / RECT.height + 0.5, 9);
   });

@@ -31,8 +31,7 @@ export function cn(...inputs: ClassValue[]): string {
  *
  * `focus-visible` rather than `focus`, so a mouse click does not leave a ring behind.
  */
-export const focusRing =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal";
+export const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal";
 
 /**
  * The focus treatment for controls whose own box is the hit target, where an offset ring

@@ -19,39 +19,17 @@ export {
   type Variant,
 } from "./Frame";
 
-export {
-  extent,
-  formatTick,
-  histogram,
-  linePath,
-  linearScale,
-  logScale,
-  niceStep,
-  padDomain,
-  type Scale,
-  type Tick,
-} from "./scale";
+export { extent, formatTick, histogram, linePath, linearScale, logScale, niceStep, padDomain, type Scale, type Tick } from "./scale";
 
 export { LineChart, type LineChartProps, type Series } from "./LineChart";
 
 export { StackedBars, type BarRow, type StackedBarsProps } from "./BarChart";
 
-export {
-  Histogram,
-  type HistogramCounts,
-  type HistogramOptions,
-  type HistogramProps,
-  type HistogramValues,
-} from "./Histogram";
+export { Histogram, type HistogramCounts, type HistogramOptions, type HistogramProps, type HistogramValues } from "./Histogram";
 
 export { ScoreHistogram, type ScoreHistogramProps } from "./ScoreHistogram";
 
-export {
-  LineProfile,
-  type EdgeMark,
-  type LineProfileProps,
-  type ProfileSeries,
-} from "./LineProfile";
+export { LineProfile, type EdgeMark, type LineProfileProps, type ProfileSeries } from "./LineProfile";
 
 export {
   Bands,
@@ -65,13 +43,6 @@ export {
   type ReadoutSeries,
 } from "./interaction";
 
-export {
-  COLORMAPS,
-  colormap,
-  colormapGradient,
-  colormapRgb,
-  colormapValue,
-  type ColormapName,
-} from "./colormap";
+export { COLORMAPS, colormap, colormapGradient, colormapRgb, colormapValue, type ColormapName } from "./colormap";
 
 export { ColormapLegend, type ColormapLegendProps } from "./ColormapLegend";

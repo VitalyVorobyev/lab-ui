@@ -13,9 +13,11 @@ let logged: string[] = [];
 
 beforeEach(() => {
   logged = [];
-  const capture = (level: string) => (...args: unknown[]) => {
-    logged.push(`${level}: ${args.map(String).join(" ").slice(0, 300)}`);
-  };
+  const capture =
+    (level: string) =>
+    (...args: unknown[]) => {
+      logged.push(`${level}: ${args.map(String).join(" ").slice(0, 300)}`);
+    };
   vi.spyOn(console, "error").mockImplementation(capture("error"));
   vi.spyOn(console, "warn").mockImplementation(capture("warn"));
 });

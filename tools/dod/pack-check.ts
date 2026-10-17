@@ -13,13 +13,26 @@ import { readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const PACKAGES = ["ui", "forms", "charts", "stage2d", "workbench", "overlays", "three", "three-react"].map((p) => join(ROOT, "packages", p));
+const PACKAGES = ["ui", "forms", "charts", "stage2d", "workbench", "overlays", "three", "three-react"].map((p) =>
+  join(ROOT, "packages", p),
+);
 const CONFIGS = readdirSync(join(ROOT, "packages/config")).map((p) => join(ROOT, "packages/config", p));
 
 const tool = process.argv[2];
 const commands: Record<string, (dir: string) => string[]> = {
   publint: (dir) => ["publint", "run", dir, "--strict", "--pack", "npm"],
-  attw: (dir) => ["attw", "--pack", dir, "--profile", "esm-only", "--exclude-entrypoints", "styles.css", "fonts.css", "--format", "table-flipped"],
+  attw: (dir) => [
+    "attw",
+    "--pack",
+    dir,
+    "--profile",
+    "esm-only",
+    "--exclude-entrypoints",
+    "styles.css",
+    "fonts.css",
+    "--format",
+    "table-flipped",
+  ],
 };
 const command = tool ? commands[tool] : undefined;
 if (!command) {

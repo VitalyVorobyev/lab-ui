@@ -183,7 +183,12 @@ export const Placed: Story = {
 export const FixedRangeAndChannel: Story = {
   render: () => (
     <Frame>
-      <HeatmapLayer plane={{ ...PLANE, channels: 2, values: new Float32Array([...PLANE.values, ...PLANE.values.map((v) => 1 - v)]) }} colormap={viridisLike} range={{ low: 0, high: 1 }} channel={1} />
+      <HeatmapLayer
+        plane={{ ...PLANE, channels: 2, values: new Float32Array([...PLANE.values, ...PLANE.values.map((v) => 1 - v)]) }}
+        colormap={viridisLike}
+        range={{ low: 0, high: 1 }}
+        channel={1}
+      />
     </Frame>
   ),
   play: async ({ canvasElement }) => {
@@ -195,7 +200,10 @@ export const FixedRangeAndChannel: Story = {
 export const PixelatedWhenZoomedIn: Story = {
   render: () => (
     <Frame view={{ scale: 5, tx: -400, ty: -300 }}>
-      <HeatmapLayer plane={{ width: 8, height: 6, stride: 1, channels: 1, values: Float32Array.from({ length: 48 }, (_, k) => k) }} colormap={viridisLike} />
+      <HeatmapLayer
+        plane={{ width: 8, height: 6, stride: 1, channels: 1, values: Float32Array.from({ length: 48 }, (_, k) => k) }}
+        colormap={viridisLike}
+      />
     </Frame>
   ),
   play: async ({ canvasElement }) => {
@@ -242,7 +250,9 @@ export const UnderOverlays: Story = {
   ),
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(heatmap(canvasElement)).toHaveAttribute("data-ready"), RASTER_WAIT);
-    await expect(heatmap(canvasElement)!.compareDocumentPosition(canvasElement.querySelector("svg[role=img]")!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    await expect(heatmap(canvasElement)!.compareDocumentPosition(canvasElement.querySelector("svg[role=img]")!)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
     await expect(getComputedStyle(heatmap(canvasElement)!).pointerEvents).toBe("none");
   },
 };

@@ -112,16 +112,7 @@ export function NavRail({ value, defaultValue, onValueChange, labels = "visible"
  * in a tooltip (the rail's `labels`). A `<button>` by default; with `asChild`, the one child
  * element (the app's link) takes the item's look, `aria-current` and click.
  */
-export function NavRailItem({
-  value,
-  label,
-  icon,
-  badge,
-  disabled = false,
-  asChild = false,
-  children,
-  className,
-}: NavRailItemProps) {
+export function NavRailItem({ value, label, icon, badge, disabled = false, asChild = false, children, className }: NavRailItemProps) {
   const rail = use(NavRailContext);
   if (rail === null) throw new Error("NavRailItem must be rendered inside a NavRail.");
   const badgeId = useId();
@@ -189,13 +180,7 @@ export function NavRailItem({
     });
   } else {
     item = (
-      <button
-        type="button"
-        {...shared}
-        disabled={disabled}
-        onClick={() => rail.choose(value)}
-        className={cn(classes, className)}
-      >
+      <button type="button" {...shared} disabled={disabled} onClick={() => rail.choose(value)} className={cn(classes, className)}>
         {content}
       </button>
     );

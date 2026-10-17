@@ -286,7 +286,12 @@ const LARGE = Array.from({ length: 4000 }, (_, n): AreaSetItem => ({
 /** Thousands of regions are a few elements. */
 export const LargeSet: Story = {
   render: () => (
-    <ImageStage image={{ width: 2000, height: 1500 }} view={{ scale: 0.2, tx: 0, ty: 0 }} onView={() => {}} style={{ width: 402, height: 302 }}>
+    <ImageStage
+      image={{ width: 2000, height: 1500 }}
+      view={{ scale: 0.2, tx: 0, ty: 0 }}
+      onView={() => {}}
+      style={{ width: 402, height: 302 }}
+    >
       <div className="absolute inset-0 bg-canvas" />
       <AreaSet items={LARGE} />
     </ImageStage>
@@ -307,9 +312,12 @@ function DrawOrSelectDemo() {
   return (
     <div>
       <Frame>
-        <AreaSet items={ITEMS.slice(1, 7)} onItemPress={(id) => {
+        <AreaSet
+          items={ITEMS.slice(1, 7)}
+          onItemPress={(id) => {
             pressedOnArea(id);
-          }} />
+          }}
+        />
         <Tool onDraw={() => setDrawn((n) => n + 1)} />
       </Frame>
       <output data-testid="drawn">{drawn}</output>
@@ -360,7 +368,7 @@ export const LabelColours: Story = {
     docs: {
       description: {
         story:
-          "Regions in the colours of their labels: `stroke` and `fill` are CSS colours used as given, `fillOpacity` is the fill's alpha, and `fillRule=\"evenodd\"` leaves the doubly-wound centre of a self-intersecting ring open. Items of one colour share a batch.",
+          'Regions in the colours of their labels: `stroke` and `fill` are CSS colours used as given, `fillOpacity` is the fill\'s alpha, and `fillRule="evenodd"` leaves the doubly-wound centre of a self-intersecting ring open. Items of one colour share a batch.',
       },
     },
   },
@@ -372,7 +380,12 @@ export const LabelColours: Story = {
         items={[
           { id: "star", stroke: "#e11d48", points: STAR },
           { id: "box", stroke: "#2563eb", fill: "color-mix(in srgb, #2563eb 60%, white)", points: [220, 40, 360, 40, 360, 120, 220, 120] },
-          { id: "box2", stroke: "#2563eb", fill: "color-mix(in srgb, #2563eb 60%, white)", points: [220, 160, 360, 160, 360, 240, 220, 240] },
+          {
+            id: "box2",
+            stroke: "#2563eb",
+            fill: "color-mix(in srgb, #2563eb 60%, white)",
+            points: [220, 160, 360, 160, 360, 240, 220, 240],
+          },
         ]}
       />
     </Frame>

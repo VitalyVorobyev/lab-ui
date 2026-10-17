@@ -9,14 +9,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  ImageStage,
-  useStage,
-  type ImageStageProps,
-  type StageContext,
-  type StageHandle,
-  type StageViewChange,
-} from "./ImageStage";
+import { ImageStage, useStage, type ImageStageProps, type StageContext, type StageHandle, type StageViewChange } from "./ImageStage";
 import type { Point } from "../measureGeometry";
 import type { StagePointerEvent } from "./hitContext";
 import type { HitId } from "./hitTest";
@@ -163,8 +156,7 @@ describe("ImageStage", () => {
     const expected = fitView(BOX, IMAGE);
     expect(corner).toBe(`${expected.tx.toFixed(6)},${expected.ty.toFixed(6)}`);
     expect(far).toBe(
-      `${(expected.tx + IMAGE.width * expected.scale).toFixed(6)},` +
-        `${(expected.ty + IMAGE.height * expected.scale).toFixed(6)}`,
+      `${(expected.tx + IMAGE.width * expected.scale).toFixed(6)},` + `${(expected.ty + IMAGE.height * expected.scale).toFixed(6)}`,
     );
   });
 
@@ -200,15 +192,7 @@ describe("ImageStage", () => {
   it("does not pan when a layer claims the press", () => {
     withLayout();
     const { container } = render(
-      <Harness
-        layer={
-          <button
-            type="button"
-            data-testid="claimer"
-            onPointerDown={(event) => event.stopPropagation()}
-          />
-        }
-      />,
+      <Harness layer={<button type="button" data-testid="claimer" onPointerDown={(event) => event.stopPropagation()} />} />,
     );
     const before = probe();
 
@@ -609,7 +593,7 @@ describe("ImageStage — will-change while the view moves", () => {
 describe("ImageStage — the fit option", () => {
   const FIT = { padding: 24, upscale: false } as const;
 
-  it("opens at the padded fit with initialView=\"fit\", and reports it as fit", () => {
+  it('opens at the padded fit with initialView="fit", and reports it as fit', () => {
     withLayout();
     const onViewChange = vi.fn();
     render(<Harness initialView="fit" fit={FIT} onViewChange={onViewChange} />);

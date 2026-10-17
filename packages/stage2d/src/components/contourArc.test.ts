@@ -4,9 +4,18 @@ import { arcLengths, deformContour, eraseArc, normalAtArc, pointAtArc, projectTo
 import type { Point } from "./measureGeometry";
 
 /** An L: 30 px right, then 40 px down. Length 70. */
-const L: Point[] = [{ x: 0, y: 0 }, { x: 30, y: 0 }, { x: 30, y: 40 }];
+const L: Point[] = [
+  { x: 0, y: 0 },
+  { x: 30, y: 0 },
+  { x: 30, y: 40 },
+];
 /** A 10 × 10 square, clockwise on screen. Perimeter 40. */
-const SQUARE: Point[] = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }];
+const SQUARE: Point[] = [
+  { x: 0, y: 0 },
+  { x: 10, y: 0 },
+  { x: 10, y: 10 },
+  { x: 0, y: 10 },
+];
 
 const near = (a: Point, b: Point) => {
   expect(a.x).toBeCloseTo(b.x, 9);
@@ -43,7 +52,17 @@ describe("pointAtArc", () => {
   it("handles paths with no length", () => {
     expect(pointAtArc([], 3).x).toBeNaN();
     near(pointAtArc([{ x: 2, y: 3 }], 10), { x: 2, y: 3 });
-    near(pointAtArc([{ x: 2, y: 3 }, { x: 2, y: 3 }], 10, true), { x: 2, y: 3 });
+    near(
+      pointAtArc(
+        [
+          { x: 2, y: 3 },
+          { x: 2, y: 3 },
+        ],
+        10,
+        true,
+      ),
+      { x: 2, y: 3 },
+    );
   });
 });
 
@@ -74,17 +93,36 @@ describe("projectToArc", () => {
 
 describe("subPath", () => {
   it("takes the ends and every vertex between", () => {
-    expect(subPath(L, 10, 50)).toEqual([{ x: 10, y: 0 }, { x: 30, y: 0 }, { x: 30, y: 20 }]);
+    expect(subPath(L, 10, 50)).toEqual([
+      { x: 10, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 20 },
+    ]);
     // Backwards on an open path: the same stretch, run forward.
-    expect(subPath(L, 50, 10)).toEqual([{ x: 10, y: 0 }, { x: 30, y: 0 }, { x: 30, y: 20 }]);
-    expect(subPath(L, 20, 20)).toEqual([{ x: 20, y: 0 }, { x: 20, y: 0 }]);
+    expect(subPath(L, 50, 10)).toEqual([
+      { x: 10, y: 0 },
+      { x: 30, y: 0 },
+      { x: 30, y: 20 },
+    ]);
+    expect(subPath(L, 20, 20)).toEqual([
+      { x: 20, y: 0 },
+      { x: 20, y: 0 },
+    ]);
     expect(subPath([], 0, 1)).toEqual([]);
   });
 
   it("wraps past the first vertex of a closed path", () => {
-    expect(subPath(SQUARE, 35, 5, true)).toEqual([{ x: 0, y: 5 }, { x: 0, y: 0 }, { x: 5, y: 0 }]);
+    expect(subPath(SQUARE, 35, 5, true)).toEqual([
+      { x: 0, y: 5 },
+      { x: 0, y: 0 },
+      { x: 5, y: 0 },
+    ]);
     expect(subPath(SQUARE, 0, 40, true)).toEqual([...SQUARE, { x: 0, y: 0 }]);
-    expect(subPath(SQUARE, 45, 52, true)).toEqual([{ x: 5, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 2 }]);
+    expect(subPath(SQUARE, 45, 52, true)).toEqual([
+      { x: 5, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 2 },
+    ]);
   });
 });
 
@@ -100,17 +138,36 @@ describe("normalAtArc", () => {
   });
 
   it("skips segments with no length, and has no normal without a length", () => {
-    const stutter = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 10, y: 0 }];
+    const stutter = [
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+    ];
     near(normalAtArc(stutter, 0), { x: 0, y: 1 });
-    const tail = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 0 }];
+    const tail = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 0 },
+    ];
     near(normalAtArc(tail, 10), { x: 0, y: 1 });
-    expect(normalAtArc([{ x: 1, y: 1 }, { x: 1, y: 1 }], 0)).toEqual({ x: 0, y: 0 });
+    expect(
+      normalAtArc(
+        [
+          { x: 1, y: 1 },
+          { x: 1, y: 1 },
+        ],
+        0,
+      ),
+    ).toEqual({ x: 0, y: 0 });
     expect(normalAtArc([{ x: 1, y: 1 }], 0)).toEqual({ x: 0, y: 0 });
   });
 });
 
 describe("deformContour", () => {
-  const line: Point[] = [{ x: 0, y: 0 }, { x: 100, y: 0 }];
+  const line: Point[] = [
+    { x: 0, y: 0 },
+    { x: 100, y: 0 },
+  ];
 
   it("divides the segments under the brush, then pushes them with a cosine falloff", () => {
     const out = deformContour(line, { x: 50, y: 0 }, { x: 0, y: 10 }, 20);
@@ -128,7 +185,11 @@ describe("deformContour", () => {
   it("leaves segments the brush does not reach undivided, and divides the closing segment of a closed path", () => {
     const far = deformContour(line, { x: 50, y: 50 }, { x: 0, y: 10 }, 20);
     expect(far).toEqual(line);
-    const tri: Point[] = [{ x: 0, y: 0 }, { x: 40, y: 0 }, { x: 0, y: 40 }];
+    const tri: Point[] = [
+      { x: 0, y: 0 },
+      { x: 40, y: 0 },
+      { x: 0, y: 40 },
+    ];
     // The brush sits on the closing segment, from (0, 40) back to (0, 0).
     const out = deformContour(tri, { x: 0, y: 20 }, { x: 5, y: 0 }, 8, true);
     expect(out.slice(0, 3)).toEqual(tri);
@@ -146,25 +207,62 @@ describe("deformContour", () => {
 describe("eraseArc", () => {
   it("leaves up to two pieces of an open path", () => {
     expect(eraseArc(L, 10, 50)).toEqual([
-      [{ x: 0, y: 0 }, { x: 10, y: 0 }],
-      [{ x: 30, y: 20 }, { x: 30, y: 40 }],
+      [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+      ],
+      [
+        { x: 30, y: 20 },
+        { x: 30, y: 40 },
+      ],
     ]);
     // Reaching an end leaves one piece; erasing everything leaves none.
-    expect(eraseArc(L, 0, 50)).toEqual([[{ x: 30, y: 20 }, { x: 30, y: 40 }]]);
-    expect(eraseArc(L, 50, -10)).toEqual([[{ x: 30, y: 20 }, { x: 30, y: 40 }]]);
+    expect(eraseArc(L, 0, 50)).toEqual([
+      [
+        { x: 30, y: 20 },
+        { x: 30, y: 40 },
+      ],
+    ]);
+    expect(eraseArc(L, 50, -10)).toEqual([
+      [
+        { x: 30, y: 20 },
+        { x: 30, y: 40 },
+      ],
+    ]);
     expect(eraseArc(L, 0, 70)).toEqual([]);
     expect(eraseArc([], 0, 1)).toEqual([]);
   });
 
   it("opens a closed path into one piece, from the end of the stretch round to its start", () => {
     expect(eraseArc(SQUARE, 5, 15, true)).toEqual([
-      [{ x: 10, y: 5 }, { x: 10, y: 10 }, { x: 0, y: 10 }, { x: 0, y: 0 }, { x: 5, y: 0 }],
+      [
+        { x: 10, y: 5 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+        { x: 0, y: 0 },
+        { x: 5, y: 0 },
+      ],
     ]);
     // Across the first vertex.
-    expect(eraseArc(SQUARE, 35, 5, true)).toEqual([[{ x: 5, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }, { x: 0, y: 5 }]]);
+    expect(eraseArc(SQUARE, 35, 5, true)).toEqual([
+      [
+        { x: 5, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+        { x: 0, y: 5 },
+      ],
+    ]);
     // An empty stretch cuts it open there.
     expect(eraseArc(SQUARE, 15, 15, true)).toEqual([
-      [{ x: 10, y: 5 }, { x: 10, y: 10 }, { x: 0, y: 10 }, { x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 5 }],
+      [
+        { x: 10, y: 5 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 5 },
+      ],
     ]);
   });
 });

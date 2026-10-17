@@ -34,11 +34,7 @@ function usableDomain(low: number, high: number): [number, number] {
  *   widened so it lands in a middle bin rather than on an edge.
  * @returns The counts and the domain they span.
  */
-export function binValues(
-  values: ArrayLike<number>,
-  bins: number | undefined,
-  domain?: [number, number],
-): BinnedData {
+export function binValues(values: ArrayLike<number>, bins: number | undefined, domain?: [number, number]): BinnedData {
   const count = bins === undefined ? DEFAULT_BINS : Number.isFinite(bins) ? Math.max(1, Math.floor(bins)) : 1;
   const finite: number[] = [];
   for (let index = 0; index < values.length; index += 1) {

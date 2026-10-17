@@ -10,9 +10,7 @@ describe("firstParagraph", () => {
   });
 
   it("takes the first paragraph and joins its lines", () => {
-    expect(firstParagraph("Number of iterations\nfor the fit.\n\n# Example\n\n```\ncode\n```")).toBe(
-      "Number of iterations for the fit.",
-    );
+    expect(firstParagraph("Number of iterations\nfor the fit.\n\n# Example\n\n```\ncode\n```")).toBe("Number of iterations for the fit.");
   });
 
   it("strips inline code, emphasis and links but keeps their text", () => {

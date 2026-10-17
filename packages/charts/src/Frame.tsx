@@ -75,10 +75,9 @@ export const plotArea = areaFor("panel");
  * @returns `[ref, size]`. Attach `ref` to the element whose width the chart takes (the
  *   `Frame`'s `figureRef`). The size is a 480 px-wide default until the first measure.
  */
-export function useFluidSize(height: number = FLUID_DEFAULT_HEIGHT): [
-  (element: HTMLElement | null) => void,
-  { width: number; height: number },
-] {
+export function useFluidSize(
+  height: number = FLUID_DEFAULT_HEIGHT,
+): [(element: HTMLElement | null) => void, { width: number; height: number }] {
   const [width, setWidth] = useState(FLUID_INITIAL_WIDTH);
   const ref = useCallback((element: HTMLElement | null) => {
     if (!element) return;
@@ -155,25 +154,12 @@ export function Frame({
 
   return (
     <figure ref={figureRef} className={cn("flex flex-col gap-1 text-fg-muted", className)}>
-      <svg
-        role="img"
-        aria-label={label}
-        viewBox={`0 0 ${PLOT.width} ${PLOT.height}`}
-        className="w-full"
-      >
+      <svg role="img" aria-label={label} viewBox={`0 0 ${PLOT.width} ${PLOT.height}`} className="w-full">
         {vertical.map((tick) => {
           const y = yScale.project(tick.value);
           return (
             <g key={`y-${tick.value}`}>
-              <line
-                x1={plotArea.x0}
-                x2={plotArea.x1}
-                y1={y}
-                y2={y}
-                stroke={AXIS}
-                strokeWidth={0.5}
-                opacity={0.25}
-              />
+              <line x1={plotArea.x0} x2={plotArea.x1} y1={y} y2={y} stroke={AXIS} strokeWidth={0.5} opacity={0.25} />
               <text x={plotArea.x0 - 6} y={y + 3.5} textAnchor="end" fontSize={10} fill={AXIS}>
                 {tick.label}
               </text>
@@ -185,15 +171,7 @@ export function Frame({
           const x = xScale.project(tick.value);
           return (
             <g key={`x-${tick.value}`}>
-              <line
-                x1={x}
-                x2={x}
-                y1={plotArea.y0}
-                y2={plotArea.y1}
-                stroke={AXIS}
-                strokeWidth={0.5}
-                opacity={0.15}
-              />
+              <line x1={x} x2={x} y1={plotArea.y0} y2={plotArea.y1} stroke={AXIS} strokeWidth={0.5} opacity={0.15} />
               <text x={x} y={plotArea.y0 + 14} textAnchor="middle" fontSize={10} fill={AXIS}>
                 {tick.label}
               </text>
@@ -201,45 +179,18 @@ export function Frame({
           );
         })}
 
-        <line
-          x1={plotArea.x0}
-          x2={plotArea.x1}
-          y1={plotArea.y0}
-          y2={plotArea.y0}
-          stroke={AXIS}
-          strokeWidth={1}
-          opacity={0.6}
-        />
-        <line
-          x1={plotArea.x0}
-          x2={plotArea.x0}
-          y1={plotArea.y0}
-          y2={plotArea.y1}
-          stroke={AXIS}
-          strokeWidth={1}
-          opacity={0.6}
-        />
+        <line x1={plotArea.x0} x2={plotArea.x1} y1={plotArea.y0} y2={plotArea.y0} stroke={AXIS} strokeWidth={1} opacity={0.6} />
+        <line x1={plotArea.x0} x2={plotArea.x0} y1={plotArea.y0} y2={plotArea.y1} stroke={AXIS} strokeWidth={1} opacity={0.6} />
 
         {children}
 
         {xLabel && (
-          <text
-            x={(plotArea.x0 + plotArea.x1) / 2}
-            y={PLOT.height - 2}
-            textAnchor="middle"
-            fontSize={10}
-            fill={AXIS}
-          >
+          <text x={(plotArea.x0 + plotArea.x1) / 2} y={PLOT.height - 2} textAnchor="middle" fontSize={10} fill={AXIS}>
             {xLabel}
           </text>
         )}
         {yLabel && (
-          <text
-            transform={`translate(10 ${(plotArea.y0 + plotArea.y1) / 2}) rotate(-90)`}
-            textAnchor="middle"
-            fontSize={10}
-            fill={AXIS}
-          >
+          <text transform={`translate(10 ${(plotArea.y0 + plotArea.y1) / 2}) rotate(-90)`} textAnchor="middle" fontSize={10} fill={AXIS}>
             {yLabel}
           </text>
         )}
@@ -248,7 +199,6 @@ export function Frame({
     </figure>
   );
 }
-
 
 /** One entry of a {@link Legend}. */
 export interface LegendItem {
@@ -279,11 +229,7 @@ export function Legend({ items, className }: LegendProps) {
     <ul className={cn("flex flex-wrap items-center gap-x-4 gap-y-1", className)}>
       {items.map((item) => (
         <li key={item.label} className="flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="inline-block h-0.5 w-4 rounded-full"
-            style={{ backgroundColor: item.colour }}
-          />
+          <span aria-hidden className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: item.colour }} />
           <span className="font-mono text-xs">{item.label}</span>
         </li>
       ))}

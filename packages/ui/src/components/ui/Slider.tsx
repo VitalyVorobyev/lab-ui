@@ -69,10 +69,7 @@ export function Slider({
         max={max}
         step={step}
         disabled={disabled}
-        className={cn(
-          "relative flex h-5 min-w-0 flex-1 touch-none items-center select-none",
-          "data-disabled:opacity-50",
-        )}
+        className={cn("relative flex h-5 min-w-0 flex-1 touch-none items-center select-none", "data-disabled:opacity-50")}
       >
         <RadixSlider.Track className="relative h-1 grow overflow-hidden rounded-full bg-line">
           <RadixSlider.Range className="absolute h-full bg-signal" />
@@ -88,9 +85,7 @@ export function Slider({
           )}
         />
       </RadixSlider.Root>
-      {readout && (
-        <span className="shrink-0 font-mono text-xs text-fg tabular-nums">{readout}</span>
-      )}
+      {readout && <span className="shrink-0 font-mono text-xs text-fg tabular-nums">{readout}</span>}
     </div>
   );
 }

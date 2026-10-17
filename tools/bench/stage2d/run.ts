@@ -87,7 +87,9 @@ lines.push("");
 lines.push("| | |");
 lines.push("|---|---|");
 lines.push(`| lab-ui commit | \`${sha}\` |`);
-lines.push(`| Machine | ${cpus()[0]?.model ?? "?"}, ${cpus().length} cores, ${Math.round(totalmem() / 2 ** 30)} GB, ${platform()} ${release()} |`);
+lines.push(
+  `| Machine | ${cpus()[0]?.model ?? "?"}, ${cpus().length} cores, ${Math.round(totalmem() / 2 ** 30)} GB, ${platform()} ${release()} |`,
+);
 lines.push(`| Browser | Chromium ${browser.version()} (${values.headless ? "headless" : "headed"}) |`);
 const any = Object.values(results)[0]?.[0];
 if (any) lines.push(`| Viewport | ${any.viewport.width}×${any.viewport.height} CSS px @ ${any.devicePixelRatio}× |`);
@@ -97,7 +99,9 @@ lines.push(
   `Gate **G6.1**: frame time p95 ≤ ${FRAME_P95_MS} ms during pan and zoom — both the interval between frames the compositor *presented* (what the user sees) and the main thread's rAF interval — and hit-test p95 ≤ ${HIT_P95_MS} ms.`,
 );
 lines.push("");
-lines.push("| Candidate | Presented p95 (ms) | rAF p50 / p95 / p99 (ms) | Compositor frames: presented · partial · dropped · checkerboarded | Render work p95 (ms) | Hit-test p95 (ms) | Hit-test | Mount (ms) | JS heap (MB) | Presented p95 per run | G6.1 |");
+lines.push(
+  "| Candidate | Presented p95 (ms) | rAF p50 / p95 / p99 (ms) | Compositor frames: presented · partial · dropped · checkerboarded | Render work p95 (ms) | Hit-test p95 (ms) | Hit-test | Mount (ms) | JS heap (MB) | Presented p95 per run | G6.1 |",
+);
 lines.push("|---|---|---|---|---|---|---|---|---|---|---|");
 for (const id of ids) {
   const list = results[id]!;

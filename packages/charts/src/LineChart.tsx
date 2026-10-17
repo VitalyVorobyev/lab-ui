@@ -115,11 +115,7 @@ export function LineChart({
       figureRef={variant === "fluid" ? fluidRef : undefined}
       footer={
         <div className="flex flex-col gap-1">
-          {showLegend && (
-            <Legend
-              items={coloured.map((entry) => ({ label: entry.name, colour: entry.colour }))}
-            />
-          )}
+          {showLegend && <Legend items={coloured.map((entry) => ({ label: entry.name, colour: entry.colour }))} />}
           {footer}
         </div>
       }

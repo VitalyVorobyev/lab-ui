@@ -71,10 +71,7 @@ export function acceptsPath(path: string, accept: string | undefined): boolean {
  * @param accept - The accept string.
  * @returns The accepted files and the rejected ones, each in their original order.
  */
-export function partitionFiles(
-  files: readonly File[],
-  accept: string | undefined,
-): { accepted: File[]; rejected: File[] } {
+export function partitionFiles(files: readonly File[], accept: string | undefined): { accepted: File[]; rejected: File[] } {
   const accepted: File[] = [];
   const rejected: File[] = [];
   for (const file of files) (acceptsFile(file, accept) ? accepted : rejected).push(file);
@@ -120,9 +117,7 @@ export interface DropEntry {
  * @param dataTransfer - The drop's data.
  * @returns The files, in the order the browser listed them.
  */
-export async function collectDroppedFiles(
-  dataTransfer: Pick<DataTransfer, "files" | "items">,
-): Promise<File[]> {
+export async function collectDroppedFiles(dataTransfer: Pick<DataTransfer, "files" | "items">): Promise<File[]> {
   // Everything is read before the first `await`: a drop's data is emptied once its event
   // handler returns.
   const plain = Array.from(dataTransfer.files);

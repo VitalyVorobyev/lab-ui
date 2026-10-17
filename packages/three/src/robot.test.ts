@@ -47,7 +47,14 @@ describe("robot visuals", () => {
       samples: [{ t: 0, world_se3_frame: [I, I] }],
     });
     const a = new Group();
-    const missing = attachRobotVisuals(runtime, "r", new Map([["a", a], ["zz", new Group()]]));
+    const missing = attachRobotVisuals(
+      runtime,
+      "r",
+      new Map([
+        ["a", a],
+        ["zz", new Group()],
+      ]),
+    );
     expect(a.parent).toBe(runtime.frame("r/a"));
     expect(missing).toEqual(["zz"]);
   });

@@ -20,10 +20,7 @@ import { cn, focusRingInset } from "./cn";
  * resizes. A scrolling body has to be reachable by keyboard (so it can be scrolled without
  * a pointer); a body that fits must not add a tab stop.
  */
-function useOverflowing(): [
-  (node: HTMLDivElement | null) => (() => void) | undefined,
-  boolean,
-] {
+function useOverflowing(): [(node: HTMLDivElement | null) => (() => void) | undefined, boolean] {
   const [overflowing, setOverflowing] = useState(false);
   const ref = useCallback((node: HTMLDivElement | null) => {
     if (node === null) return undefined;
@@ -89,17 +86,10 @@ export function Dialog({
             className,
           )}
         >
-          <RadixDialog.Title className="text-sm font-semibold tracking-tight text-fg">
-            {title}
-          </RadixDialog.Title>
+          <RadixDialog.Title className="text-sm font-semibold tracking-tight text-fg">{title}</RadixDialog.Title>
           {/* Radix warns when a dialog has no description; render an empty one rather than
               inventing prose for a form whose fields already carry their own labels. */}
-          <RadixDialog.Description
-            className={cn(
-              "mt-2 text-sm leading-relaxed text-fg-muted",
-              description === undefined && "sr-only",
-            )}
-          >
+          <RadixDialog.Description className={cn("mt-2 text-sm leading-relaxed text-fg-muted", description === undefined && "sr-only")}>
             {description ?? title}
           </RadixDialog.Description>
           <div
@@ -166,12 +156,7 @@ export function ConfirmDialog({
           <RadixDialog.Close asChild>
             <Button variant="ghost">Cancel</Button>
           </RadixDialog.Close>
-          <Button
-            variant={destructive ? "danger" : "primary"}
-            loading={loading}
-            disabled={disabled}
-            onClick={onConfirm}
-          >
+          <Button variant={destructive ? "danger" : "primary"} loading={loading} disabled={disabled} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </>

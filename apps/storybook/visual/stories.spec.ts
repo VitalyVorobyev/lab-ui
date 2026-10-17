@@ -27,8 +27,8 @@ for (const { id } of stories) {
       // Wait for the story's `play` to finish: the first stable frame can otherwise be the
       // state before `play` ran (seen on workbench-treeview--keyboard).
       await page.waitForFunction(() => {
-        const phase = (window as { __STORYBOOK_PREVIEW__?: { currentRender?: { phase?: string } } })
-          .__STORYBOOK_PREVIEW__?.currentRender?.phase;
+        const phase = (window as { __STORYBOOK_PREVIEW__?: { currentRender?: { phase?: string } } }).__STORYBOOK_PREVIEW__?.currentRender
+          ?.phase;
         return phase === "finished" || phase === "errored" || phase === "aborted";
       });
       await page.evaluate(() => document.fonts.ready);

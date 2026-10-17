@@ -29,7 +29,10 @@ function scene(count: number, seed: number): Area[] {
     const cy = random() * HEIGHT;
     const r = 10 + random() * 20;
     const a = random() * Math.PI;
-    const points = [0, 1, 2, 3].flatMap((k) => [cx + r * Math.SQRT2 * Math.cos(a + (k * Math.PI) / 2), cy + r * Math.SQRT2 * Math.sin(a + (k * Math.PI) / 2)]);
+    const points = [0, 1, 2, 3].flatMap((k) => [
+      cx + r * Math.SQRT2 * Math.cos(a + (k * Math.PI) / 2),
+      cy + r * Math.SQRT2 * Math.sin(a + (k * Math.PI) / 2),
+    ]);
     return { id, points: new Float32Array(points) };
   });
 }

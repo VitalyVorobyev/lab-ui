@@ -9,16 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  extent,
-  formatTick,
-  histogram,
-  linePath,
-  linearScale,
-  logScale,
-  niceStep,
-  padDomain,
-} from "./scale";
+import { extent, formatTick, histogram, linePath, linearScale, logScale, niceStep, padDomain } from "./scale";
 
 const RUNS = 500;
 
@@ -109,9 +100,7 @@ describe("padDomain (properties)", () => {
 describe("extent (properties)", () => {
   it("bounds every finite value, and both ends are values from the input", () => {
     forAll(5, (random) => {
-      const values = Array.from({ length: 1 + Math.floor(random() * 20) }, () =>
-        random() < 0.1 ? Number.NaN : anyValue(random),
-      );
+      const values = Array.from({ length: 1 + Math.floor(random() * 20) }, () => (random() < 0.1 ? Number.NaN : anyValue(random)));
       const finite = values.filter(Number.isFinite);
       const [low, high] = extent(values);
       if (finite.length === 0) {
@@ -191,9 +180,7 @@ describe("linearScale (properties)", () => {
       const low = random() * 1e4 * (random() < 0.5 ? -1 : 1);
       const high = low + 10 ** (-1 + random() * 5);
       const ticks = linearScale([low, high], 0, 100).ticks(5);
-      const decimal = ticks.filter(
-        (tick) => tick.value === 0 || (Math.abs(tick.value) >= 1e-3 && Math.abs(tick.value) < 1e6),
-      );
+      const decimal = ticks.filter((tick) => tick.value === 0 || (Math.abs(tick.value) >= 1e-3 && Math.abs(tick.value) < 1e6));
       const labels = decimal.map((tick) => tick.label);
       expect(new Set(labels).size, `[${low}, ${high}]: ${labels.join(" ")}`).toEqual(labels.length);
     });
@@ -280,9 +267,7 @@ describe("histogram (properties)", () => {
       );
       const bins = histogram(values, domain, count);
       expect(bins).toHaveLength(count);
-      expect(bins.reduce((sum, bin) => sum + bin, 0)).toEqual(
-        values.filter(Number.isFinite).length,
-      );
+      expect(bins.reduce((sum, bin) => sum + bin, 0)).toEqual(values.filter(Number.isFinite).length);
       for (const bin of bins) expect(bin).toBeGreaterThanOrEqual(0);
     });
   });

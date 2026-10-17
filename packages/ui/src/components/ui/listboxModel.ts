@@ -21,12 +21,7 @@ export type ListboxKey = "ArrowDown" | "ArrowUp" | "Home" | "End" | "PageDown" |
  * @returns The new active index; `from` when there is nowhere to go; -1 when every option is
  *   disabled.
  */
-export function moveActive(
-  disabled: readonly boolean[],
-  from: number,
-  key: ListboxKey,
-  page = 10,
-): number {
+export function moveActive(disabled: readonly boolean[], from: number, key: ListboxKey, page = 10): number {
   const enabled = disabled.flatMap((off, index) => (off ? [] : [index]));
   if (enabled.length === 0) return -1;
   const first = enabled[0]!;

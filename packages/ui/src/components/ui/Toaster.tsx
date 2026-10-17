@@ -64,34 +64,18 @@ export function Toaster({ store = defaultToastStore, limit = 5, className }: Toa
       onPointerLeave={() => setHovered(false)}
       onFocus={() => setFocused(true)}
       onBlur={onBlur}
-      className={cn(
-        "pointer-events-none fixed right-4 bottom-4 z-50 w-80 max-w-[calc(100vw-2rem)]",
-        className,
-      )}
+      className={cn("pointer-events-none fixed right-4 bottom-4 z-50 w-80 max-w-[calc(100vw-2rem)]", className)}
     >
       <ol aria-live="polite" className="flex flex-col gap-2">
         {shown.map((record) => (
-          <ToastItem
-            key={record.id}
-            record={record}
-            paused={hovered || focused}
-            onDismiss={() => store.dismiss(record.id)}
-          />
+          <ToastItem key={record.id} record={record} paused={hovered || focused} onDismiss={() => store.dismiss(record.id)} />
         ))}
       </ol>
     </section>
   );
 }
 
-function ToastItem({
-  record,
-  paused,
-  onDismiss,
-}: {
-  record: ToastRecord;
-  paused: boolean;
-  onDismiss: () => void;
-}) {
+function ToastItem({ record, paused, onDismiss }: { record: ToastRecord; paused: boolean; onDismiss: () => void }) {
   const { border, icon, Icon } = TONE[record.tone];
   // What is left of the countdown, carried across pauses; restarted when the toast is
   // replaced in place (a new record under the same id).

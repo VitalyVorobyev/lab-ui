@@ -59,13 +59,7 @@ function Studio({ sides = "both", storageKey }: { sides?: "both" | "left" | "non
           header={<Header />}
           left={
             sides === "none" ? undefined : (
-              <TreeView
-                nodes={FRAMES}
-                aria-label="Cell frames"
-                defaultExpandAll
-                selectedId={selected}
-                onSelect={setSelected}
-              />
+              <TreeView nodes={FRAMES} aria-label="Cell frames" defaultExpandAll selectedId={selected} onSelect={setSelected} />
             )
           }
           main={
@@ -210,7 +204,11 @@ export const WithRail: Story = {
           <ul className="flex w-12 flex-col items-center gap-2 py-2">
             {["Library", "Recognize", "Gauge"].map((name) => (
               <li key={name}>
-                <a href={`#${name}`} aria-label={name} className="grid size-9 place-items-center rounded-control text-xs text-fg-muted hover:bg-raised">
+                <a
+                  href={`#${name}`}
+                  aria-label={name}
+                  className="grid size-9 place-items-center rounded-control text-xs text-fg-muted hover:bg-raised"
+                >
                   {name[0]}
                 </a>
               </li>
