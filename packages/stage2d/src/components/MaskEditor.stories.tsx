@@ -17,7 +17,14 @@ for (let y = 38; y < 125; y++) {
 function Example() {
   const [view, setView] = useState<StageView | null>(null);
   const [mask, setMask] = useState<Uint8Array>(initialMask);
-  return <div style={{ height: 440 }}><ImageStage image={{ width, height }} view={view} onView={setView}><div className="absolute inset-0 bg-canvas" /><MaskEditor mask={mask} onChange={setMask} editable /></ImageStage></div>;
+  return (
+    <div style={{ height: 440 }}>
+      <ImageStage image={{ width, height }} view={view} onView={setView}>
+        <div className="absolute inset-0 bg-canvas" />
+        <MaskEditor mask={mask} onChange={setMask} editable />
+      </ImageStage>
+    </div>
+  );
 }
 
 const meta = { title: "stage2d/MaskEditor", component: MaskEditor } satisfies Meta<typeof MaskEditor>;

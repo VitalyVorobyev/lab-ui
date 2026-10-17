@@ -34,7 +34,13 @@ const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
  */
 export function composite(fg, alpha, bg) {
   const [a, b] = [channels(fg), channels(bg)];
-  return `#${a.map((c, i) => Math.round((c * alpha + b[i] * (1 - alpha)) * 255).toString(16).padStart(2, "0")).join("")}`;
+  return `#${a
+    .map((c, i) =>
+      Math.round((c * alpha + b[i] * (1 - alpha)) * 255)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
 }
 
 /** @param {string} hex */

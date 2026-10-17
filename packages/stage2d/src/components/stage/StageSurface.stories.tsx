@@ -331,9 +331,7 @@ export const ViewportExtentTakesMarginPresses: Story = {
     await fireEvent.pointerDown(surface, at(surface, { x: -30, y: -20 }));
     const press = pressed.mock.lastCall![0] as StagePress;
     await expect(press.point).toEqual({ x: -0.5, y: -0.5 });
-    await expect(press.client.x).toBeLessThan(
-      canvasElement.querySelector("[data-stage]")!.getBoundingClientRect().left,
-    );
+    await expect(press.client.x).toBeLessThan(canvasElement.querySelector("[data-stage]")!.getBoundingClientRect().left);
     // Dragged out past the opposite corner: the release is clamped too.
     await fireEvent.pointerMove(window, at(surface, { x: 900, y: 700 }));
     await fireEvent.pointerUp(window, at(surface, { x: 900, y: 700 }));

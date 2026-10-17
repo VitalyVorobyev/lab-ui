@@ -30,11 +30,7 @@ strip renders nothing.
     },
   },
   args: {
-    items: [
-      { label: "run", value: "12" },
-      { label: "model", value: "patchcore" },
-      { value: "1920×1080" },
-    ],
+    items: [{ label: "run", value: "12" }, { label: "model", value: "patchcore" }, { value: "1920×1080" }],
   },
 } satisfies Meta<typeof ReadoutStrip>;
 

@@ -20,7 +20,13 @@ async function violations(root: Element, theme: "light" | "dark"): Promise<strin
   void root;
   return result.violations
     .filter((v) => BLOCKING.has(v.impact ?? ""))
-    .map((v) => `[${theme}] ${v.impact} ${v.id}: ${v.help} (${v.nodes.length} node(s): ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" | ")})`);
+    .map(
+      (v) =>
+        `[${theme}] ${v.impact} ${v.id}: ${v.help} (${v.nodes.length} node(s): ${v.nodes
+          .slice(0, 3)
+          .map((n) => n.target.join(" "))
+          .join(" | ")})`,
+    );
 }
 
 let mounted: HTMLElement | null = null;

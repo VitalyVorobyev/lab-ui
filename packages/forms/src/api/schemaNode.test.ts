@@ -103,7 +103,11 @@ describe("derefNode with sibling properties", () => {
 
   it("applies the same merge to allOf: [X]", () => {
     const { schema } = resolveSchema(
-      { allOf: [{ type: "object", properties: { a: { type: "string" } }, required: ["a"] }], properties: { k: { const: "x" } }, required: ["k"] },
+      {
+        allOf: [{ type: "object", properties: { a: { type: "string" } }, required: ["a"] }],
+        properties: { k: { const: "x" } },
+        required: ["k"],
+      },
       defs,
     );
     expect(Object.keys(schema.properties ?? {})).toEqual(["k", "a"]);

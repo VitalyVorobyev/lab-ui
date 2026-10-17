@@ -81,7 +81,17 @@ export function batchAreas(items: readonly BatchableArea[], options: AreaBatchOp
   const separate = fillRule === "evenodd" || keepSelected;
   const byKey = new Map<string, AreaBatch>();
   const runs: AreaBatch[] = [];
-  const picked: AreaBatch = { key: "selected", id: "selected", role: "selection", stroke: undefined, fill: undefined, dim: false, indices: [], d: "", fills: fillRule === "evenodd" && !keepSelected ? [] : null };
+  const picked: AreaBatch = {
+    key: "selected",
+    id: "selected",
+    role: "selection",
+    stroke: undefined,
+    fill: undefined,
+    dim: false,
+    indices: [],
+    d: "",
+    fills: fillRule === "evenodd" && !keepSelected ? [] : null,
+  };
 
   items.forEach((item, i) => {
     const isSelected = selected.has(item.id);
@@ -98,7 +108,17 @@ export function batchAreas(items: readonly BatchableArea[], options: AreaBatchOp
     const key = areaBatchKey(dim, itemRole, itemStroke, item.fill);
     let batch = paintOrder === "items" ? runs[runs.length - 1] : byKey.get(key);
     if (!batch || batch.key !== key) {
-      batch = { key, id: paintOrder === "items" ? `${key}#${runs.length}` : key, role: itemRole, stroke: itemStroke, fill: item.fill, dim, indices: [], d: "", fills: separate ? [] : null };
+      batch = {
+        key,
+        id: paintOrder === "items" ? `${key}#${runs.length}` : key,
+        role: itemRole,
+        stroke: itemStroke,
+        fill: item.fill,
+        dim,
+        indices: [],
+        d: "",
+        fills: separate ? [] : null,
+      };
       byKey.set(key, batch);
       runs.push(batch);
     }

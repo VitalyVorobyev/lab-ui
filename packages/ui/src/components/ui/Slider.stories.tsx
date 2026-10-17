@@ -15,11 +15,7 @@ function Controlled(props: ComponentProps<typeof Slider>) {
       <Slider
         {...props}
         value={value}
-        readout={
-          props.readout === undefined ? undefined : (
-            <span className="inline-block w-10">{value.toFixed(2)}</span>
-          )
-        }
+        readout={props.readout === undefined ? undefined : <span className="inline-block w-10">{value.toFixed(2)}</span>}
         onValueChange={(next) => {
           setValue(next);
           props.onValueChange(next);

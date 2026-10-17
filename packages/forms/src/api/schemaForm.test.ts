@@ -208,9 +208,7 @@ describe("toOptions", () => {
 
 describe("validation", () => {
   it("names the JSON field that does not parse", () => {
-    expect(jsonErrors(fields, { ...initialValues(fields), channel_aliases: "{oops" })).toEqual([
-      "Channel aliases",
-    ]);
+    expect(jsonErrors(fields, { ...initialValues(fields), channel_aliases: "{oops" })).toEqual(["Channel aliases"]);
   });
 
   it("says nothing about an empty JSON field", () => {
@@ -298,10 +296,7 @@ describe("a closed set of values", () => {
 
   it("follows a $ref into $defs, so a StrEnum is not a JSON textarea", () => {
     expect(enumField("color").kind).toBe("choice-inline");
-    expect(enumField("color").options.map((option) => option.value)).toEqual([
-      "rgb",
-      "grayscale",
-    ]);
+    expect(enumField("color").options.map((option) => option.value)).toEqual(["rgb", "grayscale"]);
   });
 
   it("shows a few options at once and puts many behind a picker", () => {

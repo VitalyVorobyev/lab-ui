@@ -33,9 +33,7 @@ describe("ButtonLink", () => {
       </DensityProvider>,
     );
     expect(screen.getByRole("link").className).toBe(screen.getByRole("button").className);
-    expect(screen.getByRole("link").className).toBe(
-      buttonClasses({ variant: "primary", size: "sm" }),
-    );
+    expect(screen.getByRole("link").className).toBe(buttonClasses({ variant: "primary", size: "sm" }));
   });
 
   it("renders onto a router's link with asChild, keeping the link's own props", () => {

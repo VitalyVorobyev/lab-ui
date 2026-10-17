@@ -3,7 +3,17 @@ import { ImageStage, ellipsePath, imageViewBox, type StageView } from "@vitavisi
 import { useState } from "react";
 import { expect, fireEvent, fn, waitFor } from "storybook/test";
 
-import { BOARD_IMAGE, FIELD_IMAGE, charuco, chessboard, directedField, markerboard, project, puzzleboard, ringgrid } from "./fixtures.stories";
+import {
+  BOARD_IMAGE,
+  FIELD_IMAGE,
+  charuco,
+  chessboard,
+  directedField,
+  markerboard,
+  project,
+  puzzleboard,
+  ringgrid,
+} from "./fixtures.stories";
 import type { TargetDetection, TargetHit, TargetId } from "./model";
 import { TargetOverlay, type TargetOverlayProps } from "./TargetOverlay";
 
@@ -22,10 +32,13 @@ const viewport = (root: Element) => root.querySelector("[role=application]")!;
 
 /** The board as the camera saw it: a checker of squares, the markers and discs printed on it. */
 function Backdrop({ detection, image }: { detection: TargetDetection; image: { width: number; height: number } }) {
-  const polygon = (points: [number, number][]) => points.map(([u, v]) => {
-    const p = project(u, v);
-    return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
-  }).join(" ");
+  const polygon = (points: [number, number][]) =>
+    points
+      .map(([u, v]) => {
+        const p = project(u, v);
+        return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+      })
+      .join(" ");
   const board = detection.kind !== "corners";
   const squares = [];
   if (board && detection.kind !== "ringgrid") {
@@ -35,7 +48,12 @@ function Backdrop({ detection, image }: { detection: TargetDetection; image: { w
         squares.push(
           <polygon
             key={`${a}-${b}`}
-            points={polygon([[a, b], [a + 1, b], [a + 1, b + 1], [a, b + 1]])}
+            points={polygon([
+              [a, b],
+              [a + 1, b],
+              [a + 1, b + 1],
+              [a, b + 1],
+            ])}
             fill={light ? "rgb(196 200 204)" : "rgb(52 56 62)"}
           />,
         );
@@ -45,11 +63,25 @@ function Backdrop({ detection, image }: { detection: TargetDetection; image: { w
   return (
     <svg viewBox={imageViewBox(image)} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
       <rect x={-0.5} y={-0.5} width={image.width} height={image.height} fill="rgb(24 27 31)" />
-      {detection.kind === "ringgrid" && <polygon points={polygon([[0, 0], [10, 0], [10, 7], [0, 7]])} fill="rgb(196 200 204)" />}
+      {detection.kind === "ringgrid" && (
+        <polygon
+          points={polygon([
+            [0, 0],
+            [10, 0],
+            [10, 7],
+            [0, 7],
+          ])}
+          fill="rgb(196 200 204)"
+        />
+      )}
       {squares}
       {/* ArUco markers: a dark quad in each light square. */}
       {(detection.markers ?? []).map((m) => (
-        <polygon key={m.id} points={m.corners.reduce<string[]>((out, v, k) => (k % 2 === 0 ? [...out, `${v},${m.corners[k + 1]}`] : out), []).join(" ")} fill="rgb(38 42 48)" />
+        <polygon
+          key={m.id}
+          points={m.corners.reduce<string[]>((out, v, k) => (k % 2 === 0 ? [...out, `${v},${m.corners[k + 1]}`] : out), []).join(" ")}
+          fill="rgb(38 42 48)"
+        />
       ))}
       {/* Marker-board discs, in their printed polarity. */}
       {(detection.circles ?? []).map((c) => (
@@ -81,12 +113,7 @@ function Frame({
   children: React.ReactNode;
 }) {
   return (
-    <ImageStage
-      image={image}
-      view={view}
-      onView={() => {}}
-      style={{ width: size.width + 2, height: size.height + 2 }}
-    >
+    <ImageStage image={image} view={view} onView={() => {}} style={{ width: size.width + 2, height: size.height + 2 }}>
       <Backdrop detection={detection} image={image} />
       {children}
     </ImageStage>
@@ -283,7 +310,12 @@ export const DirectedFieldZoomed: Story = {
   render: () => {
     const detection = directedField();
     return (
-      <Frame detection={detection} image={FIELD_IMAGE} view={{ scale: 3, tx: -200 * 3, ty: -100 * 3 }} viewport={{ width: 720, height: 420 }}>
+      <Frame
+        detection={detection}
+        image={FIELD_IMAGE}
+        view={{ scale: 3, tx: -200 * 3, ty: -100 * 3 }}
+        viewport={{ width: 720, height: 420 }}
+      >
         <TargetOverlay detection={detection} />
       </Frame>
     );
@@ -429,7 +461,10 @@ export const HoverAndPress: Story = {
     await waitFor(() => expect(hover).toHaveBeenLastCalledWith({ id: "c3-2", part: "corner" }));
     await fireEvent.pointerMove(stage, at(canvasElement, centre));
     await waitFor(() => expect(hover).toHaveBeenLastCalledWith({ id: 6, part: "marker" }));
-    await expect(hover.mock.calls.map((call: unknown[]) => call[0])).toEqual([{ id: "c3-2", part: "corner" }, { id: 6, part: "marker" }]);
+    await expect(hover.mock.calls.map((call: unknown[]) => call[0])).toEqual([
+      { id: "c3-2", part: "corner" },
+      { id: 6, part: "marker" },
+    ]);
     await waitFor(() => expect(canvasElement.querySelector("svg[data-hovered='6']")).not.toBeNull());
 
     // Off every item.
@@ -457,7 +492,10 @@ export const PressRing: Story = {
     const stage = viewport(canvasElement);
     const ring = RINGGRID.rings![9]!;
     // A ring is picked anywhere inside its outer ellipse, not only at its centre.
-    const edge = { x: ring.x + 0.8 * ring.outer.rx * Math.cos(ring.outer.angle), y: ring.y + 0.8 * ring.outer.rx * Math.sin(ring.outer.angle) };
+    const edge = {
+      x: ring.x + 0.8 * ring.outer.rx * Math.cos(ring.outer.angle),
+      y: ring.y + 0.8 * ring.outer.rx * Math.sin(ring.outer.angle),
+    };
     await fireEvent.pointerDown(stage, at(canvasElement, edge));
     await waitFor(() => expect(press).toHaveBeenCalledWith({ id: 9, part: "ring" }));
     await waitFor(() => expect(canvas.getByTestId("selected")).toHaveTextContent("9"));

@@ -17,13 +17,10 @@ describe("toneColor", () => {
 
   // The whole domain, exhaustively: a given tone always wins over the fallback, and an absent
   // one is the fallback's colour.
-  it.each(TONES.flatMap((tone) => TONES.map((fallback) => [tone, fallback] as const)))(
-    "tone %s with fallback %s",
-    (tone, fallback) => {
-      expect(toneColor(tone, fallback)).toBe(toneColor(tone));
-      expect(toneColor(undefined, fallback)).toBe(toneColor(fallback));
-    },
-  );
+  it.each(TONES.flatMap((tone) => TONES.map((fallback) => [tone, fallback] as const)))("tone %s with fallback %s", (tone, fallback) => {
+    expect(toneColor(tone, fallback)).toBe(toneColor(tone));
+    expect(toneColor(undefined, fallback)).toBe(toneColor(fallback));
+  });
 
   it("falls back to the accent", () => {
     expect(toneColor(undefined)).toBe("var(--signal)");

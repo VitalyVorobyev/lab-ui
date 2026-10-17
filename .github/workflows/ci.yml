@@ -22,6 +22,11 @@ jobs:
         with:
           bun-version-file: package.json
 
+      # The Oxlint plugin's rule tests use Oxlint's RuleTester, which needs Node >= 22.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
       - name: Install
         run: bun install --frozen-lockfile
 
@@ -66,12 +71,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gate: [lint, api, publint, attw, knip, size, coverage]
+        gate: [lint, "format:check", api, publint, attw, knip, size, coverage]
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
+      # Oxlint and its JS plugins run on Node.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
       - run: bun install --frozen-lockfile
       - if: matrix.gate == 'coverage'
         run: bunx playwright install --with-deps chromium

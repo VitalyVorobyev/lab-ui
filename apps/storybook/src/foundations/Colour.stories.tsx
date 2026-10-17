@@ -57,8 +57,8 @@ const meta = {
       description: {
         component: `The chrome is grey so the data can be loud: true-neutral surfaces, one accent
 (\`signal\`), and verdict colours used for verdicts only. Components use these names — never a raw
-Tailwind palette class or a hex literal (the \`tokensOnly\` rule of \`@vitavision/config-eslint\`
-enforces it).`,
+Tailwind palette class or a hex literal (the \`vitavision/tokens-only\` rule of
+\`@vitavision/config-oxlint\` enforces it).`,
       },
     },
   },

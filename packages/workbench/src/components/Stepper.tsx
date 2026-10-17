@@ -113,12 +113,7 @@ export function Stepper({
         );
         return (
           <li key={step.id} className={cn("flex", vertical ? "flex-col items-start" : "items-center")}>
-            {index > 0 && (
-              <span
-                aria-hidden
-                className={cn("bg-line-strong", vertical ? "ml-4 h-3 w-px" : "mx-1 h-px w-6")}
-              />
-            )}
+            {index > 0 && <span aria-hidden className={cn("bg-line-strong", vertical ? "ml-4 h-3 w-px" : "mx-1 h-px w-6")} />}
             {blocked ? <Tooltip content={step.blockedBy}>{button}</Tooltip> : button}
             {blocked && (
               <span id={reasonId} className="sr-only">

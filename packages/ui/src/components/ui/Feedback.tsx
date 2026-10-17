@@ -58,11 +58,7 @@ export function Callout({
     <div
       role={tone === "error" ? "alert" : "status"}
       data-tone={tone}
-      className={cn(
-        "flex items-start gap-2.5 rounded-control border px-3 py-2.5 text-sm leading-snug",
-        classes,
-        className,
-      )}
+      className={cn("flex items-start gap-2.5 rounded-control border px-3 py-2.5 text-sm leading-snug", classes, className)}
     >
       <Icon className={cn("mt-0.5 size-4 shrink-0", ICON_TONE[tone])} aria-hidden />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -175,10 +171,7 @@ export function ProgressBar({
         data-complete={percent === 100 ? "" : undefined}
         className="h-1.5 overflow-hidden rounded-full bg-line"
       >
-        <div
-          className="h-full rounded-full bg-signal transition-[width] duration-300"
-          style={{ width: `${percent}%` }}
-        />
+        <div className="h-full rounded-full bg-signal transition-[width] duration-300" style={{ width: `${percent}%` }} />
       </div>
       {label && (
         <span className="font-mono text-xs text-fg-muted tabular-nums">

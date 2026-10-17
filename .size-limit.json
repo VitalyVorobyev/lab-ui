@@ -26,12 +26,7 @@
     "name": "@vitavision/forms",
     "path": "packages/forms/dist/index.js",
     "import": "*",
-    "ignore": [
-      "@vitavision/ui",
-      "react",
-      "react-dom",
-      "react/jsx-runtime"
-    ],
+    "ignore": ["@vitavision/ui", "react", "react-dom", "react/jsx-runtime"],
     "limit": "8.6 kB"
   },
   {
@@ -39,72 +34,41 @@
     "path": "packages/charts/dist/index.js",
     "limit": "5.3 kB",
     "import": "*",
-    "ignore": [
-      "@vitavision/ui",
-      "react",
-      "react-dom",
-      "react/jsx-runtime"
-    ]
+    "ignore": ["@vitavision/ui", "react", "react-dom", "react/jsx-runtime"]
   },
   {
     "name": "@vitavision/stage2d",
     "path": "packages/stage2d/dist/index.js",
     "import": "*",
     "limit": "32 kB",
-    "ignore": [
-      "@vitavision/ui",
-      "lucide-react",
-      "react",
-      "react-dom",
-      "react/jsx-runtime"
-    ]
+    "ignore": ["@vitavision/ui", "lucide-react", "react", "react-dom", "react/jsx-runtime"]
   },
   {
     "name": "@vitavision/workbench",
     "path": "packages/workbench/dist/index.js",
     "import": "*",
     "limit": "9.5 kB",
-    "ignore": [
-      "@vitavision/ui",
-      "lucide-react",
-      "react",
-      "react-dom",
-      "react/jsx-runtime"
-    ]
+    "ignore": ["@vitavision/ui", "lucide-react", "react", "react-dom", "react/jsx-runtime"]
   },
   {
     "name": "@vitavision/overlays",
     "path": "packages/overlays/dist/index.js",
     "import": "*",
     "limit": "4.1 kB",
-    "ignore": [
-      "@vitavision/stage2d",
-      "react",
-      "react-dom",
-      "react/jsx-runtime"
-    ]
+    "ignore": ["@vitavision/stage2d", "react", "react-dom", "react/jsx-runtime"]
   },
   {
     "name": "@vitavision/three",
     "path": "packages/three/dist/index.js",
     "import": "*",
     "limit": "5.32 kB",
-    "ignore": [
-      "three"
-    ]
+    "ignore": ["three"]
   },
   {
     "name": "@vitavision/three-react",
     "path": "packages/three-react/dist/index.js",
     "import": "*",
     "limit": "4 kB",
-    "ignore": [
-      "@react-three/fiber",
-      "@vitavision/three",
-      "react",
-      "react-dom",
-      "react/jsx-runtime",
-      "three"
-    ]
+    "ignore": ["@react-three/fiber", "@vitavision/three", "react", "react-dom", "react/jsx-runtime", "three"]
   }
 ]

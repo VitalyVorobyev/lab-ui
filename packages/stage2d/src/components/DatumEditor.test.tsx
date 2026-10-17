@@ -37,7 +37,9 @@ describe("DatumEditor", () => {
   it("moves on its own state, reporting each change, when uncontrolled", () => {
     const onValueChange = vi.fn();
     const onCommit = vi.fn();
-    const { container } = render(<Stage defaultValue={{ origin: { x: 50, y: 50 }, angle: 0 }} onValueChange={onValueChange} onCommit={onCommit} />);
+    const { container } = render(
+      <Stage defaultValue={{ origin: { x: 50, y: 50 }, angle: 0 }} onValueChange={onValueChange} onCommit={onCommit} />,
+    );
     fireEvent.pointerDown(button(container), at(50, 50));
     fireEvent.pointerMove(window, at(70, 60));
     fireEvent.pointerUp(window, at(70, 60));

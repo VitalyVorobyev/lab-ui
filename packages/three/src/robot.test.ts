@@ -34,7 +34,7 @@ describe("robot visuals", () => {
   it("reports non-Error rejections", async () => {
     const { failed } = await loadRobotVisuals([{ link: "a", mesh: "a.glb" }], (p) => p, {
       // A loader that rejects with a non-Error is exactly what this test is about.
-      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+      // oxlint-disable-next-line typescript/prefer-promise-reject-errors
       load: () => Promise.reject("plain"),
     });
     expect(failed).toEqual([{ link: "a", error: "plain" }]);
@@ -47,7 +47,14 @@ describe("robot visuals", () => {
       samples: [{ t: 0, world_se3_frame: [I, I] }],
     });
     const a = new Group();
-    const missing = attachRobotVisuals(runtime, "r", new Map([["a", a], ["zz", new Group()]]));
+    const missing = attachRobotVisuals(
+      runtime,
+      "r",
+      new Map([
+        ["a", a],
+        ["zz", new Group()],
+      ]),
+    );
     expect(a.parent).toBe(runtime.frame("r/a"));
     expect(missing).toEqual(["zz"]);
   });

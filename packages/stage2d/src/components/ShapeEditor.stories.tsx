@@ -73,7 +73,10 @@ function pointerAt(target: Element, p: { x: number; y: number }) {
 function handleAt(root: Element, name: string): { x: number; y: number } {
   const el = root.querySelector(`[data-handle=${name}]`)!;
   if (el instanceof SVGCircleElement) return { x: Number(el.getAttribute("cx")), y: Number(el.getAttribute("cy")) };
-  return { x: Number(el.getAttribute("x")) + Number(el.getAttribute("width")) / 2, y: Number(el.getAttribute("y")) + Number(el.getAttribute("height")) / 2 };
+  return {
+    x: Number(el.getAttribute("x")) + Number(el.getAttribute("width")) / 2,
+    y: Number(el.getAttribute("y")) + Number(el.getAttribute("height")) / 2,
+  };
 }
 
 const meta = {

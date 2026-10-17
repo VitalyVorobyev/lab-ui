@@ -124,9 +124,7 @@ function Cell({ sample }: CellProps) {
           </AtFrame>
         </FrameTree>
       </SceneCanvas>
-      {runtime && (
-        <SensorImage runtime={runtime} frame="cam" canonical={SENSOR} lut={lut} playhead={playhead} label="cam image" />
-      )}
+      {runtime && <SensorImage runtime={runtime} frame="cam" canonical={SENSOR} lut={lut} playhead={playhead} label="cam image" />}
     </div>
   );
 }
@@ -209,7 +207,15 @@ export const Playhead: Story = {
 export const CameraFrame: StoryObj = {
   render: () => (
     <SceneColorsProvider colors={{ signal: "orange", defect: "crimson" }}>
-      <SceneCanvas className="h-96 w-full" eye={[0.4, -0.6, -0.6]} target={[0, 0, 0.5]} up={[0, -1, 0]} fov={40} clip={[0.001, 10]} label="Camera frame">
+      <SceneCanvas
+        className="h-96 w-full"
+        eye={[0.4, -0.6, -0.6]}
+        target={[0, 0, 0.5]}
+        up={[0, -1, 0]}
+        fov={40}
+        clip={[0.001, 10]}
+        label="Camera frame"
+      >
         <group position={[0, 0, 0.5]}>
           <TargetBoard width={0.25} height={0.175} checker={{ cols: 10, rows: 7 }} color="ivory" edgeColor="midnightblue" active />
         </group>

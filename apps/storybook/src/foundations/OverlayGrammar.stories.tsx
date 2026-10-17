@@ -61,7 +61,10 @@ const RESIDUAL_GAIN = 12;
 
 /** A glyph stroked twice: a dark halo under the colour, so it holds on any image. */
 function Stroked({ d, colour, width, scale, dash }: { d: string; colour: string; width: number; scale: number; dash?: string }) {
-  const dashArray = dash?.split(" ").map((part) => Number(part) / scale).join(" ");
+  const dashArray = dash
+    ?.split(" ")
+    .map((part) => Number(part) / scale)
+    .join(" ");
   return (
     <>
       <path d={d} fill="none" stroke={ROLE.halo} strokeWidth={(width + PX.halo) / scale} strokeLinecap="round" />
@@ -176,7 +179,17 @@ function Layers({ scale, labels }: { scale: number; labels: boolean }) {
 }
 
 /** One viewport onto the frame: `view` is the visible image rectangle, drawn `width` px wide. */
-function Viewport({ view, width, labels, caption }: { view: [number, number, number, number]; width: number; labels: boolean; caption: string }) {
+function Viewport({
+  view,
+  width,
+  labels,
+  caption,
+}: {
+  view: [number, number, number, number];
+  width: number;
+  labels: boolean;
+  caption: string;
+}) {
   const scale = width / view[2];
   const id = useId();
   return (
@@ -198,8 +211,16 @@ function Viewport({ view, width, labels, caption }: { view: [number, number, num
 }
 
 const LEGEND: { swatch: ReactNode; name: string; rule: string }[] = [
-  { swatch: <path d={plus(12, 12, 5)} stroke={ROLE.feature} strokeWidth={1.5} />, name: "corner / X-junction", rule: "plus, 5 px arms — the centre stays visible" },
-  { swatch: <rect x={5} y={5} width={14} height={14} fill="none" stroke={ROLE.feature} strokeWidth={1.5} />, name: "marker (ArUco, AprilTag)", rule: "quad outline, corner 0 ticked, id inside" },
+  {
+    swatch: <path d={plus(12, 12, 5)} stroke={ROLE.feature} strokeWidth={1.5} />,
+    name: "corner / X-junction",
+    rule: "plus, 5 px arms — the centre stays visible",
+  },
+  {
+    swatch: <rect x={5} y={5} width={14} height={14} fill="none" stroke={ROLE.feature} strokeWidth={1.5} />,
+    name: "marker (ArUco, AprilTag)",
+    rule: "quad outline, corner 0 ticked, id inside",
+  },
   { swatch: <circle cx={12} cy={12} r={2.5} fill={ROLE.feature} />, name: "blob / circle centre / keypoint", rule: "dot, r 2.5 px" },
   {
     swatch: (
@@ -208,11 +229,29 @@ const LEGEND: { swatch: ReactNode; name: string; rule: string }[] = [
         <path d={plus(12, 12, 2.5)} stroke={ROLE.feature} strokeWidth={1} />
       </>
     ),
-    name: "ring / ellipse target", rule: "fitted ellipse + plus at the centre" },
-  { swatch: <circle cx={12} cy={12} r={4} fill="none" stroke={ROLE.model} strokeWidth={1} />, name: "reprojected / predicted", rule: "hollow circle r 4 px, model colour" },
-  { swatch: <path d="M5 16L19 8" stroke={ROLE.model} strokeWidth={1} />, name: "residual", rule: `observed → model, drawn ×${RESIDUAL_GAIN}; the gain is in the legend` },
-  { swatch: <path d="M4 12H20" stroke={ROLE.label} strokeWidth={1.5} strokeDasharray="4 3" />, name: "ground truth / reference", rule: "dashed 4 3; the prediction is solid" },
-  { swatch: <path d="M4 7H20M4 17H20" stroke={ROLE.structure} strokeWidth={1} />, name: "structure (board, grid)", rule: "1 px, 55 % white — context, not data" },
+    name: "ring / ellipse target",
+    rule: "fitted ellipse + plus at the centre",
+  },
+  {
+    swatch: <circle cx={12} cy={12} r={4} fill="none" stroke={ROLE.model} strokeWidth={1} />,
+    name: "reprojected / predicted",
+    rule: "hollow circle r 4 px, model colour",
+  },
+  {
+    swatch: <path d="M5 16L19 8" stroke={ROLE.model} strokeWidth={1} />,
+    name: "residual",
+    rule: `observed → model, drawn ×${RESIDUAL_GAIN}; the gain is in the legend`,
+  },
+  {
+    swatch: <path d="M4 12H20" stroke={ROLE.label} strokeWidth={1.5} strokeDasharray="4 3" />,
+    name: "ground truth / reference",
+    rule: "dashed 4 3; the prediction is solid",
+  },
+  {
+    swatch: <path d="M4 7H20M4 17H20" stroke={ROLE.structure} strokeWidth={1} />,
+    name: "structure (board, grid)",
+    rule: "1 px, 55 % white — context, not data",
+  },
 ];
 
 const meta = {

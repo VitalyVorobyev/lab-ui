@@ -89,10 +89,7 @@ export function StatusDot({
   children?: ReactNode;
 }) {
   return (
-    <span
-      data-tone={tone}
-      className={cn("inline-flex items-center gap-1.5 text-xs text-fg-muted", className)}
-    >
+    <span data-tone={tone} className={cn("inline-flex items-center gap-1.5 text-xs text-fg-muted", className)}>
       <span className={cn("size-1.5 shrink-0 rounded-full", DOT_CLASSES[tone])} aria-hidden />
       {children}
     </span>

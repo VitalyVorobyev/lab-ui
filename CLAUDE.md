@@ -1,7 +1,7 @@
 # lab-ui: the `@vitavision/*` frontend packages
 
 A bun workspace that publishes the `@vitavision/*` React packages (`ui`, `forms`, `charts`,
-`stage2d`, `overlays`, `workbench`, `three`, `three-react`, `config-{ts,eslint,vitest}`) and the
+`stage2d`, `overlays`, `workbench`, `three`, `three-react`, `config-{ts,oxlint,vitest}`) and the
 Storybook docs site (`apps/storybook`, deployed to GitHub Pages from `main`).
 
 Docs map:
@@ -19,7 +19,8 @@ bun install
 bun run typecheck      # tsc per package + tools/ (siblings resolve to sources: no build needed)
 bun run test           # vitest per package (node + Chromium projects) + bun test tools/ packages/config/
 bun run test:stories   # every story: interactions, axe light + dark, renderToString. NOT part of `test`
-bun run lint           # eslint, 0 warnings allowed
+bun run lint           # oxlint, type-aware, 0 warnings allowed
+bun run format         # oxfmt (CI runs format:check)
 bun run build          # tsdown → packages/*/dist
 bun run api            # regenerate packages/*/etc/*.api.md after any public API change (CI runs api:check)
 bun run check:deps     # the layering rules below
@@ -51,7 +52,7 @@ Visual regression (`test:visual`) runs only in CI, on macOS.
 - [ ] Stories are the fixtures: `composeStories` interaction tests in Vitest browser mode; unit (and property) tests for pure logic; coverage ≥ 90 % logic / ≥ 80 % components, per file.
 - [ ] axe: 0 serious/critical in light and dark; `renderToString` of every story with 0 errors/warnings; visual regression (macOS, `maxDiffPixelRatio ≤ 0.001`).
 - [ ] publint 0 errors, attw 0 problems, size-limit budget, knip 0 unused.
-- [ ] Lint and types: 0 errors, 0 warnings; no `any`; `@ts-expect-error` only with a description.
+- [ ] Lint and types: 0 errors, 0 warnings; no `any`; `@ts-expect-error` only with a description; formatted (`bun run format`).
 
 ## Workflow
 

@@ -7,14 +7,7 @@
  */
 
 export { SceneColorsProvider, type SceneColorsProviderProps, useSceneColors } from "./colors";
-export {
-  AtFrame,
-  type AtFrameProps,
-  FrameTree,
-  type FrameTreeProps,
-  type PlayheadSource,
-  useFrameTree,
-} from "./FrameTree";
+export { AtFrame, type AtFrameProps, FrameTree, type FrameTreeProps, type PlayheadSource, useFrameTree } from "./FrameTree";
 export {
   CameraFrustum,
   type CameraFrustumProps,

@@ -51,7 +51,10 @@ describe("stepStates laws", () => {
     for (let run = 0; run < RUNS; run++) {
       const steps = anySteps(random);
       const views = stepStates(steps, anyCurrent(random, steps));
-      expect(views.map((view) => view.id), JSON.stringify(steps)).toEqual(steps.map((step) => step.id));
+      expect(
+        views.map((view) => view.id),
+        JSON.stringify(steps),
+      ).toEqual(steps.map((step) => step.id));
     }
   });
 
@@ -62,7 +65,10 @@ describe("stepStates laws", () => {
       const current = anyCurrent(random, steps);
       const currents = stepStates(steps, current).filter((view) => view.state === "current");
       const known = steps.some((step) => step.id === current);
-      expect(currents.map((view) => view.id), JSON.stringify({ steps, current })).toEqual(known ? [current] : []);
+      expect(
+        currents.map((view) => view.id),
+        JSON.stringify({ steps, current }),
+      ).toEqual(known ? [current] : []);
     }
   });
 

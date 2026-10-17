@@ -47,14 +47,9 @@ export function Disclosure({
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal",
         )}
       >
-        <ChevronRight
-          className="size-3.5 shrink-0 transition-transform group-open:rotate-90"
-          aria-hidden
-        />
+        <ChevronRight className="size-3.5 shrink-0 transition-transform group-open:rotate-90" aria-hidden />
         {summary}
-        {count !== undefined && (
-          <span className="font-mono text-fg-subtle tabular-nums">{count}</span>
-        )}
+        {count !== undefined && <span className="font-mono text-fg-subtle tabular-nums">{count}</span>}
       </summary>
       <div className="pt-3">{children}</div>
     </details>

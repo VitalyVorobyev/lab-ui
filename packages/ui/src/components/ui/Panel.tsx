@@ -47,11 +47,7 @@ export function Panel({
           <h2
             className={cn(
               "truncate font-semibold text-fg",
-              byDensity(
-                density,
-                "text-sm tracking-tight",
-                "text-[11px] tracking-wider uppercase text-fg-muted",
-              ),
+              byDensity(density, "text-sm tracking-tight", "text-[11px] tracking-wider uppercase text-fg-muted"),
             )}
           >
             {title}
@@ -97,10 +93,7 @@ export function Section({
     <section className={cn("flex flex-col", byDensity(density, "gap-3", "gap-1.5"), className)}>
       <div className={cn("flex items-baseline", byDensity(density, "gap-2.5", "gap-2"))}>
         {step !== undefined && (
-          <span
-            className="font-mono text-xs text-fg-subtle tabular-nums"
-            aria-hidden
-          >
+          <span className="font-mono text-xs text-fg-subtle tabular-nums" aria-hidden>
             {String(step).padStart(2, "0")}
           </span>
         )}
@@ -212,16 +205,11 @@ export function ReadoutStrip({
   if (shown.length === 0) return null;
 
   return (
-    <ol
-      className={cn(
-        "flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-fg-muted",
-        className,
-      )}
-    >
+    <ol className={cn("flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-fg-muted", className)}>
       {shown.map((item, index) => (
         // The items are positional facts with no identity of their own (a label is optional
         // and values repeat), so their place in the strip is the key.
-        // eslint-disable-next-line @eslint-react/no-array-index-key -- positional list, see above
+        // oxlint-disable-next-line react/no-array-index-key -- positional list, see above
         <li key={index} className="flex items-center gap-2">
           {index > 0 && (
             <span className="text-fg-subtle" aria-hidden>

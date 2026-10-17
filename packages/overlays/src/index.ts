@@ -41,20 +41,8 @@ export {
   type MarkerPolygon,
 } from "./lattice";
 
-export {
-  PUZZLEBOARD_PERIOD,
-  edgeBitsFromPuzzleboard,
-  type PuzzleboardAlignment,
-  type PuzzleboardEdge,
-} from "./puzzleboard";
+export { PUZZLEBOARD_PERIOD, edgeBitsFromPuzzleboard, type PuzzleboardAlignment, type PuzzleboardEdge } from "./puzzleboard";
 
 export { TARGET_MARKERS } from "./glyphs";
 
-export {
-  circlePoints,
-  cornerNodes,
-  edgeBitEllipses,
-  markerAreas,
-  ringCentres,
-  ringEllipses,
-} from "./layerItems";
+export { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses } from "./layerItems";

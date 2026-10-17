@@ -287,12 +287,14 @@ export function PointSet({
         ))}
         {halo &&
           paths.picked.map(({ batch, d }) => (
-            <path key={`halo|selected|${batch.key}`} d={d} stroke={HALO} strokeWidth={widthOf(batch.shape, batch.role, "selected") + px(2)} />
+            <path
+              key={`halo|selected|${batch.key}`}
+              d={d}
+              stroke={HALO}
+              strokeWidth={widthOf(batch.shape, batch.role, "selected") + px(2)}
+            />
           ))}
-        {halo &&
-          paths.rings.map(({ batch, d }) => (
-            <path key={`halo|${batch.key}`} d={d} stroke={HALO} strokeWidth={ringWidth + px(2)} />
-          ))}
+        {halo && paths.rings.map(({ batch, d }) => <path key={`halo|${batch.key}`} d={d} stroke={HALO} strokeWidth={ringWidth + px(2)} />)}
         {paths.picked.map(({ batch, d }) => (
           <path
             key={`selected|${batch.key}`}
@@ -317,14 +319,22 @@ export function PointSet({
             <path
               data-hovered-point=""
               d={hoverShape.path(hoverItem.x, hoverItem.y, unit, hoverItem.angle ?? 0, hoverItem.angle2)}
-              stroke={hoverSelected ? selectionStroke : (hoverItem?.color || overlayRole(hoverRole))}
+              stroke={hoverSelected ? selectionStroke : hoverItem?.color || overlayRole(hoverRole)}
               strokeWidth={widthOf(hoverShape, hoverRole, hoverSelected ? "selected" : "hover")}
             />
           </>
         )}
       </g>
       {shownLabels.length > 0 && (
-        <g data-labels="" fontSize={px(11)} className="font-mono" stroke={HALO} strokeWidth={px(3)} paintOrder="stroke" strokeLinejoin="round">
+        <g
+          data-labels=""
+          fontSize={px(11)}
+          className="font-mono"
+          stroke={HALO}
+          strokeWidth={px(3)}
+          paintOrder="stroke"
+          strokeLinejoin="round"
+        >
           {shownLabels.map((i) => {
             const item = items[i]!;
             return (
@@ -351,7 +361,8 @@ function batchPath(batch: Batch, items: readonly PointSetItem[], unit: number, c
   let d = "";
   for (const i of batch.indices) {
     const item = items[i]!;
-    if (window && (item.x < window.x || item.x > window.x + window.width || item.y < window.y || item.y > window.y + window.height)) continue;
+    if (window && (item.x < window.x || item.x > window.x + window.width || item.y < window.y || item.y > window.y + window.height))
+      continue;
     d += batch.shape.path(item.x, item.y, unit, item.angle ?? 0, item.angle2);
   }
   batch.cache = { key, d };

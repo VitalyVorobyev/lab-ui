@@ -129,7 +129,12 @@ describe("nearestMeasurePrimitive", () => {
   });
 
   it("finds a primitive that spans the whole scene among thousands of small ones", () => {
-    const many: MeasurePrimitive[] = Array.from({ length: 3000 }, (_, n) => ({ kind: "point", id: `p${n}`, x: (n % 60) * 20, y: Math.floor(n / 60) * 20 }));
+    const many: MeasurePrimitive[] = Array.from({ length: 3000 }, (_, n) => ({
+      kind: "point",
+      id: `p${n}`,
+      x: (n % 60) * 20,
+      y: Math.floor(n / 60) * 20,
+    }));
     many.push({ kind: "segment", id: "long", x1: -5, y1: -5, x2: 1205, y2: 1005 });
     many.push({ kind: "point", x: 3, y: 3 });
     expect(nearestMeasurePrimitive(many, at(610, 509), 2, 1)?.id).toBe("long");

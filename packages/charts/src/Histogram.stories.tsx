@@ -106,9 +106,7 @@ export const PreBinnedWithCursor: Story = {
   play: async ({ canvasElement }) => {
     const svg = canvasElement.querySelector("svg[role='img']")!;
     const figure = svg.closest("figure")!;
-    await waitFor(() =>
-      expect(svg.getAttribute("viewBox")).toBe(`0 0 ${Math.round(figure.getBoundingClientRect().width)} 96`),
-    );
+    await waitFor(() => expect(svg.getAttribute("viewBox")).toBe(`0 0 ${Math.round(figure.getBoundingClientRect().width)} 96`));
     // x = 40 DN of 256 is bin floor(40 * 64 / 256) = 10.
     await expect(svg.querySelector("[data-cursor-bin]")?.getAttribute("data-cursor-bin")).toBe("10");
     await expect(svg.querySelectorAll("[data-cursor-bin]")).toHaveLength(1);

@@ -80,13 +80,7 @@ function LayersMenu() {
 function ControlledMenu() {
   const [open, setOpen] = useState(true);
   return (
-    <DropdownMenu
-      open={open}
-      onOpenChange={setOpen}
-      align="end"
-      side="right"
-      trigger={<Button variant="secondary">More</Button>}
-    >
+    <DropdownMenu open={open} onOpenChange={setOpen} align="end" side="right" trigger={<Button variant="secondary">More</Button>}>
       <MenuItem>Duplicate</MenuItem>
     </DropdownMenu>
   );
@@ -106,10 +100,7 @@ export const Open: Story = {
     const menu = await within(document.body).findByRole("menu");
     await expect(menu).toBeVisible();
     await expect(within(menu).getByRole("menuitemcheckbox", { name: /Region/ })).toHaveAttribute("aria-checked", "true");
-    await expect(within(menu).getByRole("menuitemcheckbox", { name: /Edge points/ })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
+    await expect(within(menu).getByRole("menuitemcheckbox", { name: /Edge points/ })).toHaveAttribute("aria-disabled", "true");
   },
 };
 

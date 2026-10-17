@@ -19,9 +19,7 @@ const COLUMNS = [
 ];
 
 function renderTable(extra: Partial<Parameters<typeof Table<(typeof ROWS)[number]>>[0]> = {}) {
-  return render(
-    <Table columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} {...extra} />,
-  );
+  return render(<Table columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} {...extra} />);
 }
 
 describe("Table", () => {
@@ -188,9 +186,7 @@ describe("Table sorting", () => {
     expect(ids()).toEqual(["a", "c", "b"]);
 
     // `null` is a controlled value too: the rows' own order, whatever was clicked.
-    rerender(
-      <Table columns={PART_COLUMNS} rows={PARTS} rowKey={(row) => row.id} sort={null} onSortChange={onSortChange} />,
-    );
+    rerender(<Table columns={PART_COLUMNS} rows={PARTS} rowKey={(row) => row.id} sort={null} onSortChange={onSortChange} />);
     fireEvent.click(button("Name"));
     expect(ids()).toEqual(["a", "b", "c"]);
   });

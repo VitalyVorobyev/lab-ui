@@ -23,7 +23,8 @@ The apps can only converge on packages they can adopt one layer at a time.
 
 This repository becomes a bun-workspace monorepo of independently versioned, ESM-only
 packages: `ui`, `forms`, `charts`, `stage2d`, and later `overlays`, `three` and `three-react`.
-Shared configuration lives in `config-{ts,eslint,vitest}`.
+Shared configuration lives in `config-{ts,eslint,vitest}` (`config-eslint` became
+`config-oxlint` on 2026-10-17, ADR-0002 N3).
 
 `@vitavision/lab-ui` becomes a deprecated compatibility package. It re-exports the old
 surface until its last consumer migrates (PLAN L9-1).

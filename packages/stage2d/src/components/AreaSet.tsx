@@ -245,7 +245,9 @@ export function AreaSet({
   /** Each region's fill as its own even-odd path, or all of them as one path. */
   const fillPaths = (batch: AreaBatch, colour: string, tag: string) =>
     evenOdd ? (
-      batch.fills!.map((d, k) => <path key={batch.indices[k]} data-fill={tag} d={d} fill={colour} fillOpacity={fillOpacity} fillRule="evenodd" />)
+      batch.fills!.map((d, k) => (
+        <path key={batch.indices[k]} data-fill={tag} d={d} fill={colour} fillOpacity={fillOpacity} fillRule="evenodd" />
+      ))
     ) : (
       <path data-fill={tag} d={batch.fills!.join("")} fill={colour} fillOpacity={fillOpacity} />
     );
@@ -261,7 +263,9 @@ export function AreaSet({
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {groups.normal.map((batch) => (
           <g key={batch.id} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>
-            {halo && (!separate || batch.d !== "") && <path d={batch.d} stroke={HALO} strokeWidth={widthOf(batch.role, "default") + px(2)} opacity={0.6} />}
+            {halo && (!separate || batch.d !== "") && (
+              <path d={batch.d} stroke={HALO} strokeWidth={widthOf(batch.role, "default") + px(2)} opacity={0.6} />
+            )}
             {separate && fillPaths(batch, batch.fill ?? strokeOf(batch), batch.key)}
             {(!separate || batch.d !== "") && (
               <path
@@ -292,7 +296,11 @@ export function AreaSet({
         {hoverItem && (
           <>
             {halo && (
-              <path d={areaPath(hoverItem.points)} stroke={HALO} strokeWidth={widthOf(hoverRole, hoverSelected ? "selected" : "hover") + px(2)} />
+              <path
+                d={areaPath(hoverItem.points)}
+                stroke={HALO}
+                strokeWidth={widthOf(hoverRole, hoverSelected ? "selected" : "hover") + px(2)}
+              />
             )}
             <path
               data-hovered-area=""
@@ -315,9 +323,24 @@ export function AreaSet({
         ))}
       </g>
       {shownLabels.length > 0 && (
-        <g data-labels="" fontSize={px(11)} className="font-mono" stroke={HALO} strokeWidth={px(3)} paintOrder="stroke" strokeLinejoin="round">
+        <g
+          data-labels=""
+          fontSize={px(11)}
+          className="font-mono"
+          stroke={HALO}
+          strokeWidth={px(3)}
+          paintOrder="stroke"
+          strokeLinejoin="round"
+        >
           {shownLabels.map((i) => (
-            <text key={items[i]!.id} x={anchors.xy[2 * i]} y={anchors.xy[2 * i + 1]} fill={LABEL} textAnchor="middle" dominantBaseline="central">
+            <text
+              key={items[i]!.id}
+              x={anchors.xy[2 * i]}
+              y={anchors.xy[2 * i + 1]}
+              fill={LABEL}
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
               {items[i]!.label}
             </text>
           ))}

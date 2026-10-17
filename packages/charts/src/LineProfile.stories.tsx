@@ -158,9 +158,7 @@ export const Interactive: Story = {
     const svg = canvasElement.querySelector("svg[role='img']")!;
     // Fluid: the viewBox is the container's own width, so text is drawn at its true size.
     const figure = svg.closest("figure")!;
-    await waitFor(() =>
-      expect(svg.getAttribute("viewBox")).toBe(`0 0 ${Math.round(figure.getBoundingClientRect().width)} 180`),
-    );
+    await waitFor(() => expect(svg.getAttribute("viewBox")).toBe(`0 0 ${Math.round(figure.getBoundingClientRect().width)} 180`));
     await expect(svg.querySelectorAll("[data-bands] rect")).toHaveLength(1);
     await expect(svg.querySelectorAll("[data-markers] line")).toHaveLength(5);
     // The external cursor is drawn without hovering.

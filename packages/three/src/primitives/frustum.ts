@@ -107,11 +107,7 @@ export class CameraFrustum extends Group {
     const face: number[] = [];
     for (let i = 0; i < count; i++) face.push(...centre, ...far[i]!, ...far[(i + 1) % count]!);
     const pad = options.pickPadding ?? 1.2;
-    const padded = far.map((p) => [
-      centre[0] + (p[0] - centre[0]) * pad,
-      centre[1] + (p[1] - centre[1]) * pad,
-      depth,
-    ]);
+    const padded = far.map((p) => [centre[0] + (p[0] - centre[0]) * pad, centre[1] + (p[1] - centre[1]) * pad, depth]);
     const hull: number[] = [];
     for (let i = 0; i < count; i++) {
       const a = padded[i]!;
@@ -134,15 +130,9 @@ export class CameraFrustum extends Group {
     lines.raycast = NO_RAYCAST;
     const farFace = new Mesh(faceGeometry, this.#face);
     farFace.raycast = NO_RAYCAST;
-    this.hitbox = new Mesh(
-      hullGeometry,
-      new MeshBasicMaterial({ transparent: true, opacity: 0, side: DoubleSide, depthWrite: false }),
-    );
+    this.hitbox = new Mesh(hullGeometry, new MeshBasicMaterial({ transparent: true, opacity: 0, side: DoubleSide, depthWrite: false }));
     this.hitbox.name = "hitbox";
-    const apex = new Mesh(
-      new SphereGeometry(Math.max(pad - 1, 0.05) * depth, 12, 8),
-      this.hitbox.material,
-    );
+    const apex = new Mesh(new SphereGeometry(Math.max(pad - 1, 0.05) * depth, 12, 8), this.hitbox.material);
     apex.name = "hitbox-apex";
     this.hitbox.add(apex);
     this.add(lines, farFace, this.hitbox);

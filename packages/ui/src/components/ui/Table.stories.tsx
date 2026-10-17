@@ -174,9 +174,7 @@ export const ClickableRows: Story = {
 export const ActiveRow: Story = {
   args: { isRowActive: (row) => row.id === 2 },
   play: async ({ canvas }) => {
-    const current = canvas
-      .getAllByRole("row")
-      .filter((row) => row.getAttribute("aria-current") === "true");
+    const current = canvas.getAllByRole("row").filter((row) => row.getAttribute("aria-current") === "true");
     await expect(current).toHaveLength(1);
     await expect(current[0]).toHaveTextContent("dent");
   },

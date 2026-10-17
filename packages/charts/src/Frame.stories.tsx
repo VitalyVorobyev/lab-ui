@@ -57,10 +57,7 @@ export const WideVariant: Story = {
     xTicks: 10,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("img", { name: "Wide frame" })).toHaveAttribute(
-      "viewBox",
-      "0 0 960 320",
-    );
+    await expect(canvas.getByRole("img", { name: "Wide frame" })).toHaveAttribute("viewBox", "0 0 960 320");
   },
 };
 

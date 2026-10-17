@@ -1,13 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  clampSize,
-  readStoredSize,
-  resolveLimits,
-  resolveSize,
-  splitKeyAction,
-  writeStoredSize,
-} from "./splitSize";
+import { clampSize, readStoredSize, resolveLimits, resolveSize, splitKeyAction, writeStoredSize } from "./splitSize";
 
 describe("resolveSize", () => {
   it("passes pixels through and resolves percentages against the length", () => {

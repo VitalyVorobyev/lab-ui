@@ -121,11 +121,7 @@ export function LineProfile({
       figureRef={variant === "fluid" ? fluidRef : undefined}
       footer={
         <div className="flex flex-col gap-1">
-          {showLegend && series.length > 1 && (
-            <Legend
-              items={coloured.map((entry) => ({ label: entry.name, colour: entry.colour }))}
-            />
-          )}
+          {showLegend && series.length > 1 && <Legend items={coloured.map((entry) => ({ label: entry.name, colour: entry.colour }))} />}
           {footer}
         </div>
       }
@@ -158,15 +154,7 @@ export function LineProfile({
         const colour = toneColor(edge.tone, "signal");
         return (
           <g key={`${edge.position}-${edge.label ?? ""}-${edge.tone ?? ""}`}>
-            <line
-              x1={x}
-              x2={x}
-              y1={plotArea.y0}
-              y2={plotArea.y1}
-              stroke={colour}
-              strokeWidth={1.25}
-              strokeDasharray="3 2"
-            />
+            <line x1={x} x2={x} y1={plotArea.y0} y2={plotArea.y1} stroke={colour} strokeWidth={1.25} strokeDasharray="3 2" />
             {edge.label && (
               <text x={x} y={plotArea.y1 - 3} textAnchor="middle" fontSize={9} fill={colour}>
                 {edge.label}

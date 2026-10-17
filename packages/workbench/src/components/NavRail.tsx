@@ -112,16 +112,7 @@ export function NavRail({ value, defaultValue, onValueChange, labels = "visible"
  * in a tooltip (the rail's `labels`). A `<button>` by default; with `asChild`, the one child
  * element (the app's link) takes the item's look, `aria-current` and click.
  */
-export function NavRailItem({
-  value,
-  label,
-  icon,
-  badge,
-  disabled = false,
-  asChild = false,
-  children,
-  className,
-}: NavRailItemProps) {
+export function NavRailItem({ value, label, icon, badge, disabled = false, asChild = false, children, className }: NavRailItemProps) {
   const rail = use(NavRailContext);
   if (rail === null) throw new Error("NavRailItem must be rendered inside a NavRail.");
   const badgeId = useId();
@@ -172,7 +163,7 @@ export function NavRailItem({
     const own = children.props;
     // `@vitavision/ui` keeps its Slot to itself, and this package takes no Radix dependency of
     // its own: the one child element is cloned with the item's props merged in.
-    // eslint-disable-next-line @eslint-react/no-clone-element -- the asChild merge, see above
+    // oxlint-disable-next-line react/no-clone-element -- the asChild merge, see above
     item = cloneElement(children, {
       ...shared,
       "aria-disabled": disabled ? true : undefined,
@@ -189,13 +180,7 @@ export function NavRailItem({
     });
   } else {
     item = (
-      <button
-        type="button"
-        {...shared}
-        disabled={disabled}
-        onClick={() => rail.choose(value)}
-        className={cn(classes, className)}
-      >
+      <button type="button" {...shared} disabled={disabled} onClick={() => rail.choose(value)} className={cn(classes, className)}>
         {content}
       </button>
     );

@@ -99,7 +99,8 @@ export function measurePrimitiveDistance(primitive: MeasurePrimitive, point: Poi
     case "dimension": {
       const g = dimensionGeometry(primitive.x1, primitive.y1, primitive.x2, primitive.y2, primitive.offset ?? MEASURE_DIMENSION_OFFSET);
       let best = Infinity;
-      for (const [a, b] of [g.extensionLine1, g.extensionLine2, g.dimensionLine]) best = Math.min(best, segmentDistance(p, a.x, a.y, b.x, b.y));
+      for (const [a, b] of [g.extensionLine1, g.extensionLine2, g.dimensionLine])
+        best = Math.min(best, segmentDistance(p, a.x, a.y, b.x, b.y));
       return best;
     }
 
@@ -204,7 +205,12 @@ function indexOf(primitives: readonly MeasurePrimitive[]): MeasureIndex {
   const counts = new Uint32Array(cols * rows + 1);
   const spans: [number, number, number, number][] = [];
   for (const i of gridded) {
-    const span: [number, number, number, number] = [cellX(boxes[i * 5]!), cellY(boxes[i * 5 + 1]!), cellX(boxes[i * 5 + 2]!), cellY(boxes[i * 5 + 3]!)];
+    const span: [number, number, number, number] = [
+      cellX(boxes[i * 5]!),
+      cellY(boxes[i * 5 + 1]!),
+      cellX(boxes[i * 5 + 2]!),
+      cellY(boxes[i * 5 + 3]!),
+    ];
     spans.push(span);
     if ((span[2] - span[0] + 1) * (span[3] - span[1] + 1) > LARGE_CELLS) {
       large.push(i);
@@ -273,7 +279,8 @@ function boxOf(primitive: MeasurePrimitive): [number, number, number, number, nu
       add(primitive.cx + primitive.r, primitive.cy + primitive.r);
       break;
     case "caliper": {
-      for (const corner of caliperCorners(primitive.cx, primitive.cy, primitive.width, primitive.height, primitive.angle)) add(corner.x, corner.y);
+      for (const corner of caliperCorners(primitive.cx, primitive.cy, primitive.width, primitive.height, primitive.angle))
+        add(corner.x, corner.y);
       const tip = caliperArrow(primitive.cx, primitive.cy, primitive.width, primitive.angle).to;
       add(tip.x, tip.y);
       // The head's back corners reach 1.6 × its size behind the tip and 1 × to the side.
@@ -342,7 +349,12 @@ export function nearestMeasurePrimitive(
     seen[i] = query;
     const reach = radius + boxes[i * 5 + 4]! * screen;
     if (
-      !(point.x >= boxes[i * 5]! - reach && point.x <= boxes[i * 5 + 2]! + reach && point.y >= boxes[i * 5 + 1]! - reach && point.y <= boxes[i * 5 + 3]! + reach)
+      !(
+        point.x >= boxes[i * 5]! - reach &&
+        point.x <= boxes[i * 5 + 2]! + reach &&
+        point.y >= boxes[i * 5 + 1]! - reach &&
+        point.y <= boxes[i * 5 + 3]! + reach
+      )
     ) {
       return;
     }

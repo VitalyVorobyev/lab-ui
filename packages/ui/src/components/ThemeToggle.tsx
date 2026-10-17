@@ -81,11 +81,7 @@ export function ThemeToggle({
         onClick={advance}
         aria-label={LABEL[choice]}
         data-theme-choice={choice}
-        className={cn(
-          "rounded-control p-1.5 text-fg-muted transition-colors hover:bg-raised hover:text-fg",
-          focusRing,
-          className,
-        )}
+        className={cn("rounded-control p-1.5 text-fg-muted transition-colors hover:bg-raised hover:text-fg", focusRing, className)}
       >
         <Icon className="size-4" />
       </button>

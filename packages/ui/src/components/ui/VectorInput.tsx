@@ -102,7 +102,7 @@ export function VectorInput({
     >
       {value.map((component, index) => (
         // The components are positional: index is their identity.
-        // eslint-disable-next-line @eslint-react/no-array-index-key -- see above
+        // oxlint-disable-next-line react/no-array-index-key -- see above
         <label key={index} className="flex min-w-0 flex-1 items-center gap-1">
           <span className="shrink-0 font-mono text-[11px] text-fg-subtle">{labelOf(index)}</span>
           <ComponentField

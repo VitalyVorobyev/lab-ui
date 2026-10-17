@@ -37,10 +37,7 @@ export interface StackedBarsProps {
  * on bar width. A row with no non-zero segment shows its total.
  */
 export function StackedBars({ rows, label, className }: StackedBarsProps) {
-  const widest = Math.max(
-    1,
-    ...rows.map((row) => row.segments.reduce((total, segment) => total + segment.value, 0)),
-  );
+  const widest = Math.max(1, ...rows.map((row) => row.segments.reduce((total, segment) => total + segment.value, 0)));
 
   return (
     <div className={cn("flex flex-col gap-2", className)} role="table" aria-label={label}>
@@ -51,10 +48,7 @@ export function StackedBars({ rows, label, className }: StackedBarsProps) {
             <span className="w-28 shrink-0 truncate font-mono" role="rowheader" title={row.label}>
               {row.label}
             </span>
-            <div
-              className="flex h-4 flex-1 overflow-hidden rounded-control bg-raised"
-              role="cell"
-            >
+            <div className="flex h-4 flex-1 overflow-hidden rounded-control bg-raised" role="cell">
               {row.segments.map((segment) =>
                 segment.value === 0 ? null : (
                   <div

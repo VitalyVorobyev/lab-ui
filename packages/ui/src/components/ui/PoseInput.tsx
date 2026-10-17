@@ -110,14 +110,12 @@ export function PoseInput({
   const scale = translationUnit === "mm" ? 1000 : 1;
   const tPrecision = translationPrecision ?? (translationUnit === "mm" ? 1 : 4);
   const translation = value.translation.map((component) => component * scale);
-  const radians =
-    typed !== null && sameQuaternion(typed.rotation, value.rotation) ? typed.angles : rotationView.toEuler(value.rotation);
+  const radians = typed !== null && sameQuaternion(typed.rotation, value.rotation) ? typed.angles : rotationView.toEuler(value.rotation);
   const degrees = radians.map((angle) => angle * DEGREES);
   const angleLabels = rotationView.labels ?? DEFAULT_ANGLE_LABELS;
 
   if (readOnly) {
-    const join = (values: readonly number[], precision: number) =>
-      values.map((component) => formatNumber(component, precision)).join(" ");
+    const join = (values: readonly number[], precision: number) => values.map((component) => formatNumber(component, precision)).join(" ");
     return (
       <div role="group" aria-label={ariaLabel} data-readonly="" className={cn("min-w-0", className)}>
         <ReadoutStrip
@@ -149,7 +147,11 @@ export function PoseInput({
     <div
       role="group"
       aria-label={ariaLabel}
-      className={cn("grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2", byDensity(density, "gap-y-2", "gap-y-1"), className)}
+      className={cn(
+        "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2",
+        byDensity(density, "gap-y-2", "gap-y-1"),
+        className,
+      )}
     >
       <span aria-hidden className={rowLabel}>
         Translation

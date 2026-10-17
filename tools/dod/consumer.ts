@@ -59,7 +59,16 @@ try {
         "@react-three/fiber": threeReact.devDependencies["@react-three/fiber"],
       },
       overrides: tarball,
-      devDependencies: { vite: v("vite"), "@vitejs/plugin-react": v("@vitejs/plugin-react"), tailwindcss: "4.3.3", "@tailwindcss/vite": "4.3.3" },
+      devDependencies: {
+        vite: v("vite"),
+        "@vitejs/plugin-react": v("@vitejs/plugin-react"),
+        tailwindcss: "4.3.3",
+        "@tailwindcss/vite": "4.3.3",
+        typescript: v("typescript"),
+        "@types/react": v("@types/react"),
+        "@types/react-dom": v("@types/react-dom"),
+        "@types/three": threeReact.devDependencies["@types/three"],
+      },
     }),
   );
   run("bun", ["install"], app);
@@ -87,7 +96,7 @@ const html = renderToString(
     <NumberInput aria-label="f" unit="mm" defaultValue={16} />
     <VectorInput aria-label="t" value={[0, 1, 2]} unit="m" />
     <SchemaForm fields={fields} values={{}} onChange={() => {}} />
-    <LineChart series={[{ label: "a", points: [{ x: 0, y: 0 }, { x: 1, y: 1 }] }]} label="c" />
+    <LineChart series={[{ name: "a", points: [{ x: 0, y: 0 }, { x: 1, y: 1 }] }]} label="c" />
     <svg><MeasureOverlay nativeWidth={10} nativeHeight={10} primitives={[]} strokeScale={1} /></svg>
     <ImageStage image={{ width: 64, height: 48 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
       <TargetOverlay detection={{ kind: "chessboard", corners: [{ id: "a", x: 10, y: 10, i: 0, j: 0 }, { id: "b", x: 30, y: 10, i: 1, j: 0 }], markers: [{ id: 3, corners: [5, 5, 15, 5, 15, 15, 5, 15] }] }} />
@@ -132,6 +141,33 @@ console.log("ssr ok", html.length);
     throw new Error(`fonts.css did not resolve its files: ${fonts.join(", ") || "none"}`);
   }
   console.log(`css ok (${text.length} bytes), ${fonts.length} font files`);
+
+  // 4. The shipped declarations typecheck in the consumer, with the workspace's TypeScript
+  //    and the shared strict options, declaration files included (no skipLibCheck).
+  writeFileSync(
+    join(app, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        target: "ES2022",
+        lib: ["ES2022", "DOM", "DOM.Iterable"],
+        module: "ESNext",
+        moduleResolution: "bundler",
+        jsx: "react-jsx",
+        strict: true,
+        noUncheckedIndexedAccess: true,
+        exactOptionalPropertyTypes: true,
+        verbatimModuleSyntax: true,
+        isolatedModules: true,
+        skipLibCheck: false,
+        noEmit: true,
+        types: ["vite/client"],
+      },
+      include: ["ssr.tsx", "src"],
+    }),
+  );
+  const tsc = spawnSync("bunx", ["tsc", "-p", "tsconfig.json"], { cwd: app, encoding: "utf8" });
+  if (tsc.status !== 0) throw new Error(`the packed declarations do not typecheck:\n${tsc.stdout}${tsc.stderr}`);
+  console.log(`types ok (${run("bunx", ["tsc", "--version"], app).trim()})`);
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }

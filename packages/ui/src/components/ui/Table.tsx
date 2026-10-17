@@ -105,11 +105,7 @@ export function Table<Row>({
    * modifiers — a list kept in step with a canvas needs shift-range and meta-toggle to mean
    * the same thing in both places. `index` is the row's position in `rows`, whatever the
    * sort. */
-  onRowClick?: (
-    row: Row,
-    index: number,
-    event: MouseEvent<HTMLTableRowElement> | KeyboardEvent<HTMLTableRowElement>,
-  ) => void;
+  onRowClick?: (row: Row, index: number, event: MouseEvent<HTMLTableRowElement> | KeyboardEvent<HTMLTableRowElement>) => void;
   /** Marks the row that is current — the selected match, the open frame. Rendered as
    * `aria-current`, so it is announced rather than only tinted. `index` is the row's
    * position in `rows`, whatever the sort. */
@@ -152,17 +148,7 @@ export function Table<Row>({
   };
 
   if (rows.length === 0) {
-    return (
-      <p
-        className={cn(
-          "text-center text-fg-muted",
-          byDensity(density, "py-6 text-sm", "py-3 text-xs"),
-          className,
-        )}
-      >
-        {empty}
-      </p>
-    );
+    return <p className={cn("text-center text-fg-muted", byDensity(density, "py-6 text-sm", "py-3 text-xs"), className)}>{empty}</p>;
   }
 
   return (
@@ -213,11 +199,7 @@ export function Table<Row>({
                       {column.header}
                       <SortIcon
                         aria-hidden
-                        className={cn(
-                          "shrink-0",
-                          byDensity(density, "size-3", "size-2.5"),
-                          !direction && "text-fg-subtle",
-                        )}
+                        className={cn("shrink-0", byDensity(density, "size-3", "size-2.5"), !direction && "text-fg-subtle")}
                       />
                     </button>
                   ) : (

@@ -110,9 +110,7 @@ export function SegmentedControl({
               SEGMENT_SIZE_CLASSES[size],
               "font-medium transition-colors",
               "has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-signal",
-              checked
-                ? "bg-surface text-fg shadow-sm"
-                : "text-fg-muted hover:text-fg",
+              checked ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
               disabled && "cursor-not-allowed",
             )}
           >

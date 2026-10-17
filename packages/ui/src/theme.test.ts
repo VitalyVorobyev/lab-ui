@@ -1,13 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  DEFAULT_THEME_STORAGE_KEY,
-  initTheme,
-  readThemeChoice,
-  resolveTheme,
-  setThemeChoice,
-  type ThemeChoice,
-} from "./theme";
+import { DEFAULT_THEME_STORAGE_KEY, initTheme, readThemeChoice, resolveTheme, setThemeChoice, type ThemeChoice } from "./theme";
 
 const CHOICES: ThemeChoice[] = ["light", "dark", "system"];
 

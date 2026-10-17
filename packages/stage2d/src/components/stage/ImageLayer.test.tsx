@@ -89,8 +89,7 @@ describe("ImageLayer", () => {
   it("keeps the preview until the stage would magnify it, then requests the full image and keeps it", () => {
     withLayout();
     const onFullNeeded = vi.fn();
-    const layer = (view: StageView) =>
-      stage(view, <ImageLayer src="full.png" preview={PREVIEW} alt="Frame" onFullNeeded={onFullNeeded} />);
+    const layer = (view: StageView) => stage(view, <ImageLayer src="full.png" preview={PREVIEW} alt="Frame" onFullNeeded={onFullNeeded} />);
     const { container, rerender } = render(layer(FIT));
     expect(tiers(container).full).toBeNull();
     expect(tiers(container).preview?.getAttribute("alt")).toBe("Frame");

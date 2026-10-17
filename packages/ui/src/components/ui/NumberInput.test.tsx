@@ -60,9 +60,7 @@ describe("NumberInput", () => {
   });
 
   it("keeps the caller's own style, over the room made for the unit", () => {
-    const { container } = render(
-      <NumberInput unit="px" defaultValue="1" style={{ paddingInlineEnd: "3rem", color: "red" }} />,
-    );
+    const { container } = render(<NumberInput unit="px" defaultValue="1" style={{ paddingInlineEnd: "3rem", color: "red" }} />);
     const input = container.querySelector("input");
     expect(input?.style.paddingInlineEnd).toBe("3rem");
     expect(input?.style.color).toBe("red");
@@ -100,4 +98,3 @@ describe("NumberInput", () => {
     expect(container.querySelector("input")?.value).toBe("");
   });
 });
-

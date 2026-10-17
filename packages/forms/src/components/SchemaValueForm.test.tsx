@@ -163,9 +163,13 @@ describe("numbers", () => {
   });
 
   it("leaves a cleared number alone when the app turns restoring off", () => {
-    const { spy } = setup(DETECTOR, { ...(defaultValueForSchema(DETECTOR) as object), nms_radius: 4 }, {
-      ui: { fields: { nms_radius: { restoreDefaultOnClear: false } } },
-    });
+    const { spy } = setup(
+      DETECTOR,
+      { ...(defaultValueForSchema(DETECTOR) as object), nms_radius: 4 },
+      {
+        ui: { fields: { nms_radius: { restoreDefaultOnClear: false } } },
+      },
+    );
     const input = typeNumber("Nms radius", "");
     fireEvent.blur(input);
     expect(spy).not.toHaveBeenCalled();
@@ -441,7 +445,7 @@ describe("nullable blocks", () => {
     expect(last()).not.toHaveProperty("label");
   });
 
-  it("writes null when a required or clearTo: null nullable string is emptied, and keeps \"\" for a plain one", () => {
+  it('writes null when a required or clearTo: null nullable string is emptied, and keeps "" for a plain one', () => {
     const schema: JsonSchema = {
       type: "object",
       properties: {
@@ -495,7 +499,10 @@ describe("lists and tuples", () => {
   });
 
   it("holds a list to its minItems and maxItems", () => {
-    const schema: JsonSchema = { type: "object", properties: { xs: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 2 } } };
+    const schema: JsonSchema = {
+      type: "object",
+      properties: { xs: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 2 } },
+    };
     setup(schema, { xs: ["a", "b"] });
     expect(screen.getByRole<HTMLInputElement>("button", { name: "Add Xs" }).disabled).toBe(true);
     cleanup();
@@ -562,9 +569,13 @@ describe("lists and tuples", () => {
         loose: { type: "array", items: { type: "number" } },
       },
     };
-    setup(schema, { strings: ["a"], nums: [1, 2], loose: [3] }, {
-      ui: { fields: { strings: { widget: "json" }, nums: { widget: "tuple-row" }, loose: { widget: "string-list" } } },
-    });
+    setup(
+      schema,
+      { strings: ["a"], nums: [1, 2], loose: [3] },
+      {
+        ui: { fields: { strings: { widget: "json" }, nums: { widget: "tuple-row" }, loose: { widget: "string-list" } } },
+      },
+    );
     expect(screen.getByRole("textbox", { name: "Strings" }).tagName).toBe("TEXTAREA");
     expect(screen.getByRole("group", { name: "Nums" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Add Loose" })).toBeTruthy();
@@ -620,7 +631,14 @@ describe("layout", () => {
       ui: {
         groups: [
           { id: "detect", title: "Detection", fields: ["nms_radius", "blur_sigma"], hint: "What is found." },
-          { id: "more", title: "More", fields: ["refiner", "threshold.Fixed", "nope"], collapsible: true, defaultOpen: true, hint: "Extra." },
+          {
+            id: "more",
+            title: "More",
+            fields: ["refiner", "threshold.Fixed", "nope"],
+            collapsible: true,
+            defaultOpen: true,
+            hint: "Extra.",
+          },
         ],
       },
     });

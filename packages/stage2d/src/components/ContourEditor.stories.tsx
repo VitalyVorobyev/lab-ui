@@ -11,19 +11,47 @@ import type { Point } from "./measureGeometry";
 
 function Example() {
   const [view, setView] = useState<StageView | null>(null);
-  const [points, setPoints] = useState<Point[]>([{ x: 35, y: 32 }, { x: 165, y: 30 }, { x: 175, y: 125 }, { x: 28, y: 130 }]);
-  return <div style={{ height: 440 }}><ImageStage image={{ width: 210, height: 160 }} view={view} onView={setView}><div className="absolute inset-0 bg-canvas" /><ContourEditor points={points} onChange={setPoints} editable /></ImageStage></div>;
+  const [points, setPoints] = useState<Point[]>([
+    { x: 35, y: 32 },
+    { x: 165, y: 30 },
+    { x: 175, y: 125 },
+    { x: 28, y: 130 },
+  ]);
+  return (
+    <div style={{ height: 440 }}>
+      <ImageStage image={{ width: 210, height: 160 }} view={view} onView={setView}>
+        <div className="absolute inset-0 bg-canvas" />
+        <ContourEditor points={points} onChange={setPoints} editable />
+      </ImageStage>
+    </div>
+  );
 }
 
 function BorderExample() {
-  const [points, setPoints] = useState<Point[]>([{ x: 40, y: 40 }, { x: 150, y: 40 }, { x: 150, y: 120 }]);
-  return <div style={{ height: 440 }}><ImageStage image={{ width: 210, height: 160 }} view={{ scale: 2, tx: 0, ty: 0 }} onView={() => {}}><div className="absolute inset-0 bg-canvas" /><ContourEditor points={points} onChange={setPoints} editable bounds={{ x: -0.5, y: -0.5, width: 210, height: 160 }} /></ImageStage></div>;
+  const [points, setPoints] = useState<Point[]>([
+    { x: 40, y: 40 },
+    { x: 150, y: 40 },
+    { x: 150, y: 120 },
+  ]);
+  return (
+    <div style={{ height: 440 }}>
+      <ImageStage image={{ width: 210, height: 160 }} view={{ scale: 2, tx: 0, ty: 0 }} onView={() => {}}>
+        <div className="absolute inset-0 bg-canvas" />
+        <ContourEditor points={points} onChange={setPoints} editable bounds={{ x: -0.5, y: -0.5, width: 210, height: 160 }} />
+      </ImageStage>
+    </div>
+  );
 }
 
 /** 1:1 at the origin, so client coordinates are image coordinates plus the stage's corner. */
 const IMAGE = { width: 400, height: 300 };
 const SIZE = { width: IMAGE.width + 2, height: IMAGE.height + 2 };
-const SQUARE: Point[] = [{ x: 80, y: 60 }, { x: 320, y: 60 }, { x: 320, y: 240 }, { x: 80, y: 240 }];
+const SQUARE: Point[] = [
+  { x: 80, y: 60 },
+  { x: 320, y: 60 },
+  { x: 320, y: 240 },
+  { x: 80, y: 240 },
+];
 
 /** A pointer event over image point `p`, from the transformed stage itself. */
 function at(within: Element, p: Point) {
@@ -76,7 +104,12 @@ function DoubleClickExample() {
 
 /** An open centreline: no segment from the last vertex back to the first. */
 function OpenExample() {
-  const [points, setPoints] = useState<Point[]>([{ x: 60, y: 220 }, { x: 140, y: 120 }, { x: 240, y: 160 }, { x: 340, y: 70 }]);
+  const [points, setPoints] = useState<Point[]>([
+    { x: 60, y: 220 },
+    { x: 140, y: 120 },
+    { x: 240, y: 160 },
+    { x: 340, y: 70 },
+  ]);
   return (
     <div style={SIZE}>
       <ImageStage image={IMAGE} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} style={SIZE}>
@@ -93,7 +126,10 @@ const erased = fn();
 
 /** An edge piece and its brush: a drag near it pushes it, softly, from where the press landed. */
 function BrushExample() {
-  const [points, setPoints] = useState<Point[]>([{ x: 40, y: 150 }, { x: 360, y: 150 }]);
+  const [points, setPoints] = useState<Point[]>([
+    { x: 40, y: 150 },
+    { x: 360, y: 150 },
+  ]);
   return (
     <div style={SIZE}>
       <ImageStage image={IMAGE} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} style={SIZE}>
@@ -105,10 +141,15 @@ function BrushExample() {
   );
 }
 
-
 /** A centreline and an eraser: a drag along it removes that stretch, and the app keeps the pieces. */
 function EraseExample() {
-  const [pieces, setPieces] = useState<Point[][]>([[{ x: 40, y: 150 }, { x: 200, y: 110 }, { x: 360, y: 150 }]]);
+  const [pieces, setPieces] = useState<Point[][]>([
+    [
+      { x: 40, y: 150 },
+      { x: 200, y: 110 },
+      { x: 360, y: 150 },
+    ],
+  ]);
   return (
     <div style={SIZE}>
       <ImageStage image={IMAGE} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} style={SIZE}>
@@ -116,7 +157,7 @@ function EraseExample() {
         {pieces.map((piece, index) => (
           <ContourEditor
             // The pieces are replaced as a whole on each erase.
-            // eslint-disable-next-line @eslint-react/no-array-index-key
+            // oxlint-disable-next-line react/no-array-index-key
             key={index}
             points={piece}
             onChange={(next) => setPieces((all) => all.map((p, i) => (i === index ? next : p)))}

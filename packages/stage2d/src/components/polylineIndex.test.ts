@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildPolylineIndex,
-  nearestPolyline,
-  polylineBounds,
-  polylinePath,
-  polylinesInRect,
-  type Polyline,
-} from "./polylineIndex";
+import { buildPolylineIndex, nearestPolyline, polylineBounds, polylinePath, polylinesInRect, type Polyline } from "./polylineIndex";
 import type { Rect } from "./stage/view";
 
 const SQUARE: Polyline = { id: "square", points: [10, 10, 30, 10, 30, 30, 10, 30], closed: true };

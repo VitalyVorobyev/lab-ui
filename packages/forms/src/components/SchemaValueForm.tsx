@@ -164,13 +164,7 @@ function GroupBlock({ group }: { group: UiGroup }) {
   const body = (
     <Grid>
       {fields.map(({ path, info }) => (
-        <FieldNode
-          key={path}
-          path={path}
-          name={path.split(".").at(-1) ?? path}
-          node={info.schema}
-          required={info.required}
-        />
+        <FieldNode key={path} path={path} name={path.split(".").at(-1) ?? path} node={info.schema} required={info.required} />
       ))}
     </Grid>
   );

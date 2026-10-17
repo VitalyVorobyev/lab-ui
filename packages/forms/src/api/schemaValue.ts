@@ -219,9 +219,7 @@ function classify(schema: JsonSchema, root: JsonSchema): SchemaShape {
       : { kind: "json" };
   }
   if (Object.hasOwn(schema, "const")) {
-    return isPrimitive(schema.const)
-      ? { kind: "enum", options: [{ value: schema.const, label: String(schema.const) }] }
-      : { kind: "json" };
+    return isPrimitive(schema.const) ? { kind: "enum", options: [{ value: schema.const, label: String(schema.const) }] } : { kind: "json" };
   }
 
   const branches = schema.oneOf ?? schema.anyOf;
@@ -470,12 +468,7 @@ function findChild(shape: SchemaShape, segment: string, value: unknown): FieldIn
  * @returns The field (its schema as written, and whether it is required), or `undefined`
  *   where the path leaves the schema.
  */
-export function fieldAt(
-  schema: JsonSchema,
-  path: string,
-  root: JsonSchema = schema,
-  value?: unknown,
-): FieldInfo | undefined {
+export function fieldAt(schema: JsonSchema, path: string, root: JsonSchema = schema, value?: unknown): FieldInfo | undefined {
   let info: FieldInfo = { key: "", schema, required: true };
   let current = value;
   for (const segment of splitPath(path)) {

@@ -128,11 +128,7 @@ export function extent(values: readonly number[]): [number, number] {
 }
 
 /** A linear scale from `domain` onto `[rangeStart, rangeEnd]` pixels. */
-export function linearScale(
-  domain: [number, number],
-  rangeStart: number,
-  rangeEnd: number,
-): Scale {
+export function linearScale(domain: [number, number], rangeStart: number, rangeEnd: number): Scale {
   const [low, high] = padDomain(domain[0], domain[1]);
   const span = high - low;
   return {
@@ -179,11 +175,7 @@ export function logScale(domain: [number, number], rangeStart: number, rangeEnd:
       // One tick per decade, thinned when the range covers more decades than fit.
       const stride = Math.max(1, Math.ceil(span / Math.max(1, count)));
       const ticks: Tick[] = [];
-      for (
-        let exponent = Math.ceil(paddedLow);
-        exponent <= paddedHigh + 1e-9;
-        exponent += stride
-      ) {
+      for (let exponent = Math.ceil(paddedLow); exponent <= paddedHigh + 1e-9; exponent += stride) {
         const value = 10 ** exponent;
         ticks.push({ value, label: formatTick(value, value) });
       }
@@ -193,11 +185,7 @@ export function logScale(domain: [number, number], rangeStart: number, rangeEnd:
 }
 
 /** An SVG `d` attribute through the projected points, skipping non-finite ones. */
-export function linePath(
-  points: readonly { x: number; y: number }[],
-  xScale: Scale,
-  yScale: Scale,
-): string {
+export function linePath(points: readonly { x: number; y: number }[], xScale: Scale, yScale: Scale): string {
   const commands: string[] = [];
   let pen = "M";
   for (const point of points) {
@@ -219,11 +207,7 @@ export function linePath(
  * Used for the score histogram, where the two classes must share one set of edges or the
  * bars cannot be compared. Callers pass the shared domain in for exactly that reason.
  */
-export function histogram(
-  values: readonly number[],
-  domain: [number, number],
-  count: number,
-): number[] {
+export function histogram(values: readonly number[], domain: [number, number], count: number): number[] {
   const bins = new Array<number>(Math.max(1, count)).fill(0);
   const [low, high] = domain;
   const span = high - low;

@@ -13,18 +13,12 @@ import { createToastStore, type ToastStore } from "./toastStore";
 function Raise({ store }: { store: ToastStore }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => store.toast({ title: "Scenario loaded", description: "eye_in_hand_ur5e · 12 captures" })}>
-        Info
-      </Button>
+      <Button onClick={() => store.toast({ title: "Scenario loaded", description: "eye_in_hand_ur5e · 12 captures" })}>Info</Button>
       <Button onClick={() => store.toast({ title: "Bake finished", tone: "success", duration: 400 })}>Success</Button>
       <Button onClick={() => store.toast({ title: "Pose unreachable", tone: "warn", description: "Capture 7 is outside the workspace." })}>
         Warn
       </Button>
-      <Button
-        onClick={() =>
-          store.toast({ title: "Could not read scene.json", tone: "error", description: "Line 4: expected a number." })
-        }
-      >
+      <Button onClick={() => store.toast({ title: "Could not read scene.json", tone: "error", description: "Line 4: expected a number." })}>
         Error
       </Button>
     </div>

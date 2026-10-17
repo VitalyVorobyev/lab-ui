@@ -34,7 +34,11 @@ describe("MaskEditor", () => {
     mask[9] = 1;
     const onChange = vi.fn<(mask: Uint8Array) => void>();
     const onCommit = vi.fn();
-    const { getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={mask} onChange={onChange} onCommit={onCommit} editable brushRadius={0.5} /></ImageStage>);
+    const { getByRole } = render(
+      <ImageStage image={image} view={view} onView={() => {}}>
+        <MaskEditor mask={mask} onChange={onChange} onCommit={onCommit} editable brushRadius={0.5} />
+      </ImageStage>,
+    );
     expect(putImageData).toHaveBeenCalledOnce();
     const canvas = getByRole("button", { name: "Mask brush" });
     canvas.setPointerCapture = vi.fn();
@@ -49,21 +53,37 @@ describe("MaskEditor", () => {
   it("supports keyboard paint, erase, and read-only display", () => {
     const onChange = vi.fn<(mask: Uint8Array) => void>();
     const onCommit = vi.fn();
-    const { getByRole, rerender } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={onChange} onCommit={onCommit} editable brushRadius={0.5} /></ImageStage>);
+    const { getByRole, rerender } = render(
+      <ImageStage image={image} view={view} onView={() => {}}>
+        <MaskEditor mask={new Uint8Array(64)} onChange={onChange} onCommit={onCommit} editable brushRadius={0.5} />
+      </ImageStage>,
+    );
     fireEvent.keyDown(getByRole("button", { name: "Mask brush" }), { key: "ArrowRight" });
     fireEvent.keyDown(getByRole("button", { name: "Mask brush" }), { key: "Enter" });
     // The keyboard brush starts at the image centre (4, 4).
     expect(onChange.mock.lastCall?.[0][37]).toBe(1);
-    rerender(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={onChange.mock.lastCall![0]} onChange={onChange} onCommit={onCommit} editable mode="erase" brushRadius={0.5} /></ImageStage>);
+    rerender(
+      <ImageStage image={image} view={view} onView={() => {}}>
+        <MaskEditor mask={onChange.mock.lastCall![0]} onChange={onChange} onCommit={onCommit} editable mode="erase" brushRadius={0.5} />
+      </ImageStage>,
+    );
     fireEvent.keyDown(getByRole("button", { name: "Mask brush" }), { key: "Enter" });
     expect(onChange.mock.lastCall?.[0][37]).toBe(0);
     expect(onCommit).toHaveBeenCalledTimes(2);
-    rerender(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={onChange} /></ImageStage>);
+    rerender(
+      <ImageStage image={image} view={view} onView={() => {}}>
+        <MaskEditor mask={new Uint8Array(64)} onChange={onChange} />
+      </ImageStage>,
+    );
     expect(getByRole("img", { name: "Mask brush" })).toBeTruthy();
   });
 
   it("draws the keyboard brush where Enter will paint, and hides it on blur", () => {
-    const { container, getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable brushRadius={2} /></ImageStage>);
+    const { container, getByRole } = render(
+      <ImageStage image={image} view={view} onView={() => {}}>
+        <MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable brushRadius={2} />
+      </ImageStage>,
+    );
     const canvas = getByRole("button", { name: "Mask brush" });
     fireEvent.focus(canvas);
     fireEvent.keyDown(canvas, { key: "ArrowUp" });
@@ -74,7 +94,11 @@ describe("MaskEditor", () => {
   });
 
   it("draws the brush footprint under a hovering pointer, and removes it on leave", () => {
-    const { container, getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable brushRadius={2} /></ImageStage>);
+    const { container, getByRole } = render(
+      <ImageStage image={image} view={view} onView={() => {}}>
+        <MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable brushRadius={2} />
+      </ImageStage>,
+    );
     const canvas = getByRole("button", { name: "Mask brush" });
     expect(container.querySelector("path[data-draft-brush]")).toBeNull();
     fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 2.5, clientY: 3.5 });
@@ -86,14 +110,22 @@ describe("MaskEditor", () => {
   });
 
   it("shows no footprint when read-only", () => {
-    const { container, getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={() => {}} /></ImageStage>);
+    const { container, getByRole } = render(
+      <ImageStage image={image} view={view} onView={() => {}}>
+        <MaskEditor mask={new Uint8Array(64)} onChange={() => {}} />
+      </ImageStage>,
+    );
     fireEvent.pointerMove(getByRole("img", { name: "Mask brush" }), { pointerId: 1, clientX: 2.5, clientY: 3.5 });
     expect(container.querySelector("path[data-draft-brush]")).toBeNull();
   });
 
   it("starts each stroke from the caller's mask, so a rejected edit is dropped", () => {
     const onChange = vi.fn<(mask: Uint8Array) => void>();
-    const { getByRole } = render(<ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={onChange} editable brushRadius={0.5} /></ImageStage>);
+    const { getByRole } = render(
+      <ImageStage image={image} view={view} onView={() => {}}>
+        <MaskEditor mask={new Uint8Array(64)} onChange={onChange} editable brushRadius={0.5} />
+      </ImageStage>,
+    );
     const canvas = getByRole("button", { name: "Mask brush" });
     canvas.setPointerCapture = vi.fn();
     fireEvent.pointerDown(canvas, { button: 0, pointerId: 1, clientX: 0.5, clientY: 0.5 });
@@ -107,14 +139,24 @@ describe("MaskEditor", () => {
 
   it("keeps double-clicks from reaching the stage while editing", () => {
     const outer = vi.fn();
-    const { getByRole } = render(<div onDoubleClick={outer}><ImageStage image={image} view={view} onView={() => {}}><MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable /></ImageStage></div>);
+    const { getByRole } = render(
+      <div onDoubleClick={outer}>
+        <ImageStage image={image} view={view} onView={() => {}}>
+          <MaskEditor mask={new Uint8Array(64)} onChange={() => {}} editable />
+        </ImageStage>
+      </div>,
+    );
     fireEvent.doubleClick(getByRole("button", { name: "Mask brush" }));
     expect(outer).not.toHaveBeenCalled();
   });
 
   it("defers to pan mode", () => {
     const onChange = vi.fn<(mask: Uint8Array) => void>();
-    const { getByRole } = render(<ImageStage image={image} view={view} onView={() => {}} panTool><MaskEditor mask={new Uint8Array(64)} onChange={onChange} editable /></ImageStage>);
+    const { getByRole } = render(
+      <ImageStage image={image} view={view} onView={() => {}} panTool>
+        <MaskEditor mask={new Uint8Array(64)} onChange={onChange} editable />
+      </ImageStage>,
+    );
     const canvas = getByRole("button", { name: "Mask brush" });
     fireEvent.pointerDown(canvas, { button: 0, pointerId: 1 });
     fireEvent.keyDown(canvas, { key: "Enter" });

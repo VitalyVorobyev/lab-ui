@@ -11,11 +11,7 @@ describe("stepStates", () => {
   });
 
   it("blocks a step with a reason, even a complete one, and never lets it be activated", () => {
-    const steps = [
-      { id: "a" },
-      { id: "b", blockedBy: "Teach first", complete: true },
-      { id: "c", blockedBy: "Find first" },
-    ];
+    const steps = [{ id: "a" }, { id: "b", blockedBy: "Teach first", complete: true }, { id: "c", blockedBy: "Find first" }];
     expect(stepStates(steps, "a")).toEqual([
       { id: "a", state: "current", canActivate: false },
       { id: "b", state: "blocked", canActivate: false },
@@ -28,9 +24,7 @@ describe("stepStates", () => {
   });
 
   it("lets the current step outrank its gate: the app put the person there", () => {
-    expect(stepStates([{ id: "a", blockedBy: "Not yet" }], "a")).toEqual([
-      { id: "a", state: "current", canActivate: false },
-    ]);
+    expect(stepStates([{ id: "a", blockedBy: "Not yet" }], "a")).toEqual([{ id: "a", state: "current", canActivate: false }]);
   });
 
   it("activates complete and upcoming steps, and has no current step for an unknown or null value", () => {

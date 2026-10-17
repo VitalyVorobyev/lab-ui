@@ -109,9 +109,7 @@ export const WithDescription: Story = {
   args: { description: "The new name is used in every report generated from now on." },
   play: async () => {
     const dialog = await within(document.body).findByRole("dialog", { name: "Rename dataset" });
-    await expect(dialog).toHaveAccessibleDescription(
-      "The new name is used in every report generated from now on.",
-    );
+    await expect(dialog).toHaveAccessibleDescription("The new name is used in every report generated from now on.");
   },
 };
 

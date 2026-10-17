@@ -195,7 +195,12 @@ const BIG: GridNode[] = Array.from({ length: 10_000 }, (_, n): GridNode => {
 /** Ten thousand corners and their edges are a few elements. */
 export const LargeGrid: Story = {
   render: () => (
-    <ImageStage image={{ width: 2000, height: 1500 }} view={{ scale: 0.2, tx: 0, ty: 0 }} onView={() => {}} style={{ width: 402, height: 302 }}>
+    <ImageStage
+      image={{ width: 2000, height: 1500 }}
+      view={{ scale: 0.2, tx: 0, ty: 0 }}
+      onView={() => {}}
+      style={{ width: 402, height: 302 }}
+    >
       <div className="absolute inset-0 bg-canvas" />
       <GridLayer nodes={BIG} kind="dot" />
     </ImageStage>

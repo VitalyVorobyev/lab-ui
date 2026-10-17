@@ -4,15 +4,7 @@ import type { ComponentProps } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { SchemaForm } from "./SchemaForm";
-import {
-  describeFields,
-  initialValues,
-  jsonErrors,
-  missingRequired,
-  outOfRange,
-  toOptions,
-  type RawValues,
-} from "../api/schemaForm";
+import { describeFields, initialValues, jsonErrors, missingRequired, outOfRange, toOptions, type RawValues } from "../api/schemaForm";
 
 /**
  * A chessboard corner detector's options, as schemars emits them for a Rust config struct
@@ -250,18 +242,14 @@ export const Defaults: Story = {
     const square = canvas.getByRole("spinbutton", { name: "Square size (mm)" });
     await expect(square).toHaveValue(null);
     await userEvent.type(square, "24.5");
-    await expect(args.onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ square_mm: "24.5" }),
-    );
+    await expect(args.onChange).toHaveBeenLastCalledWith(expect.objectContaining({ square_mm: "24.5" }));
     await expect(canvas.getByTestId("options")).toHaveTextContent('"square_mm":24.5');
 
     const overlay = canvas.getByRole("switch", { name: /Publish overlay/ });
     await expect(overlay).toBeChecked();
     await userEvent.click(overlay);
     await expect(overlay).not.toBeChecked();
-    await expect(args.onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ publish_overlay: false }),
-    );
+    await expect(args.onChange).toHaveBeenLastCalledWith(expect.objectContaining({ publish_overlay: false }));
   },
 };
 
@@ -344,10 +332,7 @@ export const AllDefaulted: Story = {
   args: { fields: modelFields, values: initialValues(modelFields) },
   play: async ({ canvas, canvasElement }) => {
     await expect(canvasElement.querySelector("details")).toBeNull();
-    await expect(canvas.getByRole("spinbutton", { name: "Smoothing sigma" })).toHaveAttribute(
-      "placeholder",
-      "4",
-    );
+    await expect(canvas.getByRole("spinbutton", { name: "Smoothing sigma" })).toHaveAttribute("placeholder", "4");
   },
 };
 

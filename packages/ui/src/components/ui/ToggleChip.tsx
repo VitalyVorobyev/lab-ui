@@ -87,9 +87,7 @@ export function ToggleChip({
         "inline-flex items-center gap-1.5 rounded-control border",
         SIZE_CLASSES[size],
         "whitespace-nowrap transition-colors",
-        checked
-          ? "border-line-strong bg-raised text-fg"
-          : "border-line bg-transparent text-fg-muted hover:text-fg",
+        checked ? "border-line-strong bg-raised text-fg" : "border-line bg-transparent text-fg-muted hover:text-fg",
         "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-fg-muted",
         focusRing,
         className,

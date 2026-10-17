@@ -50,9 +50,7 @@ export const OpenOnHover: Story = {
     await userEvent.hover(trigger);
     const tooltip = await within(document.body).findByRole("tooltip");
     await expect(tooltip).toHaveTextContent("Scores above the threshold are reported as defects.");
-    await expect(trigger).toHaveAccessibleDescription(
-      "Scores above the threshold are reported as defects.",
-    );
+    await expect(trigger).toHaveAccessibleDescription("Scores above the threshold are reported as defects.");
   },
 };
 

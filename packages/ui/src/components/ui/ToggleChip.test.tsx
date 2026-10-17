@@ -29,7 +29,7 @@ describe("ToggleChip size", () => {
     expect(swatch.classList.contains("size-2")).toBe(true);
   });
 
-  it("renders the same classes with `size` omitted as with size=\"sm\"", () => {
+  it('renders the same classes with `size` omitted as with size="sm"', () => {
     const omitted = renderChip();
     const omittedClasses = [omitted.chip.className, omitted.swatch.className];
     cleanup();

@@ -96,9 +96,7 @@ export const MAX_SCALE = 32;
 export const MIN_SCALE_VS_FIT = 0.25;
 
 /** Zoom in/out steps, as the percentages a readout can show without apologising. */
-const SCALE_LADDER = [
-  0.05, 0.0833, 0.125, 0.1667, 0.25, 0.3333, 0.5, 0.6667, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32,
-];
+const SCALE_LADDER = [0.05, 0.0833, 0.125, 0.1667, 0.25, 0.3333, 0.5, 0.6667, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32];
 
 /** Relative tolerance for "is this the same scale" — a hair under a tenth of a percent. */
 const SCALE_EPSILON = 1e-3;
@@ -203,12 +201,7 @@ export function toImage(view: StageView, p: Point): Point {
 
 /** Whether an image coordinate is inside the image, in the pixel-centre convention. */
 export function insideImage(p: Point, image: Box): boolean {
-  return (
-    p.x >= -PIXEL_CENTRE &&
-    p.y >= -PIXEL_CENTRE &&
-    p.x < image.width - PIXEL_CENTRE &&
-    p.y < image.height - PIXEL_CENTRE
-  );
+  return p.x >= -PIXEL_CENTRE && p.y >= -PIXEL_CENTRE && p.x < image.width - PIXEL_CENTRE && p.y < image.height - PIXEL_CENTRE;
 }
 
 /**
@@ -277,12 +270,7 @@ export function scaleRange(box: Box, image: Box, options: ClampOptions = {}): [n
  * larger is held so the viewport stays covered. With `"center"`, each axis only keeps some
  * image point at or past the viewport's centre.
  */
-export function clampView(
-  view: StageView,
-  box: Box,
-  image: Box,
-  options: ClampOptions = {},
-): StageView {
+export function clampView(view: StageView, box: Box, image: Box, options: ClampOptions = {}): StageView {
   const [min, max] = scaleRange(box, image, options);
   const scale = clamp(view.scale, min, max);
   const axis = options.panBounds === "center" ? centreAxis : clampAxis;

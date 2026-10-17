@@ -19,14 +19,7 @@
 export type TargetId = string | number;
 
 /** What a detection is of. It chooses defaults, not what is drawn: whatever is present is drawn. */
-export type TargetKind =
-  | "chessboard"
-  | "charuco"
-  | "markerboard"
-  | "puzzleboard"
-  | "ringgrid"
-  | "corners"
-  | "circles";
+export type TargetKind = "chessboard" | "charuco" | "markerboard" | "puzzleboard" | "ringgrid" | "corners" | "circles";
 
 /** Every `TargetKind`. */
 export const TARGET_KINDS: readonly TargetKind[] = [

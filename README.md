@@ -23,7 +23,7 @@ The design direction is an *instrument*: the chrome is grey so the data can be l
 | [`@vitavision/workbench`](packages/workbench) [![npm](https://img.shields.io/npm/v/@vitavision/workbench)](https://www.npmjs.com/package/@vitavision/workbench) | Studio-app building blocks: app shell, split panes, tree view, playback bar, sequence navigator, file drop | `ui` |
 | [`@vitavision/three`](packages/three) [![npm](https://img.shields.io/npm/v/@vitavision/three)](https://www.npmjs.com/package/@vitavision/three) | Framework-agnostic three.js for robot-cell scenes: CV/GL conventions, frame trees, robots, camera frusta, laser fans, targets | `three` 0.186 |
 | [`@vitavision/three-react`](packages/three-react) [![npm](https://img.shields.io/npm/v/@vitavision/three-react)](https://www.npmjs.com/package/@vitavision/three-react) | React Three Fiber components over `three`: scene canvas, frame tree, robot, gizmos, sensor image | `three`, `@react-three/fiber` 9 |
-| [`@vitavision/config-ts`](packages/config/ts), [`config-eslint`](packages/config/eslint), [`config-vitest`](packages/config/vitest) | Shared TypeScript, ESLint and Vitest presets | |
+| [`@vitavision/config-ts`](packages/config/ts), [`config-oxlint`](packages/config/oxlint), [`config-vitest`](packages/config/vitest) | Shared TypeScript, Oxlint and Vitest presets | |
 
 React 19 (`react`, `react-dom`) is a peer of every React package. Every package is ESM and
 safe to render on the server.

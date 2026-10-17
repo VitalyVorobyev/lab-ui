@@ -14,33 +14,16 @@ export {
 
 export type { StageMouseButton } from "./components/stage/gesture";
 
-export {
-  STAGE_HIT_PRIORITY,
-  type HitCandidate,
-  type HitId,
-  type StageHit,
-  type StageHitOptions,
-} from "./components/stage/hitTest";
+export { STAGE_HIT_PRIORITY, type HitCandidate, type HitId, type StageHit, type StageHitOptions } from "./components/stage/hitTest";
 export type { StagePointerEvent } from "./components/stage/hitContext";
-export {
-  useStageHitLayer,
-  useStageHitTest,
-  type StageHitLayerOptions,
-  type StageHitTestApi,
-} from "./components/stage/useStageHitTest";
+export { useStageHitLayer, useStageHitTest, type StageHitLayerOptions, type StageHitTestApi } from "./components/stage/useStageHitTest";
 
 export { CompareLayer, type CompareLayerProps } from "./components/stage/CompareLayer";
 export type { CompareMode, CompareOrientation } from "./components/stage/compareStyle";
 
 export { ImageLayer, type ImageLayerBaseProps, type ImageLayerProps, type ImageTier } from "./components/stage/ImageLayer";
 
-export {
-  StageSurface,
-  useStageDrag,
-  type StageDrag,
-  type StagePress,
-  type StageSurfaceProps,
-} from "./components/stage/StageSurface";
+export { StageSurface, useStageDrag, type StageDrag, type StagePress, type StageSurfaceProps } from "./components/stage/StageSurface";
 
 export {
   StageButton,
@@ -97,15 +80,7 @@ export {
   type ZoomPanCanvasProps,
 } from "./components/ZoomPanCanvas";
 
-export {
-  PlaneFormatError,
-  decodePlane,
-  fetchPlane,
-  fractionOf,
-  valueAt,
-  valuesAt,
-  type ValuePlane,
-} from "./api/mapValues";
+export { PlaneFormatError, decodePlane, fetchPlane, fractionOf, valueAt, valuesAt, type ValuePlane } from "./api/mapValues";
 
 export {
   MeasureOverlay,
@@ -134,15 +109,7 @@ export {
 export { useScreenPx } from "./components/stage/useScreenPx";
 
 export { ContourEditor, nearestContourSegment, type ContourEditorProps } from "./components/ContourEditor";
-export {
-  arcLengths,
-  deformContour,
-  eraseArc,
-  normalAtArc,
-  pointAtArc,
-  projectToArc,
-  subPath,
-} from "./components/contourArc";
+export { arcLengths, deformContour, eraseArc, normalAtArc, pointAtArc, projectToArc, subPath } from "./components/contourArc";
 export { RectRoiEditor, type RectRoiEditorHandle, type RectRoiEditorProps } from "./components/RectRoiEditor";
 export {
   PolylineSet,
@@ -162,11 +129,7 @@ export {
   type PolylineId,
   type PolylineIndex,
 } from "./components/polylineIndex";
-export {
-  PointSet,
-  type PointSetItem,
-  type PointSetProps,
-} from "./components/PointSet";
+export { PointSet, type PointSetItem, type PointSetProps } from "./components/PointSet";
 export {
   buildPointIndex,
   buildPointIndexFrom,
@@ -179,11 +142,7 @@ export {
   type PointIndexOptions,
   type PointItem,
 } from "./components/pointIndex";
-export {
-  AreaSet,
-  type AreaSetItem,
-  type AreaSetProps,
-} from "./components/AreaSet";
+export { AreaSet, type AreaSetItem, type AreaSetProps } from "./components/AreaSet";
 export {
   areaCentre,
   areaPath,
@@ -196,11 +155,7 @@ export {
   type AreaId,
   type AreaIndex,
 } from "./components/areaIndex";
-export {
-  EllipseSet,
-  type EllipseSetItem,
-  type EllipseSetProps,
-} from "./components/EllipseSet";
+export { EllipseSet, type EllipseSetItem, type EllipseSetProps } from "./components/EllipseSet";
 export {
   buildEllipseIndex,
   ellipseBounds,
@@ -213,12 +168,7 @@ export {
   type EllipseId,
   type EllipseIndex,
 } from "./components/ellipseIndex";
-export {
-  GridLayer,
-  type GridEdgeStyle,
-  type GridLayerProps,
-  type GridNode,
-} from "./components/GridLayer";
+export { GridLayer, type GridEdgeStyle, type GridLayerProps, type GridNode } from "./components/GridLayer";
 export { latticeEdges, type LatticeAxis, type LatticeEdge, type LatticeNode } from "./components/gridEdges";
 export {
   HeatmapLayer,
@@ -258,19 +208,8 @@ export {
   type DatumPressOptions,
   type MoveDatumOptions,
 } from "./components/datumEdit";
-export {
-  DraftShape,
-  MarqueeRect,
-  type DraftShapeProps,
-  type DraftShapeSpec,
-  type MarqueeRectProps,
-} from "./components/DraftShape";
-export {
-  translatePoints,
-  useShapeDrag,
-  type ShapeDragHandlers,
-  type ShapeDragOptions,
-} from "./components/useShapeDrag";
+export { DraftShape, MarqueeRect, type DraftShapeProps, type DraftShapeSpec, type MarqueeRectProps } from "./components/DraftShape";
+export { translatePoints, useShapeDrag, type ShapeDragHandlers, type ShapeDragOptions } from "./components/useShapeDrag";
 export { MARKER_SHAPES, circlePath, type BuiltinMarkerKind, type MarkerShape } from "./components/markerShapes";
 export {
   ROI_HANDLES,

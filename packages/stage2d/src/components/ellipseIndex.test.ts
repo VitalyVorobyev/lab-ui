@@ -99,7 +99,10 @@ describe("nearestEllipse", () => {
   });
 
   it("never picks a degenerate ellipse", () => {
-    const bad = buildEllipseIndex([{ id: "bad", x: 0, y: 0, rx: 0, ry: 5 }, { id: "ok", x: 0, y: 0, rx: 5, ry: 5 }]);
+    const bad = buildEllipseIndex([
+      { id: "bad", x: 0, y: 0, rx: 0, ry: 5 },
+      { id: "ok", x: 0, y: 0, rx: 5, ry: 5 },
+    ]);
     expect(nearestEllipse(bad, { x: 0, y: 0 }, 3)!.id).toBe("ok");
   });
 });

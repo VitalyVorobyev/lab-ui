@@ -1,7 +1,17 @@
 import { latticeEdges } from "@vitavision/stage2d";
 import { describe, expect, it } from "vitest";
 
-import { BOARD_IMAGE, charuco, chessboard, directedField, FIELD_IMAGE, markerboard, project, puzzleboard, ringgrid } from "./fixtures.stories";
+import {
+  BOARD_IMAGE,
+  charuco,
+  chessboard,
+  directedField,
+  FIELD_IMAGE,
+  markerboard,
+  project,
+  puzzleboard,
+  ringgrid,
+} from "./fixtures.stories";
 import { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses } from "./layerItems";
 import { TARGET_KINDS, isLatticeKind } from "./model";
 
@@ -146,7 +156,9 @@ describe("edgeBitEllipses", () => {
   });
 
   it("runs the opacity from 35 % at no confidence to 100 % at full, and clamps outside", () => {
-    const opacities = edgeBitEllipses([-1, 0, 0.5, 1, 4].map((confidence, k) => ({ id: k, x: 0, y: 0, radius: 1, bit: 1 as const, confidence }))).map((e) => e.opacity);
+    const opacities = edgeBitEllipses(
+      [-1, 0, 0.5, 1, 4].map((confidence, k) => ({ id: k, x: 0, y: 0, radius: 1, bit: 1 as const, confidence })),
+    ).map((e) => e.opacity);
     expect(opacities[0]).toBeCloseTo(0.35, 10);
     expect(opacities[1]).toBeCloseTo(0.35, 10);
     expect(opacities[2]).toBeCloseTo(0.675, 10);
@@ -162,7 +174,9 @@ describe("the story detections", () => {
         ...(detection.corners ?? []),
         ...(detection.circles ?? []),
         ...(detection.rings ?? []),
-        ...(detection.markers ?? []).flatMap((m) => Array.from({ length: m.corners.length / 2 }, (_, k) => ({ x: m.corners[2 * k]!, y: m.corners[2 * k + 1]! }))),
+        ...(detection.markers ?? []).flatMap((m) =>
+          Array.from({ length: m.corners.length / 2 }, (_, k) => ({ x: m.corners[2 * k]!, y: m.corners[2 * k + 1]! })),
+        ),
       ];
       expect(points.length, detection.kind).toBeGreaterThan(0);
       for (const p of points) {

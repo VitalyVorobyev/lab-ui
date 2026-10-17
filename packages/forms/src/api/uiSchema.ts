@@ -33,16 +33,7 @@ export interface UiGroup {
 }
 
 /** The widgets a field can be forced into with `FieldUi.widget`. */
-export type FieldWidget =
-  | "number"
-  | "text"
-  | "select"
-  | "segmented"
-  | "checkbox"
-  | "switch"
-  | "json"
-  | "tuple-row"
-  | "string-list";
+export type FieldWidget = "number" | "text" | "select" | "segmented" | "checkbox" | "switch" | "json" | "tuple-row" | "string-list";
 
 /** Per-field presentation, looked up by the field's dot path. */
 export interface FieldUi {

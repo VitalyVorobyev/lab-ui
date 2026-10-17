@@ -88,11 +88,7 @@ describe("collectDroppedFiles", () => {
     ]);
     const files = await collectDroppedFiles(transfer([scenario, fileEntry("readme.md")]));
     expect(files.map((f) => f.name)).toEqual(["scene.json", "scenario.json", "base.glb", "readme.md"]);
-    expect(files.slice(0, 3).map((f) => f.webkitRelativePath)).toEqual([
-      "cell/scene.json",
-      "cell/scenario.json",
-      "cell/meshes/base.glb",
-    ]);
+    expect(files.slice(0, 3).map((f) => f.webkitRelativePath)).toEqual(["cell/scene.json", "cell/scenario.json", "cell/meshes/base.glb"]);
     // A top-level file keeps the browser's own (empty) relative path.
     expect(Object.hasOwn(files[3] ?? {}, "webkitRelativePath")).toBe(false);
   });

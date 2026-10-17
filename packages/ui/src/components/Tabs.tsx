@@ -86,10 +86,7 @@ export function Tabs<Id extends string>({
       aria-label={label}
       aria-orientation="horizontal"
       onKeyDown={onKeyDown}
-      className={cn(
-        "inline-flex max-w-full flex-wrap items-center gap-0.5 rounded-control border border-line bg-raised p-0.5",
-        className,
-      )}
+      className={cn("inline-flex max-w-full flex-wrap items-center gap-0.5 rounded-control border border-line bg-raised p-0.5", className)}
     >
       {items.map((item) => {
         const selected = item.id === active;
@@ -100,9 +97,7 @@ export function Tabs<Id extends string>({
             role="tab"
             id={idPrefix === undefined ? undefined : `${idPrefix}-tab-${item.id}`}
             aria-selected={selected}
-            aria-controls={
-              idPrefix !== undefined && selected ? `${idPrefix}-panel-${item.id}` : undefined
-            }
+            aria-controls={idPrefix !== undefined && selected ? `${idPrefix}-panel-${item.id}` : undefined}
             tabIndex={item.id === focusable ? 0 : -1}
             data-tab-id={item.id}
             data-state={selected ? "active" : "inactive"}
@@ -112,9 +107,7 @@ export function Tabs<Id extends string>({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-[0.3rem] px-2.5 py-1 text-xs font-medium transition-colors",
               "disabled:cursor-not-allowed disabled:opacity-40",
-              selected
-                ? "bg-surface text-fg shadow-sm"
-                : "text-fg-muted hover:text-fg",
+              selected ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
               focusRing,
             )}
           >

@@ -1,14 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  ROI_HANDLES,
-  clampRect,
-  moveRect,
-  rectFromCorners,
-  resizeRect,
-  roiHandlePoint,
-  sameRect,
-} from "./roiEdit";
+import { ROI_HANDLES, clampRect, moveRect, rectFromCorners, resizeRect, roiHandlePoint, sameRect } from "./roiEdit";
 import type { Rect } from "./stage/view";
 
 const IMAGE: Rect = { x: 0, y: 0, width: 200, height: 100 };

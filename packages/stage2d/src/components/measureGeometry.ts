@@ -93,8 +93,14 @@ export function segmentsPath(points: ArrayLike<number>): string {
 /** The two line segments of a cross mark centred on `(x, y)`, each `2·size` long. */
 export function crossSegments(x: number, y: number, size: number): [[Point, Point], [Point, Point]] {
   return [
-    [{ x: x - size, y }, { x: x + size, y }],
-    [{ x, y: y - size }, { x, y: y + size }],
+    [
+      { x: x - size, y },
+      { x: x + size, y },
+    ],
+    [
+      { x, y: y - size },
+      { x, y: y + size },
+    ],
   ];
 }
 
@@ -159,13 +165,7 @@ export function arcPath(cx: number, cy: number, r: number, startAngle: number, e
  * by `height`, centred at `(cx, cy)` and rotated by `angle` radians. Corner order is
  * suitable for `polygonPath` — around the box, not crossed.
  */
-export function caliperCorners(
-  cx: number,
-  cy: number,
-  width: number,
-  height: number,
-  angle: number,
-): [Point, Point, Point, Point] {
+export function caliperCorners(cx: number, cy: number, width: number, height: number, angle: number): [Point, Point, Point, Point] {
   const hw = width / 2;
   const hh = height / 2;
   const local: [number, number][] = [
@@ -186,12 +186,7 @@ export function caliperCorners(
  * along the box's own measurement axis. What the arrow points at is the scan direction the
  * caliper was evaluated in, not merely a decoration on the box.
  */
-export function caliperArrow(
-  cx: number,
-  cy: number,
-  width: number,
-  angle: number,
-): { from: Point; to: Point } {
+export function caliperArrow(cx: number, cy: number, width: number, angle: number): { from: Point; to: Point } {
   const reach = width / 2 + Math.max(4, width * 0.2);
   const tip = rotatePoint(reach, 0, angle);
   return { from: { x: cx, y: cy }, to: { x: cx + tip.x, y: cy + tip.y } };
@@ -208,11 +203,7 @@ export function arrowHeadPoints(tip: Point, angle: number, size: number): [Point
   const spread = size;
   const left = rotatePoint(-back, spread, angle);
   const right = rotatePoint(-back, -spread, angle);
-  return [
-    { x: tip.x + left.x, y: tip.y + left.y },
-    tip,
-    { x: tip.x + right.x, y: tip.y + right.y },
-  ];
+  return [{ x: tip.x + left.x, y: tip.y + left.y }, tip, { x: tip.x + right.x, y: tip.y + right.y }];
 }
 
 /** What `dimensionGeometry` computes: the lines and label placement of a dimension annotation. */
@@ -237,13 +228,7 @@ export interface DimensionGeometry {
  * Degenerate input (`x1 === x2 && y1 === y2`) falls back to an arbitrary rightward normal
  * rather than dividing by zero, so a caller need not special-case a zero-length dimension.
  */
-export function dimensionGeometry(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  offset: number,
-): DimensionGeometry {
+export function dimensionGeometry(x1: number, y1: number, x2: number, y2: number, offset: number): DimensionGeometry {
   const dx = x2 - x1;
   const dy = y2 - y1;
   const length = Math.hypot(dx, dy);

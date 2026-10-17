@@ -64,37 +64,40 @@ export function useStageDrag(): (event: ReactPointerEvent<Element>, drag: StageD
   // A drag still in flight when the component unmounts is cancelled, not leaked.
   useEffect(() => () => cleanupRef.current?.(), []);
 
-  return useCallback((event: ReactPointerEvent<Element>, drag: StageDrag) => {
-    event.stopPropagation();
-    event.preventDefault();
-    cleanupRef.current?.();
-    const from = { x: event.clientX, y: event.clientY };
-    let moved = false;
-    const at = (e: PointerEvent) => toImage({ x: e.clientX, y: e.clientY });
+  return useCallback(
+    (event: ReactPointerEvent<Element>, drag: StageDrag) => {
+      event.stopPropagation();
+      event.preventDefault();
+      cleanupRef.current?.();
+      const from = { x: event.clientX, y: event.clientY };
+      let moved = false;
+      const at = (e: PointerEvent) => toImage({ x: e.clientX, y: e.clientY });
 
-    const move = (e: PointerEvent) => {
-      if (!moved && Math.hypot(e.clientX - from.x, e.clientY - from.y) > CLICK_SLOP) moved = true;
-      drag.onMove?.(at(e), e);
-    };
-    const up = (e: PointerEvent) => {
-      stop();
-      drag.onEnd?.(at(e), e, moved);
-    };
-    const cancel = () => {
-      stop();
-      drag.onCancel?.();
-    };
-    const stop = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", cancel);
-      cleanupRef.current = null;
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointercancel", cancel);
-    cleanupRef.current = cancel;
-  }, [toImage]);
+      const move = (e: PointerEvent) => {
+        if (!moved && Math.hypot(e.clientX - from.x, e.clientY - from.y) > CLICK_SLOP) moved = true;
+        drag.onMove?.(at(e), e);
+      };
+      const up = (e: PointerEvent) => {
+        stop();
+        drag.onEnd?.(at(e), e, moved);
+      };
+      const cancel = () => {
+        stop();
+        drag.onCancel?.();
+      };
+      const stop = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", cancel);
+        cleanupRef.current = null;
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", cancel);
+      cleanupRef.current = cancel;
+    },
+    [toImage],
+  );
 }
 
 /** A press on the surface, as the app's `onPress` sees it. */

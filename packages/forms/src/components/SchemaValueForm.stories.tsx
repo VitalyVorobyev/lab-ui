@@ -163,9 +163,7 @@ export const PlainEnum: Story = {
 
     await userEvent.click(model);
     await userEvent.click(await within(document.body).findByRole("option", { name: "rational8" }));
-    await waitFor(() =>
-      expect(args.onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ distortion_model: "rational8" })),
-    );
+    await waitFor(() => expect(args.onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ distortion_model: "rational8" })));
     await expect(canvas.getByText(/Rational polynomial/)).toBeVisible();
   },
 };
@@ -257,9 +255,7 @@ export const ListsAndTuples: Story = {
     const added = canvas.getByRole("textbox", { name: "Debug dirs 3" });
     await userEvent.type(added, "out/c");
     await userEvent.click(canvas.getByRole("button", { name: "Remove Debug dirs 1" }));
-    await expect(args.onValueChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ debug_dirs: ["out/b", "out/c"] }),
-    );
+    await expect(args.onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ debug_dirs: ["out/b", "out/c"] }));
 
     const second = canvas.getByRole("group", { name: "Anchors 1" });
     const x = within(second).getByRole("spinbutton", { name: "x" });

@@ -12,15 +12,7 @@ import { use, type ReactNode } from "react";
 
 import { firstParagraph } from "../../api/firstParagraph";
 import { labelFor, resolveSchema, type JsonSchema } from "../../api/schemaNode";
-import {
-  activeExternal,
-  activeTagged,
-  seedNotNull,
-  seedVariant,
-  shapeOf,
-  type FieldInfo,
-  type SchemaShape,
-} from "../../api/schemaValue";
+import { activeExternal, activeTagged, seedNotNull, seedVariant, shapeOf, type FieldInfo, type SchemaShape } from "../../api/schemaValue";
 import { fieldUiAt } from "../../api/uiSchema";
 import { getAtPath, joinPath } from "../../api/valuePath";
 import { Grid, spanClass, useChrome, type FieldMeta } from "./chrome";
@@ -56,9 +48,7 @@ function applyWidget(shape: SchemaShape, meta: FieldMeta, value: unknown): Schem
     case "string-list":
       return meta.schema.type === "array" ? { kind: "string-list", item: items ?? { type: "string" } } : shape;
     case "tuple-row":
-      return items !== undefined && Array.isArray(value)
-        ? { kind: "tuple", items: (value as unknown[]).map(() => items) }
-        : shape;
+      return items !== undefined && Array.isArray(value) ? { kind: "tuple", items: (value as unknown[]).map(() => items) } : shape;
     default:
       return shape;
   }

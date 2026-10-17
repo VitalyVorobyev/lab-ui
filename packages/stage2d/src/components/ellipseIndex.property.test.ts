@@ -89,7 +89,8 @@ describe("nearestEllipse (property)", () => {
           const distance = distanceToEllipse(e, p.x, p.y);
           const area = e.rx * e.ry;
           if (distance <= radius) {
-            if (edge === null || distance < edge.distance || (distance === edge.distance && area < edge.area)) edge = { id: e.id as number, distance, area };
+            if (edge === null || distance < edge.distance || (distance === edge.distance && area < edge.area))
+              edge = { id: e.id as number, distance, area };
           } else if (pointInEllipse(e, p.x, p.y) && (inner === null || area < inner.area)) inner = { id: e.id as number, area };
         }
         expect(nearestEllipse(index, p, radius)?.id ?? null, `run ${run} query ${q}`).toBe((edge ?? inner)?.id ?? null);

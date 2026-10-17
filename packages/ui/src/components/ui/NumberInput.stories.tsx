@@ -99,9 +99,7 @@ export const OwnDescription: Story = {
     </div>
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole("spinbutton", { name: "Tilt" })).toHaveAccessibleDescription(
-      "Scheimpflug tilt about x. °",
-    );
+    await expect(canvas.getByRole("spinbutton", { name: "Tilt" })).toHaveAccessibleDescription("Scheimpflug tilt about x. °");
   },
 };
 

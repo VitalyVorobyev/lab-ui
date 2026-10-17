@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": ["./packages/config/oxlint/oxlintrc.json"],
+  "options": { "reportUnusedDisableDirectives": "error" },
+  "ignorePatterns": ["**/temp/**", "tools/bench/**", "**/*.config.ts", "**/.storybook/**", "packages/config/**/*.d.ts"],
+  "overrides": [
+    {
+      "files": ["packages/*/src/**/*.{ts,tsx}"],
+      "rules": { "vitavision/tokens-only": "error" }
+    }
+  ]
+}

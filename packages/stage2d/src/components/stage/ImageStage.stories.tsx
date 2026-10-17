@@ -91,9 +91,7 @@ function StatefulStage({ options = {}, ...args }: ImageStageProps & { options?: 
     </StageToolbar>
   ) : undefined;
 
-  const readout = options.readout ? (
-    <StageReadout cursor={options.readout === "hover" ? cursor : null} />
-  ) : undefined;
+  const readout = options.readout ? <StageReadout cursor={options.readout === "hover" ? cursor : null} /> : undefined;
 
   return (
     <div style={{ height: 480 }}>
@@ -214,9 +212,7 @@ export const DefaultFit: Story = {
 
 /** A controlled view, set by the app — here, framing the scratch as a "jump to finding" would. */
 export const Zoomed: Story = {
-  render: (args) => (
-    <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />
-  ),
+  render: (args) => <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />,
   play: async ({ canvas, canvasElement }) => {
     await waitFor(() => expect(readoutText(canvasElement)).toMatch(/^1280×1024 · \d+%$/));
     const stage = canvas.getByRole("application");
@@ -333,11 +329,7 @@ export const ControlledInitialView: Story = {
 /** A status line over the top-left, outside the transform. */
 export const WithBanner: Story = {
   args: {
-    banner: (
-      <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white">
-        Result is from the previous recipe
-      </span>
-    ),
+    banner: <span className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-[10px] text-white">Result is from the previous recipe</span>,
   },
   render: (args) => <StatefulStage {...args} options={{ toolbar: true, readout: "static" }} />,
 };
@@ -447,10 +439,7 @@ export const InteractiveLayer: Story = {
     await waitFor(() => expect(handle).toHaveAttribute("aria-pressed", "false"));
     await expect(args.onBackgroundClick).toHaveBeenCalled();
     // The click's image point comes with it: 12 screen px from the corner is a few image pixels in.
-    await expect(args.onBackgroundClick).toHaveBeenLastCalledWith(
-      expect.anything(),
-      expect.anything(),
-    );
+    await expect(args.onBackgroundClick).toHaveBeenLastCalledWith(expect.anything(), expect.anything());
   },
 };
 
@@ -461,11 +450,7 @@ export const ReportsWhyTheViewChanged: Story = {
     const viewport = canvas.getByRole("application", { name: "Image canvas" });
     await waitFor(() => expect(args.onView).toHaveBeenCalled());
     // The opening view is the measure.
-    await expect(args.onView).toHaveBeenNthCalledWith(
-      1,
-      expect.anything(),
-      expect.objectContaining({ cause: "measure" }),
-    );
+    await expect(args.onView).toHaveBeenNthCalledWith(1, expect.anything(), expect.objectContaining({ cause: "measure" }));
     const lastCause = (cause: string) =>
       expect(args.onView).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ cause }));
 
@@ -484,12 +469,7 @@ export const ReportsWhyTheViewChanged: Story = {
 
 /** The hand tool: every press pans, whatever layer it lands on. */
 export const PanTool: Story = {
-  render: (args) => (
-    <StatefulStage
-      {...args}
-      options={{ toolbar: true, readout: "static", panToggle: true, frameOnMount: DEFECT }}
-    />
-  ),
+  render: (args) => <StatefulStage {...args} options={{ toolbar: true, readout: "static", panToggle: true, frameOnMount: DEFECT }} />,
   play: async ({ canvas, canvasElement }) => {
     await waitFor(() => expect(readoutText(canvasElement)).toMatch(/· \d+%$/));
     const toggle = canvas.getByRole("button", { name: "Pan tool" });
@@ -511,9 +491,7 @@ export const PanTool: Story = {
 /** An app whose left button belongs to a drawing tool: the right button pans, and no menu opens. */
 export const RightButtonPan: Story = {
   args: { panButton: "right" },
-  render: (args) => (
-    <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />
-  ),
+  render: (args) => <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />,
   play: async ({ canvas, canvasElement }) => {
     await waitFor(() => expect(readoutText(canvasElement)).toMatch(/· \d+%$/));
     const stage = canvas.getByRole("application");
@@ -540,9 +518,7 @@ export const RightButtonPan: Story = {
 /** An app whose tools use double-click: it no longer toggles fit. */
 export const NoDoubleClickFit: Story = {
   args: { doubleClickFit: false },
-  render: (args) => (
-    <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />
-  ),
+  render: (args) => <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />,
   play: async ({ canvas, canvasElement }) => {
     await waitFor(() => expect(readoutText(canvasElement)).toMatch(/· \d+%$/));
     const before = stageTransform(canvasElement);
@@ -553,9 +529,7 @@ export const NoDoubleClickFit: Story = {
 
 /** Two fingers pinch-zoom about their midpoint; one finger pans, or is the app's with `touchPan="two-finger"`. */
 export const TouchGestures: Story = {
-  render: (args) => (
-    <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />
-  ),
+  render: (args) => <StatefulStage {...args} options={{ toolbar: true, readout: "static", frameOnMount: DEFECT }} />,
   play: async ({ canvas, canvasElement }) => {
     await waitFor(() => expect(readoutText(canvasElement)).toMatch(/· \d+%$/));
     const stage = canvas.getByRole("application");
@@ -600,13 +574,21 @@ function InspectorDriven(args: ImageStageProps) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
-        <button type="button" className="rounded-control border border-line-strong px-2 text-sm" onClick={() => stageRef.current?.frame(DEFECT)}>
+        <button
+          type="button"
+          className="rounded-control border border-line-strong px-2 text-sm"
+          onClick={() => stageRef.current?.frame(DEFECT)}
+        >
           Frame the scratch
         </button>
         <button type="button" className="rounded-control border border-line-strong px-2 text-sm" onClick={() => stageRef.current?.fit()}>
           Fit
         </button>
-        <button type="button" className="rounded-control border border-line-strong px-2 text-sm" onClick={() => stageRef.current?.zoomTo(2)}>
+        <button
+          type="button"
+          className="rounded-control border border-line-strong px-2 text-sm"
+          onClick={() => stageRef.current?.zoomTo(2)}
+        >
           200%
         </button>
       </div>

@@ -157,9 +157,7 @@ export function treeKeyAction(rows: readonly TreeRow[], focusedId: string, key: 
       return rows[index + 1]?.parentId === row.node.id ? focus(rows[index + 1]) : null;
     case "ArrowLeft":
       if (row.isExpanded) return { type: "collapse", id: row.node.id };
-      return row.parentId === null
-        ? null
-        : focus(rows.find((candidate) => candidate.node.id === row.parentId));
+      return row.parentId === null ? null : focus(rows.find((candidate) => candidate.node.id === row.parentId));
     case "Enter":
     case " ":
       return row.node.disabled ? null : { type: "select", id: row.node.id };

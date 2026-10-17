@@ -36,15 +36,7 @@ export interface DropdownMenuProps {
  * page behind stays readable and operable. Toggling a `MenuCheckboxItem` keeps the menu open,
  * so several layers can be switched in one visit.
  */
-export function DropdownMenu({
-  trigger,
-  children,
-  open,
-  onOpenChange,
-  align = "start",
-  side = "bottom",
-  className,
-}: DropdownMenuProps) {
+export function DropdownMenu({ trigger, children, open, onOpenChange, align = "start", side = "bottom", className }: DropdownMenuProps) {
   return (
     <RadixMenu.Root
       // Non-modal: a modal menu hides the rest of the page from assistive technology while
@@ -134,13 +126,7 @@ export interface MenuCheckboxItemProps {
  * A toggle (`role="menuitemcheckbox"`): a layer on or off. A check marks it on. Choosing it
  * leaves the menu open.
  */
-export function MenuCheckboxItem({
-  children,
-  checked,
-  onCheckedChange,
-  shortcut,
-  disabled,
-}: MenuCheckboxItemProps) {
+export function MenuCheckboxItem({ children, checked, onCheckedChange, shortcut, disabled }: MenuCheckboxItemProps) {
   return (
     <RadixMenu.CheckboxItem
       checked={checked}

@@ -244,8 +244,7 @@ describe("view transform properties", () => {
       const to = g.box();
       // Zoomed in far enough that the image overflows both viewports four times over,
       // centred on a point near its middle, so the clamp has nothing to do.
-      const scale =
-        4 * Math.max(from.width / image.width, from.height / image.height, to.width / image.width, to.height / image.height);
+      const scale = 4 * Math.max(from.width / image.width, from.height / image.height, to.width / image.width, to.height / image.height);
       if (scale > MAX_SCALE) continue;
       const centre = { x: image.width * g.between(0.45, 0.55), y: image.height * g.between(0.45, 0.55) };
       const offset = toScreen({ scale, tx: 0, ty: 0 }, centre);
@@ -301,16 +300,10 @@ describe("view transform properties", () => {
       const screen = toScreen(view, p);
       const topLeft = toScreen(view, { x: -0.5, y: -0.5 });
       const bottomRight = toScreen(view, { x: image.width - 0.5, y: image.height - 0.5 });
-      const onScreenInside =
-        screen.x >= topLeft.x && screen.y >= topLeft.y && screen.x < bottomRight.x && screen.y < bottomRight.y;
+      const onScreenInside = screen.x >= topLeft.x && screen.y >= topLeft.y && screen.x < bottomRight.x && screen.y < bottomRight.y;
       // Skip points within rounding distance of an edge, where either answer is right.
       const nearEdge =
-        Math.min(
-          Math.abs(p.x + 0.5),
-          Math.abs(p.y + 0.5),
-          Math.abs(p.x - image.width + 0.5),
-          Math.abs(p.y - image.height + 0.5),
-        ) < 1e-6;
+        Math.min(Math.abs(p.x + 0.5), Math.abs(p.y + 0.5), Math.abs(p.x - image.width + 0.5), Math.abs(p.y - image.height + 0.5)) < 1e-6;
       if (!nearEdge) expect(insideImage(p, image)).toBe(onScreenInside);
     }
   });

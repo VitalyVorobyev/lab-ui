@@ -25,24 +25,8 @@
  * with the image.
  */
 
-import {
-  createContext,
-  use,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import type {
-  CSSProperties,
-  KeyboardEvent as ReactKeyboardEvent,
-  PointerEvent as ReactPointerEvent,
-  ReactNode,
-  Ref,
-} from "react";
+import { createContext, use, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent, ReactNode, Ref } from "react";
 
 import { cn } from "@vitavision/ui";
 import type { Point } from "../measureGeometry";
@@ -960,18 +944,8 @@ function contentSize(element: HTMLElement): Box {
   const style = getComputedStyle(element);
   const px = (value: string) => Number.parseFloat(value) || 0;
   return {
-    width:
-      rect.width -
-      px(style.borderLeftWidth) -
-      px(style.borderRightWidth) -
-      px(style.paddingLeft) -
-      px(style.paddingRight),
-    height:
-      rect.height -
-      px(style.borderTopWidth) -
-      px(style.borderBottomWidth) -
-      px(style.paddingTop) -
-      px(style.paddingBottom),
+    width: rect.width - px(style.borderLeftWidth) - px(style.borderRightWidth) - px(style.paddingLeft) - px(style.paddingRight),
+    height: rect.height - px(style.borderTopWidth) - px(style.borderBottomWidth) - px(style.paddingTop) - px(style.paddingBottom),
   };
 }
 

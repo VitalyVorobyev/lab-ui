@@ -63,11 +63,7 @@ export const StartOnly: Story = {
 /** Facts at both ends; an item without a value (no last run yet) is skipped. */
 export const StartAndEnd: Story = {
   args: {
-    end: [
-      { label: "last run", value: undefined },
-      { value: "1920×1080" },
-      { label: "zoom", value: "125%" },
-    ],
+    end: [{ label: "last run", value: undefined }, { value: "1920×1080" }, { label: "zoom", value: "125%" }],
   },
   play: async ({ canvas }) => {
     const [start, end] = canvas.getAllByRole("list");
@@ -103,11 +99,7 @@ function LiveStatus() {
         Detect
       </Button>
       <div className="border-t border-line bg-surface">
-        <StatusBar
-          live
-          start={[{ label: "frame", value: "dome_0003.bmp" }]}
-          end={[{ label: "last run", value: lastRun }]}
-        />
+        <StatusBar live start={[{ label: "frame", value: "dome_0003.bmp" }]} end={[{ label: "last run", value: lastRun }]} />
       </div>
     </div>
   );
@@ -142,10 +134,7 @@ export const InAppShell: Story = {
                 { label: "frame", value: "dome_0003.bmp" },
                 { label: "model", value: "ring-12" },
               ]}
-              end={[
-                { label: "last run", value: "38 ms" },
-                { value: "1920×1080" },
-              ]}
+              end={[{ label: "last run", value: "38 ms" }, { value: "1920×1080" }]}
             />
           }
         />

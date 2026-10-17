@@ -237,9 +237,7 @@ export function describeFields(schema: OptionsSchema): FieldSpec[] {
   return Object.entries(schema.properties ?? {}).map(([name, node]) => {
     const resolved = resolve(node, schema);
     const kind = kindOf(resolved, schema);
-    const numeric =
-      (kind === "choice" || kind === "choice-inline") &&
-      (resolved.type === "integer" || resolved.type === "number");
+    const numeric = (kind === "choice" || kind === "choice-inline") && (resolved.type === "integer" || resolved.type === "number");
 
     return {
       name,

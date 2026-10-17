@@ -1,0 +1,7 @@
+{
+  // The plugins are plain JS with JSDoc types (`// @ts-check`); this checks them.
+  "extends": "../ts/tsconfig.json",
+  "compilerOptions": { "allowJs": true, "checkJs": true, "lib": ["ES2022"], "types": [] },
+  "include": ["plugin.js", "storybook.js", "rules/*.js"],
+  "exclude": ["rules/*.test.js", "rules/*.rule-test.js"]
+}

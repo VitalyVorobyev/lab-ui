@@ -26,8 +26,16 @@ export function usePlayhead(playhead: Playhead): number {
  * @returns The number of samples and the seconds between them.
  */
 export function usePlayheadTimeline(playhead: Playhead): { count: number; dt: number } {
-  const count = useSyncExternalStore(playhead.subscribe, () => playhead.count, () => playhead.count);
-  const dt = useSyncExternalStore(playhead.subscribe, () => playhead.dt, () => playhead.dt);
+  const count = useSyncExternalStore(
+    playhead.subscribe,
+    () => playhead.count,
+    () => playhead.count,
+  );
+  const dt = useSyncExternalStore(
+    playhead.subscribe,
+    () => playhead.dt,
+    () => playhead.dt,
+  );
   return { count, dt };
 }
 
@@ -65,14 +73,7 @@ export interface PlaybackClockOptions {
  *
  * @param options - The playhead and the transport state.
  */
-export function usePlaybackClock({
-  playhead,
-  playing,
-  speed = 1,
-  loop = false,
-  onEnd,
-  maxFrameMs = 100,
-}: PlaybackClockOptions): void {
+export function usePlaybackClock({ playhead, playing, speed = 1, loop = false, onEnd, maxFrameMs = 100 }: PlaybackClockOptions): void {
   const step = useEffectEvent((position: number, elapsedMs: number) => {
     const delta = (Math.min(elapsedMs, maxFrameMs) / 1000) * (speed / playhead.dt);
     return advance(position, delta, playhead.count, loop);

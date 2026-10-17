@@ -46,14 +46,7 @@ export interface ScoreHistogramProps {
  * Always the `wide` variant. Painted in the verdict tokens (`--normal`, `--defect`); the
  * legend names both classes with their counts, so the chart does not rely on colour alone.
  */
-export function ScoreHistogram({
-  normal,
-  defect,
-  threshold,
-  bins = 32,
-  label,
-  className,
-}: ScoreHistogramProps) {
+export function ScoreHistogram({ normal, defect, threshold, bins = 32, label, className }: ScoreHistogramProps) {
   const domain = extent([...normal, ...defect]);
   const normalBins = histogram(normal, domain, bins);
   const defectBins = histogram(defect, domain, bins);
@@ -73,24 +66,14 @@ export function ScoreHistogram({
       footer={
         <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <li className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="inline-block h-2 w-3 rounded-sm"
-              style={{ backgroundColor: NORMAL_FILL, opacity: 0.75 }}
-            />
+            <span aria-hidden className="inline-block h-2 w-3 rounded-sm" style={{ backgroundColor: NORMAL_FILL, opacity: 0.75 }} />
             <span className="font-mono text-xs">normal ({normal.length})</span>
           </li>
           <li className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="inline-block h-2 w-3 rounded-sm"
-              style={{ backgroundColor: DEFECT_FILL, opacity: 0.75 }}
-            />
+            <span aria-hidden className="inline-block h-2 w-3 rounded-sm" style={{ backgroundColor: DEFECT_FILL, opacity: 0.75 }} />
             <span className="font-mono text-xs">defect ({defect.length})</span>
           </li>
-          {threshold !== undefined && (
-            <li className="font-mono text-xs">threshold {threshold.toFixed(4)}</li>
-          )}
+          {threshold !== undefined && <li className="font-mono text-xs">threshold {threshold.toFixed(4)}</li>}
         </ul>
       }
     >

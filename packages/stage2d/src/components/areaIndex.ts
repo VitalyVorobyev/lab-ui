@@ -232,7 +232,8 @@ export function buildAreaIndex(items: readonly Area[], cell?: number): AreaIndex
     let total = 0;
     for (let a = 0; a < count; a++) {
       if (Number.isNaN(bounds[4 * a]!)) continue;
-      total += (Math.floor((bounds[4 * a + 2]! - bounds[4 * a]!) / s) + 1) * (Math.floor((bounds[4 * a + 3]! - bounds[4 * a + 1]!) / s) + 1);
+      total +=
+        (Math.floor((bounds[4 * a + 2]! - bounds[4 * a]!) / s) + 1) * (Math.floor((bounds[4 * a + 3]! - bounds[4 * a + 1]!) / s) + 1);
     }
     return total;
   };

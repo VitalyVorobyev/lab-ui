@@ -372,7 +372,7 @@ export function MeasureOverlay({
           return (
             <g
               // Primitives carry no required identity; a position is the only stable key.
-              // eslint-disable-next-line @eslint-react/no-array-index-key
+              // oxlint-disable-next-line react/no-array-index-key
               key={index}
               data-kind={primitive.kind}
               data-id={primitive.id}
@@ -536,9 +536,22 @@ function Primitive({
       const p = primitive.points;
       return (
         <g>
-          <path d={segmentsPath(p)} fill="none" stroke={colour} strokeWidth={hairline} strokeDasharray={primitive.dashed ? dash : undefined} />
+          <path
+            d={segmentsPath(p)}
+            fill="none"
+            stroke={colour}
+            strokeWidth={hairline}
+            strokeDasharray={primitive.dashed ? dash : undefined}
+          />
           {p.length >= 4 && (
-            <Label x={p[0]!} y={p[1]! - strokeWidthFor(strokeScale, 4)} text={primitive.label} colour={colour} size={labelSize} halo={labelHalo} />
+            <Label
+              x={p[0]!}
+              y={p[1]! - strokeWidthFor(strokeScale, 4)}
+              text={primitive.label}
+              colour={colour}
+              size={labelSize}
+              halo={labelHalo}
+            />
           )}
         </g>
       );
@@ -615,9 +628,26 @@ function Primitive({
       const geometry = dimensionGeometry(primitive.x1, primitive.y1, primitive.x2, primitive.y2, offset);
       return (
         <g stroke={colour} strokeWidth={hairline}>
-          <line x1={geometry.extensionLine1[0].x} y1={geometry.extensionLine1[0].y} x2={geometry.extensionLine1[1].x} y2={geometry.extensionLine1[1].y} opacity={0.5} />
-          <line x1={geometry.extensionLine2[0].x} y1={geometry.extensionLine2[0].y} x2={geometry.extensionLine2[1].x} y2={geometry.extensionLine2[1].y} opacity={0.5} />
-          <line x1={geometry.dimensionLine[0].x} y1={geometry.dimensionLine[0].y} x2={geometry.dimensionLine[1].x} y2={geometry.dimensionLine[1].y} />
+          <line
+            x1={geometry.extensionLine1[0].x}
+            y1={geometry.extensionLine1[0].y}
+            x2={geometry.extensionLine1[1].x}
+            y2={geometry.extensionLine1[1].y}
+            opacity={0.5}
+          />
+          <line
+            x1={geometry.extensionLine2[0].x}
+            y1={geometry.extensionLine2[0].y}
+            x2={geometry.extensionLine2[1].x}
+            y2={geometry.extensionLine2[1].y}
+            opacity={0.5}
+          />
+          <line
+            x1={geometry.dimensionLine[0].x}
+            y1={geometry.dimensionLine[0].y}
+            x2={geometry.dimensionLine[1].x}
+            y2={geometry.dimensionLine[1].y}
+          />
           {labelSize > 0 && (
             <text
               x={geometry.labelAnchor.x}

@@ -48,15 +48,32 @@ describe("latticeEdges", () => {
   });
 
   it("works with negative indices", () => {
-    expect(latticeEdges([{ i: -1, j: -1 }, { i: 0, j: -1 }, { i: -1, j: 0 }])).toEqual([
+    expect(
+      latticeEdges([
+        { i: -1, j: -1 },
+        { i: 0, j: -1 },
+        { i: -1, j: 0 },
+      ]),
+    ).toEqual([
       { a: 0, b: 1, axis: "i" },
       { a: 0, b: 2, axis: "j" },
     ]);
   });
 
   it("gives no edges to a node with a non-integer or out-of-range index, and keeps the first of two nodes at one index", () => {
-    expect(latticeEdges([{ i: 0.5, j: 0 }, { i: 1.5, j: 0 }, { i: Number.NaN, j: 0 }, { i: 2 ** 30, j: 0 }])).toEqual([]);
-    const twin = latticeEdges([{ i: 0, j: 0 }, { i: 0, j: 0 }, { i: 1, j: 0 }]);
+    expect(
+      latticeEdges([
+        { i: 0.5, j: 0 },
+        { i: 1.5, j: 0 },
+        { i: Number.NaN, j: 0 },
+        { i: 2 ** 30, j: 0 },
+      ]),
+    ).toEqual([]);
+    const twin = latticeEdges([
+      { i: 0, j: 0 },
+      { i: 0, j: 0 },
+      { i: 1, j: 0 },
+    ]);
     expect(twin).toEqual([{ a: 0, b: 2, axis: "i" }]);
     expect(latticeEdges([])).toEqual([]);
   });
@@ -79,7 +96,13 @@ describe("latticeEdges", () => {
   });
 
   it("has (w-1)h + w(h-1) edges on a full lattice", () => {
-    for (const [w, h] of [[1, 1], [1, 5], [7, 1], [6, 4], [20, 20]] as const) {
+    for (const [w, h] of [
+      [1, 1],
+      [1, 5],
+      [7, 1],
+      [6, 4],
+      [20, 20],
+    ] as const) {
       expect(latticeEdges(full(w, h)).length).toBe((w - 1) * h + w * (h - 1));
     }
   });

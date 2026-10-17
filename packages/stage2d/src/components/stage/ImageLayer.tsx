@@ -83,16 +83,7 @@ export type ImageLayerProps = ImageLayerBaseProps &
  * once it has loaded, the preview carries `data-wants-full` from the moment the full image is
  * wanted until it has loaded, and both carry `data-pixelated` while pixelated.
  */
-export function ImageLayer({
-  src,
-  preview,
-  alt,
-  pixelatedAbove = 4,
-  onFullNeeded,
-  onLoad,
-  onError,
-  className,
-}: ImageLayerProps) {
+export function ImageLayer({ src, preview, alt, pixelatedAbove = 4, onFullNeeded, onLoad, onError, className }: ImageLayerProps) {
   const stage = useStage();
   const scale = stage.view.scale;
   // The full image is wanted once the preview would be magnified on screen: its own pixels

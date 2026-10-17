@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 140,
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "**/*.md",
+    "**/*.mdx",
+    "**/*.toml",
+    "**/__fixtures__/**",
+    "**/__screenshots__/**",
+    "packages/ui/src/fonts/**",
+    "bun.lock"
+  ]
+}

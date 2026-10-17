@@ -74,11 +74,7 @@ export function colormapRgb(name: ColormapName, t: number): [number, number, num
   const f = scaled - i;
   const a = anchors[i]!;
   const b = anchors[i + 1]!;
-  return [
-    Math.round(a[0] + f * (b[0] - a[0])),
-    Math.round(a[1] + f * (b[1] - a[1])),
-    Math.round(a[2] + f * (b[2] - a[2])),
-  ];
+  return [Math.round(a[0] + f * (b[0] - a[0])), Math.round(a[1] + f * (b[1] - a[1])), Math.round(a[2] + f * (b[2] - a[2]))];
 }
 
 /**

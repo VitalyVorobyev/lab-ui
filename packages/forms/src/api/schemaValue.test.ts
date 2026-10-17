@@ -83,7 +83,10 @@ describe("shapeOf", () => {
 
   it("reads an enum of unit variants spelled as {type: string, enum: [...]}", () => {
     const shape = shapeOf({
-      oneOf: [{ type: "string", enum: ["A", "B"] }, { type: "object", properties: { C: { type: "integer" } }, required: ["C"] }],
+      oneOf: [
+        { type: "string", enum: ["A", "B"] },
+        { type: "object", properties: { C: { type: "integer" } }, required: ["C"] },
+      ],
     });
     expect(shape.kind === "external" && shape.variants.map((v) => v.tag)).toEqual(["A", "B", "C"]);
   });
@@ -156,7 +159,9 @@ describe("shapeOf", () => {
     expect(shapeOf({}).kind).toBe("json");
     expect(shapeOf({ type: ["string", "integer"] }).kind).toBe("json");
     expect(shapeOf({ oneOf: [{ type: "string" }, { type: "integer" }] }).kind).toBe("json");
-    expect(shapeOf({ oneOf: [{ type: "object", properties: { a: { type: "integer" }, b: { type: "integer" } } }, { type: "string" }] }).kind).toBe("json");
+    expect(
+      shapeOf({ oneOf: [{ type: "object", properties: { a: { type: "integer" }, b: { type: "integer" } } }, { type: "string" }] }).kind,
+    ).toBe("json");
     expect(shapeOf({ oneOf: [{ const: 1 }, { type: "object", properties: { A: { type: "integer" } } }] }).kind).toBe("json");
   });
 
@@ -216,7 +221,9 @@ describe("fieldAt / fieldsAt", () => {
   });
 
   it("lists the payload of an externally tagged variant", () => {
-    expect(fieldsAt(PLANAR, "solver.robust_loss", PLANAR, { solver: { robust_loss: { Huber: { scale: 1 } } } }).map((f) => f.key)).toEqual(["Huber"]);
+    expect(fieldsAt(PLANAR, "solver.robust_loss", PLANAR, { solver: { robust_loss: { Huber: { scale: 1 } } } }).map((f) => f.key)).toEqual([
+      "Huber",
+    ]);
     expect(fieldsAt(PLANAR, "solver.robust_loss", PLANAR, { solver: { robust_loss: "None" } })).toEqual([]);
   });
 
@@ -280,7 +287,9 @@ describe("defaultValueForSchema", () => {
     expect(defaultValueForSchema({ enum: ["x", "y"] })).toBe("x");
     expect(defaultValueForSchema(DETECTOR.properties?.["upscale"] as JsonSchema, DETECTOR)).toBe("None");
     expect(defaultValueForSchema({ oneOf: [{ type: "string" }, { type: "integer" }] })).toBe("");
-    expect(defaultValueForSchema({ oneOf: [{ type: "object", properties: { a: { type: "integer" } }, required: ["a"] }, { type: "string" }] })).toEqual({
+    expect(
+      defaultValueForSchema({ oneOf: [{ type: "object", properties: { a: { type: "integer" } }, required: ["a"] }, { type: "string" }] }),
+    ).toEqual({
       a: 0,
     });
   });
@@ -303,7 +312,13 @@ describe("defaultValueForSchema", () => {
     const noDefault = shapeAt(RIG, "sensor");
     expect(noDefault.kind).toBe("tagged");
     const huber: JsonSchema = {
-      oneOf: [{ type: "object", properties: { Huber: { type: "object", properties: { scale: { type: "number" } }, required: ["scale"] } }, required: ["Huber"] }],
+      oneOf: [
+        {
+          type: "object",
+          properties: { Huber: { type: "object", properties: { scale: { type: "number" } }, required: ["scale"] } },
+          required: ["Huber"],
+        },
+      ],
     };
     expect(defaultValueForSchema(huber)).toEqual({ Huber: { scale: 0 } });
   });

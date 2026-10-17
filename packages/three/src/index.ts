@@ -25,20 +25,8 @@ export {
 } from "./conventions";
 export { disposeObject } from "./dispose";
 export { GIZMO_LAYER, PHYSICAL_LAYER, setLayer } from "./layers";
-export {
-  type CanonicalPinhole,
-  type PixelCentre,
-  type RemapTable,
-  SensorView,
-  type SensorViewOptions,
-} from "./sensorView";
-export {
-  type BakedSampleLike,
-  type BakedScenarioLike,
-  type CaptureMarker,
-  FrameTreeRuntime,
-  WORLD,
-} from "./frameTree";
+export { type CanonicalPinhole, type PixelCentre, type RemapTable, SensorView, type SensorViewOptions } from "./sensorView";
+export { type BakedSampleLike, type BakedScenarioLike, type CaptureMarker, FrameTreeRuntime, WORLD } from "./frameTree";
 export { Axes, type AxesColors } from "./primitives/axes";
 export { CameraFrustum, type CameraFrustumOptions, imageBorderPixels } from "./primitives/frustum";
 export { LaserFan, type LaserFanOptions } from "./primitives/laserFan";

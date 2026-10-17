@@ -134,17 +134,8 @@ export function AppShell({
   );
 
   return (
-    <div
-      className={cn(
-        "grid h-dvh w-full grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden bg-ground text-fg",
-        className,
-      )}
-    >
-      {header ? (
-        <header className="min-w-0 border-b border-line bg-surface">{header}</header>
-      ) : (
-        <div aria-hidden />
-      )}
+    <div className={cn("grid h-dvh w-full grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden bg-ground text-fg", className)}>
+      {header ? <header className="min-w-0 border-b border-line bg-surface">{header}</header> : <div aria-hidden />}
       {hasRail ? (
         <div className="flex min-h-0 min-w-0">
           <nav aria-label={railLabel} className="h-full shrink-0 overflow-y-auto border-r border-line bg-surface">

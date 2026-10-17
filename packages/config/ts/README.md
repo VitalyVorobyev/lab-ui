@@ -4,7 +4,7 @@ Shared TypeScript compiler options and a tsdown library preset for the `@vitavis
 frontends.
 
 ```bash
-bun add -d @vitavision/config-ts typescript@^6.0.3
+bun add -d @vitavision/config-ts typescript@^7.0.2
 ```
 
 ## App
@@ -38,6 +38,10 @@ import { library } from "@vitavision/config-ts/tsdown";
 
 export default library(); // ESM + declarations from src/index.ts; pass overrides to change it
 ```
+
+With TypeScript 7, tsdown emits the declarations with the native compiler (its `tsgo`
+generator) and logs that this path is experimental. It reads the options from
+`tsconfig.json`, so put declaration options there rather than in `dts` overrides.
 
 ## License
 

@@ -40,17 +40,7 @@ export function packageLayers(options: { kind: "dot" | "plus" } = { kind: "dot" 
     return null;
   }
 
-  function Harness({
-    points,
-    lines,
-    url,
-    initial,
-  }: {
-    points: PointSetItem[];
-    lines: PolylineSetItem[];
-    url: string;
-    initial: View;
-  }) {
+  function Harness({ points, lines, url, initial }: { points: PointSetItem[]; lines: PolylineSetItem[]; url: string; initial: View }) {
     const [view, set] = useState<View>(initial);
     setView = set;
     return (

@@ -105,9 +105,7 @@ export const AtTheEnds: Story = {
       await expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
       const last = canvas.getByRole("button", { name: "dome_0012.bmp" });
       await waitFor(() =>
-        expect(list.getBoundingClientRect().right - last.getBoundingClientRect().right).toBeGreaterThanOrEqual(
-          RING_ROOM - 1,
-        ),
+        expect(list.getBoundingClientRect().right - last.getBoundingClientRect().right).toBeGreaterThanOrEqual(RING_ROOM - 1),
       );
     }
     await expect(canvas.getByRole("button", { name: "Next" })).toBeDisabled();
@@ -179,10 +177,7 @@ export const WithStatus: Story = {
     await expect(missing).toHaveAttribute("data-status", "defect");
     await expect(missing).toHaveAttribute("title", "dome_0003.bmp, not found");
     await expect(missing.querySelector('[data-tone="defect"]')).not.toBeNull();
-    await expect(canvas.getByRole("button", { name: "dome_0005.bmp, low contrast" })).toHaveAttribute(
-      "data-status",
-      "warning",
-    );
+    await expect(canvas.getByRole("button", { name: "dome_0005.bmp, low contrast" })).toHaveAttribute("data-status", "warning");
     // An item without a status keeps its plain name and draws no dot.
     const plain = canvas.getByRole("button", { name: "dome_0010.bmp" });
     await expect(plain).not.toHaveAttribute("data-status");

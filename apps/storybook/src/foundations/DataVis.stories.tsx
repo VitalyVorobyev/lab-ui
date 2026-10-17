@@ -107,8 +107,8 @@ export const Categorical: Story = {
         ))}
       </ol>
       <p className="max-w-prose text-xs text-fg-muted">
-        Each slot is ≥ 3:1 against <code>surface</code> and <code>ground</code> in its theme. A seventh
-        series reuses a slot and is told apart by its legend text, never by colour alone.
+        Each slot is ≥ 3:1 against <code>surface</code> and <code>ground</code> in its theme. A seventh series reuses a slot and is told
+        apart by its legend text, never by colour alone.
       </p>
     </div>
   ),
@@ -164,9 +164,8 @@ export const Maps: Story = {
         </span>
       </section>
       <p className="max-w-prose text-xs text-fg-muted">
-        Not used: <code>jet</code>, <code>hot</code>, <code>turbo</code> and red→green ramps. They are
-        not perceptually uniform (a band reads as an edge in the data) and red/green carries a
-        verdict.
+        Not used: <code>jet</code>, <code>hot</code>, <code>turbo</code> and red→green ramps. They are not perceptually uniform (a band
+        reads as an edge in the data) and red/green carries a verdict.
       </p>
     </div>
   ),

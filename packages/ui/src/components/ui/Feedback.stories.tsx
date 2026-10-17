@@ -79,9 +79,7 @@ export const ErrorBoxStory: Story = {
 };
 
 export const EmptyState: Story = {
-  render: () => (
-    <Empty action={<Button variant="primary">Upload images</Button>}>No images in this dataset yet.</Empty>
-  ),
+  render: () => <Empty action={<Button variant="primary">Upload images</Button>}>No images in this dataset yet.</Empty>,
 };
 
 export const EmptyWithoutAction: Story = {

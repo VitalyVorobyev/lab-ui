@@ -1,4 +1,4 @@
-/* eslint-disable storybook/default-exports -- not a story: the data the stories render. It is named `*.stories.*` so it ships in no package and counts for no coverage. */
+/* oxlint-disable storybook/default-exports -- not a story: the data the stories render. It is named `*.stories.*` so it ships in no package and counts for no coverage. */
 
 /**
  * Synthetic detections for the stories and their tests: boards seen under a perspective, ring
@@ -45,13 +45,15 @@ export function project(u: number, v: number): Projected {
 }
 
 /** The 9×6 inner corners of a chessboard, with lattice indices and the two edge directions. */
-export function boardCorners(options: { cols?: number; rows?: number; directed?: boolean; offset?: [number, number] } = {}): TargetCorner[] {
+export function boardCorners(
+  options: { cols?: number; rows?: number; directed?: boolean; offset?: [number, number] } = {},
+): TargetCorner[] {
   const { cols = 9, rows = 6, directed = false, offset = [1, 1] } = options;
   const corners: TargetCorner[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
       const p = project(i + offset[0], j + offset[1]);
-      const corner: TargetCorner = { id: `c${i}-${j}`, x: p.x, y: p.y, i, j, score: 0.6 + 0.4 * ((i * 7 + j * 3) % 10) / 10 };
+      const corner: TargetCorner = { id: `c${i}-${j}`, x: p.x, y: p.y, i, j, score: 0.6 + (0.4 * ((i * 7 + j * 3) % 10)) / 10 };
       if (directed) {
         corner.angle = p.angleU;
         corner.angle2 = p.angleV;
@@ -74,12 +76,7 @@ export function charuco(): TargetDetection {
   for (let b = 0; b < 7; b++) {
     for (let a = 0; a < 10; a++) {
       if ((a + b) % 2 !== 0) continue;
-      const quad = [
-        project(a + 0.18, b + 0.18),
-        project(a + 0.82, b + 0.18),
-        project(a + 0.82, b + 0.82),
-        project(a + 0.18, b + 0.82),
-      ];
+      const quad = [project(a + 0.18, b + 0.18), project(a + 0.82, b + 0.18), project(a + 0.82, b + 0.82), project(a + 0.18, b + 0.82)];
       // The detector reports the marker's own corner order: rotating it by `id` turns corner 0.
       const turn = id % 4;
       const ordered = [...quad.slice(turn), ...quad.slice(0, turn)];
@@ -125,8 +122,10 @@ export function puzzleboard(): TargetDetection {
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const hash = (col * 31 + row * 17 + col * row * 5) % 23;
-      if (col + 1 < cols) edges.push({ row, col, orientation: "horizontal", bit: hash % 2 === 0 ? 1 : 0, confidence: 0.2 + 0.8 * (hash / 22) });
-      if (row + 1 < rows) edges.push({ row, col, orientation: "vertical", bit: hash % 3 === 0 ? 1 : 0, confidence: 0.2 + 0.8 * (((hash * 7) % 23) / 22) });
+      if (col + 1 < cols)
+        edges.push({ row, col, orientation: "horizontal", bit: hash % 2 === 0 ? 1 : 0, confidence: 0.2 + 0.8 * (hash / 22) });
+      if (row + 1 < rows)
+        edges.push({ row, col, orientation: "vertical", bit: hash % 3 === 0 ? 1 : 0, confidence: 0.2 + 0.8 * (((hash * 7) % 23) / 22) });
     }
   }
   return { kind: "puzzleboard", corners, edgeBits: edgeBitsFromPuzzleboard(edges, corners, PUZZLE_ALIGNMENT) };

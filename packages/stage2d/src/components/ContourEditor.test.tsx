@@ -7,7 +7,12 @@ import { STAGE_HIT_PRIORITY, type HitId } from "./stage/hitTest";
 import { useStageHitLayer, useStageHitTest } from "./stage/useStageHitTest";
 import type { Point } from "./measureGeometry";
 
-const points = [{ x: 2, y: 2 }, { x: 8, y: 2 }, { x: 8, y: 8 }, { x: 2, y: 8 }];
+const points = [
+  { x: 2, y: 2 },
+  { x: 8, y: 2 },
+  { x: 8, y: 8 },
+  { x: 2, y: 8 },
+];
 
 const viewportOf = (container: HTMLElement) => container.querySelector<HTMLElement>("[aria-label='Image canvas']")!;
 
@@ -29,7 +34,10 @@ describe("ContourEditor", () => {
 
   it("draws an open contour as a polyline that keeps two vertices, and edits it without wrapping", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
-    const line = [{ x: 10, y: 10 }, { x: 50, y: 10 }];
+    const line = [
+      { x: 10, y: 10 },
+      { x: 50, y: 10 },
+    ];
     const render2 = (pts: Point[]) => (
       <ImageStage image={{ width: 100, height: 100 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
         <ContourEditor points={pts} closed={false} onChange={onChange} editable />
@@ -43,24 +51,44 @@ describe("ContourEditor", () => {
     expect(onChange).not.toHaveBeenCalled();
     // Insert on the last vertex goes midway to the one before it.
     fireEvent.keyDown(getByRole("button", { name: "Contour point 2" }), { key: "Insert" });
-    expect(onChange).toHaveBeenLastCalledWith([{ x: 10, y: 10 }, { x: 30, y: 10 }, { x: 50, y: 10 }]);
+    expect(onChange).toHaveBeenLastCalledWith([
+      { x: 10, y: 10 },
+      { x: 30, y: 10 },
+      { x: 50, y: 10 },
+    ]);
     // A double-click past the open end's gap is not on a segment.
-    const three = [{ x: 10, y: 10 }, { x: 50, y: 10 }, { x: 50, y: 50 }];
+    const three = [
+      { x: 10, y: 10 },
+      { x: 50, y: 10 },
+      { x: 50, y: 50 },
+    ];
     rerender(render2(three));
     onChange.mockClear();
     fireEvent.doubleClick(viewportOf(container), { clientX: 28.5, clientY: 32.5 });
     expect(onChange).not.toHaveBeenCalled();
     // On the second segment it inserts after its start.
     fireEvent.doubleClick(viewportOf(container), { clientX: 52.5, clientY: 30.5 });
-    expect(onChange).toHaveBeenLastCalledWith([{ x: 10, y: 10 }, { x: 50, y: 10 }, { x: 52, y: 30 }, { x: 50, y: 50 }]);
+    expect(onChange).toHaveBeenLastCalledWith([
+      { x: 10, y: 10 },
+      { x: 50, y: 10 },
+      { x: 52, y: 30 },
+      { x: 50, y: 50 },
+    ]);
     // Three vertices: one may go.
     fireEvent.keyDown(getByRole("button", { name: "Contour point 2" }), { key: "Delete" });
-    expect(onChange).toHaveBeenLastCalledWith([{ x: 10, y: 10 }, { x: 50, y: 50 }]);
+    expect(onChange).toHaveBeenLastCalledWith([
+      { x: 10, y: 10 },
+      { x: 50, y: 50 },
+    ]);
   });
 
   it("registers pixel-center geometry and keyboard editing", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
-    const { container, getByRole } = render(<ImageStage image={{ width: 100, height: 80 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable /></ImageStage>);
+    const { container, getByRole } = render(
+      <ImageStage image={{ width: 100, height: 80 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={points} onChange={onChange} editable />
+      </ImageStage>,
+    );
     const svg = container.querySelector("svg");
     expect(svg?.getAttribute("viewBox")).toBe("-0.5 -0.5 100 80");
     fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "ArrowRight" });
@@ -73,7 +101,11 @@ describe("ContourEditor", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const onCommit = vi.fn();
     const triangle = points.slice(0, 3);
-    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={triangle} onChange={onChange} onCommit={onCommit} editable label="Weld" /></ImageStage>);
+    const { getByRole } = render(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={triangle} onChange={onChange} onCommit={onCommit} editable label="Weld" />
+      </ImageStage>,
+    );
     const handle = getByRole("button", { name: "Weld point 1" });
     fireEvent.keyDown(handle, { key: "Delete" });
     expect(onChange).not.toHaveBeenCalled();
@@ -87,7 +119,11 @@ describe("ContourEditor", () => {
   it("clamps edits to image bounds and adds a point on double-click", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const onCommit = vi.fn();
-    const { container, getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} onCommit={onCommit} editable /></ImageStage>);
+    const { container, getByRole } = render(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={points} onChange={onChange} onCommit={onCommit} editable />
+      </ImageStage>,
+    );
     fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "ArrowUp" });
     expect(onChange.mock.lastCall?.[0][0]).toEqual({ x: 2, y: 1 });
     // No band of its own: the double-click reaches the stage, which offers it to the contour.
@@ -100,7 +136,11 @@ describe("ContourEditor", () => {
   it("drags vertices and commits once when the gesture ends", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const onCommit = vi.fn();
-    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} onCommit={onCommit} editable /></ImageStage>);
+    const { getByRole } = render(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={points} onChange={onChange} onCommit={onCommit} editable />
+      </ImageStage>,
+    );
     const handle = getByRole("button", { name: "Contour point 1" });
     handle.setPointerCapture = vi.fn();
     fireEvent.pointerDown(handle, { button: 0, pointerId: 4 });
@@ -113,8 +153,16 @@ describe("ContourEditor", () => {
   it("commits only edits that change the contour", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const onCommit = vi.fn();
-    const edge = [{ x: 0, y: 0 }, { x: 8, y: 2 }, { x: 8, y: 8 }];
-    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={edge} onChange={onChange} onCommit={onCommit} editable /></ImageStage>);
+    const edge = [
+      { x: 0, y: 0 },
+      { x: 8, y: 2 },
+      { x: 8, y: 8 },
+    ];
+    const { getByRole } = render(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={edge} onChange={onChange} onCommit={onCommit} editable />
+      </ImageStage>,
+    );
     const handle = getByRole("button", { name: "Contour point 1" });
     handle.setPointerCapture = vi.fn();
     fireEvent.pointerDown(handle, { button: 0, pointerId: 2 });
@@ -127,7 +175,13 @@ describe("ContourEditor", () => {
   it("clamps a double-clicked point into the image and keeps vertex double-clicks from the stage", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const outer = vi.fn();
-    const { container, getByRole } = render(<div onDoubleClick={outer}><ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable /></ImageStage></div>);
+    const { container, getByRole } = render(
+      <div onDoubleClick={outer}>
+        <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+          <ContourEditor points={points} onChange={onChange} editable />
+        </ImageStage>
+      </div>,
+    );
     fireEvent.doubleClick(viewportOf(container), { clientX: -3, clientY: 5.5 });
     expect(onChange.mock.lastCall?.[0][4]).toEqual({ x: 0, y: 5 });
     outer.mockClear();
@@ -137,22 +191,38 @@ describe("ContourEditor", () => {
 
   it("does not edit when read-only or the pan tool is active", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
-    const { getByRole, rerender } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable /></ImageStage>);
+    const { getByRole, rerender } = render(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={points} onChange={onChange} editable />
+      </ImageStage>,
+    );
     const handle = getByRole("button", { name: "Contour point 1" });
     fireEvent.pointerDown(handle, { button: 1, pointerId: 1 });
     fireEvent.pointerMove(handle, { clientX: 6, clientY: 6 });
     expect(onChange).not.toHaveBeenCalled();
-    rerender(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} panTool><ContourEditor points={points} onChange={onChange} editable /></ImageStage>);
+    rerender(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} panTool>
+        <ContourEditor points={points} onChange={onChange} editable />
+      </ImageStage>,
+    );
     fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "ArrowRight" });
     expect(onChange).not.toHaveBeenCalled();
-    rerender(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} /></ImageStage>);
+    rerender(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={points} onChange={onChange} />
+      </ImageStage>,
+    );
     expect(getByRole("img", { name: "Contour" })).toBeTruthy();
   });
 
   it("clamps drags and nudges to custom bounds, reaching the image border", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const bounds = { x: -0.5, y: -0.5, width: 10, height: 10 };
-    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} editable bounds={bounds} /></ImageStage>);
+    const { getByRole } = render(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={points} onChange={onChange} editable bounds={bounds} />
+      </ImageStage>,
+    );
     const handle = getByRole("button", { name: "Contour point 1" });
     handle.setPointerCapture = vi.fn();
     fireEvent.pointerDown(handle, { button: 0, pointerId: 4 });
@@ -165,8 +235,16 @@ describe("ContourEditor", () => {
 
   it("nudges to a custom border and stops there", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
-    const edge = [{ x: 9.4, y: 5 }, { x: 5, y: 2 }, { x: 5, y: 8 }];
-    const { getByRole } = render(<ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={edge} onChange={onChange} editable bounds={{ x: -0.5, y: -0.5, width: 10, height: 10 }} /></ImageStage>);
+    const edge = [
+      { x: 9.4, y: 5 },
+      { x: 5, y: 2 },
+      { x: 5, y: 8 },
+    ];
+    const { getByRole } = render(
+      <ImageStage image={{ width: 10, height: 10 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={edge} onChange={onChange} editable bounds={{ x: -0.5, y: -0.5, width: 10, height: 10 }} />
+      </ImageStage>,
+    );
     fireEvent.keyDown(getByRole("button", { name: "Contour point 1" }), { key: "ArrowRight" });
     expect(onChange.mock.lastCall?.[0][0]).toEqual({ x: 9.5, y: 5 });
   });
@@ -174,7 +252,11 @@ describe("ContourEditor", () => {
   it("drags a vertex only once the pointer has left the click slop", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
     const onCommit = vi.fn();
-    const { getByRole } = render(<ImageStage image={{ width: 100, height: 100 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}><ContourEditor points={points} onChange={onChange} onCommit={onCommit} editable /></ImageStage>);
+    const { getByRole } = render(
+      <ImageStage image={{ width: 100, height: 100 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}}>
+        <ContourEditor points={points} onChange={onChange} onCommit={onCommit} editable />
+      </ImageStage>,
+    );
     const handle = getByRole("button", { name: "Contour point 2" });
     handle.setPointerCapture = vi.fn();
     // Pressed at (8, 2), which is client (8.5, 2.5) at 1:1.
@@ -199,11 +281,17 @@ describe("ContourEditor", () => {
     function Probe() {
       const { hitTest } = useStageHitTest();
       useStageHitLayer({ layerId: "below", priority: STAGE_HIT_PRIORITY.area, pick: () => ({ id: "area", dist: 0 }), onPress });
+      // oxlint-disable-next-line react/globals -- the probe hands the hit-test out of the render, to call it from the test
       hitAt = (p) => hitTest(p)?.id ?? null;
       return null;
     }
     const view = { scale: 1, tx: 0, ty: 0 };
-    const { container, rerender } = render(<ImageStage image={{ width: 10, height: 10 }} view={view} onView={() => {}}><Probe /><ContourEditor points={points} onChange={() => {}} editable layerId="contour" /></ImageStage>);
+    const { container, rerender } = render(
+      <ImageStage image={{ width: 10, height: 10 }} view={view} onView={() => {}}>
+        <Probe />
+        <ContourEditor points={points} onChange={() => {}} editable layerId="contour" />
+      </ImageStage>,
+    );
     // A press on the top edge: the contour takes no presses, so the area below gets it.
     fireEvent.pointerDown(viewportOf(container), { button: 0, pointerId: 1, clientX: 5.5, clientY: 2.5 });
     expect(onPress).toHaveBeenCalledWith("area", expect.anything());
@@ -211,13 +299,23 @@ describe("ContourEditor", () => {
     expect(hitAt({ x: 5, y: 2 })).toBe(0);
     expect(hitAt({ x: 8, y: 5 })).toBe(1);
     // Read-only, it does not.
-    rerender(<ImageStage image={{ width: 10, height: 10 }} view={view} onView={() => {}}><Probe /><ContourEditor points={points} onChange={() => {}} layerId="contour" /></ImageStage>);
+    rerender(
+      <ImageStage image={{ width: 10, height: 10 }} view={view} onView={() => {}}>
+        <Probe />
+        <ContourEditor points={points} onChange={() => {}} layerId="contour" />
+      </ImageStage>,
+    );
     expect(hitAt({ x: 5, y: 2 })).toBe("area");
   });
 
   it("takes a double-click near the outline instead of the stage's fit, and leaves one elsewhere to it", () => {
     const onChange = vi.fn<(points: Point[]) => void>();
-    const square = [{ x: 20, y: 20 }, { x: 80, y: 20 }, { x: 80, y: 80 }, { x: 20, y: 80 }];
+    const square = [
+      { x: 20, y: 20 },
+      { x: 80, y: 20 },
+      { x: 80, y: 80 },
+      { x: 20, y: 80 },
+    ];
     const stage = (props: { panTool?: boolean; editable?: boolean }) => (
       <ImageStage image={{ width: 100, height: 100 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} panTool={props.panTool ?? false}>
         <ContourEditor points={square} onChange={onChange} editable={props.editable ?? true} />
@@ -243,7 +341,10 @@ describe("ContourEditor", () => {
 
 describe("ContourEditor — brush and erase", () => {
   /** A 100 px horizontal line at y = 50, in a 200 × 100 image at 1:1. */
-  const LINE: Point[] = [{ x: 50, y: 50 }, { x: 150, y: 50 }];
+  const LINE: Point[] = [
+    { x: 50, y: 50 },
+    { x: 150, y: 50 },
+  ];
   /** At 1:1 with the viewport at the origin, client = image + 0.5. */
   const at = (p: Point) => ({ clientX: p.x + 0.5, clientY: p.y + 0.5, pointerId: 1, button: 0 });
 
@@ -255,7 +356,16 @@ describe("ContourEditor — brush and erase", () => {
     const result = render(
       <div onPointerDown={outer} onDoubleClick={outer}>
         <ImageStage image={{ width: 200, height: 100 }} view={{ scale: 1, tx: 0, ty: 0 }} onView={() => {}} panTool={panTool}>
-          <ContourEditor points={LINE} closed={false} onChange={onChange} onCommit={onCommit} onErase={onErase} editable brushRadius={10} {...props} />
+          <ContourEditor
+            points={LINE}
+            closed={false}
+            onChange={onChange}
+            onCommit={onCommit}
+            onErase={onErase}
+            editable
+            brushRadius={10}
+            {...props}
+          />
         </ImageStage>
       </div>,
     );
@@ -334,8 +444,14 @@ describe("ContourEditor — brush and erase", () => {
     fireEvent.pointerUp(window, at({ x: 120, y: 50 }));
     expect(onErase).toHaveBeenCalledWith(
       [
-        [{ x: 50, y: 50 }, { x: 70, y: 50 }],
-        [{ x: 120, y: 50 }, { x: 150, y: 50 }],
+        [
+          { x: 50, y: 50 },
+          { x: 70, y: 50 },
+        ],
+        [
+          { x: 120, y: 50 },
+          { x: 150, y: 50 },
+        ],
       ],
       { start: 20, end: 70 },
     );
@@ -345,7 +461,12 @@ describe("ContourEditor — brush and erase", () => {
   });
 
   it("erases the shorter way round a closed contour, leaving one open piece", () => {
-    const square = [{ x: 50, y: 20 }, { x: 150, y: 20 }, { x: 150, y: 80 }, { x: 50, y: 80 }];
+    const square = [
+      { x: 50, y: 20 },
+      { x: 150, y: 20 },
+      { x: 150, y: 80 },
+      { x: 50, y: 80 },
+    ];
     const { surface, onErase } = setup({ mode: "erase", points: square, closed: true });
     // From the left side just below the first vertex, up across it and along the top.
     fireEvent.pointerDown(surface, at({ x: 50, y: 30 }));
@@ -356,7 +477,15 @@ describe("ContourEditor — brush and erase", () => {
     expect(onErase).toHaveBeenCalledOnce();
     const [pieces, range] = onErase.mock.calls[0]!;
     expect(range).toEqual({ start: 310, end: 20 });
-    expect(pieces).toEqual([[{ x: 70, y: 20 }, { x: 150, y: 20 }, { x: 150, y: 80 }, { x: 50, y: 80 }, { x: 50, y: 30 }]]);
+    expect(pieces).toEqual([
+      [
+        { x: 70, y: 20 },
+        { x: 150, y: 20 },
+        { x: 150, y: 80 },
+        { x: 50, y: 80 },
+        { x: 50, y: 30 },
+      ],
+    ]);
   });
 
   it("does nothing on release for a jitter, and draws the footprint under a hovering pointer", () => {

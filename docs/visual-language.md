@@ -25,8 +25,8 @@ The semantic tokens live in `@vitavision/ui/styles.css`. Specimen: *Foundations 
 | Verdicts | `normal`, `defect`, `warn` | Only for a pass/fail/attention judgement the app has actually made. They are never a series colour, a decoration, or a continuous scale. `defect` also marks destructive actions. |
 
 - **Must:** components use token names only. There are no raw Tailwind palette classes
-  (`bg-gray-500`) and no hex literals. The `tokensOnly` rule of
-  `@vitavision/config-eslint` enforces it in each app's migrated directories.
+  (`bg-gray-500`) and no hex literals. The `vitavision/tokens-only` rule of
+  `@vitavision/config-oxlint` enforces it in each app's migrated directories.
 - **Must:** a "verdict" means the app compared a value with a declared threshold and said
   so. A continuous quality (a score, an error in px) is a magnitude and uses a sequential
   map (§4), even when low values are "good".
@@ -260,7 +260,7 @@ both themes.
 
 | Rule | Enforced by |
 |---|---|
-| tokens only, no palette classes or hex literals | `tokensOnly` in `@vitavision/config-eslint` |
+| tokens only, no palette classes or hex literals | `vitavision/tokens-only` in `@vitavision/config-oxlint` |
 | text contrast ≥ 4.5:1, UI boundaries ≥ 3:1, signal vs verdicts under dichromacy | `ui/src/contrast.test.ts` |
 | axe, light and dark | the story harness, today (Foundations included) |
 | series palette ≥ 3:1 and CVD separation | `charts/src/palette.test.ts`; `tools/visual-language/colours.py` prints the numbers |

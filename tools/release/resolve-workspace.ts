@@ -34,14 +34,16 @@ export function manifestPaths(root = ROOT): string[] {
     ...readdirSync(join(root, "packages")).map((d) => join(root, "packages", d)),
     ...readdirSync(join(root, "packages", "config")).map((d) => join(root, "packages", "config", d)),
   ];
-  return dirs.map((d) => join(d, "package.json")).filter((p) => {
-    try {
-      readFileSync(p);
-      return true;
-    } catch {
-      return false;
-    }
-  });
+  return dirs
+    .map((d) => join(d, "package.json"))
+    .filter((p) => {
+      try {
+        readFileSync(p);
+        return true;
+      } catch {
+        return false;
+      }
+    });
 }
 
 /** Rewrite `manifests` in memory; returns the names of the fields changed, as `pkg: dep`. */

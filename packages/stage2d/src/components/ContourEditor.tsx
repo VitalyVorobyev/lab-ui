@@ -107,7 +107,10 @@ function nearestSegment(points: Point[], point: Point, closed: boolean): { index
     const dy = b.y - a.y;
     const t = Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy || 1)));
     const d = (point.x - a.x - t * dx) ** 2 + (point.y - a.y - t * dy) ** 2;
-    if (d < distance) { distance = d; nearest = i; }
+    if (d < distance) {
+      distance = d;
+      nearest = i;
+    }
   }
   return { index: nearest, distance: Math.sqrt(distance) };
 }
@@ -243,8 +246,10 @@ export function ContourEditor({
     const p = points[index];
     if (!p) return;
     const shift: Record<string, Point> = {
-      ArrowLeft: { x: -delta, y: 0 }, ArrowRight: { x: delta, y: 0 },
-      ArrowUp: { x: 0, y: -delta }, ArrowDown: { x: 0, y: delta },
+      ArrowLeft: { x: -delta, y: 0 },
+      ArrowRight: { x: delta, y: 0 },
+      ArrowUp: { x: 0, y: -delta },
+      ArrowDown: { x: 0, y: delta },
     };
     if (shift[event.key]) {
       event.preventDefault();
@@ -281,8 +286,7 @@ export function ContourEditor({
     const touch = event.pointerType === "touch";
     let moved = false;
     /** Whether the pointer has left the click slop: before that, the press edits nothing. */
-    const past = (e: globalThis.PointerEvent) =>
-      moved || (moved = Math.hypot(e.clientX - client.x, e.clientY - client.y) > CLICK_SLOP);
+    const past = (e: globalThis.PointerEvent) => moved || (moved = Math.hypot(e.clientX - client.x, e.clientY - client.y) > CLICK_SLOP);
     setFootprint(from);
     if (mode === "brush") {
       const snapshot = points;
@@ -366,17 +370,49 @@ export function ContourEditor({
         {preview && (
           <g fill="none" strokeLinecap="round" strokeLinejoin="round">
             <polyline points={toAttribute(preview)} stroke={overlayRole("halo")} strokeWidth={px(4)} />
-            <polyline data-erase-preview="" points={toAttribute(preview)} stroke={ERASE} strokeWidth={px(2.5)} strokeDasharray={`${px(6)} ${px(4)}`} />
+            <polyline
+              data-erase-preview=""
+              points={toAttribute(preview)}
+              stroke={ERASE}
+              strokeWidth={px(2.5)}
+              strokeDasharray={`${px(6)} ${px(4)}`}
+            />
           </g>
         )}
-        {editable && mode === "vertex" && points.map((point, index) => (
-          // The contour API is an ordered point list without vertex IDs; indices are stable across drag edits.
-          // eslint-disable-next-line @eslint-react/no-array-index-key
-          <circle key={index} cx={point.x} cy={point.y} r={selected === index ? radius * 1.3 : radius} fill="var(--surface)" stroke={stroke} strokeWidth={hairline} className="pointer-events-auto cursor-move" tabIndex={0} role="button" aria-label={`${label} point ${index + 1}`} onPointerDown={(event) => pointerDown(event, index)} onPointerMove={pointerMove} onPointerUp={pointerUp} onLostPointerCapture={pointerUp} onDoubleClick={(event) => { if (!stage.panMode) event.stopPropagation(); }} onKeyDown={(event) => keyDown(event, index)} onFocus={() => setSelected(index)} />
-        ))}
+        {editable &&
+          mode === "vertex" &&
+          points.map((point, index) => (
+            // The contour API is an ordered point list without vertex IDs; indices are stable across drag edits.
+            <circle
+              // oxlint-disable-next-line react/no-array-index-key
+              key={index}
+              cx={point.x}
+              cy={point.y}
+              r={selected === index ? radius * 1.3 : radius}
+              fill="var(--surface)"
+              stroke={stroke}
+              strokeWidth={hairline}
+              className="pointer-events-auto cursor-move"
+              tabIndex={0}
+              role="button"
+              aria-label={`${label} point ${index + 1}`}
+              onPointerDown={(event) => pointerDown(event, index)}
+              onPointerMove={pointerMove}
+              onPointerUp={pointerUp}
+              onLostPointerCapture={pointerUp}
+              onDoubleClick={(event) => {
+                if (!stage.panMode) event.stopPropagation();
+              }}
+              onKeyDown={(event) => keyDown(event, index)}
+              onFocus={() => setSelected(index)}
+            />
+          ))}
       </svg>
       {tool && footprint && (
-        <DraftShape shape={{ kind: "brush", x: footprint.x, y: footprint.y, diameter: 2 * brushRadius }} stroke={mode === "erase" ? ERASE : undefined} />
+        <DraftShape
+          shape={{ kind: "brush", x: footprint.x, y: footprint.y, diameter: 2 * brushRadius }}
+          stroke={mode === "erase" ? ERASE : undefined}
+        />
       )}
     </>
   );

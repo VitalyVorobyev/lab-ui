@@ -89,12 +89,7 @@ function Inspector() {
         <Field label="Square size" annotation="mm" description="Measured across the full board.">
           <NumberInput min={1} max={500} step={0.001} defaultValue={20.015} />
         </Field>
-        <Switch
-          checked={refine}
-          onCheckedChange={setRefine}
-          label="Subpixel refinement"
-          description="Saddle-point fit in a 5 px window."
-        />
+        <Switch checked={refine} onCheckedChange={setRefine} label="Subpixel refinement" description="Saddle-point fit in a 5 px window." />
         <SegmentedControl
           aria-label="Overlay"
           value={overlay}
@@ -146,9 +141,8 @@ function SpecimenScreen() {
       </dl>
 
       <p className="max-w-prose text-sm leading-relaxed text-fg-muted">
-        The board is detected in every frame, then the intrinsics are refined jointly with each
-        frame&apos;s pose. Frames whose residuals exceed 1 px are flagged as outliers rather than
-        dropped, so you can inspect them before the next run.
+        The board is detected in every frame, then the intrinsics are refined jointly with each frame&apos;s pose. Frames whose residuals
+        exceed 1 px are flagged as outliers rather than dropped, so you can inspect them before the next run.
       </p>
 
       <div className="grid grid-cols-2 gap-3 rounded-panel bg-surface p-3 ring-1 ring-line">
@@ -164,12 +158,7 @@ function SpecimenScreen() {
 
       <Inspector />
 
-      <LineChart
-        label="Reprojection RMS per iteration"
-        xLabel="iteration"
-        yLabel="RMS (px)"
-        series={CONVERGENCE}
-      />
+      <LineChart label="Reprojection RMS per iteration" xLabel="iteration" yLabel="RMS (px)" series={CONVERGENCE} />
     </section>
   );
 }

@@ -60,7 +60,11 @@ describe("DraftShape stroke", () => {
     const el = c.querySelector("path[data-draft-stroke]")!;
     expect(el.getAttribute("d")).toBe("M5 6L7 8");
     expect(el.getAttribute("stroke")).toBe("var(--defect)");
-    expect(draw({ kind: "stroke", points: [5, 6], width: 3 }).querySelector("path[data-draft-stroke]")?.getAttribute("d")).toBe("M5 6h0");
+    expect(
+      draw({ kind: "stroke", points: [5, 6], width: 3 })
+        .querySelector("path[data-draft-stroke]")
+        ?.getAttribute("d"),
+    ).toBe("M5 6h0");
     expect(draw({ kind: "stroke", points: [], width: 3 }).querySelector("path")).toBeNull();
   });
 });

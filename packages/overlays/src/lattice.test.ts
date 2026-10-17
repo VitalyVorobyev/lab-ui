@@ -22,12 +22,25 @@ describe("cornerGrid", () => {
 
   it("groups rows by i sorted by j, and columns by j sorted by i, whatever the input order", () => {
     const grid = cornerGrid([...FULL].reverse());
-    expect(grid.rows.map((row) => row.map((p) => grid.nodes[p]!.id))).toEqual([["0-0", "0-1"], ["1-0", "1-1"], ["2-0", "2-1"]]);
-    expect(grid.cols.map((col) => col.map((p) => grid.nodes[p]!.id))).toEqual([["0-0", "1-0", "2-0"], ["0-1", "1-1", "2-1"]]);
+    expect(grid.rows.map((row) => row.map((p) => grid.nodes[p]!.id))).toEqual([
+      ["0-0", "0-1"],
+      ["1-0", "1-1"],
+      ["2-0", "2-1"],
+    ]);
+    expect(grid.cols.map((col) => col.map((p) => grid.nodes[p]!.id))).toEqual([
+      ["0-0", "1-0", "2-0"],
+      ["0-1", "1-1", "2-1"],
+    ]);
   });
 
   it("leaves out corners with no integer index, and keeps the first of a repeated position", () => {
-    const grid = cornerGrid([corner("a", 0, 0), corner("loose", undefined, undefined), corner("half", 1, undefined), corner("frac", 0.5, 0), corner("dup", 0, 0)]);
+    const grid = cornerGrid([
+      corner("a", 0, 0),
+      corner("loose", undefined, undefined),
+      corner("half", 1, undefined),
+      corner("frac", 0.5, 0),
+      corner("dup", 0, 0),
+    ]);
     expect(grid.nodes.map((n) => n.id)).toEqual(["a"]);
   });
 
