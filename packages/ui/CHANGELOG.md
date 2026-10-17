@@ -1,5 +1,59 @@
 # @vitavision/ui
 
+## 0.13.0
+
+### Minor Changes
+
+- d36cb3c: New `HighlightedText`: a string with its placeholders, markup tags, protected terms and mismatches marked, such as a UI string next to its translation.
+  
+  ```tsx
+  const spans = findSpans(source, [
+    { pattern: /%\d+/, kind: "placeholder" },
+    { pattern: /<\/?[a-z][^>]*>/i, kind: "tag" },
+    { pattern: /\bParamsManager\b/, kind: "protected-term" },
+  ]);
+  <HighlightedText text={source} spans={spans} />
+  ```
+  
+  - **Spans** are `{ start, end, kind, label? }` in UTF-16 offsets, in any order. Overlaps are allowed. The kinds are `placeholder`, `tag`, `protected-term` and `mismatch`.
+  - **`findSpans(text, rules)`** builds spans from regular expressions. It finds every match, skips empty ones and sorts the result.
+  - **Text only:** the string is never parsed as HTML. `<b>` shows as the characters `<b>`. Whitespace and line breaks are kept.
+  - **Accessible:** each kind has its own shape: an outlined mono box, a mono face on a quiet box, a dotted underline, or a wavy underline with a tint. None is told apart by colour alone. Each span is a `<mark>`, followed by its kind for screen readers ("%1, placeholder"). That label is left out when the text is copied. `labels` renames or silences a kind, and a span's `label` says why it is marked.
+- d36cb3c: New `Progress`: how far a long operation has got, as a count out of a total.
+  
+  ```tsx
+  <Progress aria-label="Translating" value={412} max={2556} />
+  <Progress aria-label="Loading the catalog" /> {/* no value: indeterminate */}
+  ```
+  
+  - **Determinate** with a `value` out of `max` (100 by default), clamped. Screen readers hear "412 of 2,556"; `valueText` replaces it ("412 of 2,556 strings").
+  - **Indeterminate** without a `value`: a sweeping bar, with no `aria-valuenow`, `aria-valuemax` or `aria-valuetext`. It holds still with reduced motion.
+  - The bar is in the accent colour, never a verdict colour. The track is thinner in the compact density. `data-state` is `loading`, `complete` or `indeterminate`.
+  - `progressText(value, max)` gives the same "412 of 2,556" text, for a label printed beside the bar.
+  - `ProgressBar` is deprecated in favour of `Progress`. It still works as before.
+- d36cb3c: `Table` can render only the rows in view (`windowed`), so a table of thousands of rows scrolls smoothly, and rows can be navigated with the keyboard.
+  
+  ```tsx
+  <Table columns={columns} rows={strings} rowKey={(s) => s.id} windowed={{ rowHeight: 36, height: 480 }} />
+  ```
+  
+  - **`windowed={{ rowHeight, height?, overscan? }}`:** the table scrolls itself under a sticky header and keeps only the visible rows (plus `overscan`, 8 by default) in the DOM. Without `height` it fills its container, which needs a height of its own. Every row is drawn `rowHeight` tall (at least 36 px comfortable, 22 px compact). Cells keep to one line and longer content ends in an ellipsis. Columns use a fixed layout, so give a column a `width` where its content needs one.
+  - Sorting, `onRowClick`, `isRowActive` and `onRowHover` work over all the rows. The table carries `aria-rowcount` and each rendered row its `aria-rowindex`, so a screen reader still hears a row's place among all of them. A windowed table with nothing focusable in it is a tab stop itself, so it can be scrolled from the keyboard.
+  - **Keyboard:** from a focused activatable row, the arrow keys, Page Up / Page Down and Home / End move to another row, and a windowed table scrolls to it. Before, these keys scrolled the page. Enter and Space still activate the row.
+  - The props type of the option is exported as `TableWindowing`.
+- d36cb3c: `Textarea` grows with its content, shows an invalid state, and is set in the sans face unless you ask for mono.
+  
+  ```tsx
+  <Field label="German" error={error}>
+    <Textarea minRows={2} maxRows={8} value={text} onValueChange={setText} />
+  </Field>
+  ```
+  
+  - **Growing:** with `minRows` and/or `maxRows` it starts `minRows` tall (also in a server render), follows its content and scrolls past `maxRows`. It also refits when a controlled `value` changes or its width changes. Without them it is `rows` tall and resizable, as before.
+  - **Invalid:** `invalid` sets `aria-invalid`, `data-invalid` and a border in the defect colour. Inside a `Field` with an `error` it is on without the prop.
+  - **`onValueChange`** is called with the text on every edit, alongside the native `onChange`.
+  - **Breaking:** the text is now IBM Plex Sans by default; it used to always be mono. Pass `mono` to keep the old look, for JSON, code or lists. The props type is exported as `TextareaProps`.
+
 ## 0.12.0
 
 ### Minor Changes
