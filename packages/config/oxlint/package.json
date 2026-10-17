@@ -1,0 +1,49 @@
+{
+  "name": "@vitavision/config-oxlint",
+  "version": "0.0.0",
+  "description": "Shared Oxlint config for vitavision frontends, including a rule that keeps colour in the design tokens.",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VitalyVorobyev/lab-ui.git",
+    "directory": "packages/config/oxlint"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "oxlintrc.json",
+    "plugin.js",
+    "plugin.d.ts",
+    "storybook.js",
+    "storybook.d.ts",
+    "rules",
+    "!rules/*.test.js",
+    "!rules/*.rule-test.js"
+  ],
+  "exports": {
+    "./oxlintrc.json": "./oxlintrc.json",
+    "./plugin": {
+      "types": "./plugin.d.ts",
+      "default": "./plugin.js"
+    },
+    "./storybook": {
+      "types": "./storybook.d.ts",
+      "default": "./storybook.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "bun test && node --test 'rules/*.rule-test.js'"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@oxlint/plugins": "^1.86.0"
+  },
+  "peerDependencies": {
+    "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "^7.0.2003",
+    "typescript": "^7.0.2"
+  }
+}

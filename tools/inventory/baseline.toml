@@ -2,7 +2,8 @@
 #
 # Rule: latest, unless a peer range blocks it; then the newest compatible version, with the
 # blocker and its re-check trigger recorded in docs/adrs/0002-toolchain-baseline.md.
-# Read from the npm registry 2026-09-26.
+# Read from the npm registry 2026-09-26; the TypeScript and lint/format rows re-read
+# 2026-10-17 (the newest release at least two weeks old that day).
 #
 #   version = "x.y.z"   the baseline
 #   exact   = true      the declared range must be exactly this version (no ^/~)
@@ -14,7 +15,7 @@ react-dom = { version = "19.3.0" }
 "@types/react" = { version = "19.3.0" }
 "@types/react-dom" = { version = "19.3.0" }
 react-router = { version = "8.4.0" }
-typescript = { version = "6.0.3", note = "typescript-eslint 8.70.1 peers <6.1.0" }
+typescript = { version = "7.0.2" }
 vite = { version = "8.3.1" }
 "@vitejs/plugin-react" = { version = "6.1.1" }
 vitest = { version = "5.0.2" }
@@ -22,11 +23,10 @@ vitest = { version = "5.0.2" }
 tailwindcss = { version = "4.3.3" }
 "@tailwindcss/vite" = { version = "4.3.3" }
 "@tailwindcss/postcss" = { version = "4.3.3" }
-eslint = { version = "10.11.0" }
-typescript-eslint = { version = "8.70.1" }
-"@eslint-react/eslint-plugin" = { version = "5.20.8" }
-eslint-plugin-react-hooks = { version = "7.1.1" }
-eslint-plugin-storybook = { version = "10.6.0" }
+oxlint = { version = "1.86.0", exact = true, note = "JS plugins are alpha, outside semver: pinned exactly" }
+oxlint-tsgolint = { version = "7.0.2003", exact = true, note = "tracks the TypeScript release it embeds" }
+"@oxlint/plugins" = { version = "1.86.0", note = "moves with oxlint" }
+oxfmt = { version = "0.71.0", exact = true, note = "0.x: pinned exactly" }
 storybook = { version = "10.6.0" }
 "@storybook/addon-docs" = { version = "10.6.0" }
 "@storybook/addon-a11y" = { version = "10.6.0" }
@@ -57,6 +57,13 @@ react-router-dom = "react-router 8 (there is no 8.x react-router-dom)"
 framer-motion = "motion"
 tsup = "tsdown (tsup is unmaintained)"
 eslint-plugin-jsx-a11y = "axe in story tests (peers eslint <=9)"
+eslint = "oxlint"
+typescript-eslint = "oxlint type-aware rules (oxlint-tsgolint)"
+"@eslint-react/eslint-plugin" = "oxlint react rules + @vitavision/config-oxlint"
+eslint-plugin-react-hooks = "oxlint react rules (hooks and React Compiler checks)"
+eslint-plugin-storybook = "the storybook plugin of @vitavision/config-oxlint"
+"@vitavision/config-eslint" = "@vitavision/config-oxlint"
+prettier = "oxfmt"
 "@storybook/addon-vitest" = "composeStories in Vitest browser mode (peers vitest ^3||^4)"
 
 # Documented exceptions: "<repo>.<package>" = "reason, with ADR link". A deviation listed

@@ -1,4 +1,4 @@
-/* eslint-disable storybook/default-exports -- not a story: the data the stories render. It is named `*.stories.*` so it ships in no package and counts for no coverage. */
+/* oxlint-disable storybook/default-exports -- not a story: the data the stories render. It is named `*.stories.*` so it ships in no package and counts for no coverage. */
 
 /**
  * Synthetic detections for the stories and their tests: boards seen under a perspective, ring

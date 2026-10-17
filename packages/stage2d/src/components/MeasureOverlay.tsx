@@ -372,7 +372,7 @@ export function MeasureOverlay({
           return (
             <g
               // Primitives carry no required identity; a position is the only stable key.
-              // eslint-disable-next-line @eslint-react/no-array-index-key
+              // oxlint-disable-next-line react/no-array-index-key
               key={index}
               data-kind={primitive.kind}
               data-id={primitive.id}

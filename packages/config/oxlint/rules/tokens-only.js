@@ -7,8 +7,12 @@
  *   - a hex colour literal: `#1e293b`, `#fff`.
  *
  * Semantic token utilities (`bg-surface`, `text-fg-muted`, `ring-signal`) are what the rule
- * steers to, and are never flagged.
+ * steers to, and are never flagged. Test and story files are skipped: their fixtures are
+ * drawn in literal colours on purpose. (Oxlint's `overrides` cannot exclude files, so the
+ * rule does it itself.)
  */
+
+import { defineRule } from "@oxlint/plugins";
 
 const PALETTE =
   "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
@@ -18,20 +22,23 @@ const UTILITY =
 /** Exported for tests. */
 export const RAW_PALETTE = new RegExp(`(?:^|[\\s:"'\`])(?:${UTILITY})-(?:${PALETTE})-\\d{2,3}(?:/\\d{1,3})?(?=$|[\\s"'\`])`);
 export const HEX = /(?:^|[^\w&])#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/;
+/** The files the rule leaves alone: tests and stories. */
+export const EXEMPT_FILE = /\.(?:test|stories)\.[cm]?[jt]sx?$/;
 
-/** @type {import("eslint").Rule.RuleModule} */
-export const tokensOnly = {
+export const tokensOnly = defineRule({
   meta: {
     type: "problem",
     docs: { description: "Colours come from design tokens: no raw Tailwind palette classes, no hex literals." },
     messages: {
-      palette: "Raw Tailwind palette class `{{match}}` — use a semantic token (bg-surface, text-fg-muted, …). See the Foundations / Colour page of the @vitavision Storybook.",
+      palette:
+        "Raw Tailwind palette class `{{match}}` — use a semantic token (bg-surface, text-fg-muted, …). See the Foundations / Colour page of the @vitavision Storybook.",
       hex: "Hex colour literal `{{match}}` — use a design token (a CSS variable or its utility). See the Foundations / Colour page of the @vitavision Storybook.",
     },
     schema: [],
   },
   create(context) {
-    /** @param {import("estree").Node} node @param {string} text */
+    if (EXEMPT_FILE.test(context.filename)) return {};
+    /** @param {import("@oxlint/plugins").ESTree.Node} node @param {string} text */
     function check(node, text) {
       const palette = RAW_PALETTE.exec(text);
       if (palette) {
@@ -50,4 +57,4 @@ export const tokensOnly = {
       },
     };
   },
-};
+});

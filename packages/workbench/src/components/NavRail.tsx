@@ -172,7 +172,7 @@ export function NavRailItem({
     const own = children.props;
     // `@vitavision/ui` keeps its Slot to itself, and this package takes no Radix dependency of
     // its own: the one child element is cloned with the item's props merged in.
-    // eslint-disable-next-line @eslint-react/no-clone-element -- the asChild merge, see above
+    // oxlint-disable-next-line react/no-clone-element -- the asChild merge, see above
     item = cloneElement(children, {
       ...shared,
       "aria-disabled": disabled ? true : undefined,

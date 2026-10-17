@@ -10,7 +10,8 @@ bun install
 bun run typecheck      # every package, sources resolved across the workspace
 bun run test           # vitest per package + bun test for tools/ and packages/config/
 bun run test:stories   # every story: interactions, axe in both themes, server render
-bun run lint
+bun run lint           # oxlint, type-aware (Node >= 22 on PATH)
+bun run format         # oxfmt; CI runs format:check
 bun run build          # tsdown → packages/*/dist
 bun run api            # refresh packages/*/etc/*.api.md after a public API change
 bun run storybook      # the docs site on :6006

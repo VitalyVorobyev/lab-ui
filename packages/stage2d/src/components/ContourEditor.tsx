@@ -371,7 +371,7 @@ export function ContourEditor({
         )}
         {editable && mode === "vertex" && points.map((point, index) => (
           // The contour API is an ordered point list without vertex IDs; indices are stable across drag edits.
-          // eslint-disable-next-line @eslint-react/no-array-index-key
+          // oxlint-disable-next-line react/no-array-index-key
           <circle key={index} cx={point.x} cy={point.y} r={selected === index ? radius * 1.3 : radius} fill="var(--surface)" stroke={stroke} strokeWidth={hairline} className="pointer-events-auto cursor-move" tabIndex={0} role="button" aria-label={`${label} point ${index + 1}`} onPointerDown={(event) => pointerDown(event, index)} onPointerMove={pointerMove} onPointerUp={pointerUp} onLostPointerCapture={pointerUp} onDoubleClick={(event) => { if (!stage.panMode) event.stopPropagation(); }} onKeyDown={(event) => keyDown(event, index)} onFocus={() => setSelected(index)} />
         ))}
       </svg>

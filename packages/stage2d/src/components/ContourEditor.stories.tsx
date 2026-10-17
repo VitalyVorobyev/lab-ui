@@ -116,7 +116,7 @@ function EraseExample() {
         {pieces.map((piece, index) => (
           <ContourEditor
             // The pieces are replaced as a whole on each erase.
-            // eslint-disable-next-line @eslint-react/no-array-index-key
+            // oxlint-disable-next-line react/no-array-index-key
             key={index}
             points={piece}
             onChange={(next) => setPieces((all) => all.map((p, i) => (i === index ? next : p)))}

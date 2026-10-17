@@ -13,7 +13,9 @@ const config: StorybookConfig = {
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y"],
   framework: { name: "@storybook/react-vite", options: {} },
   core: { disableTelemetry: true },
-  typescript: { reactDocgen: "react-docgen-typescript" },
+  // Babel-based prop tables: react-docgen-typescript needs the TypeScript compiler API,
+  // which TypeScript 7 does not have.
+  typescript: { reactDocgen: "react-docgen" },
   viteFinal: (vite) =>
     mergeConfig(vite, {
       plugins: [tailwindcss()],

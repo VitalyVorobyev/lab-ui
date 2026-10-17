@@ -199,6 +199,7 @@ describe("ContourEditor", () => {
     function Probe() {
       const { hitTest } = useStageHitTest();
       useStageHitLayer({ layerId: "below", priority: STAGE_HIT_PRIORITY.area, pick: () => ({ id: "area", dist: 0 }), onPress });
+      // oxlint-disable-next-line react/globals -- the probe hands the hit-test out of the render, to call it from the test
       hitAt = (p) => hitTest(p)?.id ?? null;
       return null;
     }
