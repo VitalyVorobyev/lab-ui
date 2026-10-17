@@ -38,3 +38,8 @@ New `Breakdown`: how many things of a set are in each state, as one thin stacked
 - Use it where the selected row shows its detail beside the table, so moving through the rows updates the detail as you go. Leave it off when activating a row is costly or leaves the page.
 - The event passed to `onRowClick` is the key press, so modifiers can be read as for a click. The index is still the row's index in `rows`, whatever the sort, and windowed tables select rows outside the window as the keyboard reaches them.
 - Clicks, Enter and Space behave as before. Off by default.
+
+Fixes in a windowed `Table`:
+
+- The arrow keys, Page Up / Page Down and Home / End now move focus to a row that is already in view. Before, focus only moved when the table had to scroll to the row.
+- A table whose rows are cleared and then come back (a filter that matches nothing, then matches again) fills its scroll area again. Before, it measured the scroll area that had gone away and rendered only a few rows until it was resized.

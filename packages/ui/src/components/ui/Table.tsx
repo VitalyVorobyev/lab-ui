@@ -213,18 +213,25 @@ export function Table<Row>({
     : { start: 0, end: order.length, before: 0, after: 0 };
 
   const isWindowed = windowed !== undefined;
+  // With no rows the scroll area is replaced by the `empty` message: measure the new one when
+  // the rows come back, rather than keep observing the one that went away.
+  const hasRows = rows.length > 0;
   useLayoutEffect(() => {
     const scroller = scrollRef.current;
-    if (!isWindowed || !scroller || typeof ResizeObserver === "undefined") return;
+    if (!isWindowed || !hasRows || !scroller || typeof ResizeObserver === "undefined") return;
     const measure = () => {
+      // A detached element measures 0, which would shrink the window to a row or two.
+      if (!scroller.isConnected) return;
       const next = { viewport: scroller.clientHeight, header: headRef.current?.offsetHeight ?? 0 };
       setMeasured((last) => (last?.viewport === next.viewport && last.header === next.header ? last : next));
     };
     measure();
+    // A new scroll area starts at the top, whatever the last one was scrolled to.
+    setScrollTop(scroller.scrollTop);
     const observer = new ResizeObserver(measure);
     observer.observe(scroller);
     return () => observer.disconnect();
-  }, [isWindowed]);
+  }, [isWindowed, hasRows]);
 
   useLayoutEffect(() => {
     const target = pendingFocus.current;
@@ -255,10 +262,12 @@ export function Table<Row>({
       // Render the target's window now rather than on the scroll event, so it can take focus.
       setScrollTop(scroller.scrollTop);
     }
+    // A row already in the DOM takes focus now: when nothing scrolled, nothing re-renders, and
+    // the pending focus would wait for a render that never comes.
     const row = bodyRef.current?.querySelector<HTMLElement>(`tr[data-position="${target}"]`);
-    if (row && !windowed) {
+    if (row) {
       pendingFocus.current = null;
-      row.focus();
+      row.focus({ preventScroll: windowed !== undefined });
     }
     return true;
   };
