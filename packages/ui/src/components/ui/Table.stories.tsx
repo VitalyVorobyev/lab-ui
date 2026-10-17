@@ -144,7 +144,9 @@ work over all the rows.
 names the table. Activatable rows are focusable (\`tabIndex=0\`) and keep their \`row\` role, so the
 cells stay announced as cells; the active row carries \`aria-current\`. From a focused row the
 arrow keys, Page Up / Page Down and Home / End move to another row, scrolling a windowed table
-to it. A windowed table carries \`aria-rowcount\` and each rendered row its \`aria-rowindex\`, so a
+to it. With \`selectionFollowsFocus\` each of those moves also calls \`onRowClick\` for the row it
+lands on (with the key press as the event), so the selection follows the keyboard as in a list
+box; leave it off when activating a row is costly or leaves the page. A windowed table carries \`aria-rowcount\` and each rendered row its \`aria-rowindex\`, so a
 reader hears a row's place among all of them; a windowed table with nothing focusable in it is
 a tab stop itself, so it can be scrolled from the keyboard. A sortable header's
 content is a button, reachable with Tab and pressed with Enter or Space; the sorted header
@@ -360,6 +362,51 @@ export const KeyboardNavigation: Story = {
 };
 
 /**
+ * The keyboard moves the selection, not only focus: each arrow key also activates the row it
+ * lands on, as in a list whose selected item shows its detail beside it. Sorted by score, the
+ * rows still report their index in `rows`.
+ */
+export const SelectionFollowsFocus: Story = {
+  args: {
+    columns: SORT_COLUMNS,
+    rows: SORT_ROWS,
+    defaultSort: { key: "score", direction: "descending" },
+    selectionFollowsFocus: true,
+    onRowClick: fn(),
+  },
+  render: (args) => <Selectable {...args} />,
+  play: async ({ canvas, args }) => {
+    // Best score first: matches 1, 2, 4, then the unscored 3.
+    const rows = canvas.getAllByRole("row").slice(1);
+    await userEvent.click(rows[0]!);
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[0], 0, expect.anything());
+
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(rows[1]).toHaveFocus();
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[1], 1, expect.anything());
+    await expect(rows[1]).toHaveAttribute("aria-current", "true");
+    await expect(rows[0]).not.toHaveAttribute("aria-current");
+
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[3], 3, expect.anything());
+    await expect(rows[2]).toHaveAttribute("aria-current", "true");
+
+    await userEvent.keyboard("{End}");
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[2], 2, expect.anything());
+    await expect(rows[3]).toHaveAttribute("aria-current", "true");
+
+    // A key that lands on the same row selects nothing new.
+    await expect(args.onRowClick).toHaveBeenCalledTimes(4);
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(args.onRowClick).toHaveBeenCalledTimes(4);
+
+    await userEvent.keyboard("{Home}");
+    await expect(rows[0]).toHaveFocus();
+    await expect(rows[0]).toHaveAttribute("aria-current", "true");
+  },
+};
+
+/**
  * 5,000 matches in a 400 px scroll area: only the rows in view are in the DOM, and the header
  * stays put. Sorting orders all 5,000.
  */
@@ -415,6 +462,84 @@ export const WindowedKeyboard: Story = {
     await userEvent.keyboard("{Home}");
     await waitFor(() => expect(document.activeElement).toHaveAttribute("aria-rowindex", "2"));
     await expect(scroller.scrollTop).toBe(0);
+  },
+};
+
+/** The arrow keys move between rows already in view, where nothing needs to scroll. */
+export const WindowedArrowKeys: Story = {
+  args: { rows: MANY.slice(0, 50), caption: "Matches", windowed: { rowHeight: 36, height: 320 }, onRowClick: fn() },
+  play: async ({ canvasElement, args }) => {
+    const scroller = canvasElement.querySelector("table")!.parentElement!;
+    await userEvent.click(renderedRows(canvasElement)[0]!);
+    await userEvent.keyboard("{ArrowDown}");
+    await waitFor(() => expect(canvasElement.querySelector('tr[aria-rowindex="3"]')).toHaveFocus());
+    await userEvent.keyboard("{ArrowDown}");
+    await waitFor(() => expect(canvasElement.querySelector('tr[aria-rowindex="4"]')).toHaveFocus());
+    await userEvent.keyboard("{ArrowUp}");
+    await waitFor(() => expect(canvasElement.querySelector('tr[aria-rowindex="3"]')).toHaveFocus());
+    await expect(scroller.scrollTop).toBe(0);
+    // Moving focus is not activating: only the click called back.
+    await expect(args.onRowClick).toHaveBeenCalledTimes(1);
+  },
+};
+
+/**
+ * In a windowed table too, the keyboard moves to a row that is already in view, and with
+ * `selectionFollowsFocus` it selects it.
+ */
+export const WindowedSelectionFollowsFocus: Story = {
+  args: {
+    rows: MANY.slice(0, 50),
+    caption: "Matches",
+    windowed: { rowHeight: 36, height: 320 },
+    selectionFollowsFocus: true,
+    onRowClick: fn(),
+  },
+  render: (args) => <Selectable {...args} />,
+  play: async ({ canvasElement, args }) => {
+    await userEvent.click(renderedRows(canvasElement)[0]!);
+    await userEvent.keyboard("{ArrowDown}");
+    const second = canvasElement.querySelector('tr[aria-rowindex="3"]');
+    await waitFor(() => expect(second).toHaveFocus());
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(MANY[1], 1, expect.anything());
+    await expect(second).toHaveAttribute("aria-current", "true");
+
+    await userEvent.keyboard("{ArrowUp}");
+    await waitFor(() => expect(canvasElement.querySelector('tr[aria-rowindex="2"]')).toHaveFocus());
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(MANY[0], 0, expect.anything());
+  },
+};
+
+/** Clears the rows and brings them back, as a filter that matches nothing and then matches again. */
+function Refilled(props: ComponentProps<typeof Table<Match>>) {
+  const [shown, setShown] = useState(true);
+  return (
+    <div className="flex flex-col gap-2">
+      <button type="button" className="w-fit text-xs text-fg-muted" onClick={() => setShown((value) => !value)}>
+        {shown ? "Clear" : "Restore"}
+      </button>
+      <div style={{ height: 480 }}>
+        <Table {...props} rows={shown ? props.rows : []} />
+      </div>
+    </div>
+  );
+}
+
+/** A windowed table that empties and fills again measures its new scroll area and fills it. */
+export const WindowedRefill: Story = {
+  args: { rows: MANY.slice(0, 46), caption: "Matches", windowed: { rowHeight: 36 }, empty: "No matches." },
+  render: (args) => <Refilled {...args} />,
+  play: async ({ canvas, canvasElement }) => {
+    const before = renderedRows(canvasElement).length;
+    await expect(before).toBeGreaterThan(15);
+
+    await userEvent.click(canvas.getByRole("button", { name: "Clear" }));
+    await expect(canvas.getByText("No matches.")).toBeVisible();
+    // Long enough for a resize observer to report on the scroll area that went away.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    await userEvent.click(canvas.getByRole("button", { name: "Restore" }));
+    await waitFor(() => expect(renderedRows(canvasElement)).toHaveLength(before));
   },
 };
 

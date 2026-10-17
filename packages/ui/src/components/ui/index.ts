@@ -8,6 +8,14 @@
 export { cn, focusRing, focusRingInset } from "./cn";
 
 export { Badge, CountRun, StatusDot, type Tone } from "./Badge";
+export {
+  Breakdown,
+  breakdownText,
+  type BreakdownProps,
+  type BreakdownSegment,
+  type BreakdownTextOptions,
+  type BreakdownTone,
+} from "./Breakdown";
 export { Button, ButtonLink, buttonClasses, type ButtonSize, type ButtonVariant } from "./Button";
 export { DensityProvider, byDensity, useDensity, type Density } from "./Density";
 export { ConfirmDialog, Dialog, DialogClose } from "./Dialog";

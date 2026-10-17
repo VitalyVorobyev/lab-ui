@@ -102,7 +102,8 @@ const SORT_ICONS = { ascending: ArrowUp, descending: ArrowDown, none: ArrowUpDow
  * show it and the rows render as given. Row callbacks always receive a row's index in `rows`,
  * whatever the order on screen.
  *
- * Activatable rows also move focus with the arrow keys, Page Up / Page Down and Home / End.
+ * Activatable rows also move focus with the arrow keys, Page Up / Page Down and Home / End;
+ * with `selectionFollowsFocus` each of those moves also activates the row it lands on.
  * With `windowed` the table scrolls itself (vertically, under a sticky header), renders only the
  * rows in view, and uses a fixed layout: give columns a `width` where the content needs it.
  */
@@ -121,6 +122,7 @@ export function Table<Row>({
   onSortChange,
   manualSort = false,
   windowed,
+  selectionFollowsFocus = false,
 }: {
   /** The columns, in order. */
   columns: Column<Row>[];
@@ -170,6 +172,15 @@ export function Table<Row>({
    * callbacks and keyboard navigation work as without it.
    */
   windowed?: TableWindowing | undefined;
+  /**
+   * Activate a row as soon as the keyboard moves to it: each arrow key, Page Up / Page Down,
+   * Home or End that lands on another row also calls `onRowClick` for that row, with the key
+   * press as the event — selection follows focus, as in a list where the selected item shows
+   * its detail beside the list. Clicks, Enter and Space work as without it. Leave it off when
+   * activating a row is costly or navigates away: then a reader can move through the rows and
+   * choose one. Needs `onRowClick`.
+   */
+  selectionFollowsFocus?: boolean | undefined;
 }) {
   const density = useDensity();
   const [ownSort, setOwnSort] = useState<TableSort | null>(defaultSort);
@@ -202,18 +213,25 @@ export function Table<Row>({
     : { start: 0, end: order.length, before: 0, after: 0 };
 
   const isWindowed = windowed !== undefined;
+  // With no rows the scroll area is replaced by the `empty` message: measure the new one when
+  // the rows come back, rather than keep observing the one that went away.
+  const hasRows = rows.length > 0;
   useLayoutEffect(() => {
     const scroller = scrollRef.current;
-    if (!isWindowed || !scroller || typeof ResizeObserver === "undefined") return;
+    if (!isWindowed || !hasRows || !scroller || typeof ResizeObserver === "undefined") return;
     const measure = () => {
+      // A detached element measures 0, which would shrink the window to a row or two.
+      if (!scroller.isConnected) return;
       const next = { viewport: scroller.clientHeight, header: headRef.current?.offsetHeight ?? 0 };
       setMeasured((last) => (last?.viewport === next.viewport && last.header === next.header ? last : next));
     };
     measure();
+    // A new scroll area starts at the top, whatever the last one was scrolled to.
+    setScrollTop(scroller.scrollTop);
     const observer = new ResizeObserver(measure);
     observer.observe(scroller);
     return () => observer.disconnect();
-  }, [isWindowed]);
+  }, [isWindowed, hasRows]);
 
   useLayoutEffect(() => {
     const target = pendingFocus.current;
@@ -224,11 +242,18 @@ export function Table<Row>({
     row.focus({ preventScroll: isWindowed });
   });
 
-  /** Moves focus from the row at `position` for a navigation key; `true` when the key was one. */
-  const moveFocus = (key: string, position: number): boolean => {
+  /**
+   * Moves focus from the row at `position` for a navigation key, activating the new row when
+   * selection follows focus; `true` when the key was one.
+   */
+  const moveFocus = (event: KeyboardEvent<HTMLTableRowElement>, position: number): boolean => {
     const page = windowed ? Math.floor((viewportHeight - headerHeight) / rowHeight) : 10;
-    const target = navigate(key, position, order.length, page);
+    const target = navigate(event.key, position, order.length, page);
     if (target === null) return false;
+    if (selectionFollowsFocus && onRowClick && target !== position) {
+      const index = order[target]!;
+      onRowClick(rows[index]!, index, event);
+    }
     pendingFocus.current = target;
     const scroller = scrollRef.current;
     if (windowed && scroller) {
@@ -237,10 +262,12 @@ export function Table<Row>({
       // Render the target's window now rather than on the scroll event, so it can take focus.
       setScrollTop(scroller.scrollTop);
     }
+    // A row already in the DOM takes focus now: when nothing scrolled, nothing re-renders, and
+    // the pending focus would wait for a render that never comes.
     const row = bodyRef.current?.querySelector<HTMLElement>(`tr[data-position="${target}"]`);
-    if (row && !windowed) {
+    if (row) {
       pendingFocus.current = null;
-      row.focus();
+      row.focus({ preventScroll: windowed !== undefined });
     }
     return true;
   };
@@ -375,7 +402,7 @@ export function Table<Row>({
                           event.preventDefault();
                           onRowClick(row, index, event);
                           // Navigation keys belong to a control inside the row while it has focus.
-                        } else if (event.target === event.currentTarget && moveFocus(event.key, position)) event.preventDefault();
+                        } else if (event.target === event.currentTarget && moveFocus(event, position)) event.preventDefault();
                       }
                     : undefined
                 }
