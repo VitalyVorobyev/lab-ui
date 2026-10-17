@@ -63,6 +63,44 @@ describe("Table", () => {
     expect(onRowHover).toHaveBeenLastCalledWith(null, null);
   });
 
+  it("moves only focus with the arrow keys, unless selection follows focus", () => {
+    const onRowClick = vi.fn();
+    const { rerender } = renderTable({ onRowClick });
+    fireEvent.keyDown(screen.getAllByRole("row")[1]!, { key: "ArrowDown" });
+    expect(onRowClick).not.toHaveBeenCalled();
+
+    rerender(<Table columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} onRowClick={onRowClick} selectionFollowsFocus />);
+    const rows = screen.getAllByRole("row");
+    fireEvent.keyDown(rows[1]!, { key: "ArrowDown" });
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+    expect(onRowClick).toHaveBeenLastCalledWith(ROWS[1], 1, expect.objectContaining({ key: "ArrowDown" }));
+    expect(document.activeElement).toBe(rows[2]);
+
+    // Already on the last row: nothing to move to, nothing selected.
+    fireEvent.keyDown(rows[2]!, { key: "End" });
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+    // Other keys are not navigation.
+    fireEvent.keyDown(rows[2]!, { key: "a" });
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("selects rows outside the window as the keyboard reaches them", () => {
+    const many = Array.from({ length: 500 }, (_, id) => ({ id, length: id * 2 }));
+    const onRowClick = vi.fn();
+    render(
+      <Table
+        columns={COLUMNS}
+        rows={many}
+        rowKey={(row) => row.id}
+        windowed={{ rowHeight: 36, height: 200 }}
+        onRowClick={onRowClick}
+        selectionFollowsFocus
+      />,
+    );
+    fireEvent.keyDown(screen.getAllByRole("row")[1]!, { key: "End" });
+    expect(onRowClick).toHaveBeenLastCalledWith(many[499], 499, expect.objectContaining({ key: "End" }));
+  });
+
   it("says so when there is nothing to show", () => {
     render(<Table columns={COLUMNS} rows={[]} rowKey={(row) => row.id} empty="No contours." />);
     expect(screen.getByText("No contours.")).toBeTruthy();

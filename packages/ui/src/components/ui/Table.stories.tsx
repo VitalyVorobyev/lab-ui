@@ -144,7 +144,9 @@ work over all the rows.
 names the table. Activatable rows are focusable (\`tabIndex=0\`) and keep their \`row\` role, so the
 cells stay announced as cells; the active row carries \`aria-current\`. From a focused row the
 arrow keys, Page Up / Page Down and Home / End move to another row, scrolling a windowed table
-to it. A windowed table carries \`aria-rowcount\` and each rendered row its \`aria-rowindex\`, so a
+to it. With \`selectionFollowsFocus\` each of those moves also calls \`onRowClick\` for the row it
+lands on (with the key press as the event), so the selection follows the keyboard as in a list
+box; leave it off when activating a row is costly or leaves the page. A windowed table carries \`aria-rowcount\` and each rendered row its \`aria-rowindex\`, so a
 reader hears a row's place among all of them; a windowed table with nothing focusable in it is
 a tab stop itself, so it can be scrolled from the keyboard. A sortable header's
 content is a button, reachable with Tab and pressed with Enter or Space; the sorted header
@@ -356,6 +358,51 @@ export const KeyboardNavigation: Story = {
     await expect(rows[0]).toHaveFocus();
     await userEvent.keyboard("{Enter}");
     await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[0], 0, expect.anything());
+  },
+};
+
+/**
+ * The keyboard moves the selection, not only focus: each arrow key also activates the row it
+ * lands on, as in a list whose selected item shows its detail beside it. Sorted by score, the
+ * rows still report their index in `rows`.
+ */
+export const SelectionFollowsFocus: Story = {
+  args: {
+    columns: SORT_COLUMNS,
+    rows: SORT_ROWS,
+    defaultSort: { key: "score", direction: "descending" },
+    selectionFollowsFocus: true,
+    onRowClick: fn(),
+  },
+  render: (args) => <Selectable {...args} />,
+  play: async ({ canvas, args }) => {
+    // Best score first: matches 1, 2, 4, then the unscored 3.
+    const rows = canvas.getAllByRole("row").slice(1);
+    await userEvent.click(rows[0]!);
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[0], 0, expect.anything());
+
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(rows[1]).toHaveFocus();
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[1], 1, expect.anything());
+    await expect(rows[1]).toHaveAttribute("aria-current", "true");
+    await expect(rows[0]).not.toHaveAttribute("aria-current");
+
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[3], 3, expect.anything());
+    await expect(rows[2]).toHaveAttribute("aria-current", "true");
+
+    await userEvent.keyboard("{End}");
+    await expect(args.onRowClick).toHaveBeenLastCalledWith(SORT_ROWS[2], 2, expect.anything());
+    await expect(rows[3]).toHaveAttribute("aria-current", "true");
+
+    // A key that lands on the same row selects nothing new.
+    await expect(args.onRowClick).toHaveBeenCalledTimes(4);
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(args.onRowClick).toHaveBeenCalledTimes(4);
+
+    await userEvent.keyboard("{Home}");
+    await expect(rows[0]).toHaveFocus();
+    await expect(rows[0]).toHaveAttribute("aria-current", "true");
   },
 };
 

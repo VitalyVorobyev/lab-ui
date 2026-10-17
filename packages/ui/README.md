@@ -126,13 +126,13 @@ keep independent preferences.
 `DialogClose` · `Disclosure` · `DropdownMenu`, `MenuItem`, `MenuCheckboxItem`, `MenuLabel`,
 `MenuSeparator` (a non-modal command and toggle menu) · `Callout`, `Empty`, `ErrorBox`,
 `Skeleton`, `SkeletonRows` · `Progress` (a count out of a total, or indeterminate; `ProgressBar` is
-deprecated) · `Field` · `Input`, `NumberInput` (with an optional
+deprecated) · `Breakdown`, `breakdownText` (counts by verdict as one thin stacked bar) · `Field` · `Input`, `NumberInput` (with an optional
 `unit` written in the field; number-valued with `onValueChange`), `Textarea` (optionally growing
 with its content between `minRows` and `maxRows`) · `HighlightedText`, `findSpans` (a string
 with its placeholders, tags and terms marked, never parsed as HTML) · `VectorInput`,
 `PoseInput` · `Kbd` · `Listbox` (single choice among options that render their own content) ·
 `PageHeader`, `Panel`, `ReadoutStrip`, `Section` · `Popover`, `PopoverClose` ·
-`SegmentedControl` · `Select` · `Slider` · `Table` (with `windowed` for thousands of rows) ·
+`SegmentedControl` · `Select` · `Slider` · `Table` (with `windowed` for thousands of rows, and `selectionFollowsFocus` for keyboard selection) ·
 `Checkbox`, `Switch` · `ToggleChip` · `Toaster`, `toast()` (notifications from anywhere; mount one `<Toaster />` near the root) ·
 `InfoHint`, `Tooltip`, `TooltipProvider` ·
 `ThemeToggle` · plus `cn`, `focusRing`, `focusRingInset`, and `formatNumber` / `parseNumber`

@@ -32,6 +32,35 @@ export function Badge(input: {
 }): JSX.Element;
 
 // @public
+export function Breakdown(input: BreakdownProps): JSX.Element;
+
+// @public
+export type BreakdownProps = Omit<ComponentProps<"div">, "children" | "role"> & {
+    segments: readonly BreakdownSegment[];
+    total?: number | undefined;
+    remainderLabel?: string | undefined;
+};
+
+// @public
+export interface BreakdownSegment {
+    label: string;
+    tone: BreakdownTone;
+    value: number;
+}
+
+// @public
+export function breakdownText(segments: readonly BreakdownSegment[], options?: BreakdownTextOptions): string;
+
+// @public
+export interface BreakdownTextOptions {
+    remainderLabel?: string | undefined;
+    total?: number | undefined;
+}
+
+// @public
+export type BreakdownTone = "normal" | "warn" | "defect" | "neutral";
+
+// @public
 export function Button(input: ComponentProps<"button"> & {
     variant?: ButtonVariant | undefined;
     size?: ButtonSize | undefined;
@@ -583,6 +612,7 @@ export function Table<Row>(input: {
     onSortChange?: ((sort: TableSort | null) => void) | undefined;
     manualSort?: boolean | undefined;
     windowed?: TableWindowing | undefined;
+    selectionFollowsFocus?: boolean | undefined;
 }): JSX.Element;
 
 // @public
