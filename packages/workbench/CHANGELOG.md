@@ -1,5 +1,12 @@
 # @vitavision/workbench
 
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [e8b571d]
+  - @vitavision/ui@0.14.0
+
 ## 0.3.1
 
 ### Patch Changes
