@@ -85,6 +85,8 @@ index rather than the DOM.
   smallest ellipse containing it, so a ring inside another is picked rather than the outer one. The distance is the true
   Euclidean distance to the outline, also for a thin ellipse. \`onHoverChange(id | null)\` and \`onItemPress(id, event)\`
   claim presses inside the layer; for an app with a drawing tool, ask \`useStageHitTest\` what is under a press.
+- **Colour:** an item's \`color\` overrides its role, to encode a scalar per ellipse; ellipses of one colour share a
+  path, so quantise a continuous scale.
 - **\`pickable={false}\`** leaves a decorative layer out of the hit-test (the ring outlines of a calibration target,
   whose picking is a \`PointSet\` at the centres).
 
@@ -280,3 +282,38 @@ function HitTestDemo() {
     </div>
   );
 }
+
+/** A scalar per ellipse as colour: a quantised ramp, so ellipses of one step share a path. */
+export const Colours: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`color` overrides the role, so a layer can encode a scalar per ellipse (a predicted uncertainty, say). Ellipses of one colour share a batch: quantise a continuous scale to a few dozen steps. Selection still paints in the selection colour.",
+      },
+    },
+  },
+  render: () => (
+    <Frame>
+      <EllipseSet
+        label="Ellipses"
+        items={[
+          { id: "a", x: 70, y: 80, rx: 30, ry: 20, color: "#16a34a" },
+          { id: "b", x: 160, y: 80, rx: 30, ry: 20, color: "#16a34a" },
+          { id: "c", x: 250, y: 80, rx: 30, ry: 20, color: "var(--defect)" },
+          { id: "d", x: 340, y: 80, rx: 30, ry: 20 },
+          { id: "e", x: 200, y: 200, rx: 50, ry: 30, color: "#16a34a", dashed: true },
+        ]}
+        selectedIds={["b"]}
+      />
+    </Frame>
+  ),
+  play: async ({ canvasElement }) => {
+    // Colour splits batches: green solid (a), defect (c), role default (d), green dashed (e); b is selected.
+    const batches = [...canvasElement.querySelectorAll("path[data-batch]")];
+    await expect(batches.map((b) => b.getAttribute("stroke")).sort()).toEqual(
+      ["#16a34a", "#16a34a", "var(--defect)", "var(--stage-feature)"].sort(),
+    );
+    await expect(canvasElement.querySelector("path[data-selected-ellipses]")).not.toBeNull();
+  },
+};

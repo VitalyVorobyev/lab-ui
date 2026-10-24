@@ -6,6 +6,7 @@ import type { MarkerShape } from "./markerShapes";
 import type { Point } from "./measureGeometry";
 import { PointSet, type PointSetItem, type PointSetProps } from "./PointSet";
 import type { PointId } from "./pointIndex";
+import { AreaSet } from "./AreaSet";
 import { PolylineSet } from "./PolylineSet";
 import { ImageStage } from "./stage/ImageStage";
 import { StageSurface } from "./stage/StageSurface";
@@ -96,6 +97,8 @@ smooth and a hover costs microseconds. A scene of 20,000 points is a dozen DOM n
   the layer's index, not from per-point elements. Setting \`onItemPress\` makes the layer claim presses on its
   points, so the stage does not pan from them. For an app with a drawing tool, ask \`useStageHitTest\` what is under
   a press instead (see *Draw or select*).
+
+\`pickable={false}\` leaves a decorative layer out of the hit-test, so it neither hovers nor claims presses and the layer under it does.
 
 **Use** it for any set of points a person inspects or picks from, with a list of the same items beside the stage.
 
@@ -374,5 +377,34 @@ export const Colours: Story = {
       ["#16a34a", "#16a34a", "var(--defect)", "var(--stage-feature)"].sort(),
     );
     await expect(canvasElement.querySelector("path[data-selected-points]")).not.toBeNull();
+  },
+};
+
+const hoveredBoard = fn();
+
+/** Not pickable: a decorative layer of points over a region neither hovers nor claims the pointer, so the region under it does. */
+export const NotPickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`pickable={false}` leaves the layer out of the hit-test. The backdrop dots sit over a region and would win its hover (points outrank regions); with the prop off the region is hovered, and bare image still pans.",
+      },
+    },
+  },
+  render: () => (
+    <Frame>
+      <AreaSet items={[{ id: "board", points: [60, 60, 340, 60, 340, 240, 60, 240] }]} onHoverChange={hoveredBoard} />
+      <PointSet items={[{ id: "backdrop", x: 200, y: 150 }]} pickable={false} onHoverChange={hover} />
+    </Frame>
+  ),
+  play: async ({ canvasElement }) => {
+    hover.mockClear();
+    hoveredBoard.mockClear();
+    const stage = viewport(canvasElement);
+    await fireEvent.pointerMove(stage, at(canvasElement, { x: 200, y: 150 }));
+    await waitFor(() => expect(hoveredBoard).toHaveBeenLastCalledWith("board"));
+    await expect(hover).not.toHaveBeenCalled();
+    await expect(canvasElement.querySelector("svg[data-hovered]")).toBeNull();
   },
 };

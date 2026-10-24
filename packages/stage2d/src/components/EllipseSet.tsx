@@ -11,12 +11,12 @@
 
 import { useMemo, useState } from "react";
 
-import { buildEllipseIndex, ellipsePath, nearestEllipse, type Ellipse, type EllipseId, type EllipseIndex } from "./ellipseIndex";
+import { buildEllipseIndex, ellipsePath, nearestEllipse, type Ellipse, type EllipseId } from "./ellipseIndex";
 import { overlayRole, OVERLAY_STATE_OPACITY, OVERLAY_STATE_WIDTH, type OverlayRole } from "./overlayRole";
 import { useStage } from "./stage/ImageStage";
 import type { StagePointerEvent } from "./stage/hitContext";
+import { HitLayer } from "./stage/HitLayer";
 import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
-import { useStageHitLayer } from "./stage/useStageHitTest";
 import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox } from "./stage/view";
 
@@ -24,6 +24,12 @@ import { imageViewBox } from "./stage/view";
 export interface EllipseSetItem extends Ellipse {
   /** The overlay role it is painted in. Defaults to the layer's `role`. */
   role?: OverlayRole | undefined;
+  /**
+   * CSS colour of its outline (`#hex`, `var(--x)`, `color-mix(…)`; used as given), so a layer can
+   * encode a scalar per ellipse. Overrides the role; selection still paints in `selectionStroke`.
+   * Ellipses sharing a colour share a path, so quantise a continuous scale to a few dozen steps.
+   */
+  color?: string | undefined;
   /** Draw it dashed (4 3 screen px), so two kinds differ by more than colour. */
   dashed?: boolean | undefined;
   /** Opacity in [0, 1], rounded to a tenth so ellipses still share paths. Defaults to 1. */
@@ -90,40 +96,12 @@ function batchPath(items: readonly EllipseSetItem[], indices: readonly number[],
   return d;
 }
 
-/**
- * The layer's entry in the stage's hit registry: a component, not a hook call in
- * `EllipseSet`, so `pickable={false}` really unregisters it. Renders nothing.
- */
-function EllipseHits({
-  index,
-  layerId,
-  priority,
-  onHover,
-  onPress,
-}: {
-  index: EllipseIndex;
-  layerId: string | undefined;
-  priority: number;
-  onHover: (id: EllipseId | null) => void;
-  onPress: ((id: EllipseId, event: StagePointerEvent) => void) | undefined;
-}) {
-  useStageHitLayer({
-    layerId,
-    priority,
-    pick: (point, radius) => {
-      const hit = nearestEllipse(index, point, radius);
-      return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
-    },
-    onHover,
-    onPress: onPress ? (id, event) => onPress(id, event) : undefined,
-  });
-  return null;
-}
-
 /** The ellipses of one batched path. */
 interface Batch {
   key: string;
   role: OverlayRole;
+  /** The custom colour, when the items of this batch have one. */
+  color: string | undefined;
   dashed: boolean;
   opacity: number;
   dim: boolean;
@@ -138,7 +116,7 @@ interface Batch {
  *   the stroke is a screen constant.
  * - **States**: 1.5 screen px (1 for `model` and `structure`), hover
  *   2, selected 2.5 in the selection colour, dimmed at 35 % opacity. Every stroke has a halo.
- * - **Batching** is by (role, dash, opacity, dimming): a thousand rings are a dozen elements.
+ * - **Batching** is by (role, colour, dash, opacity, dimming): a thousand rings are a dozen elements.
  * - **Picking** goes through the stage's hit registry: a press within the pointer's tolerance of
  *   an outline picks that ellipse, else the smallest ellipse containing the point.
  *   `onHoverChange` and `onItemPress` here, and `useStageHitTest` for an app that arbitrates
@@ -179,20 +157,21 @@ export function EllipseSet({
 
   const batches = useMemo(() => {
     const normal = new Map<string, Batch>();
-    const picked: Batch = { key: "selected", role: "selection", dashed: false, opacity: 1, dim: false, indices: [] };
+    const picked: Batch = { key: "selected", role: "selection", color: undefined, dashed: false, opacity: 1, dim: false, indices: [] };
     items.forEach((item, i) => {
       if (selectedSet.has(item.id)) {
         picked.indices.push(i);
         return;
       }
       const itemRole = item.role ?? role;
+      const color = item.color || undefined;
       const dashed = item.dashed ?? false;
       const opacity = Math.round(Math.min(1, Math.max(0, item.opacity ?? 1)) * 10) / 10;
       const dim = isDimmed(item.id);
-      const key = `${dim ? 1 : 0}|${itemRole}|${dashed ? "dashed" : "solid"}|${opacity}`;
+      const key = `${dim ? 1 : 0}|${itemRole}|${dashed ? "dashed" : "solid"}|${opacity}${color ? `|${color}` : ""}`;
       let batch = normal.get(key);
       if (!batch) {
-        batch = { key, role: itemRole, dashed, opacity, dim, indices: [] };
+        batch = { key, role: itemRole, color, dashed, opacity, dim, indices: [] };
         normal.set(key, batch);
       }
       batch.indices.push(i);
@@ -231,10 +210,13 @@ export function EllipseSet({
       data-hovered={hoverId ?? undefined}
     >
       {index && (
-        <EllipseHits
-          index={index}
+        <HitLayer
           layerId={layerId}
           priority={priority}
+          pick={(point, radius) => {
+            const hit = nearestEllipse(index, point, radius);
+            return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
+          }}
           onHover={(id) => {
             setOwnHover(id);
             onHoverChange?.(id);
@@ -257,7 +239,7 @@ export function EllipseSet({
             <path
               data-batch={batch.key}
               d={d}
-              stroke={overlayRole(batch.role)}
+              stroke={batch.color ?? overlayRole(batch.role)}
               strokeWidth={widthOf(batch.role, "default")}
               strokeDasharray={batch.dashed ? dash : undefined}
               opacity={batch.opacity}
@@ -280,7 +262,7 @@ export function EllipseSet({
               <path
                 data-hovered-ellipse=""
                 d={outlineOf(item, floor)}
-                stroke={hoverSelected ? selectionStroke : overlayRole(itemRole)}
+                stroke={hoverSelected ? selectionStroke : item.color || overlayRole(itemRole)}
                 strokeWidth={widthOf(itemRole, state)}
               />
             </g>

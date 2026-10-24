@@ -16,8 +16,8 @@ import { useLabelIndices } from "./labelLod";
 import { overlayRole, OVERLAY_STATE_OPACITY, OVERLAY_STATE_WIDTH, type OverlayRole } from "./overlayRole";
 import { useStage } from "./stage/ImageStage";
 import type { StagePointerEvent } from "./stage/hitContext";
+import { HitLayer } from "./stage/HitLayer";
 import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
-import { useStageHitLayer } from "./stage/useStageHitTest";
 import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox } from "./stage/view";
 
@@ -97,6 +97,12 @@ export interface AreaSetProps {
   halo?: boolean | undefined;
   /** CSS colour of selected regions. Defaults to the overlay `selection` role. */
   selectionStroke?: string | undefined;
+  /**
+   * Whether the layer takes part in the stage's hit-test. On by default. Turn it off for a
+   * decorative layer (a shaded backdrop under the regions that matter), so it neither hovers,
+   * nor claims presses, nor answers `useStageHitTest`.
+   */
+  pickable?: boolean | undefined;
   /** The id hit-tests report for this layer. Defaults to a generated one. */
   layerId?: string | undefined;
   /** Rank against other layers in hit-tests. Defaults to `STAGE_HIT_PRIORITY.area`. */
@@ -127,6 +133,7 @@ const TICK_PX = 8;
  * - **Picking** goes through the stage's hit registry: a press within the pointer's tolerance of
  *   an outline picks that region, else the smallest region containing the point. `onHoverChange`
  *   and `onItemPress` here, and `useStageHitTest` for an app that arbitrates between layers.
+ *   `pickable={false}` turns it off.
  *
  * The SVG carries `data-hovered` (the hovered id).
  */
@@ -138,6 +145,7 @@ export function AreaSet({
   selectedIds,
   dimmed,
   onItemPress,
+  pickable = true,
   labels = true,
   firstVertexTick = false,
   stroke,
@@ -166,20 +174,6 @@ export function AreaSet({
 
   const [ownHover, setOwnHover] = useState<AreaId | null>(null);
   const hoverId = hoveredId !== undefined ? hoveredId : ownHover;
-
-  useStageHitLayer({
-    layerId,
-    priority,
-    pick: (point, radius) => {
-      const hit = nearestArea(index, point, radius);
-      return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
-    },
-    onHover: (id) => {
-      setOwnHover(id);
-      onHoverChange?.(id);
-    },
-    onPress: onItemPress ? (id, event) => onItemPress(id, event) : undefined,
-  });
 
   // Regions grouped by appearance. Rebuilt when the items or the selection change, never on
   // hover or on a view change.
@@ -260,6 +254,21 @@ export function AreaSet({
       aria-label={`${label}: ${items.length} ${items.length === 1 ? "area" : "areas"}, ${selectedSet.size} selected`}
       data-hovered={hoverId ?? undefined}
     >
+      {pickable && (
+        <HitLayer
+          layerId={layerId}
+          priority={priority}
+          pick={(point, radius) => {
+            const hit = nearestArea(index, point, radius);
+            return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
+          }}
+          onHover={(id) => {
+            setOwnHover(id);
+            onHoverChange?.(id);
+          }}
+          onPress={onItemPress}
+        />
+      )}
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {groups.normal.map((batch) => (
           <g key={batch.id} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>
