@@ -6,6 +6,7 @@ import { expect, fireEvent, fn, waitFor } from "storybook/test";
 import {
   BOARD_IMAGE,
   FIELD_IMAGE,
+  calibTargetsChessboard,
   charuco,
   chessboard,
   directedField,
@@ -14,6 +15,7 @@ import {
   puzzleboard,
   ringgrid,
 } from "./fixtures.stories";
+import { fromCalibTargets } from "./calibTargets";
 import type { TargetDetection, TargetHit, TargetId } from "./model";
 import { TargetOverlay, type TargetOverlayProps } from "./TargetOverlay";
 
@@ -146,6 +148,7 @@ const CHARUCO = charuco();
 const MARKERBOARD = markerboard();
 const PUZZLEBOARD = puzzleboard();
 const RINGGRID = ringgrid();
+const WITH_COVARIANCE = fromCalibTargets({ kind: "chessboard", detection: calibTargetsChessboard() });
 
 const meta = {
   title: "overlays/TargetOverlay",
@@ -174,6 +177,11 @@ Angles are radians, clockwise on screen. An app maps its detector's result to th
   \`hoveredId\` and \`selectedIds\` are controlled by the app; a hover it does not control is tracked here.
 - **Colour:** roles only. A score is never drawn as red, amber or green, and polarity and bits are shapes (hollow or
   dotted, solid or dashed), not hues: colour is never the only channel.
+- **Uncertainty** (opt-in): \`uncertainty={{ scale }}\` draws each corner's position covariance (\`cov\`) as its 1σ ellipse,
+  both semi-axes × \`scale\`, in the \`model\` role under the corners. A detector's σ is a fraction of a pixel, so the gain
+  is large; print it beside the image ("ellipses ×40"). The ellipses follow the corner's hover, selection and dimming.
+- **From calib-targets:** \`fromCalibTargets({ kind, detection, diagnostics })\` maps a \`@vitavision/calib-targets\` result
+  (chessboard, ChArUco, marker board, PuzzleBoard, raw corners) to a \`TargetDetection\`, covariances included.
 - **Labels** (lattice indices, marker and ring ids) appear only where items are at least 24 screen px apart, at most
   200 at a time. \`showLabels={false}\` hides them; \`showEdges={false}\` hides the lattice edges.
 - **Callbacks** report \`{ id, part }\` with the id from the detection, so the app maps it back to its feature. Keep ids
@@ -215,6 +223,30 @@ export const Chessboard: Story = {
     await expect(labels).toEqual(expect.arrayContaining(["0,0", "8,5"]));
     // Colours are roles, never a hex.
     await expect(canvasElement.querySelector("path[data-batch]")!.getAttribute("stroke")).toBe("var(--stage-feature)");
+  },
+};
+
+/**
+ * A calib-targets chessboard result mapped with \`fromCalibTargets\`, its position covariances drawn as 1σ ellipses ×40.
+ * The far side of the board is less sure, and every corner is less sure along the board's v axis than its u axis. Two
+ * corners report no covariance and one a singular matrix: those three have no ellipse.
+ */
+export const Uncertainty: Story = {
+  render: () => (
+    <Frame detection={WITH_COVARIANCE}>
+      <TargetOverlay detection={WITH_COVARIANCE} uncertainty={{ scale: 40 }} selectedIds={["corner-30"]} />
+    </Frame>
+  ),
+  play: async ({ canvas }) => {
+    // 54 corners, 51 ellipses: no covariance on two, a singular one on a third.
+    const layer = canvas.getByRole("img", { name: "Position uncertainty: 1σ ellipses ×40" });
+    await expect(layer).toHaveAttribute("data-ellipses", "51");
+    // One batch in the model role (not one element per ellipse), and the selected corner's ellipse in the selection colour.
+    await expect(layer.querySelectorAll("path[data-batch]")).toHaveLength(1);
+    await expect(layer.querySelector("path[data-batch]")!.getAttribute("stroke")).toBe("var(--stage-model)");
+    await expect(layer.querySelector("path[data-selected-ellipses]")).not.toBeNull();
+    // The corners are still drawn on top, with their lattice.
+    await expect(canvas.getByRole("img", { name: "Corners: 54 points, 1 selected" })).toBeInTheDocument();
   },
 };
 

@@ -3,8 +3,9 @@
  *
  * Every detector in the vitavision family (calib-targets' chessboard, ChArUco, marker board and
  * PuzzleBoard, ringgrid, chess-corners) returns its own result shape. An app maps that shape to a
- * `TargetDetection` once, and the overlay never learns which library ran. Nothing here imports a
- * detector package: these are plain data types.
+ * `TargetDetection` once (for calib-targets, `fromCalibTargets` is that mapping), and the overlay
+ * never learns which library ran. Nothing here imports a detector package: these are plain data
+ * types.
  *
  * Conventions, the same as `@vitavision/stage2d`:
  * - Positions are **image pixels, with the centre of pixel `i` at coordinate `i`** (the frame
@@ -66,6 +67,12 @@ export interface TargetCorner {
   angle?: number | undefined;
   /** Orientation of the second edge through the corner, radians. Needs `angle`. */
   angle2?: number | undefined;
+  /**
+   * The covariance of the position, image pixels squared: the three distinct entries
+   * `[xx, xy, yy]` of the symmetric 2×2 matrix. `TargetOverlay`'s `uncertainty` prop draws it as
+   * a 1σ ellipse; a matrix that is not positive definite is not drawn.
+   */
+  cov?: readonly [xx: number, xy: number, yy: number] | undefined;
   /** Text beside it. Defaults to the lattice index `i,j` on a board, else the id. */
   label?: string | undefined;
 }

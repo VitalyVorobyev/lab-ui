@@ -15,13 +15,14 @@
  * | `circles` | `PointSet` | ring; a centre dot marks black |
  * | `rings` | `PointSet` + `EllipseSet` | fitted outer and inner ellipse, plus at the centre |
  * | `edgeBits` | `EllipseSet` | dot on the edge: solid for 1, dashed for 0, opacity from confidence |
+ * | corners' `cov` | `EllipseSet` | with `uncertainty`: the 1σ ellipse × the scale, in `model` |
  */
 
 import { EllipseSet, GridLayer, AreaSet, PointSet, type StagePointerEvent } from "@vitavision/stage2d";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { TARGET_MARKERS } from "./glyphs";
-import { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses } from "./layerItems";
+import { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses, uncertaintyEllipses } from "./layerItems";
 import type { TargetDetection, TargetHit, TargetId, TargetPart } from "./model";
 
 /** Props of `TargetOverlay`. */
@@ -55,6 +56,17 @@ export interface TargetOverlayProps {
    * opacity. They still take hover and presses. Pass a stable value: a new one re-batches.
    */
   dimmed?: boolean | Iterable<TargetId> | ((id: TargetId) => boolean) | undefined;
+  /**
+   * Draw each corner's position covariance (`cov`) as its 1σ ellipse with both semi-axes
+   * multiplied by `scale`, in the `model` role, under the corners. Off by default.
+   *
+   * A detector's σ is a small fraction of a pixel, so the ellipses are drawn magnified: the
+   * `scale` is the app's to choose and to print beside the image ("ellipses ×40"), as a
+   * residual's gain is. Their shape and orientation are the data's. A corner with no covariance,
+   * or one that is not positive definite, gets none. The ellipses take the corner's hover,
+   * selection and dimming, and are not picked themselves.
+   */
+  uncertainty?: { scale: number } | undefined;
   /** Prefix of the hit-test layer ids (`<prefix>-corners`, `-markers`, `-circles`, `-rings`). Defaults to generated ids. */
   layerIdPrefix?: string | undefined;
 }
@@ -91,6 +103,8 @@ function dimPredicate(dimmed: TargetOverlayProps["dimmed"]): ((id: TargetId) => 
  * - **Callbacks** report `{ id, part }` with the id from the detection. A press and a hover move
  *   between layers (a corner, then the marker under it) without a flicker: the change is reported
  *   once.
+ * - **Uncertainty** (opt-in, `uncertainty`): each corner's covariance as a 1σ ellipse × the
+ *   given scale, under the corners.
  *
  * The layers it renders carry their own accessible names ("Corners: 54 points, 0 selected").
  */
@@ -103,6 +117,7 @@ export function TargetOverlay({
   onHoverChange,
   onItemPress,
   dimmed,
+  uncertainty,
   layerIdPrefix,
 }: TargetOverlayProps) {
   const nodes = useMemo(() => cornerNodes(detection), [detection]);
@@ -112,6 +127,11 @@ export function TargetOverlay({
   const ringPoints = useMemo(() => ringCentres(rings ?? []), [rings]);
   const ringShapes = useMemo(() => ringEllipses(rings ?? []), [rings]);
   const bits = useMemo(() => edgeBitEllipses(detection.edgeBits ?? []), [detection.edgeBits]);
+  const uncertaintyScale = uncertainty?.scale;
+  const covEllipses = useMemo(
+    () => (uncertaintyScale === undefined ? [] : uncertaintyEllipses(detection.corners ?? [], uncertaintyScale)),
+    [detection.corners, uncertaintyScale],
+  );
   const ids = useMemo(() => idsByPart(detection), [detection]);
 
   // Selection and hover are by id; each layer is given the ids it owns, so its count is right.
@@ -210,6 +230,17 @@ export function TargetOverlay({
             label="Rings"
           />
         </>
+      )}
+      {covEllipses.length > 0 && (
+        <EllipseSet
+          items={covEllipses}
+          role="model"
+          hoveredId={hoverOf("corner")}
+          selectedIds={selected.corner}
+          dimmed={isDimmed}
+          pickable={false}
+          label={`Position uncertainty: 1σ ellipses ×${uncertaintyScale}`}
+        />
       )}
       {hasCorners && (
         <GridLayer

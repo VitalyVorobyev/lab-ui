@@ -16,6 +16,142 @@ import { PointSetItem } from '@vitavision/stage2d';
 import { StagePointerEvent } from '@vitavision/stage2d';
 
 // @public
+export interface CalibTargetsAlignment {
+    matrix: readonly [readonly [number, number], readonly [number, number]];
+    translation: readonly [number, number];
+}
+
+// @public
+export interface CalibTargetsAxis {
+    angle: number;
+}
+
+// @public
+export interface CalibTargetsCharucoDetection {
+    corners: readonly CalibTargetsLabeledCorner[];
+    markers: readonly CalibTargetsMarker[];
+}
+
+// @public
+export interface CalibTargetsChessboardDetection {
+    corners: readonly CalibTargetsLabeledCorner[];
+}
+
+// @public
+export interface CalibTargetsCircleCandidate {
+    center_img: CalibTargetsPoint;
+}
+
+// @public
+export interface CalibTargetsCircleMatch {
+    expected: {
+        cell: {
+            i: number;
+            j: number;
+        };
+        polarity: "white" | "black";
+    };
+    matched_index: number | null;
+}
+
+// @public
+export interface CalibTargetsCoord {
+    u: number;
+    v: number;
+}
+
+// @public
+export interface CalibTargetsCorner {
+    axes: readonly [CalibTargetsAxis, CalibTargetsAxis];
+    position: CalibTargetsPoint;
+    position_covariance?: CalibTargetsCovariance | null | undefined;
+    strength: number;
+}
+
+// @public
+export interface CalibTargetsCovariance {
+    xx: number;
+    xy: number;
+    yy: number;
+}
+
+// @public
+export interface CalibTargetsLabeledCorner {
+    grid: CalibTargetsCoord | null;
+    position: CalibTargetsPoint;
+    position_covariance?: CalibTargetsCovariance | null | undefined;
+    score: number;
+}
+
+// @public
+export interface CalibTargetsMarker {
+    corners_img: readonly [CalibTargetsPoint, CalibTargetsPoint, CalibTargetsPoint, CalibTargetsPoint] | null;
+    id: number;
+}
+
+// @public
+export interface CalibTargetsMarkerBoardDetection {
+    corners: readonly CalibTargetsLabeledCorner[];
+}
+
+// @public
+export interface CalibTargetsMarkerBoardDiagnostics {
+    circle_candidates: readonly CalibTargetsCircleCandidate[];
+    circle_matches: readonly CalibTargetsCircleMatch[];
+}
+
+// @public
+export interface CalibTargetsObservedEdge {
+    bit: number;
+    col: number;
+    confidence: number;
+    orientation: "horizontal" | "vertical";
+    row: number;
+}
+
+// @public
+export type CalibTargetsPoint = readonly [x: number, y: number];
+
+// @public
+export interface CalibTargetsPuzzleBoardDetection {
+    alignment: CalibTargetsAlignment;
+    corners: readonly CalibTargetsLabeledCorner[];
+}
+
+// @public
+export interface CalibTargetsPuzzleBoardDiagnostics {
+    observed_edges: readonly CalibTargetsObservedEdge[];
+}
+
+// @public
+export interface CalibTargetsPuzzlePoleDetection {
+    corners: readonly CalibTargetsLabeledCorner[];
+}
+
+// @public
+export type CalibTargetsResult = {
+    kind: "corners";
+    corners: readonly CalibTargetsCorner[];
+} | {
+    kind: "chessboard";
+    detection: CalibTargetsChessboardDetection | null | undefined;
+} | {
+    kind: "charuco";
+    detection: CalibTargetsCharucoDetection | null | undefined;
+} | {
+    kind: "markerboard";
+    detection: CalibTargetsMarkerBoardDetection | null | undefined;
+    diagnostics?: CalibTargetsMarkerBoardDiagnostics | null | undefined;
+} | {
+    kind: "puzzleboard";
+    detection: CalibTargetsPuzzleBoardDetection | null | undefined;
+    diagnostics?: CalibTargetsPuzzleBoardDiagnostics | null | undefined;
+} | {
+    kind: "puzzlepole";
+    detection: CalibTargetsPuzzlePoleDetection | null | undefined;
+};
+
+// @public
 export function circlePoints(detection: TargetDetection): PointSetItem[];
 
 // @public
@@ -37,6 +173,9 @@ export function cornerGrid(corners: readonly TargetCorner[]): CornerGrid;
 export function cornerNodes(detection: TargetDetection): GridNode[];
 
 // @public
+export function covarianceEllipse(cov: readonly [xx: number, xy: number, yy: number], scale?: number): TargetEllipse | null;
+
+// @public
 export function edgeBitEllipses(bits: readonly TargetEdgeBit[]): EllipseSetItem[];
 
 // @public
@@ -49,6 +188,9 @@ export { EllipseSet }
 export { EllipseSetItem }
 
 export { EllipseSetProps }
+
+// @public
+export function fromCalibTargets(result: CalibTargetsResult): TargetDetection;
 
 // @public
 export interface GridBounds {
@@ -163,6 +305,7 @@ export interface TargetCircle {
 export interface TargetCorner {
     angle?: number | undefined;
     angle2?: number | undefined;
+    cov?: readonly [xx: number, xy: number, yy: number] | undefined;
     i?: number | undefined;
     id: TargetId;
     j?: number | undefined;
@@ -232,6 +375,9 @@ export interface TargetOverlayProps {
     selectedIds?: Iterable<TargetId> | undefined;
     showEdges?: boolean | undefined;
     showLabels?: boolean | undefined;
+    uncertainty?: {
+        scale: number;
+    } | undefined;
 }
 
 // @public
@@ -246,6 +392,9 @@ export interface TargetRing {
     x: number;
     y: number;
 }
+
+// @public
+export function uncertaintyEllipses(corners: readonly TargetCorner[], scale: number): EllipseSetItem[];
 
 // (No @packageDocumentation comment for this package)
 

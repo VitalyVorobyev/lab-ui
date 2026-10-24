@@ -12,7 +12,16 @@ import {
   puzzleboard,
   ringgrid,
 } from "./fixtures.stories";
-import { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses } from "./layerItems";
+import {
+  circlePoints,
+  cornerNodes,
+  covarianceEllipse,
+  edgeBitEllipses,
+  markerAreas,
+  ringCentres,
+  ringEllipses,
+  uncertaintyEllipses,
+} from "./layerItems";
 import { TARGET_KINDS, isLatticeKind } from "./model";
 
 describe("isLatticeKind", () => {
@@ -164,6 +173,106 @@ describe("edgeBitEllipses", () => {
     expect(opacities[2]).toBeCloseTo(0.675, 10);
     expect(opacities[3]).toBeCloseTo(1, 10);
     expect(opacities[4]).toBeCloseTo(1, 10);
+  });
+});
+
+describe("covarianceEllipse", () => {
+  it("is a circle of radius σ for an isotropic covariance", () => {
+    expect(covarianceEllipse([0.04, 0, 0.04])).toEqual({ rx: 0.2, ry: 0.2, angle: 0 });
+  });
+
+  it("lies along x for an axis-aligned covariance wider in x, and along y for one taller in y", () => {
+    const wide = covarianceEllipse([9, 0, 4])!;
+    expect(wide.rx).toBeCloseTo(3, 12);
+    expect(wide.ry).toBeCloseTo(2, 12);
+    expect(wide.angle).toBe(0);
+    const tall = covarianceEllipse([4, 0, 9])!;
+    expect(tall.rx).toBeCloseTo(3, 12);
+    expect(tall.ry).toBeCloseTo(2, 12);
+    expect(tall.angle).toBeCloseTo(Math.PI / 2, 12);
+    // A negative zero does not turn the axis to -π/2.
+    expect(covarianceEllipse([4, -0, 9])!.angle).toBeCloseTo(Math.PI / 2, 12);
+  });
+
+  it("recovers the axes and the angle of a rotated covariance", () => {
+    for (const theta of [0.3, -0.7, 1.2, -1.5]) {
+      const [a, b] = [0.12, 0.05];
+      const c = Math.cos(theta);
+      const s = Math.sin(theta);
+      // R(θ) · diag(a², b²) · R(θ)ᵀ
+      const cov = [c * c * a * a + s * s * b * b, c * s * (a * a - b * b), s * s * a * a + c * c * b * b] as const;
+      const e = covarianceEllipse(cov)!;
+      expect(e.rx).toBeCloseTo(a, 12);
+      expect(e.ry).toBeCloseTo(b, 12);
+      expect(e.angle).toBeCloseTo(theta, 12);
+    }
+  });
+
+  it("is the 1σ curve: every point d on it has dᵀ Σ⁻¹ d = 1", () => {
+    const [xx, xy, yy] = [0.05, 0.02, 0.03];
+    const e = covarianceEllipse([xx, xy, yy])!;
+    const det = xx * yy - xy * xy;
+    for (let t = 0; t < 8; t++) {
+      const phi = (t / 8) * 2 * Math.PI;
+      const ex = e.rx * Math.cos(phi);
+      const ey = e.ry * Math.sin(phi);
+      const dx = ex * Math.cos(e.angle) - ey * Math.sin(e.angle);
+      const dy = ex * Math.sin(e.angle) + ey * Math.cos(e.angle);
+      expect((yy * dx * dx - 2 * xy * dx * dy + xx * dy * dy) / det).toBeCloseTo(1, 10);
+    }
+  });
+
+  it("multiplies both semi-axes by the scale and keeps the angle", () => {
+    const one = covarianceEllipse([0.05, 0.02, 0.03])!;
+    const many = covarianceEllipse([0.05, 0.02, 0.03], 40)!;
+    expect(many.rx).toBeCloseTo(40 * one.rx, 12);
+    expect(many.ry).toBeCloseTo(40 * one.ry, 12);
+    expect(many.angle).toBe(one.angle);
+  });
+
+  it("keeps a thin ellipse of a nearly singular covariance", () => {
+    // Eigenvalues 1 and 1e-6 along the diagonals: σ 1 and 0.001.
+    const e = covarianceEllipse([0.5 + 0.5e-6, 0.5 - 0.5e-6, 0.5 + 0.5e-6])!;
+    expect(e.rx).toBeCloseTo(1, 9);
+    expect(e.ry / 1e-3).toBeCloseTo(1, 6);
+    expect(e.angle).toBeCloseTo(Math.PI / 4, 12);
+  });
+
+  it("is null when the matrix is singular, indefinite, negative or not finite, or the scale is unusable", () => {
+    expect(covarianceEllipse([1, 1, 1])).toBeNull();
+    expect(covarianceEllipse([0, 0, 0])).toBeNull();
+    expect(covarianceEllipse([1, 0, 0])).toBeNull();
+    expect(covarianceEllipse([1, 2, 1])).toBeNull();
+    expect(covarianceEllipse([-1, 0, -1])).toBeNull();
+    expect(covarianceEllipse([Number.NaN, 0, 1])).toBeNull();
+    expect(covarianceEllipse([1, 0, Number.POSITIVE_INFINITY])).toBeNull();
+    expect(covarianceEllipse([1, 0, 1], 0)).toBeNull();
+    expect(covarianceEllipse([1, 0, 1], -2)).toBeNull();
+    expect(covarianceEllipse([1, 0, 1], Number.NaN)).toBeNull();
+  });
+});
+
+describe("uncertaintyEllipses", () => {
+  it("draws one model ellipse per corner with a drawable covariance, centred on it and sharing its id", () => {
+    const ellipses = uncertaintyEllipses(
+      [
+        { id: "a", x: 10, y: 20, cov: [0.01, 0, 0.04] },
+        { id: "b", x: 0, y: 0 },
+        { id: "c", x: 0, y: 0, cov: [1, 1, 1] },
+        { id: "d", x: 5, y: 6, cov: [0.04, 0, 0.04] },
+      ],
+      10,
+    );
+    expect(ellipses.map((e) => e.id)).toEqual(["a", "d"]);
+    expect(ellipses[0]).toMatchObject({ x: 10, y: 20, role: "model" });
+    expect(ellipses[0]!.rx).toBeCloseTo(2, 12);
+    expect(ellipses[0]!.ry).toBeCloseTo(1, 12);
+    expect(ellipses[0]!.angle).toBeCloseTo(Math.PI / 2, 12);
+    expect(ellipses[1]).toMatchObject({ x: 5, y: 6, rx: 2, ry: 2, angle: 0 });
+  });
+
+  it("is empty for an unusable scale", () => {
+    expect(uncertaintyEllipses([{ id: "a", x: 0, y: 0, cov: [1, 0, 1] }], 0)).toEqual([]);
   });
 });
 
