@@ -61,6 +61,12 @@ export interface StageHitLayerOptions {
   /** Rank against other layers; see `STAGE_HIT_PRIORITY`. */
   priority: number;
   /**
+   * Whether the layer is in the hit-test. Defaults to `true`. Off, it answers no hit-test and
+   * takes no hover or press; turning it off while it holds the hover calls `onHover(null)`.
+   * The layer id stays the same either way.
+   */
+  enabled?: boolean | undefined;
+  /**
    * The item under `point`, if any, within `radius` image pixels. Use the layer's index
    * (`nearestPoint`, `nearestPolyline`), not the DOM.
    */
@@ -102,9 +108,11 @@ export function useStageHitLayer(options: StageHitLayerOptions): string {
     latestRef.current = options;
   });
   const priority = options.priority;
+  const enabled = options.enabled ?? true;
   useLayoutEffect(() => {
+    if (!enabled) return;
     // Everything the registry reads goes through `latestRef`, so one registration serves the
-    // layer's whole life; `priority` and `id` are the only things that re-register it.
+    // layer's whole life; `priority`, `id` and `enabled` are the only things that re-register it.
     const layer: StageHitLayerSpec<StagePointerEvent> = {
       id,
       priority,
@@ -127,6 +135,6 @@ export function useStageHitLayer(options: StageHitLayerOptions): string {
       },
     };
     return registry.register(layer);
-  }, [registry, id, priority]);
+  }, [registry, id, priority, enabled]);
   return id;
 }

@@ -92,6 +92,7 @@ export interface AreaSetProps {
     onHoverChange?: ((id: AreaId | null) => void) | undefined;
     onItemPress?: ((id: AreaId, event: StagePointerEvent) => void) | undefined;
     paintOrder?: "appearance" | "items" | undefined;
+    pickable?: boolean | undefined;
     priority?: number | undefined;
     role?: OverlayRole | undefined;
     selectedIds?: Iterable<AreaId> | undefined;
@@ -418,6 +419,7 @@ export function EllipseSet(input: EllipseSetProps): JSX.Element;
 
 // @public
 export interface EllipseSetItem extends Ellipse {
+    color?: string | undefined;
     dashed?: boolean | undefined;
     opacity?: number | undefined;
     role?: OverlayRole | undefined;
@@ -899,6 +901,7 @@ export interface PointSetProps {
     markers?: Readonly<Record<string, MarkerShape>> | undefined;
     onHoverChange?: ((id: PointId | null) => void) | undefined;
     onItemPress?: ((id: PointId, event: StagePointerEvent) => void) | undefined;
+    pickable?: boolean | undefined;
     priority?: number | undefined;
     selectedIds?: Iterable<PointId> | undefined;
     selectionStroke?: string | undefined;
@@ -1237,6 +1240,7 @@ export interface StageHit extends HitCandidate {
 
 // @public
 export interface StageHitLayerOptions {
+    enabled?: boolean | undefined;
     layerId?: string | undefined;
     onDoubleClick?: ((id: HitId, point: Point) => boolean | void) | undefined;
     onHover?: ((id: HitId | null) => void) | undefined;

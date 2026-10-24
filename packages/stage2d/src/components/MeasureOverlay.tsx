@@ -19,7 +19,7 @@
  * still takes no pointer events.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { nearestMeasurePrimitive } from "./measureHit";
 import type { StagePointerEvent } from "./stage/hitContext";
@@ -462,8 +462,6 @@ function MeasureHitLayer({
     },
     onPress: onItemPress ? (id, event) => onItemPress(String(id), event) : undefined,
   });
-  // A hover tracked here ends with the layer, so it is not drawn when the overlay is made pickable again.
-  useEffect(() => () => setOwnHover(null), [setOwnHover]);
   return null;
 }
 

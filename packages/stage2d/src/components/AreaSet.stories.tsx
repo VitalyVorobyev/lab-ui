@@ -103,6 +103,8 @@ spatial index rather than the DOM, so thousands of regions stay smooth and a hov
   for an app with a drawing tool, ask \`useStageHitTest\` what is under a press instead.
 - **Moving:** start \`useShapeDrag\` from an \`onItemPress\` on a selected region (see *Moving shapes*).
 
+\`pickable={false}\` leaves a decorative layer out of the hit-test, so it neither hovers nor claims presses and the layer under it does.
+
 **Use** it for any set of regions a person inspects or picks from, with a list of the same items beside the stage.
 
 **Don't** use it for a handful of regions the user edits vertex by vertex; that is \`ContourEditor\`. A rotated
@@ -445,5 +447,41 @@ export const SelectionKeepsFill: Story = {
     await expect(fill).toHaveAttribute("fill", "#2563eb");
     const overlay = canvasElement.querySelector("path[data-selected-areas]")!;
     await expect(overlay).not.toHaveAttribute("fill");
+  },
+};
+
+const hoveredPoint = fn();
+
+/** Not pickable: a decorative shading of regions neither hovers nor claims the pointer, so the layer under it does. */
+export const NotPickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`pickable={false}` leaves the layer out of the hit-test: the shaded region is purely decorative, so the point inside it is hovered and a press on bare region pans.",
+      },
+    },
+  },
+  render: () => (
+    <Frame>
+      <AreaSet
+        items={[{ id: "shade", points: [60, 60, 340, 60, 340, 240, 60, 240], role: "structure" }]}
+        pickable={false}
+        onHoverChange={hover}
+      />
+      <PointSet items={[{ id: "corner", kind: "plus", x: 200, y: 150 }]} onHoverChange={hoveredPoint} />
+    </Frame>
+  ),
+  play: async ({ canvasElement }) => {
+    hover.mockClear();
+    hoveredPoint.mockClear();
+    const stage = viewport(canvasElement);
+    await fireEvent.pointerMove(stage, at(canvasElement, { x: 120, y: 150 }));
+    await expect(hover).not.toHaveBeenCalled();
+    await fireEvent.pointerDown(stage, at(canvasElement, { x: 120, y: 150 }));
+    await expect(stage).toHaveAttribute("data-panning");
+    await fireEvent.pointerUp(stage, at(canvasElement, { x: 120, y: 150 }));
+    await fireEvent.pointerMove(stage, at(canvasElement, { x: 200, y: 150 }));
+    await waitFor(() => expect(hoveredPoint).toHaveBeenLastCalledWith("corner"));
   },
 };

@@ -131,14 +131,23 @@ describe("the registry", () => {
       expect(hover).toHaveBeenCalledTimes(2);
     });
 
-    it("forgets a hover owned by a layer that unregistered", () => {
+    it("ends the hover of a layer that unregistered, and then forgets it", () => {
       const registry = createHitRegistry<string>();
       const hover = vi.fn();
       const remove = registry.register(layerOver("a", 300, { a: [0, 0] }, { hover }));
       registry.routeHover({ x: 0, y: 0 }, 1);
       remove();
+      expect(hover).toHaveBeenLastCalledWith(null);
       registry.clearHover();
-      expect(hover).toHaveBeenCalledTimes(1);
+      expect(hover).toHaveBeenCalledTimes(2);
+    });
+
+    it("tells a layer that unregistered without the hover nothing", () => {
+      const registry = createHitRegistry<string>();
+      const hover = vi.fn();
+      const remove = registry.register(layerOver("a", 300, { a: [0, 0] }, { hover }));
+      remove();
+      expect(hover).not.toHaveBeenCalled();
     });
   });
 

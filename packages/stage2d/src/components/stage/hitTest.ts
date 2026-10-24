@@ -115,7 +115,8 @@ export interface HitRegistry<E = unknown> {
   /**
    * Add a layer.
    *
-   * @returns The function that removes it.
+   * @returns The function that removes it. A layer removed while it holds the hover is told
+   *   the hover ended (`hover(null)`).
    */
   register: (layer: StageHitLayerSpec<E>) => () => void;
   /** Every layer's best answer at `point`, sorted best first. */
@@ -173,7 +174,10 @@ export function createHitRegistry<E = unknown>(): HitRegistry<E> {
       layers.add(layer);
       return () => {
         layers.delete(layer);
-        if (hovered?.layer === layer) hovered = null;
+        if (hovered?.layer === layer) {
+          hovered = null;
+          layer.hover?.(null);
+        }
       };
     },
     hitTestAll: (point, radius, options) => answers(point, radius, options).map((a) => a.hit),

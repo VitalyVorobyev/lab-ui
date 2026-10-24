@@ -44,7 +44,7 @@ export interface AreaSetProps {
   role?: OverlayRole | undefined;
   /** The hovered id, when the app controls hover (a list beside the stage hovers regions too). */
   hoveredId?: AreaId | null | undefined;
-  /** Called when the region under the pointer changes. `null` when it leaves every region. */
+  /** Called when the region under the pointer changes. `null` when it leaves every region. Not called while `pickable` is off; turning it off ends a hover with `null`. */
   onHoverChange?: ((id: AreaId | null) => void) | undefined;
   /** The selected ids, drawn at 2.5 px in the selection colour. */
   selectedIds?: Iterable<AreaId> | undefined;
@@ -97,6 +97,12 @@ export interface AreaSetProps {
   halo?: boolean | undefined;
   /** CSS colour of selected regions. Defaults to the overlay `selection` role. */
   selectionStroke?: string | undefined;
+  /**
+   * Whether the layer takes part in the stage's hit-test. On by default. Turn it off for a
+   * decorative layer (a shaded backdrop under the regions that matter), so it neither hovers,
+   * nor claims presses, nor answers `useStageHitTest`.
+   */
+  pickable?: boolean | undefined;
   /** The id hit-tests report for this layer. Defaults to a generated one. */
   layerId?: string | undefined;
   /** Rank against other layers in hit-tests. Defaults to `STAGE_HIT_PRIORITY.area`. */
@@ -127,6 +133,7 @@ const TICK_PX = 8;
  * - **Picking** goes through the stage's hit registry: a press within the pointer's tolerance of
  *   an outline picks that region, else the smallest region containing the point. `onHoverChange`
  *   and `onItemPress` here, and `useStageHitTest` for an app that arbitrates between layers.
+ *   `pickable={false}` turns it off.
  *
  * The SVG carries `data-hovered` (the hovered id).
  */
@@ -138,6 +145,7 @@ export function AreaSet({
   selectedIds,
   dimmed,
   onItemPress,
+  pickable = true,
   labels = true,
   firstVertexTick = false,
   stroke,
@@ -155,7 +163,7 @@ export function AreaSet({
   const px = useScreenPx();
   const unit = px(1);
 
-  const index = useMemo(() => buildAreaIndex(items), [items]);
+  const index = useMemo(() => (pickable ? buildAreaIndex(items) : null), [items, pickable]);
   const selectedSet = useMemo(() => new Set(selectedIds ?? []), [selectedIds]);
   const isDimmed = useMemo(() => {
     if (typeof dimmed === "function") return dimmed;
@@ -170,15 +178,16 @@ export function AreaSet({
   useStageHitLayer({
     layerId,
     priority,
+    enabled: pickable,
     pick: (point, radius) => {
-      const hit = nearestArea(index, point, radius);
+      const hit = index && nearestArea(index, point, radius);
       return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
     },
     onHover: (id) => {
       setOwnHover(id);
       onHoverChange?.(id);
     },
-    onPress: onItemPress ? (id, event) => onItemPress(id, event) : undefined,
+    onPress: onItemPress,
   });
 
   // Regions grouped by appearance. Rebuilt when the items or the selection change, never on

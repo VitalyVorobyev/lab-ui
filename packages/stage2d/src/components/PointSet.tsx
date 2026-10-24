@@ -53,7 +53,7 @@ export interface PointSetProps {
   markers?: Readonly<Record<string, MarkerShape>> | undefined;
   /** The hovered id, when the app controls hover (a list beside the stage hovers points too). */
   hoveredId?: PointId | null | undefined;
-  /** Called when the point under the pointer changes. `null` when it leaves every point. */
+  /** Called when the point under the pointer changes. `null` when it leaves every point. Not called while `pickable` is off; turning it off ends a hover with `null`. */
   onHoverChange?: ((id: PointId | null) => void) | undefined;
   /** The selected ids, drawn at 2.5 px in the selection colour with a ring. */
   selectedIds?: Iterable<PointId> | undefined;
@@ -77,6 +77,12 @@ export interface PointSetProps {
   halo?: boolean | undefined;
   /** CSS colour of selected points and rings. Defaults to the overlay `selection` role. */
   selectionStroke?: string | undefined;
+  /**
+   * Whether the layer takes part in the stage's hit-test. On by default. Turn it off for a
+   * decorative layer (a backdrop of markers under the points that matter), so it neither
+   * hovers, nor claims presses, nor answers `useStageHitTest`.
+   */
+  pickable?: boolean | undefined;
   /** The id hit-tests report for this layer. Defaults to a generated one. */
   layerId?: string | undefined;
   /** Rank against other layers in hit-tests. Defaults to `STAGE_HIT_PRIORITY.point`. */
@@ -116,7 +122,7 @@ interface Batch {
  *   selection colour with a ring, dimmed at 35 % opacity. Every mark has a halo.
  * - **Labels** only where points are at least 24 screen px apart, at most 200 at a time.
  * - **Picking** goes through the stage's hit registry: `onHoverChange` and `onItemPress` here,
- *   and `useStageHitTest` for an app that arbitrates between layers.
+ *   and `useStageHitTest` for an app that arbitrates between layers. `pickable={false}` turns it off.
  *
  * Outlines (`plus`, `cross`, …) are regenerated when the zoom changes, since their size is in
  * screen pixels; past 3,000 points only those near the viewport are generated. `dot` is a
@@ -133,6 +139,7 @@ export function PointSet({
   selectedIds,
   dimmed,
   onItemPress,
+  pickable = true,
   labels = true,
   halo = true,
   selectionStroke = overlayRole("selection"),
@@ -160,6 +167,7 @@ export function PointSet({
   useStageHitLayer({
     layerId,
     priority,
+    enabled: pickable,
     pick: (point, radius) => {
       const hit = nearestPoint(index, point.x, point.y, radius);
       return hit ? { id: hit.id, dist: hit.dist } : null;
@@ -168,7 +176,7 @@ export function PointSet({
       setOwnHover(id);
       onHoverChange?.(id);
     },
-    onPress: onItemPress ? (id, event) => onItemPress(id, event) : undefined,
+    onPress: onItemPress,
   });
 
   // Items grouped by appearance. Rebuilt when the items or the selection change, never on
