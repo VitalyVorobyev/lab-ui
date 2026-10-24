@@ -136,7 +136,7 @@
     },
     "packages/overlays": {
       "name": "@vitavision/overlays",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "devDependencies": {
         "@storybook/react-vite": "10.6.0",
         "@vitavision/stage2d": "workspace:^",
