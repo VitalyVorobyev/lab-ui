@@ -4,10 +4,11 @@
  */
 
 import { act, render } from "@testing-library/react";
-import { useState } from "react";
+import { use, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ImageStage } from "./ImageStage";
+import { StageHitContext } from "./hitContext";
 import { STAGE_HIT_PRIORITY } from "./hitTest";
 import { useStageHitLayer, useStageHitTest, type StageHitTestApi } from "./useStageHitTest";
 
@@ -127,6 +128,68 @@ describe("useStageHitTest", () => {
     api.hitTest({ x: 0, y: 0 });
     expect(second).toHaveBeenCalledTimes(1);
     expect(first).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the hit-test while disabled, keeps its id, and ends a hover it held", () => {
+    let api!: StageHitTestApi;
+    let registry!: NonNullable<React.ContextType<typeof StageHitContext>>;
+    const ids: string[] = [];
+    const hover = vi.fn();
+    function Registry() {
+      registry = use(StageHitContext)!;
+      return null;
+    }
+    function Switchable({ enabled }: { enabled: boolean }) {
+      ids.push(useStageHitLayer({ priority: 1, enabled, pick: () => ({ id: "item", dist: 0 }), onHover: hover }));
+      return null;
+    }
+    const tree = (enabled: boolean) => (
+      <Stage>
+        <Switchable enabled={enabled} />
+        <Registry />
+        <Asker onApi={(a) => (api = a)} />
+      </Stage>
+    );
+    const { rerender } = render(tree(true));
+    act(() => registry.routeHover({ x: 0, y: 0 }, 1));
+    expect(hover).toHaveBeenLastCalledWith("item");
+
+    rerender(tree(false));
+    expect(hover).toHaveBeenLastCalledWith(null);
+    expect(api.hitTest({ x: 0, y: 0 })).toBeNull();
+    act(() => registry.routeHover({ x: 0, y: 0 }, 1));
+    expect(hover).toHaveBeenCalledTimes(2);
+
+    rerender(tree(true));
+    expect(api.hitTest({ x: 0, y: 0 })?.layerId).toBe(ids[0]);
+    expect(new Set(ids).size).toBe(1);
+    expect(hover).toHaveBeenCalledTimes(2);
+  });
+
+  it("ends a hover it held when it unmounts", () => {
+    let registry!: NonNullable<React.ContextType<typeof StageHitContext>>;
+    const hover = vi.fn();
+    function Registry() {
+      registry = use(StageHitContext)!;
+      return null;
+    }
+    function Hovering() {
+      useStageHitLayer({ priority: 1, pick: () => ({ id: "item", dist: 0 }), onHover: hover });
+      return null;
+    }
+    const { rerender } = render(
+      <Stage>
+        <Hovering />
+        <Registry />
+      </Stage>,
+    );
+    act(() => registry.routeHover({ x: 0, y: 0 }, 1));
+    rerender(
+      <Stage>
+        <Registry />
+      </Stage>,
+    );
+    expect(hover.mock.calls).toEqual([["item"], [null]]);
   });
 
   it("limits to layers that claim presses on request", () => {

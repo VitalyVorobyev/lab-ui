@@ -405,6 +405,6 @@ export const NotPickable: Story = {
     await fireEvent.pointerMove(stage, at(canvasElement, { x: 200, y: 150 }));
     await waitFor(() => expect(hoveredBoard).toHaveBeenLastCalledWith("board"));
     await expect(hover).not.toHaveBeenCalled();
-    await expect(canvasElement.querySelector("svg[data-hovered]")).toBeNull();
+    await expect(canvasElement.querySelector('svg[aria-label^="Points"]')).not.toHaveAttribute("data-hovered");
   },
 };

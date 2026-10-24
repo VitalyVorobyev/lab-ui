@@ -16,8 +16,8 @@ import { useLabelIndices } from "./labelLod";
 import { overlayRole, OVERLAY_STATE_OPACITY, OVERLAY_STATE_WIDTH, type OverlayRole } from "./overlayRole";
 import { useStage } from "./stage/ImageStage";
 import type { StagePointerEvent } from "./stage/hitContext";
-import { HitLayer } from "./stage/HitLayer";
 import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
+import { useStageHitLayer } from "./stage/useStageHitTest";
 import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox } from "./stage/view";
 
@@ -44,7 +44,7 @@ export interface AreaSetProps {
   role?: OverlayRole | undefined;
   /** The hovered id, when the app controls hover (a list beside the stage hovers regions too). */
   hoveredId?: AreaId | null | undefined;
-  /** Called when the region under the pointer changes. `null` when it leaves every region. */
+  /** Called when the region under the pointer changes. `null` when it leaves every region. Not called while `pickable` is off; turning it off ends a hover with `null`. */
   onHoverChange?: ((id: AreaId | null) => void) | undefined;
   /** The selected ids, drawn at 2.5 px in the selection colour. */
   selectedIds?: Iterable<AreaId> | undefined;
@@ -163,7 +163,7 @@ export function AreaSet({
   const px = useScreenPx();
   const unit = px(1);
 
-  const index = useMemo(() => buildAreaIndex(items), [items]);
+  const index = useMemo(() => (pickable ? buildAreaIndex(items) : null), [items, pickable]);
   const selectedSet = useMemo(() => new Set(selectedIds ?? []), [selectedIds]);
   const isDimmed = useMemo(() => {
     if (typeof dimmed === "function") return dimmed;
@@ -174,6 +174,21 @@ export function AreaSet({
 
   const [ownHover, setOwnHover] = useState<AreaId | null>(null);
   const hoverId = hoveredId !== undefined ? hoveredId : ownHover;
+
+  useStageHitLayer({
+    layerId,
+    priority,
+    enabled: pickable,
+    pick: (point, radius) => {
+      const hit = index && nearestArea(index, point, radius);
+      return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
+    },
+    onHover: (id) => {
+      setOwnHover(id);
+      onHoverChange?.(id);
+    },
+    onPress: onItemPress,
+  });
 
   // Regions grouped by appearance. Rebuilt when the items or the selection change, never on
   // hover or on a view change.
@@ -254,21 +269,6 @@ export function AreaSet({
       aria-label={`${label}: ${items.length} ${items.length === 1 ? "area" : "areas"}, ${selectedSet.size} selected`}
       data-hovered={hoverId ?? undefined}
     >
-      {pickable && (
-        <HitLayer
-          layerId={layerId}
-          priority={priority}
-          pick={(point, radius) => {
-            const hit = nearestArea(index, point, radius);
-            return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
-          }}
-          onHover={(id) => {
-            setOwnHover(id);
-            onHoverChange?.(id);
-          }}
-          onPress={onItemPress}
-        />
-      )}
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {groups.normal.map((batch) => (
           <g key={batch.id} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>

@@ -1240,6 +1240,7 @@ export interface StageHit extends HitCandidate {
 
 // @public
 export interface StageHitLayerOptions {
+    enabled?: boolean | undefined;
     layerId?: string | undefined;
     onDoubleClick?: ((id: HitId, point: Point) => boolean | void) | undefined;
     onHover?: ((id: HitId | null) => void) | undefined;

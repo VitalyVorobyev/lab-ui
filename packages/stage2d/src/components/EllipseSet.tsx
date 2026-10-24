@@ -15,8 +15,8 @@ import { buildEllipseIndex, ellipsePath, nearestEllipse, type Ellipse, type Elli
 import { overlayRole, OVERLAY_STATE_OPACITY, OVERLAY_STATE_WIDTH, type OverlayRole } from "./overlayRole";
 import { useStage } from "./stage/ImageStage";
 import type { StagePointerEvent } from "./stage/hitContext";
-import { HitLayer } from "./stage/HitLayer";
 import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
+import { useStageHitLayer } from "./stage/useStageHitTest";
 import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox } from "./stage/view";
 
@@ -44,7 +44,7 @@ export interface EllipseSetProps {
   role?: OverlayRole | undefined;
   /** The hovered id, when the app controls hover: its ellipses are drawn at 2 px. */
   hoveredId?: EllipseId | null | undefined;
-  /** Called when the ellipse under the pointer changes. `null` when it leaves every ellipse. Not called when `pickable` is off. */
+  /** Called when the ellipse under the pointer changes. `null` when it leaves every ellipse. Not called while `pickable` is off; turning it off ends a hover with `null`. */
   onHoverChange?: ((id: EllipseId | null) => void) | undefined;
   /** The selected ids, drawn at 2.5 px in the selection colour. */
   selectedIds?: Iterable<EllipseId> | undefined;
@@ -153,7 +153,22 @@ export function EllipseSet({
 
   const index = useMemo(() => (pickable ? buildEllipseIndex(items) : null), [items, pickable]);
   const [ownHover, setOwnHover] = useState<EllipseId | null>(null);
-  const hoverId = hoveredId !== undefined ? hoveredId : pickable ? ownHover : null;
+  const hoverId = hoveredId !== undefined ? hoveredId : ownHover;
+
+  useStageHitLayer({
+    layerId,
+    priority,
+    enabled: pickable,
+    pick: (point, radius) => {
+      const hit = index && nearestEllipse(index, point, radius);
+      return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
+    },
+    onHover: (id) => {
+      setOwnHover(id);
+      onHoverChange?.(id);
+    },
+    onPress: onItemPress,
+  });
 
   const batches = useMemo(() => {
     const normal = new Map<string, Batch>();
@@ -209,21 +224,6 @@ export function EllipseSet({
       data-ellipses={items.length}
       data-hovered={hoverId ?? undefined}
     >
-      {index && (
-        <HitLayer
-          layerId={layerId}
-          priority={priority}
-          pick={(point, radius) => {
-            const hit = nearestEllipse(index, point, radius);
-            return hit ? { id: hit.id, dist: hit.inside ? 0 : hit.distance } : null;
-          }}
-          onHover={(id) => {
-            setOwnHover(id);
-            onHoverChange?.(id);
-          }}
-          onPress={onItemPress}
-        />
-      )}
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {normalPaths.map(({ batch, d }) => (
           <g key={batch.key} opacity={batch.dim ? OVERLAY_STATE_OPACITY.dimmed : undefined}>

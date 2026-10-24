@@ -16,8 +16,8 @@ import { useLabelIndices, visibleRect } from "./labelLod";
 import { buildPointIndexFrom, nearestPoint, type PointId, type PointItem } from "./pointIndex";
 import { useStage } from "./stage/ImageStage";
 import type { StagePointerEvent } from "./stage/hitContext";
-import { HitLayer } from "./stage/HitLayer";
 import { STAGE_HIT_PRIORITY } from "./stage/hitTest";
+import { useStageHitLayer } from "./stage/useStageHitTest";
 import { useScreenPx } from "./stage/useScreenPx";
 import { imageViewBox, type Rect } from "./stage/view";
 
@@ -53,7 +53,7 @@ export interface PointSetProps {
   markers?: Readonly<Record<string, MarkerShape>> | undefined;
   /** The hovered id, when the app controls hover (a list beside the stage hovers points too). */
   hoveredId?: PointId | null | undefined;
-  /** Called when the point under the pointer changes. `null` when it leaves every point. Not called when `pickable` is off. */
+  /** Called when the point under the pointer changes. `null` when it leaves every point. Not called while `pickable` is off; turning it off ends a hover with `null`. */
   onHoverChange?: ((id: PointId | null) => void) | undefined;
   /** The selected ids, drawn at 2.5 px in the selection colour with a ring. */
   selectedIds?: Iterable<PointId> | undefined;
@@ -164,6 +164,21 @@ export function PointSet({
   const [ownHover, setOwnHover] = useState<PointId | null>(null);
   const hoverId = hoveredId !== undefined ? hoveredId : ownHover;
 
+  useStageHitLayer({
+    layerId,
+    priority,
+    enabled: pickable,
+    pick: (point, radius) => {
+      const hit = nearestPoint(index, point.x, point.y, radius);
+      return hit ? { id: hit.id, dist: hit.dist } : null;
+    },
+    onHover: (id) => {
+      setOwnHover(id);
+      onHoverChange?.(id);
+    },
+    onPress: onItemPress,
+  });
+
   // Items grouped by appearance. Rebuilt when the items or the selection change, never on
   // hover or on a view change.
   const groups = useMemo(() => {
@@ -257,21 +272,6 @@ export function PointSet({
       aria-label={`${label}: ${items.length} ${items.length === 1 ? "point" : "points"}, ${selectedSet.size} selected`}
       data-hovered={hoverId ?? undefined}
     >
-      {pickable && (
-        <HitLayer
-          layerId={layerId}
-          priority={priority}
-          pick={(point, radius) => {
-            const hit = nearestPoint(index, point.x, point.y, radius);
-            return hit ? { id: hit.id, dist: hit.dist } : null;
-          }}
-          onHover={(id) => {
-            setOwnHover(id);
-            onHoverChange?.(id);
-          }}
-          onPress={onItemPress}
-        />
-      )}
       <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {halo &&
           paths.normal.map(({ batch, d }) => (
