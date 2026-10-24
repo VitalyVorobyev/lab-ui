@@ -217,6 +217,7 @@ both themes.
 | ring or ellipse target | fitted ellipse, plus at the centre |
 | reprojected / predicted point | hollow circle r 4 px, model colour |
 | residual | line from observed to model, drawn × gain; the gain is printed in the legend |
+| position uncertainty | 1σ covariance ellipse in the model colour, drawn × gain; the gain is printed in the legend |
 | ground truth vs prediction | truth dashed `4 3`, prediction solid |
 | origin | ring r 7 px with i and j axes |
 | region, annotation | outline plus 12 % fill |

@@ -10,7 +10,15 @@
 import type { AreaSetItem, EllipseSetItem, GridNode, PointSetItem } from "@vitavision/stage2d";
 
 import { markerPolygons } from "./lattice";
-import { isLatticeKind, type TargetCircle, type TargetCorner, type TargetDetection, type TargetEdgeBit, type TargetRing } from "./model";
+import {
+  isLatticeKind,
+  type TargetCircle,
+  type TargetCorner,
+  type TargetDetection,
+  type TargetEdgeBit,
+  type TargetEllipse,
+  type TargetRing,
+} from "./model";
 
 /** The label of a corner: its own, else the lattice index on a board, else the id. */
 function cornerLabel(corner: TargetCorner, lattice: boolean): string {
@@ -144,4 +152,54 @@ export function edgeBitEllipses(bits: readonly TargetEdgeBit[]): EllipseSetItem[
     dashed: bit.bit === 0,
     opacity: BIT_OPACITY_MIN + (1 - BIT_OPACITY_MIN) * Math.min(1, Math.max(0, bit.confidence)),
   }));
+}
+
+/**
+ * The ellipse of a 2×2 position covariance: `scale` standard deviations along each principal
+ * axis.
+ *
+ * The semi-axes are `scale · √λ` for the matrix's two eigenvalues `λ₁ ≥ λ₂`, and `angle` is the
+ * direction of the eigenvector of `λ₁` (radians, clockwise on screen, in `(-π/2, π/2]`). At
+ * `scale = 1` this is the 1σ ellipse: the curve `dᵀ Σ⁻¹ d = 1`.
+ *
+ * @param cov - The covariance `[xx, xy, yy]`, image pixels squared.
+ * @param scale - The gain applied to both semi-axes. Defaults to 1.
+ * @returns The ellipse, or `null` when the matrix is not finite and positive definite, or the
+ *   scale is not a finite positive number: there is no ellipse to draw.
+ */
+export function covarianceEllipse(cov: readonly [xx: number, xy: number, yy: number], scale = 1): TargetEllipse | null {
+  const [xx, xy, yy] = cov;
+  if (!Number.isFinite(xx + xy + yy) || !(Number.isFinite(scale) && scale > 0)) return null;
+  const det = xx * yy - xy * xy;
+  // Positive definite: a positive diagonal and a positive determinant.
+  if (!(xx > 0 && yy > 0 && det > 0)) return null;
+  const mean = 0.5 * (xx + yy);
+  const spread = Math.hypot(0.5 * (xx - yy), xy);
+  const major = mean + spread;
+  // λ₁λ₂ = det: the smaller eigenvalue from the product rather than from `mean - spread`.
+  const minor = det / major;
+  const half = 0.5 * Math.atan2(2 * xy, xx - yy);
+  // `atan2(-0, x < 0)` is -π: keep the axis in (-π/2, π/2].
+  const angle = half <= -Math.PI / 2 ? half + Math.PI : half;
+  return { rx: scale * Math.sqrt(major), ry: scale * Math.sqrt(minor), angle };
+}
+
+/**
+ * The ellipses of the uncertainty layer: each corner's position covariance as a 1σ ellipse,
+ * both semi-axes multiplied by `scale`, centred on the corner and sharing its id, in the `model`
+ * role. A corner with no covariance, or one that is not positive definite, has none.
+ *
+ * @param corners - The corners.
+ * @param scale - The gain on the semi-axes. A detector's σ is a fraction of a pixel, so it is
+ *   drawn magnified; print the gain beside the image ("ellipses ×40").
+ * @returns One ellipse per corner with a drawable covariance, in order.
+ */
+export function uncertaintyEllipses(corners: readonly TargetCorner[], scale: number): EllipseSetItem[] {
+  const out: EllipseSetItem[] = [];
+  for (const corner of corners) {
+    if (!corner.cov) continue;
+    const ellipse = covarianceEllipse(corner.cov, scale);
+    if (ellipse) out.push({ id: corner.id, x: corner.x, y: corner.y, ...ellipse, role: "model" });
+  }
+  return out;
 }

@@ -4,7 +4,8 @@
  * One component, `TargetOverlay`, draws a `TargetDetection` (a chessboard, ChArUco, marker
  * board, PuzzleBoard, ring grid or loose corners) through stage2d's batched layers, in the
  * overlay grammar's roles and glyphs. The input model, the lattice builders and the glyph path
- * generators are exported too, for an app that composes the layers itself.
+ * generators are exported too, for an app that composes the layers itself. `fromCalibTargets`
+ * maps a calib-targets result to the input model.
  */
 
 export { TargetOverlay, type TargetOverlayProps } from "./TargetOverlay";
@@ -45,4 +46,36 @@ export { PUZZLEBOARD_PERIOD, edgeBitsFromPuzzleboard, type PuzzleboardAlignment,
 
 export { TARGET_MARKERS } from "./glyphs";
 
-export { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses } from "./layerItems";
+export {
+  circlePoints,
+  cornerNodes,
+  covarianceEllipse,
+  edgeBitEllipses,
+  markerAreas,
+  ringCentres,
+  ringEllipses,
+  uncertaintyEllipses,
+} from "./layerItems";
+
+export {
+  fromCalibTargets,
+  type CalibTargetsAlignment,
+  type CalibTargetsAxis,
+  type CalibTargetsCharucoDetection,
+  type CalibTargetsChessboardDetection,
+  type CalibTargetsCircleCandidate,
+  type CalibTargetsCircleMatch,
+  type CalibTargetsCoord,
+  type CalibTargetsCorner,
+  type CalibTargetsCovariance,
+  type CalibTargetsLabeledCorner,
+  type CalibTargetsMarker,
+  type CalibTargetsMarkerBoardDetection,
+  type CalibTargetsMarkerBoardDiagnostics,
+  type CalibTargetsObservedEdge,
+  type CalibTargetsPoint,
+  type CalibTargetsPuzzleBoardDetection,
+  type CalibTargetsPuzzleBoardDiagnostics,
+  type CalibTargetsPuzzlePoleDetection,
+  type CalibTargetsResult,
+} from "./calibTargets";

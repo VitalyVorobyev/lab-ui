@@ -7,6 +7,7 @@
  * stories exercise what an app will pass.
  */
 
+import type { CalibTargetsChessboardDetection, CalibTargetsLabeledCorner } from "./calibTargets";
 import { edgeBitsFromPuzzleboard, type PuzzleboardAlignment, type PuzzleboardEdge } from "./puzzleboard";
 import type { TargetCircle, TargetCorner, TargetDetection, TargetMarker, TargetRing } from "./model";
 
@@ -99,6 +100,39 @@ export function markerboard(): TargetDetection {
     return { id: `circle${k}`, x: p.x, y: p.y, polarity: cell.polarity, i: cell.i, j: cell.j };
   });
   return { kind: "markerboard", corners: boardCorners(), circles };
+}
+
+/**
+ * A chessboard as calib-targets' `detect_chessboard` returns it, each corner with a position
+ * covariance: σ grows towards the far (foreshortened) side of the board and is longer along the
+ * board's v axis than its u axis, so the ellipses vary in size, shape and orientation. Two corners
+ * carry none, and one a singular matrix, which is not drawn.
+ */
+export function calibTargetsChessboard(): CalibTargetsChessboardDetection {
+  const corners: CalibTargetsLabeledCorner[] = [];
+  for (let v = 0; v < 6; v++) {
+    for (let u = 0; u < 9; u++) {
+      const p = project(u + 1, v + 1);
+      const index = v * 9 + u;
+      const corner: CalibTargetsLabeledCorner = { position: [p.x, p.y], grid: { u, v }, score: 0.9 };
+      if (index === 13 || index === 40) {
+        corners.push(corner);
+        continue;
+      }
+      // σ along u and v, px: 0.04 to 0.12 across the board, v half as sure again as u.
+      const su = 0.04 + 0.01 * u;
+      const sv = 1.5 * su;
+      const c = Math.cos(p.angleU);
+      const s = Math.sin(p.angleU);
+      // R · diag(su², sv²) · Rᵀ, R the rotation to the board's local u axis.
+      const xx = c * c * su * su + s * s * sv * sv;
+      const yy = s * s * su * su + c * c * sv * sv;
+      const xy = c * s * (su * su - sv * sv);
+      corner.position_covariance = index === 22 ? { xx: 0.01, xy: 0.01, yy: 0.01 } : { xx, xy, yy };
+      corners.push(corner);
+    }
+  }
+  return { corners };
 }
 
 /** The alignment of the PuzzleBoard story: the local frame is turned a quarter and shifted, wrapping the period. */
