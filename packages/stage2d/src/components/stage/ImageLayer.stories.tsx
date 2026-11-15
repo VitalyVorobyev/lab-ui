@@ -49,6 +49,10 @@ When the full image is costly to produce, leave \`src\` out: \`onFullNeeded\` fi
 rule trips, the preview carries \`data-wants-full\` until the full image has loaded, and the full image is shown as
 soon as \`src\` arrives. Past \`pixelatedAbove\` (default 4×) pixels are drawn as blocks: the sensor's own samples, not interpolated ones.
 
+\`gain\` and \`gamma\` are a display tone curve, as an image editor's levels: each channel \`v\` is drawn as
+\`gain × v^(1 / gamma)\`, clipped at white, through one SVG filter on both tiers. They change what is drawn, never
+the image data, so they are for reading a dark or low-contrast frame, not for measuring on.
+
 **Use** it for the image under every overlay in a stage.
 
 **Don't** size or position it yourself — the stage is already laid out at the image's pixel size.
@@ -143,6 +147,19 @@ export const Pixelated: Story = {
     const image = canvas.getByRole("img", { name: "Synthetic inspection frame" });
     await waitFor(() => expect(image).toHaveAttribute("data-pixelated"));
     await expect(image.style.imageRendering).toBe("pixelated");
+  },
+};
+
+/** A dark frame read with a gain and a gamma: the tone curve applies to both tiers, on screen only. */
+export const Adjusted: Story = {
+  args: { src: frame("#0d0f11", "gain 2.5, gamma 1.8"), gain: 2.5, gamma: 1.8 },
+  play: async ({ canvas, canvasElement }) => {
+    const image = canvas.getByRole("img", { name: "Synthetic inspection frame" });
+    await waitFor(() => expect(image).toHaveAttribute("data-loaded"));
+    await expect(image).toHaveAttribute("data-adjusted");
+    const filter = canvasElement.querySelector("filter[data-tone-curve]")!;
+    await expect(image.style.filter).toBe(`url("#${filter.id}")`);
+    await expect(filter.querySelector("feFuncG")).toHaveAttribute("amplitude", "2.5");
   },
 };
 

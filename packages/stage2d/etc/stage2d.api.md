@@ -577,6 +577,8 @@ export function ImageLayer(input: ImageLayerProps): JSX.Element;
 export interface ImageLayerBaseProps {
     alt: string;
     className?: string | undefined;
+    gain?: number | undefined;
+    gamma?: number | undefined;
     onError?: (() => void) | undefined;
     onFullNeeded?: (() => void) | undefined;
     onLoad?: (() => void) | undefined;

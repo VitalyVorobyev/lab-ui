@@ -40,7 +40,7 @@
     "name": "@vitavision/stage2d",
     "path": "packages/stage2d/dist/index.js",
     "import": "*",
-    "limit": "32 kB",
+    "limit": "32.2 kB",
     "ignore": ["@vitavision/ui", "lucide-react", "react", "react-dom", "react/jsx-runtime"]
   },
   {

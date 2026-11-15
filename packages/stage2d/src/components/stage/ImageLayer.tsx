@@ -15,9 +15,11 @@
  *   - **Pixelated past a zoom.** Above about 4× the browser's smoothing paints detail the
  *     sensor never recorded; on a metrology bench the sensor's own samples are what is worth
  *     looking at.
+ *   - **A display tone curve.** A dark or low-contrast frame is read with a gain and a gamma
+ *     applied on screen only (`gain`, `gamma`): the pixels the app measures are untouched.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { cn } from "@vitavision/ui";
 import { useStage } from "./ImageStage";
@@ -47,6 +49,20 @@ export interface ImageLayerBaseProps {
   onLoad?: (() => void) | undefined;
   /** Called when the full image fails to load. */
   onError?: (() => void) | undefined;
+  /**
+   * Display gain: each channel is multiplied by it and clipped at white, after `gamma`.
+   * Defaults to 1. A negative value counts as 0, one that is not finite as 1.
+   *
+   * Like `gamma`, it changes what is drawn, never the image data: a way to read a dark or
+   * low-contrast frame, not a correction to measure on.
+   */
+  gain?: number | undefined;
+  /**
+   * Display gamma, as an image editor's levels control: each channel `v` (0 to 1, as encoded in
+   * the file) is drawn as `gain × v^(1 / gamma)`. Above 1 it lifts the shadows and mid-tones,
+   * below 1 it darkens them. Defaults to 1; a value that is not positive counts as 1.
+   */
+  gamma?: number | undefined;
   /** Merged onto both images with `cn`. */
   className?: string | undefined;
 }
@@ -79,12 +95,29 @@ export type ImageLayerProps = ImageLayerBaseProps &
  * With a `preview`, the full image is wanted once the stage would magnify the preview, and
  * `onFullNeeded` says so; `src` can be supplied then rather than up front.
  *
+ * With a `gain` or `gamma` other than 1, both images are drawn through one SVG tone-curve filter
+ * (sRGB values, per channel) and carry `data-adjusted`.
+ *
  * Each image carries `data-tier` (`preview` or `full`); the full image carries `data-loaded`
  * once it has loaded, the preview carries `data-wants-full` from the moment the full image is
  * wanted until it has loaded, and both carry `data-pixelated` while pixelated.
  */
-export function ImageLayer({ src, preview, alt, pixelatedAbove = 4, onFullNeeded, onLoad, onError, className }: ImageLayerProps) {
+export function ImageLayer({
+  src,
+  preview,
+  alt,
+  pixelatedAbove = 4,
+  onFullNeeded,
+  onLoad,
+  onError,
+  gain,
+  gamma,
+  className,
+}: ImageLayerProps) {
   const stage = useStage();
+  const curve = toneCurve(gain, gamma);
+  // `useId` may contain characters that are not valid in a CSS `url(#…)` reference.
+  const filterId = `stage-image-tone-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
   const scale = stage.view.scale;
   // The full image is wanted once the preview would be magnified on screen: its own pixels
   // per image pixel are `preview.width / image.width`. Not before the viewport is measured:
@@ -112,9 +145,22 @@ export function ImageLayer({ src, preview, alt, pixelatedAbove = 4, onFullNeeded
   const pixelated = scale >= pixelatedAbove;
   const shared = cn("pointer-events-none absolute inset-0 h-full w-full select-none", className);
   const rendering = pixelated ? ("pixelated" as const) : undefined;
+  const style = { imageRendering: rendering, filter: curve ? `url(#${filterId})` : undefined };
+  const adjusted = curve ? "" : undefined;
 
   return (
     <>
+      {curve && (
+        <svg aria-hidden="true" width="0" height="0" className="pointer-events-none absolute" focusable="false">
+          <filter id={filterId} colorInterpolationFilters="sRGB" data-tone-curve="">
+            <feComponentTransfer>
+              <feFuncR type="gamma" amplitude={curve.amplitude} exponent={curve.exponent} offset={0} />
+              <feFuncG type="gamma" amplitude={curve.amplitude} exponent={curve.exponent} offset={0} />
+              <feFuncB type="gamma" amplitude={curve.amplitude} exponent={curve.exponent} offset={0} />
+            </feComponentTransfer>
+          </filter>
+        </svg>
+      )}
       {preview && !fullReady && (
         <img
           src={preview.src}
@@ -124,8 +170,9 @@ export function ImageLayer({ src, preview, alt, pixelatedAbove = 4, onFullNeeded
           data-tier="preview"
           data-wants-full={wanted ? "" : undefined}
           data-pixelated={pixelated ? "" : undefined}
+          data-adjusted={adjusted}
           className={shared}
-          style={{ imageRendering: rendering }}
+          style={style}
         />
       )}
       {showFull && (
@@ -136,15 +183,27 @@ export function ImageLayer({ src, preview, alt, pixelatedAbove = 4, onFullNeeded
           data-tier="full"
           data-loaded={fullReady ? "" : undefined}
           data-pixelated={pixelated ? "" : undefined}
+          data-adjusted={adjusted}
           onLoad={() => {
             setLoaded(src);
             onLoad?.();
           }}
           onError={() => onError?.()}
           className={cn(shared, preview && !fullReady && "opacity-0")}
-          style={{ imageRendering: rendering }}
+          style={style}
         />
       )}
     </>
   );
+}
+
+/**
+ * The `feFuncX type="gamma"` parameters (`amplitude × v^exponent`) for a gain and a gamma, or
+ * `null` when the curve is the identity and no filter is needed.
+ */
+function toneCurve(gain: number | undefined, gamma: number | undefined): { amplitude: number; exponent: number } | null {
+  const amplitude = gain === undefined || !Number.isFinite(gain) ? 1 : Math.max(0, gain);
+  const g = gamma === undefined || !(gamma > 0) || !Number.isFinite(gamma) ? 1 : gamma;
+  if (amplitude === 1 && g === 1) return null;
+  return { amplitude, exponent: 1 / g };
 }
