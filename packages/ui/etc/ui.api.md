@@ -539,6 +539,26 @@ export type SelectOption = {
 export function setThemeChoice(choice: ThemeChoice, storageKey?: string): void;
 
 // @public
+export interface Shortcut {
+    description: string;
+    keys: readonly string[];
+}
+
+// @public
+export interface ShortcutGroup {
+    shortcuts: readonly Shortcut[];
+    title: string;
+}
+
+// @public
+export function ShortcutList(input: ShortcutListProps): JSX.Element;
+
+// @public
+export type ShortcutListProps = Omit<ComponentProps<"div">, "children"> & {
+    groups: readonly ShortcutGroup[];
+};
+
+// @public
 export function Skeleton(input: {
     className?: string | undefined;
 }): JSX.Element;
