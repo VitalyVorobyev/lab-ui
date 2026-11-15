@@ -8,7 +8,7 @@ import { fireEvent, render } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ImageLayer, type ImageLayerProps } from "./ImageLayer";
+import { ImageLayer, type ImageLayerBaseProps, type ImageLayerProps } from "./ImageLayer";
 import { ImageStage } from "./ImageStage";
 import type { Box, StageView } from "./view";
 
@@ -191,5 +191,59 @@ describe("ImageLayer", () => {
       expect(image?.hasAttribute("data-pixelated")).toBe(true);
       expect(image?.style.imageRendering).toBe("pixelated");
     }
+  });
+
+  it("draws both tiers through one tone-curve filter for a gain or a gamma, and none for the identity", () => {
+    withLayout();
+    const layer = (props: Pick<ImageLayerBaseProps, "gain" | "gamma">) =>
+      stage(ACTUAL, <ImageLayer src="full.png" preview={PREVIEW} alt="Frame" {...props} />);
+    const { container, rerender } = render(layer({}));
+    const filter = () => container.querySelector("filter[data-tone-curve]");
+    expect(filter()).toBeNull();
+    expect(tiers(container).full?.style.filter).toBe("");
+    expect(tiers(container).full?.hasAttribute("data-adjusted")).toBe(false);
+
+    rerender(layer({ gain: 2, gamma: 2 }));
+    const node = filter();
+    expect(node?.getAttribute("color-interpolation-filters")).toBe("sRGB");
+    const funcs = node!.querySelectorAll("feFuncR, feFuncG, feFuncB");
+    expect(funcs).toHaveLength(3);
+    for (const func of funcs) {
+      expect(func.getAttribute("type")).toBe("gamma");
+      expect(func.getAttribute("amplitude")).toBe("2");
+      expect(func.getAttribute("exponent")).toBe("0.5");
+    }
+    const { preview, full } = tiers(container);
+    for (const image of [preview, full]) {
+      expect(image?.style.filter).toBe(`url(#${node!.id})`);
+      expect(image?.hasAttribute("data-adjusted")).toBe(true);
+    }
+    // The id is usable in a CSS reference as it is.
+    expect(node!.id).toMatch(/^[A-Za-z0-9_-]+$/);
+    // The filter is decorative markup, never announced.
+    expect(node!.closest("svg")?.getAttribute("aria-hidden")).toBe("true");
+
+    // Back to the identity: the filter goes.
+    rerender(layer({ gain: 1, gamma: 1 }));
+    expect(filter()).toBeNull();
+    expect(tiers(container).full?.style.filter).toBe("");
+  });
+
+  it("reads an unusable gain or gamma as the identity, and a negative gain as black", () => {
+    withLayout();
+    const amplitude = (props: Pick<ImageLayerBaseProps, "gain" | "gamma">) => {
+      const { container, unmount } = render(stage(ACTUAL, <ImageLayer src="full.png" alt="" {...props} />));
+      const func = container.querySelector("filter[data-tone-curve] feFuncR");
+      const result = func ? [func.getAttribute("amplitude"), func.getAttribute("exponent")] : null;
+      unmount();
+      return result;
+    };
+    expect(amplitude({ gain: Number.NaN })).toBeNull();
+    expect(amplitude({ gain: Number.POSITIVE_INFINITY })).toBeNull();
+    expect(amplitude({ gamma: 0 })).toBeNull();
+    expect(amplitude({ gamma: -2 })).toBeNull();
+    expect(amplitude({ gamma: Number.NaN })).toBeNull();
+    expect(amplitude({ gain: -1 })).toEqual(["0", "1"]);
+    expect(amplitude({ gamma: 0.5 })).toEqual(["1", "2"]);
   });
 });

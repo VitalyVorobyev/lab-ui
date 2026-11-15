@@ -21,7 +21,8 @@ deprecated predecessor, still exported unchanged.
 
 `ImageLayer` draws the photograph at its natural size. It can show a `preview` tier until
 the stage would magnify it, then load the full image and keep it, and it turns pixelated past
-`pixelatedAbove`. `StageButton` takes a `hint` and a `shortcut` for a richer tooltip, and
+`pixelatedAbove`. `gain` and `gamma` draw it through a display tone curve (`gain × v^(1 / gamma)`
+per channel, on screen only) for reading a dark or low-contrast frame. `StageButton` takes a `hint` and a `shortcut` for a richer tooltip, and
 `StageLayersMenu` is a layers button for `StageToolbar`. Code outside the stage, such as an
 inspector's "frame this", drives it through `ImageStage`'s `ref` (`StageHandle`: `frame`,
 `fit`, `zoomTo`). `initialView="fit"` opens a `null` view at fit even when the image would fit
