@@ -130,7 +130,7 @@ deprecated) · `Breakdown`, `breakdownText` (counts by verdict as one thin stack
 `unit` written in the field; number-valued with `onValueChange`), `Textarea` (optionally growing
 with its content between `minRows` and `maxRows`) · `HighlightedText`, `findSpans` (a string
 with its placeholders, tags and terms marked, never parsed as HTML) · `VectorInput`,
-`PoseInput` · `Kbd` · `Listbox` (single choice among options that render their own content) ·
+`PoseInput` · `Kbd`, `ShortcutList` (a screen's keyboard shortcuts as titled groups, for a `?` help dialog) · `Listbox` (single choice among options that render their own content) ·
 `PageHeader`, `Panel`, `ReadoutStrip`, `Section` · `Popover`, `PopoverClose` ·
 `SegmentedControl` · `Select` · `Slider` · `Table` (with `windowed` for thousands of rows, and `selectionFollowsFocus` for keyboard selection) ·
 `Checkbox`, `Switch` · `ToggleChip` · `Toaster`, `toast()` (notifications from anywhere; mount one `<Toaster />` near the root) ·

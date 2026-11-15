@@ -44,6 +44,7 @@ export { Popover, PopoverClose, type PopoverProps } from "./Popover";
 export { PoseInput, type PoseInputProps, type PoseValue, type Quaternion, type RotationView, type Vec3 } from "./PoseInput";
 export { SegmentedControl } from "./SegmentedControl";
 export { Select, type SelectOption } from "./Select";
+export { ShortcutList, type Shortcut, type ShortcutGroup, type ShortcutListProps } from "./ShortcutList";
 export { Slider } from "./Slider";
 export { Table, type Column, type TableWindowing } from "./Table";
 export { sortRows, type SortDirection, type TableSort } from "./tableSort";
