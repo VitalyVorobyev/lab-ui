@@ -32,7 +32,7 @@ into `baseline.toml` `[exceptions]` with a link back here.
 | oxfmt | 0.71.0, **exact pin** | newest two weeks old; 0.x, so pinned exactly; see N4 |
 | storybook, @storybook/{react-vite,addon-docs,addon-a11y} | 10.6.0 | latest |
 | tsdown | 0.23.0, **exact pin** | latest; 0.x, so pinned exactly |
-| three / @types/three | 0.186.1 / 0.186.0, **exact pin** | latest; three breaks on minor releases |
+| three / @types/three | 0.187.0 / 0.187.0, **exact pin** | latest; three breaks on minor releases |
 | @react-three/fiber / drei | 9.8.1 / 10.7.9 | latest |
 | konva / react-konva | 10.7.0 / 19.3.0 | latest; only until the L6 stage decision |
 | motion | 13.4.4 | latest; replaces framer-motion; apps only, never in `ui` |

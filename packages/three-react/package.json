@@ -42,7 +42,7 @@
     "@react-three/fiber": "^9.8.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "three": "^0.186.0"
+    "three": ">=0.186.0 <0.188.0"
   },
   "dependencies": {
     "@vitavision/three": "workspace:^"
@@ -50,8 +50,8 @@
   "devDependencies": {
     "@react-three/fiber": "9.8.1",
     "@storybook/react-vite": "10.6.0",
-    "@types/three": "0.186.0",
+    "@types/three": "0.187.0",
     "storybook": "10.6.0",
-    "three": "0.186.1"
+    "three": "0.187.0"
   }
 }

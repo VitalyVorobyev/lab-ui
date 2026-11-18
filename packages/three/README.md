@@ -5,10 +5,10 @@ conventions, a runtime that plays baked scenarios, robot visuals, and gizmos for
 lasers, targets, and lights. No React; see `@vitavision/three-react` for the R3F layer.
 
 ```bash
-bun add @vitavision/three three@0.186.1
+bun add @vitavision/three three@0.187.0
 ```
 
-`three` is a peer (`^0.186.0`): three breaks on minor releases, so the app owns the one copy.
+`three` is a peer (`>=0.186.0 <0.188.0`): three breaks on minor releases, so the app owns the one copy.
 
 ```ts
 import { FrameTreeRuntime, CameraFrustum, imageBorderPixels } from "@vitavision/three";

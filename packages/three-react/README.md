@@ -6,10 +6,10 @@ React Three Fiber components over `@vitavision/three`. Per-frame updates go thro
 frame.
 
 ```bash
-bun add @vitavision/three-react @vitavision/three three@0.186.1 @react-three/fiber
+bun add @vitavision/three-react @vitavision/three three@0.187.0 @react-three/fiber
 ```
 
-Peers: `react`, `react-dom`, `three` (`^0.186.0`) and `@react-three/fiber` (`^9.8.1`). No
+Peers: `react`, `react-dom`, `three` (`>=0.186.0 <0.188.0`) and `@react-three/fiber` (`^9.8.1`). No
 stylesheet: nothing here is a Tailwind class; the colours are read from the `@vitavision/ui`
 tokens at runtime.
 
