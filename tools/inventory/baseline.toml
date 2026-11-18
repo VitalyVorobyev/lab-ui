@@ -32,8 +32,8 @@ storybook = { version = "10.6.0" }
 "@storybook/addon-a11y" = { version = "10.6.0" }
 "@storybook/react-vite" = { version = "10.6.0" }
 tsdown = { version = "0.23.0", exact = true, note = "0.x: pinned exactly" }
-three = { version = "0.186.1", exact = true, note = "three breaks on minor releases" }
-"@types/three" = { version = "0.186.0", exact = true }
+three = { version = "0.187.0", exact = true, note = "three breaks on minor releases" }
+"@types/three" = { version = "0.187.0", exact = true }
 "@react-three/fiber" = { version = "9.8.1" }
 "@react-three/drei" = { version = "10.7.9" }
 konva = { version = "10.7.0", note = "only until the L6 stage decision" }
