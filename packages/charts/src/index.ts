@@ -22,6 +22,7 @@ export {
 export { extent, formatTick, histogram, linePath, linearScale, logScale, niceStep, padDomain, type Scale, type Tick } from "./scale";
 
 export { LineChart, type LineChartProps, type Series } from "./LineChart";
+export { bandPath, formatWithBand, type SeriesBand } from "./band";
 
 export {
   ScatterChart,
@@ -66,4 +67,4 @@ export {
   type ColormapName,
 } from "./colormap";
 
-export { ColormapLegend, type ColormapLegendProps } from "./ColormapLegend";
+export { ColormapLegend, type ColormapClipped, type ColormapLegendProps, type ColormapMarker } from "./ColormapLegend";

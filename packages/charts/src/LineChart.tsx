@@ -9,6 +9,7 @@
 
 import type { ReactNode } from "react";
 
+import { bandPath, bandValues, type SeriesBand } from "./band";
 import { FLUID_DEFAULT_HEIGHT, Frame, Legend, areaFor, seriesColour, useFluidSize } from "./Frame";
 import { Bands, Markers, PlotInteraction, type InteractionProps } from "./interaction";
 import type { Variant } from "./Frame";
@@ -26,6 +27,15 @@ export interface Series {
   points: { x: number; y: number }[];
   /** Any CSS colour. Omitted: {@link seriesColour} of the series' index. */
   colour?: string;
+  /**
+   * An error band around the line: `lower` and `upper` hold one value per point, by index (a
+   * mean ± σ, a confidence interval). It is drawn as a translucent area in the series colour
+   * under every line, shown in the legend, and read in the hover readout as `value ± half-width`
+   * (or the value with its range when the band is not symmetric). A point whose edges are
+   * missing or non-finite leaves a gap in the band. Unless `yDomain` is fixed, the y domain
+   * grows to hold the band.
+   */
+  band?: SeriesBand;
 }
 
 /** Props for {@link LineChart}. */
@@ -42,7 +52,12 @@ export interface LineChartProps extends InteractionProps {
   logY?: boolean;
   /** Fixed domains, for charts whose axes are known — ROC and PR are both `[0, 1]`. */
   xDomain?: [number, number];
-  /** Fixed y domain. Omitted: the extent of every series' `y`. */
+  /**
+   * Writes the x tick labels and the x in the hover readout from the x value: a date from a
+   * timestamp, a unit. Omitted: the scale's own labels.
+   */
+  xFormat?: (x: number) => string;
+  /** Fixed y domain. Omitted: the extent of every series' `y` and band edges. */
   yDomain?: [number, number];
   /** Drawn behind the series, in plot pixels. A chance diagonal or a tolerance band uses this. */
   underlay?: (x: Scale, y: Scale) => ReactNode;
@@ -65,7 +80,8 @@ export interface LineChartProps extends InteractionProps {
  * An SVG `role="img"` named by `label`, with the legend as real text under it. Series are
  * told apart by the legend's names, never by colour alone. `bands` and `markers` mark x
  * ranges and positions; `onHover` adds a crosshair and a value readout, `onPick` makes a
- * click report its x, and `cursor` draws an x chosen elsewhere.
+ * click report its x, and `cursor` draws an x chosen elsewhere. A series' `band` adds an error
+ * band, and `xFormat` writes the x labels.
  */
 export function LineChart({
   series,
@@ -75,6 +91,7 @@ export function LineChart({
   logY = false,
   xDomain,
   yDomain,
+  xFormat,
   underlay,
   footer,
   showLegend = true,
@@ -88,7 +105,7 @@ export function LineChart({
   onPick,
 }: LineChartProps) {
   const allX = series.flatMap((entry) => entry.points.map((point) => point.x));
-  const allY = series.flatMap((entry) => entry.points.map((point) => point.y));
+  const allY = series.flatMap((entry) => [...entry.points.map((point) => point.y), ...(entry.band ? bandValues(entry.band) : [])]);
   const [fluidRef, fluidSize] = useFluidSize(height);
   const size = variant === "fluid" ? fluidSize : undefined;
   const plotArea = areaFor(variant, size);
@@ -113,14 +130,37 @@ export function LineChart({
       className={className}
       size={size}
       figureRef={variant === "fluid" ? fluidRef : undefined}
+      xFormat={xFormat}
       footer={
         <div className="flex flex-col gap-1">
-          {showLegend && <Legend items={coloured.map((entry) => ({ label: entry.name, colour: entry.colour }))} />}
+          {showLegend && (
+            <Legend
+              items={coloured.map((entry) => ({
+                label: entry.name,
+                colour: entry.colour,
+                ...(entry.band ? { band: entry.band.label ?? "± band" } : {}),
+              }))}
+            />
+          )}
           {footer}
         </div>
       }
     >
       {bands && bands.length > 0 && <Bands bands={bands} xScale={xScale} area={plotArea} />}
+      {coloured.map(
+        (entry) =>
+          entry.band && (
+            <path
+              key={`band-${entry.name}`}
+              data-series-band={entry.name}
+              aria-hidden
+              d={bandPath(entry.points, entry.band, xScale, yScale)}
+              fill={entry.colour}
+              fillOpacity={0.16}
+              stroke="none"
+            />
+          ),
+      )}
       {underlay?.(xScale, yScale)}
       {coloured.map((entry) =>
         entry.points.length === 1 ? (
@@ -153,6 +193,7 @@ export function LineChart({
           cursor={cursor}
           onHover={onHover}
           onPick={onPick}
+          xFormat={xFormat}
         />
       )}
     </Frame>

@@ -39,12 +39,17 @@ pending); a series with one point draws a dot. \`logY\` puts losses that span de
 behind the series (a chance diagonal, a tolerance band). \`variant\` says where the chart goes —
 \`panel\` in a two-column grid, \`wide\` for a full-width panel — so its text matches its neighbours.
 
+\`band\` on a series draws a translucent y-error band (\`lower\` / \`upper\`, one per point) in the series colour under the lines; the
+legend marks it and the hover readout reads \`value ± half-width\`. \`xFormat\` writes the x tick labels and the readout's x (a date from a
+timestamp, a unit).
+
 **Don't** use it for a signal against arc length with detected edges — that is \`LineProfile\` — or for
 a two-class score distribution (\`ScoreHistogram\`). It is not an interactive plot: no zoom, no hover.
 
 **Accessibility**: the SVG is \`role="img"\` named by \`label\` (required); the legend is real text below
 the plot. The chart's data is not exposed to a screen reader — put the numbers that matter in the
-surrounding text or a table.`,
+surrounding text or a table. A band is decorative: its meaning (what the band is) is the legend's text, and with \`onHover\` the
+readout writes it per point.`,
       },
     },
   },
@@ -140,3 +145,77 @@ export const WithoutLegend: Story = {
     await expect(canvas.queryByText("loss_st")).toBeNull();
   },
 };
+
+/** A device trend: a value per run with a ±σ band, and the x written as dates. */
+const DAY = 86_400_000;
+const T0 = Date.UTC(2026, 0, 5);
+const TREND_POINTS = Array.from({ length: 8 }, (_, i) => ({ x: T0 + i * 7 * DAY, y: 1.2 + 0.05 * Math.sin(i) + 0.01 * i }));
+const SIGMA = [0.08, 0.07, 0.07, 0.05, 0.06, 0.04, 0.04, 0.03];
+const dateFormat = (x: number) => new Date(x).toISOString().slice(5, 10);
+
+export const WithBand: Story = {
+  args: {
+    label: "Focal length trend",
+    xLabel: "run date",
+    yLabel: "fx, px",
+    xFormat: dateFormat,
+    series: [
+      {
+        name: "fx",
+        points: TREND_POINTS,
+        band: { lower: TREND_POINTS.map((p, i) => p.y - SIGMA[i]!), upper: TREND_POINTS.map((p, i) => p.y + SIGMA[i]!), label: "±1σ" },
+      },
+    ],
+  },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvasElement.querySelectorAll("[data-series-band]")).toHaveLength(1);
+    await expect(canvas.getByText("±1σ")).toBeInTheDocument();
+    await expect(canvasElement.textContent).toMatch(/\d\d-\d\d/);
+  },
+};
+
+/** Two series, one with a band and one without, and a gap in the band where a run had no σ. */
+export const BandsAndGap: Story = {
+  args: {
+    series: [
+      {
+        name: "k1",
+        points: TREND_POINTS.map((p) => ({ x: p.x, y: p.y - 1 })),
+        band: {
+          lower: TREND_POINTS.map((p, i) => (i === 4 ? Number.NaN : p.y - 1.1)),
+          upper: TREND_POINTS.map((p, i) => (i === 4 ? Number.NaN : p.y - 0.9)),
+        },
+      },
+      { name: "k2", points: TREND_POINTS.map((p) => ({ x: p.x, y: p.y - 1.15 })) },
+    ],
+    xFormat: dateFormat,
+  },
+  play: async ({ canvasElement }) => {
+    const d = canvasElement.querySelector("[data-series-band]")!.getAttribute("d")!;
+    await expect(d.match(/Z/g)).toHaveLength(2);
+  },
+};
+
+/** Hover reads the value with its band at the pointer, and the x as the formatter writes it. */
+export const BandReadout: Story = {
+  args: { ...WithBand.args, onHover: () => {}, variant: "wide" },
+  play: async ({ canvasElement }) => {
+    const target = canvasElement.querySelector<SVGRectElement>("[data-plot-target]")!;
+    const box = target.getBoundingClientRect();
+    target.dispatchEvent(
+      new PointerEvent("pointermove", { bubbles: true, clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 }),
+    );
+    const readout = await waitForReadout(canvasElement);
+    await expect(readout).toContain("fx ");
+    await expect(readout).toContain("±");
+  },
+};
+
+async function waitForReadout(root: HTMLElement): Promise<string> {
+  for (let i = 0; i < 20; i++) {
+    const text = root.querySelector("[data-readout]")?.textContent;
+    if (text) return text;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  return "";
+}
