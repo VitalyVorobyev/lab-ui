@@ -178,6 +178,20 @@ export {
   type HeatmapRgbaProps,
 } from "./components/HeatmapLayer";
 export { planeRange, rasterizePlane, type Colormap, type ValueRange } from "./components/heatmapRaster";
+export { VectorField, useVectorScale, type VectorFieldProps } from "./components/VectorField";
+export { VectorFieldKey, type VectorFieldKeyProps } from "./components/VectorFieldKey";
+export {
+  VECTOR_COLOR_BINS,
+  arrowPath,
+  colorBin,
+  imagePerUnit,
+  magnitudePercentile,
+  niceLength,
+  vectorMagnitude,
+  vectorMagnitudes,
+  type ArrowStyle,
+  type VectorScale,
+} from "./components/vectorGeometry";
 export { ShapeEditor, type ShapeEditorProps } from "./components/ShapeEditor";
 export {
   fromShapeFrame,

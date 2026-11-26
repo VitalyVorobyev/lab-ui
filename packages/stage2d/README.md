@@ -76,6 +76,17 @@ and the edges between lattice neighbours as two batched paths, each axis restyle
 `@vitavision/charts` maps fit) or an `rgba` buffer as one image, rasterised in an effect, placed over the
 image (or `rect`), pixelated from 4 CSS px per cell. `rasterizePlane` and `planeRange` are pure.
 
+**Vector fields**: `VectorField` draws many arrows (a displacement, a flow, the direction and size of an error) from
+flat `anchors` `[x, y, …]` and `vectors` `[dx, dy, …]` as a halo path and one path per colour step, never one element per vector.
+- **Scale:** a number is image pixels per data unit; `{ length, percentile }` makes the percentile vector span `length`
+  screen pixels at every zoom. The default is the 95th percentile at 28 screen px.
+- **Colour:** one tone (`color` or a `role`), or by magnitude through `colormap` over `range` (the `@vitavision/charts` maps fit).
+- **Absent data:** a non-finite number, or an arrow under one screen pixel, is not drawn.
+- **Pointer:** `onHoverChange` and `onItemPress` pick the vector whose anchor is nearest.
+- **Key:** `VectorFieldKey` shows an arrow of a round length with its value ("0.1 px") at the field's scale, for the
+  stage's readout (`bare` inside a `StageReadout`'s `extra`).
+- **Pure functions:** `arrowPath`, `vectorMagnitudes`, `magnitudePercentile`, `imagePerUnit`, `niceLength`, `colorBin`.
+
 **Rotated shapes**: `ShapeEditor` edits `{ cx, cy, width, height, rotation }` as a rectangle or an ellipse:
 eight handles resize in the shape's own frame (the opposite side stays put), a rotation handle turns it, the
 interior moves it, arrow keys nudge it. **Rotation is radians, clockwise on screen** (Konva's degrees are
