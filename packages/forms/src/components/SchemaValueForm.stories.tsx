@@ -118,6 +118,12 @@ What the schema cannot say — grouping, labels, units, a different control — 
 \`restoreDefaultOnClear\`). Paths are dot paths of the value; \`*\` stands for any array index. \`renderField\`
 takes over any one field.
 
+**Against a baseline**: give \`baseline\` (the defaults, a previous run) and every field that differs gets a rule in the gutter and a
+note under the control — "changed", what it was, and a Reset that writes the baseline's value back through \`onValueChange\`. A
+struct, a variant or a tuple row shows how many leaves under it changed, with one Reset for the block. **Messages**: \`messages\`
+attaches text to fields by dot path (\`solver.max_iters\`, \`cameras.0.id\`), for validation that comes from elsewhere: an error is
+announced as an alert and marks the control invalid, a warning is shown without blocking, and the path \`""\` is the form as a whole.
+
 **Don't** use it for a form whose layout is the product (a wizard, a settings page with sections of unrelated
 controls) — hand-build that from \`Field\` and the \`@vitavision/ui\` controls — or for *options* where "unset"
 must mean "use the server's default" (that is \`SchemaForm\`).
@@ -424,5 +430,53 @@ export const CustomField: Story = {
     await expect(args.onValueChange).toHaveBeenLastCalledWith(expect.objectContaining({ nms_radius: 4 }));
     await expect(canvas.queryByRole("spinbutton", { name: "Nms radius" })).toBeNull();
     await expect(canvas.getByRole("spinbutton", { name: "Blur sigma" })).toBeVisible();
+  },
+};
+
+/** Fields that differ from the defaults are marked, say what they were, and reset one at a time or a block at once. */
+export const AgainstABaseline: Story = {
+  args: {
+    schema: PLANAR,
+    value: {
+      ...PLANAR_VALUE,
+      solver: { ...PLANAR_VALUE.solver, max_iters: 120, verbosity: 1 },
+      distortion_model: "division",
+      init: { ...PLANAR_VALUE.init, fix_k3: false },
+    },
+    baseline: PLANAR_VALUE,
+  },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvasElement.querySelectorAll("[data-change-note]").length).toBeGreaterThanOrEqual(4);
+    await expect(canvasElement.textContent).toContain("was 50");
+    await userEvent.click(canvas.getByRole("button", { name: "Reset Max iters to baseline" }));
+    await waitFor(() => expect(canvas.queryByRole("button", { name: "Reset Max iters to baseline" })).toBeNull());
+    await expect(canvas.getByTestId("value")).toHaveTextContent('"max_iters": 50');
+    // The block's own Reset puts the rest of the solver back.
+    await userEvent.click(canvas.getByRole("button", { name: "Reset Solver to baseline" }));
+    await waitFor(() => expect(canvas.queryByRole("button", { name: "Reset Solver to baseline" })).toBeNull());
+    await expect(canvas.getByTestId("value")).toHaveTextContent('"verbosity": 0');
+  },
+};
+
+/** A backend's verdicts, attached by path: an error blocks nothing in the form but is announced, a warning is shown, a block can carry one. */
+export const MessagesFromABackend: Story = {
+  args: {
+    schema: PLANAR,
+    value: PLANAR_VALUE,
+    messages: {
+      "": "The service rejected this configuration.",
+      "solver.max_iters": "Must be between 1 and 1000 for this solver.",
+      "init.fix_k3": { severity: "warning", text: "Fixing k3 with a wide-angle lens biases the focal length." },
+      fix_camera: { severity: "warning", text: "Every intrinsic is free: the result may not be unique." },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByRole("alert").map((a) => a.textContent)).toEqual([
+      "The service rejected this configuration.",
+      "Must be between 1 and 1000 for this solver.",
+    ]);
+    await expect(canvas.getByRole("spinbutton", { name: "Max iters" })).toHaveAttribute("aria-invalid", "true");
+    await expect(canvas.getByText(/biases the focal length/)).toBeVisible();
+    await expect(canvas.getByText(/may not be unique/)).toBeVisible();
   },
 };

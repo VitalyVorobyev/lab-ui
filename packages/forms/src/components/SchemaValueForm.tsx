@@ -15,12 +15,18 @@ import { useMemo, useState, type Ref } from "react";
 import type { JsonSchema } from "../api/schemaNode";
 import { defaultValueForSchema, fieldAt, shapeOf } from "../api/schemaValue";
 import { fieldUiAt, type RenderField, type UiGroup, type UiSchema } from "../api/uiSchema";
+import { changeCounts, diffPaths } from "../api/valueDiff";
 import { setAtPath } from "../api/valuePath";
 import { Grid } from "./valueForm/chrome";
-import { FormContext, useForm, type FormState } from "./valueForm/context";
+import { FormContext, useForm, type FieldMessage, type FormState } from "./valueForm/context";
 import { FieldNode, ObjectBody } from "./valueForm/nodes";
 
 const NO_UI: UiSchema = {};
+
+/** Messages from the app, by dot path (`""` is the form as a whole). A bare string is an error. */
+export type FieldMessages = Readonly<Record<string, FieldMessage | string>>;
+
+export type { FieldMessage };
 
 /** Props of `SchemaValueForm`. */
 export interface SchemaValueFormProps {
@@ -43,6 +49,23 @@ export interface SchemaValueFormProps {
   onValueChange?: ((next: unknown) => void) | undefined;
   /** Layout the schema cannot carry: groups, labels, units, widgets. */
   ui?: UiSchema | undefined;
+  /**
+   * The value to compare with, such as the defaults or a previous run. A field whose value
+   * differs from it is marked "changed" (a rule in the gutter and a note under the control
+   * saying what it was), with a Reset that writes the baseline's value back through
+   * `onValueChange`; a struct, a variant or a tuple shows how many leaves under it changed
+   * and one Reset for them all. A key missing on one side differs from a key present on the
+   * other; arrays of equal length compare by index, others as a whole. Without it, nothing is marked.
+   */
+  baseline?: unknown;
+  /**
+   * Messages to show on fields, by dot path (`solver.max_iters`, `cameras.0.id`, the paths
+   * `getAtPath` reads), for validation that comes from elsewhere, such as a backend. An `error`
+   * (or a bare string) is announced as an alert and marks the control invalid; a `warning`
+   * is shown under it without blocking. A path of `""` shows above the form. A path that no
+   * visible field has shows nowhere: list those yourself.
+   */
+  messages?: FieldMessages | undefined;
   /** `2` (the default) puts fields side by side from `sm:` up; `1` is one column, for a narrow rail. */
   columns?: 1 | 2 | undefined;
   /** Blocks every control. The value is still shown. */
@@ -99,6 +122,8 @@ export function SchemaValueForm({
   value,
   defaultValue,
   onValueChange,
+  baseline,
+  messages,
   ui = NO_UI,
   columns = 2,
   disabled = false,
@@ -110,6 +135,10 @@ export function SchemaValueForm({
     value,
     () => (defaultValue !== undefined ? defaultValue : defaultValueForSchema(schema)),
     onValueChange,
+  );
+  const compared = useMemo(
+    () => (baseline === undefined ? null : { value: baseline, counts: changeCounts(diffPaths(current, baseline)) }),
+    [current, baseline],
   );
   const claimed = useMemo(() => new Set((ui.groups ?? []).flatMap((group) => group.fields)), [ui.groups]);
 
@@ -126,9 +155,13 @@ export function SchemaValueForm({
     columns,
     renderField,
     claimed,
+    baseline: compared,
+    messages,
   };
 
   const root = shapeOf(schema, schema);
+  const raw = messages?.[""];
+  const formMessage: FieldMessage | undefined = typeof raw === "string" ? { severity: "error", text: raw } : raw;
 
   return (
     <TooltipProvider>
@@ -139,6 +172,15 @@ export function SchemaValueForm({
           data-disabled={disabled ? "" : undefined}
           className={cn("flex min-w-0 flex-col gap-5", className)}
         >
+          {formMessage !== undefined && (
+            <p
+              role={formMessage.severity === "error" ? "alert" : undefined}
+              data-message={formMessage.severity}
+              className={cn("text-xs leading-snug", formMessage.severity === "error" ? "text-defect" : "text-warn")}
+            >
+              {formMessage.text}
+            </p>
+          )}
           {root.kind === "object" && (ui.groups ?? []).map((group) => <GroupBlock key={group.id} group={group} />)}
           {root.kind === "object" ? (
             <ObjectBody path="" fields={root.fields} />

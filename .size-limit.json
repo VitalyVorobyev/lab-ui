@@ -27,7 +27,7 @@
     "path": "packages/forms/dist/index.js",
     "import": "*",
     "ignore": ["@vitavision/ui", "react", "react-dom", "react/jsx-runtime"],
-    "limit": "8.6 kB"
+    "limit": "9.4 kB"
   },
   {
     "name": "@vitavision/charts",
