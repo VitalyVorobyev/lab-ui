@@ -199,8 +199,8 @@ export function ContourLayer({
           textAnchor="middle"
           dominantBaseline="central"
         >
-          {labelled.map((entry, k) => (
-            <text key={k} x={entry.x} y={entry.y}>
+          {labelled.map((entry) => (
+            <text key={`${entry.x},${entry.y},${entry.text}`} x={entry.x} y={entry.y}>
               {entry.text}
             </text>
           ))}

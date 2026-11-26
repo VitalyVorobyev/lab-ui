@@ -195,9 +195,9 @@ export function ColormapLegend({
             <div aria-hidden className="absolute inset-0 rounded-full" style={{ backgroundImage: colormapGradient(map) }} />
             {capLow && <EndCap map={map} end="low" orientation="horizontal" />}
             {capHigh && <EndCap map={map} end="high" orientation="horizontal" />}
-            {markers.map((entry, index) => (
+            {markers.map((entry) => (
               <span
-                key={`m-${index}`}
+                key={`m-${entry.value}-${entry.label ?? ""}`}
                 aria-hidden
                 data-marker-tick=""
                 className="absolute -top-0.5 h-3 w-0.5 -translate-x-1/2 rounded-full bg-fg ring-1 ring-surface"
@@ -205,9 +205,9 @@ export function ColormapLegend({
               />
             ))}
           </div>
-          {markers.map((entry, index) => (
+          {markers.map((entry) => (
             <span
-              key={`mt-${index}`}
+              key={`mt-${entry.value}-${entry.label ?? ""}`}
               data-marker=""
               className="absolute top-0 -translate-x-1/2 whitespace-nowrap font-mono text-[10px] leading-none tabular-nums text-fg"
               style={{ left: `${(fraction(entry.value) * 100).toFixed(2)}%` }}
@@ -215,9 +215,9 @@ export function ColormapLegend({
               {markerText(entry)}
             </span>
           ))}
-          {values.map((value, index) => (
+          {values.map((value) => (
             <span
-              key={`${value}-${index}`}
+              key={value}
               data-tick=""
               className={cn("absolute -translate-x-1/2 font-mono text-[10px] tabular-nums", markers.length > 0 ? "top-7" : "top-3")}
               style={{ left: `${(fraction(value) * 100).toFixed(2)}%` }}
@@ -243,9 +243,9 @@ export function ColormapLegend({
           <div aria-hidden className="absolute inset-0 rounded-full" style={{ backgroundImage: colormapGradient(map, "to top") }} />
           {capLow && <EndCap map={map} end="low" orientation="vertical" />}
           {capHigh && <EndCap map={map} end="high" orientation="vertical" />}
-          {markers.map((entry, index) => (
+          {markers.map((entry) => (
             <span
-              key={`m-${index}`}
+              key={`m-${entry.value}-${entry.label ?? ""}`}
               aria-hidden
               data-marker-tick=""
               className="absolute -left-0.5 -right-0.5 h-0.5 translate-y-1/2 rounded-full bg-fg ring-1 ring-surface"
@@ -254,9 +254,9 @@ export function ColormapLegend({
           ))}
         </div>
         <div className="relative ml-1.5 min-w-8">
-          {values.map((value, index) => (
+          {values.map((value) => (
             <span
-              key={`${value}-${index}`}
+              key={value}
               data-tick=""
               className="absolute left-0 translate-y-1/2 whitespace-nowrap font-mono text-[10px] leading-none tabular-nums"
               style={{ bottom: `${(fraction(value) * 100).toFixed(2)}%` }}
@@ -267,9 +267,9 @@ export function ColormapLegend({
         </div>
         {markers.length > 0 && (
           <div className="relative ml-1.5 min-w-8">
-            {markers.map((entry, index) => (
+            {markers.map((entry) => (
               <span
-                key={`mt-${index}`}
+                key={`mt-${entry.value}-${entry.label ?? ""}`}
                 data-marker=""
                 className="absolute left-0 translate-y-1/2 whitespace-nowrap font-mono text-[10px] leading-none tabular-nums text-fg"
                 style={{ bottom: `${(fraction(entry.value) * 100).toFixed(2)}%` }}

@@ -44,6 +44,15 @@ export { acceptsFile, acceptsPath, collectDroppedFiles, type DropEntry } from ".
 export { SequenceNavigator, type SequenceItem, type SequenceItemStatus, type SequenceNavigatorProps } from "./components/SequenceNavigator";
 export { stepIndex } from "./components/sequence";
 
+export {
+  SequenceMatrix,
+  type SequenceMatrixCellState,
+  type SequenceMatrixColumn,
+  type SequenceMatrixProps,
+  type SequenceMatrixRow,
+  type SequenceMatrixSelection,
+} from "./components/SequenceMatrix";
+
 export { Stepper, type StepperProps, type StepperStep } from "./components/Stepper";
 export { type StepGate, type StepState, type StepView, stepStates } from "./components/stepperModel";
 
