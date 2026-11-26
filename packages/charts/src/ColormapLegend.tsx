@@ -226,7 +226,7 @@ export function ColormapLegend({
             </span>
           ))}
         </div>
-        {unit && <span className="text-fg-subtle">{unit}</span>}
+        {unit && <span className={cn("text-fg-subtle", markers.length > 0 && "pt-4")}>{unit}</span>}
       </div>
     );
   }
