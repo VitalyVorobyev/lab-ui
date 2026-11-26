@@ -10,6 +10,22 @@ import { createContext, use } from "react";
 import type { JsonSchema } from "../../api/schemaNode";
 import type { RenderField, UiSchema } from "../../api/uiSchema";
 
+/** A message the app attaches to a field, such as a backend's verdict on a value. */
+export interface FieldMessage {
+  /** `error` is announced as an alert and marks the control invalid; `warning` is shown without blocking. */
+  severity: "error" | "warning";
+  /** What to tell the person. */
+  text: string;
+}
+
+/** The form's comparison with its baseline, computed once per value. */
+export interface BaselineState {
+  /** The value the form compares with. */
+  value: unknown;
+  /** How many differing leaves lie at or under each path (see `changeCounts`). */
+  counts: ReadonlyMap<string, number>;
+}
+
 /** The form's state, for the nodes below it. */
 export interface FormState {
   /** The root schema, which also holds `$defs`. */
@@ -26,6 +42,10 @@ export interface FormState {
   columns: 1 | 2;
   /** The app's escape hatch. */
   renderField: RenderField | undefined;
+  /** The comparison with the baseline, or `null` when the form has none. */
+  baseline: BaselineState | null;
+  /** The app's messages, by dot path (`""` is the form as a whole). */
+  messages: Readonly<Record<string, FieldMessage | string>> | undefined;
   /** Paths a group has claimed, so the ungrouped remainder skips them. */
   claimed: ReadonlySet<string>;
 }

@@ -108,6 +108,16 @@ export function areasInRect(index: AreaIndex, rect: Rect): AreaId[];
 export function arrowHeadPoints(tip: Point, angle: number, size: number): [Point, Point, Point];
 
 // @public
+export function arrowPath(x: number, y: number, dx: number, dy: number, unit: number, style: ArrowStyle): string;
+
+// @public
+export interface ArrowStyle {
+    head: number;
+    headWidth: number;
+    minLength: number;
+}
+
+// @public
 export interface Box {
     height: number;
     width: number;
@@ -181,6 +191,9 @@ export function clampToImage(p: Point, image: Box): Point;
 
 // @public
 export function clampView(view: StageView, box: Box, image: Box, options?: ClampOptions): StageView;
+
+// @public
+export function colorBin(magnitude: number, low: number, high: number, bins?: number): number;
 
 // @public
 export type Colormap = (t: number) => readonly [number, number, number];
@@ -598,6 +611,9 @@ export type ImageLayerProps = ImageLayerBaseProps & ({
 export function imageLengthFor(view: StageView, css: number): number;
 
 // @public
+export function imagePerUnit(scale: VectorScale, referenceMagnitude: number, imagePerScreenPx: number): number;
+
+// @public
 export function ImageStage(input: ImageStageProps): JSX.Element;
 
 // @public
@@ -663,6 +679,9 @@ export interface LatticeNode {
     i: number;
     j: number;
 }
+
+// @public
+export function magnitudePercentile(magnitudes: ArrayLike<number>, p: number): number;
 
 // @public
 export const MARKER_SHAPES: Readonly<Record<BuiltinMarkerKind, MarkerShape>>;
@@ -773,6 +792,9 @@ export function nearestPoint(index: PointIndex, x: number, y: number, radius: nu
 
 // @public
 export function nearestPolyline(index: PolylineIndex, p: Point, radius: number): PolylineHit | null;
+
+// @public
+export function niceLength(max: number): number;
 
 // @public
 export function normalAtArc(points: readonly Point[], s: number, closed?: boolean): Point;
@@ -1398,6 +1420,12 @@ export function useStageHitLayer(options: StageHitLayerOptions): string;
 export function useStageHitTest(): StageHitTestApi;
 
 // @public
+export function useVectorScale(vectors: ArrayLike<number>, scale?: VectorScale): {
+    reference: number;
+    perUnit: number;
+};
+
+// @public
 export function valueAt(plane: ValuePlane, u: number, v: number, channel?: number): number | null;
 
 // @public
@@ -1417,6 +1445,58 @@ export interface ValueRange {
 
 // @public
 export function valuesAt(plane: ValuePlane, u: number, v: number): number[];
+
+// @public
+export const VECTOR_COLOR_BINS = 24;
+
+// @public
+export function VectorField(input: VectorFieldProps): JSX.Element;
+
+// @public
+export function VectorFieldKey(input: VectorFieldKeyProps): JSX.Element | null;
+
+// @public
+export interface VectorFieldKeyProps {
+    bare?: boolean | undefined;
+    className?: string | undefined;
+    format?: ((value: number) => string) | undefined;
+    length?: number | undefined;
+    scale?: VectorScale | undefined;
+    unit?: string | undefined;
+    vectors: ArrayLike<number>;
+}
+
+// @public
+export interface VectorFieldProps {
+    anchors: ArrayLike<number>;
+    color?: string | undefined;
+    colormap?: Colormap | undefined;
+    halo?: boolean | undefined;
+    hoveredId?: PointId | null | undefined;
+    ids?: ArrayLike<PointId> | undefined;
+    label?: string | undefined;
+    layerId?: string | undefined;
+    onHoverChange?: ((id: PointId | null) => void) | undefined;
+    onItemPress?: ((id: PointId, event: StagePointerEvent) => void) | undefined;
+    pickable?: boolean | undefined;
+    priority?: number | undefined;
+    range?: ValueRange | undefined;
+    role?: OverlayRole | undefined;
+    scale?: VectorScale | undefined;
+    vectors: ArrayLike<number>;
+}
+
+// @public
+export function vectorMagnitude(vectors: ArrayLike<number>, i: number): number;
+
+// @public
+export function vectorMagnitudes(vectors: ArrayLike<number>): Float64Array;
+
+// @public
+export type VectorScale = number | {
+    length: number;
+    percentile?: number | undefined;
+};
 
 // @public
 export interface View {

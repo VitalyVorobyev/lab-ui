@@ -279,3 +279,87 @@ describe("Table sorting", () => {
     expect(ids()).toEqual(["a", "b", "c"]);
   });
 });
+
+describe("Table column groups", () => {
+  type Run = { id: number; a: number; b: number; c: number };
+  const RUNS: Run[] = [
+    { id: 1, a: 1.5, b: 2.5, c: 3.5 },
+    { id: 2, a: 4.5, b: 5.5, c: 6.5 },
+  ];
+  const GROUPED: Column<Run>[] = [
+    { key: "id", header: "Frame", cell: (row) => row.id },
+    { key: "a", header: "x", numeric: true, group: "Run A", cell: (row) => row.a },
+    { key: "b", header: "y", numeric: true, group: "Run A", cell: (row) => row.b },
+    { key: "c", header: "x", numeric: true, group: "Run B", cell: (row) => row.c },
+  ];
+  const draw = (extra: Partial<ComponentProps<typeof Table<Run>>> = {}) =>
+    render(<Table columns={GROUPED} rows={RUNS} rowKey={(row) => row.id} caption="Runs" {...extra} />);
+
+  it("adds a header row whose cells span the columns that share a group", () => {
+    draw();
+    const groups = screen.getAllByRole("columnheader").filter((cell) => cell.getAttribute("scope") === "colgroup");
+    expect(groups.map((cell) => [cell.textContent, cell.getAttribute("colspan")])).toEqual([
+      ["Run A", "2"],
+      ["Run B", "1"],
+    ]);
+    // Two header rows and two body rows.
+    expect(screen.getAllByRole("row")).toHaveLength(4);
+  });
+
+  it("gives ungrouped columns an empty cell rather than an empty header", () => {
+    const { container } = draw();
+    const first = container.querySelector("thead tr")!.firstElementChild!;
+    expect(first.tagName).toBe("TD");
+    expect(first.textContent).toBe("");
+  });
+
+  it("draws no group row when no column has a group", () => {
+    renderTable();
+    expect(screen.getAllByRole("columnheader").filter((cell) => cell.getAttribute("scope") === "colgroup")).toHaveLength(0);
+    expect(screen.getAllByRole("row")).toHaveLength(3);
+  });
+
+  it("keeps sorting on the column headers beneath the groups", () => {
+    const columns = GROUPED.map((column) => (column.key === "a" ? { ...column, sortValue: (row: Run) => row.a } : column));
+    const { container } = render(<Table columns={columns} rows={RUNS} rowKey={(row) => row.id} />);
+    fireEvent.click(screen.getByRole("button", { name: "x" }));
+    expect(container.querySelector('th[aria-sort="ascending"]')?.textContent).toBe("x");
+  });
+
+  it("counts the group row in a windowed table's row numbers", () => {
+    const { container } = draw({ windowed: { rowHeight: 36, height: 200 } });
+    expect(container.querySelector("table")!.getAttribute("aria-rowcount")).toBe("4");
+    expect([...container.querySelectorAll("tr[aria-rowindex]")].map((row) => row.getAttribute("aria-rowindex"))).toEqual([
+      "1",
+      "2",
+      "3",
+      "4",
+    ]);
+  });
+});
+
+describe("Table pinned first column", () => {
+  it("sticks the first header and body cells to the left, and no others", () => {
+    const { container } = renderTable({ pinFirstColumn: true });
+    const heads = [...container.querySelectorAll("thead th")];
+    expect(heads[0]!.className).toContain("sticky");
+    expect(heads[0]!.className).toContain("left-0");
+    expect(heads[1]!.className).not.toContain("sticky");
+    const cells = [...container.querySelectorAll("tbody tr:first-child td")];
+    expect(cells[0]!.className).toContain("sticky");
+    expect(cells[1]!.className).not.toContain("sticky");
+  });
+
+  it("is off by default", () => {
+    const { container } = renderTable();
+    expect(container.querySelector("th.sticky, td.sticky")).toBeNull();
+  });
+
+  it("keeps the active and hovered tint on the opaque pinned cell", () => {
+    const { container } = renderTable({ pinFirstColumn: true, onRowClick: () => {}, isRowActive: (row) => row.id === 0 });
+    const [first, second] = [...container.querySelectorAll("tbody tr")].map((row) => row.firstElementChild!);
+    expect(first!.className).toContain("group-hover/row:bg-raised");
+    expect(first!.className).not.toContain("color-mix");
+    expect(second!.className).toContain("color-mix");
+  });
+});

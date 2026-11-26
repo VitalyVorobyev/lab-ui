@@ -85,6 +85,20 @@ export interface PlayheadSource {
 }
 
 // @public
+export function PointCloud(input: PointCloudProps): JSX;
+
+// @public
+export interface PointCloudProps {
+    color?: string | undefined;
+    colors?: ArrayLike<number> | undefined;
+    opacity?: number | undefined;
+    physical?: boolean | undefined;
+    positions: ArrayLike<number>;
+    size?: number | undefined;
+    sizeAttenuation?: boolean | undefined;
+}
+
+// @public
 export function Robot(input: RobotProps): JSX;
 
 // @public

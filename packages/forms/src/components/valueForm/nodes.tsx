@@ -16,6 +16,7 @@ import { activeExternal, activeTagged, seedNotNull, seedVariant, shapeOf, type F
 import { fieldUiAt } from "../../api/uiSchema";
 import { getAtPath, joinPath } from "../../api/valuePath";
 import { Grid, spanClass, useChrome, type FieldMeta } from "./chrome";
+import { ErrorText, useFieldExtras, withNotes } from "./changes";
 import { Chooser, BooleanLeaf, EnumLeaf, JsonLeaf, NumberLeaf, StringListLeaf, TextLeaf } from "./leaves";
 import { DenseContext, useForm } from "./context";
 
@@ -161,14 +162,17 @@ function Frame({ meta, bare, children }: { meta: FieldMeta; bare: boolean; child
   const dense = use(DenseContext);
   const density = useDensity();
   const chrome = useChrome(meta);
+  const extras = useFieldExtras(meta);
   if (bare) return <div className="flex min-w-0 flex-col gap-3">{children}</div>;
 
   return (
     <fieldset
+      data-changed={extras.changed ? "" : undefined}
       className={cn(
         "flex min-w-0 flex-col gap-3 rounded-panel border border-line",
         byDensity(density, "p-3", "p-2"),
         !dense && spanClass(form.columns, meta.ui, 2),
+        extras.className,
       )}
     >
       <legend className="px-1">
@@ -178,6 +182,8 @@ function Frame({ meta, bare, children }: { meta: FieldMeta; bare: boolean; child
         </span>
       </legend>
       {chrome.description !== undefined && <p className="text-xs leading-snug text-fg-muted">{chrome.description}</p>}
+      {extras.error !== undefined && <ErrorText text={extras.error} />}
+      {extras.notes !== undefined && <div className="text-xs">{extras.notes}</div>}
       {children}
     </fieldset>
   );
@@ -295,18 +301,19 @@ function TupleNode({ meta, shape, bare }: { meta: FieldMeta; shape: TupleShape; 
 function NullableNode({ meta, shape }: { meta: FieldMeta; shape: SchemaShape }) {
   const form = useForm();
   const chrome = useChrome(meta);
+  const extras = useFieldExtras(meta);
   const value = getAtPath(form.value, meta.path);
   const set = value !== null && value !== undefined;
   const props = {
     checked: set,
     label: meta.label,
-    description: chrome.description,
+    description: withNotes(withNotes(chrome.description, extras.error ? <ErrorText text={extras.error} /> : undefined), extras.notes),
     disabled: form.disabled,
     onCheckedChange: (next: boolean) => form.setValue(meta.path, next ? seedNotNull(meta.node, form.schema) : null),
   };
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-3", spanClass(form.columns, meta.ui, 2))}>
+    <div className={cn("flex min-w-0 flex-col gap-3", spanClass(form.columns, meta.ui, 2), extras.className)}>
       <div className="flex items-start gap-1.5">
         {meta.ui.widget === "checkbox" ? <Checkbox {...props} /> : <Switch {...props} />}
         {chrome.hint !== null && <span className="mt-0.5">{chrome.hint}</span>}

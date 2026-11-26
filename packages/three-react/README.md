@@ -35,6 +35,8 @@ tokens at runtime.
 - `FrameTree` / `AtFrame` / `useFrameTree` — a baked scenario as a frame graph; children of
   `AtFrame` live in that frame.
 - `Robot`, `CameraFrustum`, `LaserFan`, `TargetBoard`, `LightGizmo`, `FrameAxes`.
+- `PointCloud` — many points as one draw call (`positions`, optional per-point `colors`, `size` in pixels or metres,
+  `opacity`); the `fg` token by default; viewer-only unless `physical`; not pickable.
 - `SensorImage` — a camera's calibrated image of the enclosing `FrameTree` (a `SensorView`
   on its own canvas, physical layer only) at the playhead. It redraws only when the playhead's
   sample, the theme or the scene changes, and not while it is out of view.

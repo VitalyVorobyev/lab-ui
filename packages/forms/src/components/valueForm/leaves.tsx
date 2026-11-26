@@ -28,6 +28,7 @@ import { defaultValueForSchema } from "../../api/schemaValue";
 import { getAtPath } from "../../api/valuePath";
 import type { FieldWidget } from "../../api/uiSchema";
 import { useChrome, spanClass, type FieldMeta } from "./chrome";
+import { ErrorText, useFieldExtras, withNotes } from "./changes";
 import { DenseContext, useForm } from "./context";
 
 /** `required` as the marker shows it: a nullable field is never mandatory. */
@@ -54,6 +55,7 @@ export function NumberLeaf({ meta }: { meta: FieldMeta }) {
   const value = getAtPath(form.value, meta.path);
   const spec = numberSpec(meta.schema, meta.ui);
   const chrome = useChrome(meta, rangeText(spec));
+  const extras = useFieldExtras(meta);
   const [error, setError] = useState<string | undefined>();
 
   const fallback = meta.schema.default;
@@ -78,9 +80,9 @@ export function NumberLeaf({ meta }: { meta: FieldMeta }) {
       label={meta.label}
       required={marked(meta)}
       annotation={chrome.annotation}
-      description={chrome.description}
-      error={error}
-      className={spanClass(form.columns, meta.ui, 1)}
+      description={withNotes(chrome.description, extras.notes)}
+      error={error ?? extras.error}
+      className={cn(spanClass(form.columns, meta.ui, 1), extras.className)}
     >
       <NumberInput
         aria-label={meta.label}
@@ -113,6 +115,7 @@ export function TextLeaf({ meta }: { meta: FieldMeta }) {
   const form = useForm();
   const value = getAtPath(form.value, meta.path);
   const chrome = useChrome(meta);
+  const extras = useFieldExtras(meta);
   const fallback = meta.schema.default;
 
   return (
@@ -120,8 +123,9 @@ export function TextLeaf({ meta }: { meta: FieldMeta }) {
       label={meta.label}
       required={marked(meta)}
       annotation={chrome.annotation}
-      description={chrome.description}
-      className={spanClass(form.columns, meta.ui, 1)}
+      description={withNotes(chrome.description, extras.notes)}
+      error={extras.error}
+      className={cn(spanClass(form.columns, meta.ui, 1), extras.className)}
     >
       <Input
         className="font-mono"
@@ -185,6 +189,7 @@ export function EnumLeaf({ meta, options }: { meta: FieldMeta; options: EnumOpti
   const dense = use(DenseContext);
   const value = getAtPath(form.value, meta.path);
   const chrome = useChrome(meta);
+  const extras = useFieldExtras(meta);
 
   const shown = options.map((option) => ({
     value: String(option.value),
@@ -211,8 +216,9 @@ export function EnumLeaf({ meta, options }: { meta: FieldMeta; options: EnumOpti
       label={meta.label}
       required={marked(meta)}
       annotation={chrome.annotation}
-      description={description}
-      className={spanClass(form.columns, meta.ui, 1)}
+      description={withNotes(description, extras.notes)}
+      error={extras.error}
+      className={cn(spanClass(form.columns, meta.ui, 1), extras.className)}
     >
       <Chooser
         label={meta.label}
@@ -239,16 +245,17 @@ export function BooleanLeaf({ meta }: { meta: FieldMeta }) {
   const form = useForm();
   const value = getAtPath(form.value, meta.path);
   const chrome = useChrome(meta);
+  const extras = useFieldExtras(meta);
   const props = {
     checked: value === true,
     onCheckedChange: (next: boolean) => form.setValue(meta.path, next),
     label: meta.label,
-    description: chrome.description,
+    description: withNotes(withNotes(chrome.description, extras.error ? <ErrorText text={extras.error} /> : undefined), extras.notes),
     disabled: form.disabled,
   };
 
   return (
-    <div className={cn("flex min-w-0 items-start gap-1.5", spanClass(form.columns, meta.ui, 1))}>
+    <div className={cn("flex min-w-0 items-start gap-1.5", spanClass(form.columns, meta.ui, 1), extras.className)}>
       {meta.ui.widget === "checkbox" ? <Checkbox {...props} /> : <Switch {...props} />}
       {chrome.hint !== null && <span className="mt-0.5">{chrome.hint}</span>}
     </div>
@@ -270,6 +277,7 @@ export function JsonLeaf({ meta }: { meta: FieldMeta }) {
   const form = useForm();
   const value = getAtPath(form.value, meta.path);
   const chrome = useChrome(meta);
+  const extras = useFieldExtras(meta);
   const canonical = JSON.stringify(value) ?? "";
   const [draft, setDraft] = useState<{ text: string; error: string | undefined; base: string }>(() => ({
     text: pretty(value),
@@ -302,9 +310,9 @@ export function JsonLeaf({ meta }: { meta: FieldMeta }) {
       label={meta.label}
       required={marked(meta)}
       annotation={chrome.annotation}
-      description={chrome.description}
-      error={draft.error}
-      className={spanClass(form.columns, meta.ui, 2)}
+      description={withNotes(chrome.description, extras.notes)}
+      error={draft.error ?? extras.error}
+      className={cn(spanClass(form.columns, meta.ui, 2), extras.className)}
     >
       <Textarea
         mono
@@ -351,6 +359,7 @@ export function StringListLeaf({
   const form = useForm();
   const value = getAtPath(form.value, meta.path);
   const chrome = useChrome(meta);
+  const extras = useFieldExtras(meta);
   const raw: unknown[] = Array.isArray(value) ? (value as unknown[]) : [];
   const [rows, setRows] = useState<RowIds>(() => syncIds({ ids: [], next: 0 }, raw.length));
   const synced = syncIds(rows, raw.length);
@@ -366,8 +375,9 @@ export function StringListLeaf({
       label={meta.label}
       required={marked(meta)}
       annotation={chrome.annotation}
-      description={chrome.description}
-      className={spanClass(form.columns, meta.ui, 2)}
+      description={withNotes(chrome.description, extras.notes)}
+      error={extras.error}
+      className={cn(spanClass(form.columns, meta.ui, 2), extras.className)}
     >
       <div className="flex flex-col gap-1.5">
         {raw.map((entry, index) => (

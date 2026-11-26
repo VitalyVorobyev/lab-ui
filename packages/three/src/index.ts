@@ -31,6 +31,7 @@ export { Axes, type AxesColors } from "./primitives/axes";
 export { CameraFrustum, type CameraFrustumOptions, imageBorderPixels } from "./primitives/frustum";
 export { LaserFan, type LaserFanOptions } from "./primitives/laserFan";
 export { LightGizmo, type LightShapeLike } from "./primitives/lightGizmo";
+export { PointCloud, type FinitePoints, type PointCloudOptions, finitePoints } from "./primitives/pointCloud";
 export { TargetBoard, type TargetBoardOptions } from "./primitives/targetBoard";
 export {
   type MeshLoader,

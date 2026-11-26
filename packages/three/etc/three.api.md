@@ -4,6 +4,7 @@
 
 ```ts
 
+import { Box3 } from 'three';
 import { BufferGeometry } from 'three';
 import { ColorRepresentation } from 'three';
 import { Group } from 'three';
@@ -14,6 +15,8 @@ import { Mesh } from 'three';
 import { MeshStandardMaterial } from 'three';
 import { Object3D } from 'three';
 import { PerspectiveCamera } from 'three';
+import { Points } from 'three';
+import { PointsMaterial } from 'three';
 import { Vector3 } from 'three';
 import { WebGLRenderer } from 'three';
 import { WebGLRenderTarget } from 'three';
@@ -92,6 +95,16 @@ export const CV_TO_GL: Readonly<Matrix4>;
 
 // @public
 export function disposeObject(root: Object3D): void;
+
+// @public
+export interface FinitePoints {
+    count: number;
+    kept: Uint32Array | null;
+    positions: Float32Array;
+}
+
+// @public
+export function finitePoints(positions: ArrayLike<number>): FinitePoints;
 
 // @public
 export class FrameTreeRuntime {
@@ -197,6 +210,28 @@ export const PHYSICAL_LAYER = 0;
 
 // @public
 export type PixelCentre = "integer" | "half";
+
+// @public
+export class PointCloud extends Points<BufferGeometry, PointsMaterial> {
+    constructor(input: PointCloudOptions);
+    get bounds(): Box3;
+    get count(): number;
+    setColor(color: ColorRepresentation): void;
+    setOpacity(opacity: number): void;
+    setPoints(positions: ArrayLike<number>, colors?: ArrayLike<number>): void;
+    setSize(size: number): void;
+}
+
+// @public
+export interface PointCloudOptions {
+    color?: ColorRepresentation | undefined;
+    colors?: ArrayLike<number> | undefined;
+    layer?: number | undefined;
+    opacity?: number | undefined;
+    positions: ArrayLike<number>;
+    size?: number | undefined;
+    sizeAttenuation?: boolean | undefined;
+}
 
 // @public
 export function quaternionFromRpy(rpy: ArrayLike<number>): [number, number, number, number];

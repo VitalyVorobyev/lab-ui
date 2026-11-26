@@ -851,3 +851,122 @@ describe("ringgrid target_spec", () => {
     expect((last() as { lattice: { kind: string; rows: number } }).lattice).toMatchObject({ kind: "hex", rows: 7 });
   });
 });
+
+describe("baseline", () => {
+  const BASELINE = PLANAR_VALUE;
+  const EDITED = { ...PLANAR_VALUE, solver: { ...PLANAR_VALUE.solver, max_iters: 80 }, distortion_model: "division" };
+
+  it("marks nothing without a baseline, and nothing while the value equals it", () => {
+    const none = setup(PLANAR, PLANAR_VALUE);
+    expect(none.container.querySelector("[data-change-note]")).toBeNull();
+    none.unmount();
+    const same = setup(PLANAR, PLANAR_VALUE, { baseline: BASELINE });
+    expect(same.container.querySelector("[data-change-note]")).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Reset/ })).toBeNull();
+  });
+
+  it("marks a changed field, says what it was, and leaves its neighbours alone", () => {
+    const { container } = setup(PLANAR, EDITED, { baseline: BASELINE });
+    const notes = [...container.querySelectorAll("[data-change-note]")].map((note) => note.textContent);
+    // The number and the model changed, and the block holding the number says so too.
+    expect(notes).toHaveLength(3);
+    expect(notes.some((text) => text?.includes("changed") && text.includes("was 50"))).toBe(true);
+    expect(notes.some((text) => text?.includes("was brown_conrady5"))).toBe(true);
+    expect(screen.getByRole("button", { name: "Reset Max iters to baseline" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Reset Verbosity to baseline" })).toBeNull();
+  });
+
+  it("resets one field through onValueChange, to the baseline's value", () => {
+    const { last } = setup(PLANAR, EDITED, { baseline: BASELINE });
+    fireEvent.click(screen.getByRole("button", { name: "Reset Max iters to baseline" }));
+    expect(last()).toEqual({ ...EDITED, solver: { ...EDITED.solver, max_iters: 50 } });
+    // Once reset, the marker and its button are gone.
+    expect(screen.queryByRole("button", { name: "Reset Max iters to baseline" })).toBeNull();
+  });
+
+  it("marks a changed leaf of a block with how many changed under it, and resets them together", () => {
+    const edited = { ...PLANAR_VALUE, solver: { max_iters: 80, verbosity: 2, robust_loss: "None" } };
+    const { last, container } = setup(PLANAR, edited, { baseline: BASELINE });
+    const fieldset = [...container.querySelectorAll("fieldset")].find((f) => f.querySelector("legend")?.textContent?.includes("Solver"))!;
+    expect(fieldset.hasAttribute("data-changed")).toBe(true);
+    expect(within(fieldset as HTMLElement).getByText("2 changed")).toBeTruthy();
+    fireEvent.click(within(fieldset as HTMLElement).getByRole("button", { name: "Reset Solver to baseline" }));
+    expect(last()).toEqual(PLANAR_VALUE);
+  });
+
+  it("restores a key the edit removed", () => {
+    const without = { ...PLANAR_VALUE, solver: { max_iters: 50, verbosity: 0 } };
+    const { last } = setup(PLANAR, without, { baseline: BASELINE });
+    fireEvent.click(screen.getByRole("button", { name: "Reset Solver to baseline" }));
+    expect(last()).toEqual(PLANAR_VALUE);
+  });
+
+  it("removes a key the baseline lacks", () => {
+    const { solver: _solver, ...rest } = PLANAR_VALUE;
+    const { last } = setup(PLANAR, { ...rest, solver: { max_iters: 50 } }, { baseline: rest });
+    fireEvent.click(screen.getByRole("button", { name: "Reset Solver to baseline" }));
+    expect(last()).toEqual(rest);
+  });
+
+  it("cannot reset a disabled form", () => {
+    setup(PLANAR, EDITED, { baseline: BASELINE, disabled: true });
+    expect(screen.getByRole("button", { name: "Reset Max iters to baseline" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("follows the baseline when it changes", () => {
+    const { rerender, spy } = setup(PLANAR, EDITED, { baseline: BASELINE });
+    expect(screen.queryByRole("button", { name: "Reset Max iters to baseline" })).not.toBeNull();
+    rerender(<Harness schema={PLANAR} initial={EDITED} spy={spy} baseline={EDITED} />);
+    expect(screen.queryByRole("button", { name: "Reset Max iters to baseline" })).toBeNull();
+  });
+});
+
+describe("messages", () => {
+  it("shows an error on its field, as an alert that marks the control invalid", () => {
+    setup(PLANAR, PLANAR_VALUE, { messages: { "solver.max_iters": "Must be at least 1 for this solver" } });
+    const alert = screen.getByRole("alert");
+    expect(alert.textContent).toBe("Must be at least 1 for this solver");
+    expect(screen.getByRole("spinbutton", { name: "Max iters" }).getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByRole("spinbutton", { name: "Verbosity" }).getAttribute("aria-invalid")).toBeNull();
+  });
+
+  it("shows a warning under the field without marking it invalid", () => {
+    setup(PLANAR, PLANAR_VALUE, { messages: { "solver.max_iters": { severity: "warning", text: "Slow above 200" } } });
+    expect(screen.getByText("Slow above 200")).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("spinbutton", { name: "Max iters" }).getAttribute("aria-invalid")).toBeNull();
+  });
+
+  it("shows a message for a block under its legend, and one for the form above it", () => {
+    const { container } = setup(PLANAR, PLANAR_VALUE, { messages: { solver: "Inconsistent solver settings", "": "Config rejected" } });
+    expect(screen.getByText("Inconsistent solver settings")).toBeTruthy();
+    const top = screen.getByText("Config rejected");
+    expect(top.getAttribute("role")).toBe("alert");
+    expect(container.firstElementChild!.firstElementChild).toBe(top);
+  });
+
+  it("shows a message on a switch and a choice", () => {
+    setup(PLANAR, PLANAR_VALUE, { messages: { "init.fix_k3": "Not with this model", distortion_model: "Unknown model" } });
+    expect(screen.getByText("Not with this model")).toBeTruthy();
+    expect(screen.getByText("Unknown model")).toBeTruthy();
+  });
+
+  it("keeps a typed number's own error ahead of the message", () => {
+    setup(PLANAR, PLANAR_VALUE, { messages: { "solver.max_iters": "From the backend" } });
+    typeNumber("Max iters", "2.5");
+    expect(screen.getAllByRole("alert").map((a) => a.textContent)).toEqual(["Must be a whole number"]);
+  });
+
+  it("goes with a changed note under one description", () => {
+    setup(
+      PLANAR,
+      { ...PLANAR_VALUE, solver: { ...PLANAR_VALUE.solver, max_iters: 80 } },
+      {
+        baseline: PLANAR_VALUE,
+        messages: { "solver.max_iters": { severity: "warning", text: "Slow above 200" } },
+      },
+    );
+    expect(screen.getByText("Slow above 200")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Reset Max iters to baseline" })).toBeTruthy();
+  });
+});

@@ -22,8 +22,16 @@ is accepted.
 `Frame` + `Legend` (the axes/grid/label shell every chart composes), `LineChart`
 (multi-series, optional log y), `StackedBars`, `Histogram` (one distribution from raw
 `values` or pre-binned `counts`, with markers, a cursor bin and hover/pick), `ScoreHistogram` (two-class
-distribution with a threshold rule), and `LineProfile` (one or more series against arc length in pixels
+distribution with a threshold rule), `ScatterChart` (below), and `LineProfile` (one or more series against arc length in pixels
 along a scan line or caliper axis, with detected edges drawn as labelled vertical rules).
+
+**Scatter**: `ScatterChart` plots `series` of `{ x, y, value? }` points on the same frame, palette and variants.
+- **Colour by value:** `colourBy={{ map, label, unit }}` colours each point through a map, with the scale in the
+  footer; a diverging map is centred on zero.
+- **Reference lines:** `referenceLines` draw a dashed rule at a value of either axis, with a label and a tone.
+- **Pointer:** `onHover` rings the nearest point and reads its numbers, `onPick` reports a click's point, and
+  `highlighted` rings one chosen elsewhere.
+- Points are a few batched paths, not one element each.
 
 **Fitting a chart to its container**: `variant="fluid"` takes the container's width at a fixed
 `height`, for a chart in a resizable inspector.
@@ -33,9 +41,15 @@ along a scan line or caliper axis, with detected edges drawn as labelled vertica
 - `cursor` draws an x chosen elsewhere, such as the pointer on the canvas a profile came from.
 - `bands` shade x ranges, and `markers` tick positions on the x axis.
 
-**Sequential colour maps**: `colormap("viridis" | "cividis", t)` and
-`colormapValue(map, value, domain)`, for a magnitude such as an error, a validity or a
-confidence. `ColormapLegend` shows the scale with its units; a map is never shown without one.
+**Colour maps**: `colormap(name, t)` and `colormapValue(map, value, domain)`, for a magnitude such as an error, a validity
+or a confidence, or for a signed value around zero.
+- **Sequential:** `viridis` (the default), `cividis` (for an unknown reader's colour vision), `magma` and `inferno`
+  (black to a pale end, for a heatmap over a dark image).
+- **Diverging:** `blueOrange`, from a deep blue through a neutral light grey to a deep orange, with both arms falling in
+  lightness at the same rate. Centre a domain on zero with `symmetricDomain`; `isDivergingColormap` tells the two kinds apart.
+- **Legend:** `ColormapLegend` shows the scale with its units; a map is never shown without one. It stands vertical
+  beside a map with `orientation="vertical"`, labels values along the bar with `ticks` (a list, or a rough count), and
+  with `symmetric` centres a diverging scale on zero.
 
 ## License
 

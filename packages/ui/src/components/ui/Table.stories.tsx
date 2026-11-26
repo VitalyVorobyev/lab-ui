@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ComponentProps, useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
+import { DeltaCell } from "./DeltaCell";
 import { DensityProvider } from "./Density";
 import { type Column, Table } from "./Table";
 import { sortRows, type TableSort } from "./tableSort";
@@ -129,6 +130,12 @@ order. The table keeps the sort (from \`defaultSort\`) or follows \`sort\` and \
 with \`manualSort\` the app orders the rows and the headers only show the sort. Row callbacks get
 each row's index in \`rows\`, whatever the order on screen. \`sortRows\` gives the same order
 outside the table.
+
+**Column groups**: give columns a \`group\` label and a header row appears above the column headers; adjacent columns
+with the same label sit under one cell that spans them, with a rule under its label, and columns with none get an empty
+cell. **Pinned column**: \`pinFirstColumn\` keeps the first column in view while the others scroll sideways in a table
+wider than its container; it is drawn on \`surface\` with a rule on its right edge. Both work with sorting, windowing and
+the keyboard, and a \`DeltaCell\` in a numeric column shows a value with its difference and a strength tint.
 
 **Don't** use it for layout, or for a two-column key/value list of a single record. Don't make
 a column sortable when its order tells a reader nothing, such as a row number.
@@ -568,5 +575,136 @@ export const WindowedFill: Story = {
     await expect(region.getBoundingClientRect().height).toBe(region.parentElement!.getBoundingClientRect().height);
     await expect(region.getBoundingClientRect().height).toBeLessThanOrEqual(240);
     await expect(renderedRows(canvasElement).length).toBeLessThan(30);
+  },
+};
+
+type Compare = { name: string; a: number; b: number; c: number; d: number };
+const COMPARE: Compare[] = [
+  { name: "focal length", a: 1204.31, b: 1204.52, c: 1198.9, d: 1210.2 },
+  { name: "principal x", a: 641.2, b: 641.15, c: 640.8, d: 645.9 },
+  { name: "principal y", a: 479.8, b: 480.1, c: 479.5, d: 479.9 },
+  { name: "k1", a: -0.2412, b: -0.2398, c: -0.2512, d: -0.1832 },
+  { name: "k2", a: 0.0731, b: 0.0702, c: 0.0869, d: -0.0124 },
+  { name: "reprojection rms", a: 0.2113, b: 0.2087, c: 0.2301, d: 0.4119 },
+];
+
+/** Two comparisons per row, each against the first run: the difference and how large it is for that row. */
+const COMPARE_COLUMNS: Column<Compare>[] = [
+  { key: "name", header: "Parameter", width: "10rem", cell: (row) => row.name },
+  { key: "a", header: "Run A", numeric: true, group: "Baseline", width: "6rem", cell: (row) => row.a.toFixed(4) },
+  ...(["b", "c", "d"] as const).map((key, i): Column<Compare> => ({
+    key,
+    header: `Run ${key.toUpperCase()}`,
+    numeric: true,
+    group: i < 2 ? "Repeats" : "Other setup",
+    width: "11rem",
+    cell: (row) => (
+      <DeltaCell
+        value={row[key]}
+        delta={row[key] - row.a}
+        magnitude={Math.abs(row[key] - row.a) / (Math.abs(row.a) * 0.05 || 1)}
+        format={(v) => v.toFixed(4)}
+        deltaFormat={(v) => v.toFixed(3)}
+        deltaLabel="from run A"
+      />
+    ),
+  })),
+];
+
+/** A header row above the column headers, each cell spanning the columns that share a label. */
+export const ColumnGroups: StoryObj = {
+  render: () => <Table columns={COMPARE_COLUMNS} rows={COMPARE} rowKey={(row) => row.name} caption="Runs compared" />,
+  play: async ({ canvas }) => {
+    const groups = canvas.getAllByRole("columnheader").filter((cell) => cell.getAttribute("scope") === "colgroup");
+    await expect(groups.map((cell) => cell.textContent)).toEqual(["Baseline", "Repeats", "Other setup"]);
+    await expect(groups.map((cell) => cell.getAttribute("colspan"))).toEqual(["1", "2", "1"]);
+    // Two header rows plus six parameters.
+    await expect(canvas.getAllByRole("row")).toHaveLength(8);
+    await expect(canvas.getAllByText("from run A", { exact: false }).length).toBeGreaterThan(5);
+  },
+};
+
+/** Sorting, with the headers under the groups. */
+export const GroupedSortable: StoryObj = {
+  render: () => (
+    <Table
+      columns={COMPARE_COLUMNS.map((column) =>
+        column.key === "a" ? { ...column, sortValue: (row: Compare) => row.a, firstSort: "descending" as const } : column,
+      )}
+      rows={COMPARE}
+      rowKey={(row) => row.name}
+      caption="Runs compared"
+    />
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Run A" }));
+    await expect(canvasElement.querySelector("tbody tr")).toHaveTextContent("focal length");
+    await expect(canvas.getByRole("columnheader", { name: "Run A" })).toHaveAttribute("aria-sort", "descending");
+  },
+};
+
+/** The first column stays while the table scrolls sideways inside a narrow panel. */
+export const PinnedFirstColumn: StoryObj = {
+  render: () => (
+    <div className="w-80 rounded-panel border border-line bg-surface p-2.5">
+      <Table
+        columns={COMPARE_COLUMNS}
+        rows={COMPARE}
+        rowKey={(row) => row.name}
+        caption="Runs compared"
+        pinFirstColumn
+        onRowClick={fn()}
+        isRowActive={(row) => row.name === "k1"}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const scroller = canvasElement.querySelector<HTMLElement>(".overflow-x-auto")!;
+    const first = canvasElement.querySelector<HTMLElement>("tbody tr td")!;
+    await expect(first).toHaveClass("sticky", "left-0");
+    // The geometry needs the stylesheet, which the package's own story tests do not load; the docs app's do.
+    if (getComputedStyle(scroller).overflowX !== "auto") return;
+    await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+    scroller.scrollLeft = 200;
+    await waitFor(() => expect(scroller.scrollLeft).toBeGreaterThan(100));
+    // It has not moved from the left edge of the scroll area.
+    await expect(Math.round(first.getBoundingClientRect().left)).toBe(Math.round(scroller.getBoundingClientRect().left));
+  },
+};
+
+/** Groups, a pinned column and a windowed body together: both header rows stay put. */
+export const GroupedPinnedWindowed: StoryObj = {
+  render: () => {
+    const rows: Compare[] = Array.from({ length: 400 }, (_, i) => ({
+      name: `parameter ${i + 1}`,
+      a: 1 + (i % 17) * 0.37,
+      b: 1 + (i % 17) * 0.37 + ((i * 7) % 11) * 0.004,
+      c: 1 + (i % 17) * 0.37 - ((i * 5) % 13) * 0.01,
+      d: 1 + (i % 17) * 0.37 + ((i * 3) % 19) * 0.03,
+    }));
+    return (
+      <div className="w-96 rounded-panel border border-line bg-surface p-2.5">
+        <Table
+          columns={COMPARE_COLUMNS}
+          rows={rows}
+          rowKey={(row) => row.name}
+          caption="Runs compared"
+          pinFirstColumn
+          windowed={{ rowHeight: 36, height: 260 }}
+        />
+      </div>
+    );
+  },
+  play: async ({ canvas, canvasElement }) => {
+    const table = canvas.getByRole("table", { name: "Runs compared" });
+    await expect(table).toHaveAttribute("aria-rowcount", "402");
+    const scroller = table.parentElement!;
+    scroller.scrollTop = 120 * 36;
+    await waitFor(() => expect(canvasElement.querySelector('tr[aria-rowindex="123"]')).not.toBeNull());
+    // Both header rows are still at the top of the scroll area, one under the other.
+    const group = canvas.getByRole("columnheader", { name: "Baseline" }).getBoundingClientRect();
+    const column = canvas.getByRole("columnheader", { name: "Parameter" }).getBoundingClientRect();
+    await expect(Math.round(group.top)).toBe(Math.round(scroller.getBoundingClientRect().top));
+    await expect(Math.round(column.top)).toBe(Math.round(group.bottom));
   },
 };

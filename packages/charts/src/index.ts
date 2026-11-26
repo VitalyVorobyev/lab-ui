@@ -23,6 +23,17 @@ export { extent, formatTick, histogram, linePath, linearScale, logScale, niceSte
 
 export { LineChart, type LineChartProps, type Series } from "./LineChart";
 
+export {
+  ScatterChart,
+  type ScatterChartProps,
+  type ScatterColourBy,
+  type ScatterPick,
+  type ScatterPoint,
+  type ScatterReferenceLine,
+  type ScatterSeries,
+} from "./ScatterChart";
+export { SCATTER_COLOUR_STEPS, colourDomain, colourStep, nearestProjected } from "./scatter";
+
 export { StackedBars, type BarRow, type StackedBarsProps } from "./BarChart";
 
 export { Histogram, type HistogramCounts, type HistogramOptions, type HistogramProps, type HistogramValues } from "./Histogram";
@@ -43,6 +54,16 @@ export {
   type ReadoutSeries,
 } from "./interaction";
 
-export { COLORMAPS, colormap, colormapGradient, colormapRgb, colormapValue, type ColormapName } from "./colormap";
+export {
+  COLORMAPS,
+  DIVERGING_COLORMAPS,
+  colormap,
+  colormapGradient,
+  colormapRgb,
+  colormapValue,
+  isDivergingColormap,
+  symmetricDomain,
+  type ColormapName,
+} from "./colormap";
 
 export { ColormapLegend, type ColormapLegendProps } from "./ColormapLegend";

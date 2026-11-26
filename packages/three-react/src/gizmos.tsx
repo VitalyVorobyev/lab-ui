@@ -19,7 +19,7 @@ import { invalidateScene } from "./sceneSignal";
 /** Colour an object is built with before its effect applies the theme's. */
 const UNSET = "gray";
 
-function useDisposed<T extends Object3D>(object: T): T {
+export function useDisposed<T extends Object3D>(object: T): T {
   useEffect(() => () => disposeObject(object), [object]);
   return object;
 }

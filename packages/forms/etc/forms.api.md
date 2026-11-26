@@ -21,6 +21,9 @@ export function defaultValueForSchema(schema: JsonSchema, root?: JsonSchema): un
 export function describeFields(schema: OptionsSchema): FieldSpec[];
 
 // @public
+export function diffPaths(current: unknown, baseline: unknown, path?: string): string[];
+
+// @public
 export interface EnumOption {
     description?: string | undefined;
     label: string;
@@ -54,6 +57,15 @@ export type FieldKind = "text" | "number" | "boolean" | "string-list" | "json" |
 "choice-inline" |
 /** A closed set, too many to show at once. */
 "choice";
+
+// @public
+export interface FieldMessage {
+    severity: "error" | "warning";
+    text: string;
+}
+
+// @public
+export type FieldMessages = Readonly<Record<string, FieldMessage | string>>;
 
 // @public
 export function fieldsAt(schema: JsonSchema, path: string, root?: JsonSchema, value?: unknown): FieldInfo[];
@@ -260,10 +272,12 @@ export function SchemaValueForm(input: SchemaValueFormProps): JSX.Element;
 
 // @public
 export interface SchemaValueFormProps {
+    baseline?: unknown;
     className?: string | undefined;
     columns?: 1 | 2 | undefined;
     defaultValue?: unknown;
     disabled?: boolean | undefined;
+    messages?: FieldMessages | undefined;
     onValueChange?: ((next: unknown) => void) | undefined;
     ref?: Ref<HTMLDivElement> | undefined;
     renderField?: RenderField | undefined;

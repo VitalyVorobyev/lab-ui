@@ -15,7 +15,7 @@
  */
 
 export { SchemaForm } from "./components/SchemaForm";
-export { SchemaValueForm, type SchemaValueFormProps } from "./components/SchemaValueForm";
+export { SchemaValueForm, type FieldMessage, type FieldMessages, type SchemaValueFormProps } from "./components/SchemaValueForm";
 
 export {
   describeFields,
@@ -48,4 +48,5 @@ export {
   type TaggedVariant,
 } from "./api/schemaValue";
 export type { FieldUi, FieldWidget, RenderField, RenderFieldContext, UiGroup, UiSchema } from "./api/uiSchema";
+export { diffPaths } from "./api/valueDiff";
 export { getAtPath, setAtPath } from "./api/valuePath";

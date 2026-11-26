@@ -2,7 +2,7 @@
   {
     "name": "@vitavision/ui",
     "path": "packages/ui/dist/index.js",
-    "limit": "14.5 kB",
+    "limit": "15 kB",
     "import": "*",
     "ignore": [
       "@radix-ui/react-checkbox",
@@ -27,12 +27,12 @@
     "path": "packages/forms/dist/index.js",
     "import": "*",
     "ignore": ["@vitavision/ui", "react", "react-dom", "react/jsx-runtime"],
-    "limit": "8.6 kB"
+    "limit": "9.4 kB"
   },
   {
     "name": "@vitavision/charts",
     "path": "packages/charts/dist/index.js",
-    "limit": "5.3 kB",
+    "limit": "7.6 kB",
     "import": "*",
     "ignore": ["@vitavision/ui", "react", "react-dom", "react/jsx-runtime"]
   },
@@ -40,7 +40,7 @@
     "name": "@vitavision/stage2d",
     "path": "packages/stage2d/dist/index.js",
     "import": "*",
-    "limit": "32.2 kB",
+    "limit": "33.7 kB",
     "ignore": ["@vitavision/ui", "lucide-react", "react", "react-dom", "react/jsx-runtime"]
   },
   {
@@ -61,14 +61,14 @@
     "name": "@vitavision/three",
     "path": "packages/three/dist/index.js",
     "import": "*",
-    "limit": "5.32 kB",
+    "limit": "5.95 kB",
     "ignore": ["three"]
   },
   {
     "name": "@vitavision/three-react",
     "path": "packages/three-react/dist/index.js",
     "import": "*",
-    "limit": "4 kB",
+    "limit": "4.1 kB",
     "ignore": ["@react-three/fiber", "@vitavision/three", "react", "react-dom", "react/jsx-runtime", "three"]
   }
 ]
