@@ -178,6 +178,8 @@ export {
   type HeatmapRgbaProps,
 } from "./components/HeatmapLayer";
 export { planeRange, rasterizePlane, type Colormap, type ValueRange } from "./components/heatmapRaster";
+export { ContourLayer, type ContourLayerProps } from "./components/ContourLayer";
+export { contourPaths, resolveLevels, type ContourLine } from "./components/contour";
 export { VectorField, useVectorScale, type VectorFieldProps } from "./components/VectorField";
 export { VectorFieldKey, type VectorFieldKeyProps } from "./components/VectorFieldKey";
 export {
