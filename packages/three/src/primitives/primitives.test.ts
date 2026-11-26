@@ -6,6 +6,7 @@ import { Axes } from "./axes";
 import { CameraFrustum, imageBorderPixels } from "./frustum";
 import { LaserFan } from "./laserFan";
 import { LightGizmo } from "./lightGizmo";
+import { PointCloud, finitePoints } from "./pointCloud";
 import { TargetBoard } from "./targetBoard";
 
 const positions = (m: { geometry: { getAttribute(n: string): { array: ArrayLike<number> } } }) =>
@@ -193,5 +194,117 @@ describe("Axes", () => {
     expect([c.getX(0), c.getY(0), c.getZ(0)]).toEqual([1, 0, 0]);
     expect([c.getX(5), c.getY(5), c.getZ(5)]).toEqual([0, 0, 1]);
     expect(positions(a).slice(3, 6)).toEqual([0.1, 0, 0].map((v) => Math.fround(v)));
+  });
+});
+
+describe("PointCloud", () => {
+  const XYZ = [0, 0, 0, 1, 2, 3, -1, 4, 0.5];
+
+  it("draws every point once, with bounds that match", () => {
+    const cloud = new PointCloud({ positions: XYZ });
+    expect(cloud.count).toBe(3);
+    expect(Array.from(cloud.geometry.getAttribute("position").array)).toEqual(XYZ);
+    const box = cloud.bounds;
+    expect(box.min.toArray()).toEqual([-1, 0, 0]);
+    expect(box.max.toArray()).toEqual([1, 4, 3]);
+    expect(cloud.geometry.boundingSphere!.radius).toBeGreaterThan(0);
+    expect(cloud.frustumCulled).toBe(true);
+  });
+
+  it("takes its colour, size and layer from the options, with viewer-only defaults", () => {
+    const cloud = new PointCloud({ positions: XYZ, color: "red", size: 4 });
+    expect(cloud.material.color.equals(new Color("red"))).toBe(true);
+    expect(cloud.material.size).toBe(4);
+    expect(cloud.material.sizeAttenuation).toBe(false);
+    expect(cloud.material.vertexColors).toBe(false);
+    expect(cloud.geometry.getAttribute("color")).toBeUndefined();
+    expect(cloud.layers.isEnabled(GIZMO_LAYER)).toBe(true);
+    expect(cloud.layers.isEnabled(0)).toBe(false);
+    expect(new PointCloud({ positions: XYZ, layer: 0, sizeAttenuation: true }).layers.isEnabled(0)).toBe(true);
+  });
+
+  it("drops a point with a non-finite coordinate, and its colour, so the bounds stay finite", () => {
+    const positions = [0, 0, 0, Number.NaN, 1, 1, 2, 2, 2, 3, Infinity, 3, 4, 4, 4];
+    const colors = [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0.5, 0.5, 0.5];
+    const cloud = new PointCloud({ positions, colors });
+    expect(cloud.count).toBe(3);
+    expect(Array.from(cloud.geometry.getAttribute("position").array)).toEqual([0, 0, 0, 2, 2, 2, 4, 4, 4]);
+    expect(Array.from(cloud.geometry.getAttribute("color").array)).toEqual([1, 0, 0, 0, 0, 1, 0.5, 0.5, 0.5]);
+    expect(Number.isFinite(cloud.geometry.boundingSphere!.radius)).toBe(true);
+    expect(cloud.bounds.max.toArray()).toEqual([4, 4, 4]);
+  });
+
+  it("colours points one by one with vertex colours, and back to one colour", () => {
+    const cloud = new PointCloud({ positions: XYZ, colors: [1, 0, 0, 0, 1, 0, 0, 0, 1] });
+    expect(cloud.material.vertexColors).toBe(true);
+    expect(Array.from(cloud.geometry.getAttribute("color").array)).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+    cloud.setPoints(XYZ);
+    expect(cloud.material.vertexColors).toBe(false);
+    expect(cloud.geometry.getAttribute("color")).toBeUndefined();
+  });
+
+  it("leaves a missing colour black rather than reading past the list", () => {
+    const cloud = new PointCloud({ positions: XYZ, colors: [1, 1, 1] });
+    expect(Array.from(cloud.geometry.getAttribute("color").array)).toEqual([1, 1, 1, 0, 0, 0, 0, 0, 0]);
+  });
+
+  it("replaces its points in place and recomputes the bounds", () => {
+    const cloud = new PointCloud({ positions: XYZ });
+    const material = cloud.material;
+    cloud.setPoints([10, 10, 10, 12, 12, 12]);
+    expect(cloud.material).toBe(material);
+    expect(cloud.count).toBe(2);
+    expect(cloud.bounds.min.toArray()).toEqual([10, 10, 10]);
+    expect(cloud.geometry.boundingSphere!.center.toArray()).toEqual([11, 11, 11]);
+  });
+
+  it("frees the previous GPU buffers when its points are replaced", () => {
+    const cloud = new PointCloud({ positions: XYZ });
+    let freed = 0;
+    cloud.geometry.addEventListener("dispose", () => freed++);
+    cloud.setPoints([1, 1, 1]);
+    cloud.setPoints([2, 2, 2]);
+    expect(freed).toBe(2);
+  });
+
+  it("is empty without points: an empty box, nothing for a frustum to hit", () => {
+    for (const positions of [[], [Number.NaN, 0, 0], [1, 2]]) {
+      const cloud = new PointCloud({ positions });
+      expect(cloud.count).toBe(0);
+      expect(cloud.bounds.isEmpty()).toBe(true);
+      expect(cloud.geometry.boundingSphere!.radius).toBeLessThan(0);
+    }
+  });
+
+  it("keeps a Float32Array without a copy when every point is finite", () => {
+    const positions = new Float32Array(XYZ);
+    const cloud = new PointCloud({ positions });
+    expect(cloud.geometry.getAttribute("position").array).toBe(positions);
+  });
+
+  it("changes colour, size and opacity, and stops writing depth when translucent", () => {
+    const cloud = new PointCloud({ positions: XYZ });
+    cloud.setColor("blue");
+    cloud.setSize(6);
+    expect(cloud.material.color.equals(new Color("blue"))).toBe(true);
+    expect(cloud.material.size).toBe(6);
+    cloud.setOpacity(0.4);
+    expect(cloud.material.transparent).toBe(true);
+    expect(cloud.material.depthWrite).toBe(false);
+    cloud.setOpacity(1);
+    expect(cloud.material.transparent).toBe(false);
+    expect(cloud.material.depthWrite).toBe(true);
+    expect(new PointCloud({ positions: XYZ, opacity: 0.5 }).material.depthWrite).toBe(false);
+  });
+
+  it("is not pickable", () => {
+    const cloud = new PointCloud({ positions: XYZ, layer: 0, size: 50 });
+    const ray = new Raycaster(new Vector3(0, 0, -1), new Vector3(0, 0, 1));
+    expect(ray.intersectObject(cloud)).toHaveLength(0);
+  });
+
+  it("keeps a partial trailing triple out", () => {
+    expect(new PointCloud({ positions: [0, 0, 0, 1, 1] }).count).toBe(1);
+    expect(finitePoints([0, 0, 0, 1, 1]).positions.length).toBe(3);
   });
 });

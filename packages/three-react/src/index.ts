@@ -20,6 +20,7 @@ export {
   TargetBoard,
   type TargetBoardProps,
 } from "./gizmos";
+export { PointCloud, type PointCloudProps } from "./PointCloud";
 export { Robot, type RobotProps } from "./Robot";
 export { invalidateScene, useSceneInvalidate } from "./sceneSignal";
 export { SensorImage, type SensorImageProps } from "./SensorImage";
