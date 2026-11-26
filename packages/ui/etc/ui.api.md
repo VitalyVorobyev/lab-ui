@@ -126,6 +126,7 @@ export type Column<Row> = {
     header: ReactNode;
     numeric?: boolean;
     width?: string;
+    group?: string | undefined;
     cell: (row: Row) => ReactNode;
     sortable?: boolean | undefined;
     sortValue?: ((row: Row) => number | string | null | undefined) | undefined;
@@ -164,6 +165,28 @@ export const DEFAULT_THEME_STORAGE_KEY = "vitavision-theme";
 
 // @public
 export const defaultToastStore: ToastStore;
+
+// @public
+export function DeltaCell(input: DeltaCellProps): JSX.Element;
+
+// @public
+export interface DeltaCellProps {
+    className?: string | undefined;
+    delta?: number | null | undefined;
+    deltaFormat?: ((delta: number) => string) | undefined;
+    deltaLabel?: string | undefined;
+    format?: ((value: number) => string) | undefined;
+    magnitude?: number | null | undefined;
+    tone?: "signal" | "neutral" | undefined;
+    unit?: string | undefined;
+    value: number | null | undefined;
+}
+
+// @public
+export type DeltaStrength = "none" | "low" | "medium" | "high";
+
+// @public
+export function deltaStrength(magnitude: number | null | undefined): DeltaStrength;
 
 // @public
 export type Density = "comfortable" | "compact";
@@ -633,6 +656,7 @@ export function Table<Row>(input: {
     manualSort?: boolean | undefined;
     windowed?: TableWindowing | undefined;
     selectionFollowsFocus?: boolean | undefined;
+    pinFirstColumn?: boolean | undefined;
 }): JSX.Element;
 
 // @public

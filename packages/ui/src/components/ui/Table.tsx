@@ -9,6 +9,10 @@
  * Practices: the header's content is a button, and only the sorted header carries
  * `aria-sort`. The order itself lives in `tableSort.ts`.
  *
+ * `group` on a column adds a header row above the column headers: adjacent columns that share a
+ * label sit under one cell that spans them (`tableGroups.ts`). `pinFirstColumn` keeps the first
+ * column in view while the rest scroll sideways.
+ *
  * `windowed` renders only the rows in view, between two spacer rows that keep the scroll
  * height, so a table of thousands of rows scrolls as fast as one of thirty. It stays a real
  * `<table>`: the rows that are rendered carry `aria-rowindex` and the table `aria-rowcount`, so
@@ -20,6 +24,7 @@ import { type KeyboardEvent, type MouseEvent, type ReactNode, useLayoutEffect, u
 
 import { byDensity, useDensity } from "./Density";
 import { cn, focusRing, focusRingInset } from "./cn";
+import { columnGroups } from "./tableGroups";
 import { isSortable, nextSort, type SortDirection, sortOrder, type TableSort } from "./tableSort";
 import { navigate, rowWindow, scrollTopFor } from "./tableWindow";
 
@@ -33,6 +38,12 @@ export type Column<Row> = {
   numeric?: boolean;
   /** A CSS width for the column, e.g. `"6rem"`. */
   width?: string;
+  /**
+   * The label of the header group the column belongs to. Adjacent columns with the same label
+   * are headed by one cell that spans them, in a row above the column headers; columns with no
+   * group get an empty cell there. Any column with a `group` makes the row appear.
+   */
+  group?: string | undefined;
   /** The cell's content for a row. */
   cell: (row: Row) => ReactNode;
   /**
@@ -84,6 +95,25 @@ export interface TableWindowing {
 /** Rows per screen before a windowed table has measured itself (a server render, the first paint). */
 const INITIAL_ROWS = 20;
 
+/**
+ * A pinned cell sticks to the left edge of the scroll area on `surface`, with a rule on its
+ * right edge so a cell scrolling under it reads as under it.
+ */
+const pinned = "sticky left-0 z-[2] bg-surface shadow-[inset_-1px_0_0_var(--line)]";
+
+/**
+ * A pinned body cell: it must be opaque, so a row's hover and active tint is painted on the
+ * cell itself, mixed over `surface`, to match what the row's other cells show through.
+ */
+function pinnedCell(clickable: boolean, active: boolean): string {
+  return cn(
+    "sticky left-0 z-[1] bg-surface shadow-[inset_-1px_0_0_var(--line)]",
+    clickable && "group-hover/row:bg-raised",
+    active &&
+      "bg-[color-mix(in_oklab,var(--surface),var(--signal)_10%)] group-hover/row:bg-[color-mix(in_oklab,var(--raised),var(--signal)_10%)]",
+  );
+}
+
 /** The header icon for a sort state: the direction when sorted, both arrows when only sortable. */
 const SORT_ICONS = { ascending: ArrowUp, descending: ArrowDown, none: ArrowUpDown } as const;
 
@@ -123,6 +153,7 @@ export function Table<Row>({
   manualSort = false,
   windowed,
   selectionFollowsFocus = false,
+  pinFirstColumn = false,
 }: {
   /** The columns, in order. */
   columns: Column<Row>[];
@@ -181,6 +212,13 @@ export function Table<Row>({
    * choose one. Needs `onRowClick`.
    */
   selectionFollowsFocus?: boolean | undefined;
+  /**
+   * Keep the first column in view while the others scroll sideways, for a table wider than its
+   * container; the table is then as wide as its content (`min-w-max`) rather than squeezed to fit.
+   * The column is drawn on `surface`, the panel colour, with a rule on its right edge;
+   * give it a `width`. Put the table on a `Panel` or another `surface`.
+   */
+  pinFirstColumn?: boolean | undefined;
 }) {
   const density = useDensity();
   const [ownSort, setOwnSort] = useState<TableSort | null>(defaultSort);
@@ -201,13 +239,18 @@ export function Table<Row>({
   const rowHeight = windowed?.rowHeight ?? 0;
   const scrollRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLTableSectionElement>(null);
+  const groupRowRef = useRef<HTMLTableRowElement>(null);
+  const groups = useMemo(() => columnGroups(columns), [columns]);
+  // The group row and the column headers are two rows: the ARIA row numbers of the body start after both.
+  const headerRows = groups ? 2 : 1;
   const bodyRef = useRef<HTMLTableSectionElement>(null);
   // The row to focus once it is rendered: a key press may scroll to a row that is not in the DOM yet.
   const pendingFocus = useRef<number | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  const [measured, setMeasured] = useState<{ viewport: number; header: number } | null>(null);
+  const [measured, setMeasured] = useState<{ viewport: number; header: number; groupRow: number } | null>(null);
   const viewportHeight = measured?.viewport ?? windowed?.height ?? INITIAL_ROWS * rowHeight;
   const headerHeight = measured?.header ?? 0;
+  const groupRowHeight = measured?.groupRow ?? 0;
   const range = windowed
     ? rowWindow({ rowCount: order.length, rowHeight, scrollTop, viewportHeight, headerHeight, overscan: windowed.overscan ?? 8 })
     : { start: 0, end: order.length, before: 0, after: 0 };
@@ -222,8 +265,14 @@ export function Table<Row>({
     const measure = () => {
       // A detached element measures 0, which would shrink the window to a row or two.
       if (!scroller.isConnected) return;
-      const next = { viewport: scroller.clientHeight, header: headRef.current?.offsetHeight ?? 0 };
-      setMeasured((last) => (last?.viewport === next.viewport && last.header === next.header ? last : next));
+      const next = {
+        viewport: scroller.clientHeight,
+        header: headRef.current?.offsetHeight ?? 0,
+        groupRow: groupRowRef.current?.offsetHeight ?? 0,
+      };
+      setMeasured((last) =>
+        last?.viewport === next.viewport && last.header === next.header && last.groupRow === next.groupRow ? last : next,
+      );
     };
     measure();
     // A new scroll area starts at the top, whatever the last one was scrolled to.
@@ -298,14 +347,48 @@ export function Table<Row>({
       {...(scrollStop ? { tabIndex: 0, role: "region", "aria-label": caption ?? "Table" } : {})}
     >
       <table
-        className={cn("w-full text-left", byDensity(density, "text-sm", "text-[11px]"))}
+        className={cn("w-full text-left", pinFirstColumn && "min-w-max", byDensity(density, "text-sm", "text-[11px]"))}
         style={windowed ? { tableLayout: "fixed" } : undefined}
-        aria-rowcount={windowed ? order.length + 1 : undefined}
+        aria-rowcount={windowed ? order.length + headerRows : undefined}
       >
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead ref={headRef}>
-          <tr className="border-b border-line" aria-rowindex={windowed ? 1 : undefined}>
-            {columns.map((column) => {
+          {groups && (
+            <tr ref={groupRowRef} aria-rowindex={windowed ? 1 : undefined}>
+              {groups.map((cell) =>
+                cell.label === null ? (
+                  // An empty `<td>`: an empty `<th>` is a header that names nothing.
+                  <td
+                    key={`gap-${cell.start}`}
+                    colSpan={cell.span}
+                    className={cn(windowed && "bg-surface", pinFirstColumn && cell.start === 0 && cell.span === 1 && pinned)}
+                    style={windowed ? { position: "sticky", top: 0, zIndex: pinFirstColumn && cell.start === 0 ? 3 : 1 } : undefined}
+                  />
+                ) : (
+                  <th
+                    key={`group-${cell.start}`}
+                    scope="colgroup"
+                    colSpan={cell.span}
+                    className={cn(
+                      "font-medium text-fg-muted",
+                      byDensity(density, "pb-1 text-xs", "pb-0.5 text-[10px]"),
+                      cell.start + cell.span === columns.length ? "pr-0" : byDensity(density, "pr-3", "pr-2"),
+                      windowed && "bg-surface",
+                      pinFirstColumn && cell.start === 0 && cell.span === 1 && pinned,
+                    )}
+                    style={windowed ? { position: "sticky", top: 0, zIndex: pinFirstColumn && cell.start === 0 ? 3 : 1 } : undefined}
+                  >
+                    {/* The rule under the label is the group's extent: it spans its columns and stops short of the next group. */}
+                    <span className={cn("block border-b border-line pb-1 text-left", byDensity(density, "pb-1", "pb-0.5"))}>
+                      {cell.label}
+                    </span>
+                  </th>
+                ),
+              )}
+            </tr>
+          )}
+          <tr className="border-b border-line" aria-rowindex={windowed ? headerRows : undefined}>
+            {columns.map((column, columnIndex) => {
               const sortable = isSortable(column);
               const direction = sortable && sort?.key === column.key ? sort.direction : undefined;
               const SortIcon = SORT_ICONS[direction ?? "none"];
@@ -315,7 +398,12 @@ export function Table<Row>({
                   scope="col"
                   style={
                     windowed
-                      ? { position: "sticky", top: 0, zIndex: 1, ...(column.width ? { width: column.width } : {}) }
+                      ? {
+                          position: "sticky",
+                          top: groupRowHeight,
+                          zIndex: pinFirstColumn && columnIndex === 0 ? 3 : 1,
+                          ...(column.width ? { width: column.width } : {}),
+                        }
                       : column.width
                         ? { width: column.width }
                         : undefined
@@ -332,6 +420,9 @@ export function Table<Row>({
                     column.numeric && "text-right",
                     // A sticky cell leaves its row's border behind: it draws its own rule.
                     windowed && "bg-surface shadow-[inset_0_-1px_0_var(--line)]",
+                    pinFirstColumn && columnIndex === 0 && pinned,
+                    // A pinned header cell of a table that does not scroll vertically is only sticky to the left.
+                    pinFirstColumn && columnIndex === 0 && !windowed && "bg-surface",
                   )}
                 >
                   {sortable ? (
@@ -376,10 +467,11 @@ export function Table<Row>({
               <tr
                 key={rowKey(row, index)}
                 data-position={position}
-                aria-rowindex={windowed ? position + 2 : undefined}
+                aria-rowindex={windowed ? position + 1 + headerRows : undefined}
                 style={windowed ? { height: rowHeight } : undefined}
                 data-state={active ? "active" : undefined}
                 className={cn(
+                  "group/row",
                   // A windowed row's rule is a shadow on its cells: a collapsed border would add
                   // half a pixel to every row, and the arithmetic counts whole rows.
                   !windowed && "border-b border-line/60 last:border-0",
@@ -409,11 +501,12 @@ export function Table<Row>({
                 onPointerEnter={onRowHover ? () => onRowHover(row, index) : undefined}
                 onPointerLeave={onRowHover ? () => onRowHover(null, null) : undefined}
               >
-                {columns.map((column) => (
+                {columns.map((column, columnIndex) => (
                   <td
                     key={column.key}
                     className={cn(
                       "align-middle text-fg last:pr-0",
+                      pinFirstColumn && columnIndex === 0 && pinnedCell(Boolean(onRowClick), active),
                       byDensity(density, "py-2 pr-3", "py-0.5 pr-2"),
                       column.numeric && "text-right font-mono tabular-nums",
                       windowed && "shadow-[inset_0_-1px_0_color-mix(in_oklab,var(--line)_60%,transparent)]",

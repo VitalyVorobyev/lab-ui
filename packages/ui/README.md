@@ -132,7 +132,7 @@ with its content between `minRows` and `maxRows`) · `HighlightedText`, `findSpa
 with its placeholders, tags and terms marked, never parsed as HTML) · `VectorInput`,
 `PoseInput` · `Kbd`, `ShortcutList` (a screen's keyboard shortcuts as titled groups, for a `?` help dialog) · `Listbox` (single choice among options that render their own content) ·
 `PageHeader`, `Panel`, `ReadoutStrip`, `Section` · `Popover`, `PopoverClose` ·
-`SegmentedControl` · `Select` · `Slider` · `Table` (with `windowed` for thousands of rows, and `selectionFollowsFocus` for keyboard selection) ·
+`SegmentedControl` · `Select` · `Slider` · `Table` (with `windowed` for thousands of rows, `selectionFollowsFocus` for keyboard selection, a column's `group` for a header row that spans columns, and `pinFirstColumn`) · `DeltaCell` (a number with its signed difference and a strength tint, for a numeric `Table` cell) ·
 `Checkbox`, `Switch` · `ToggleChip` · `Toaster`, `toast()` (notifications from anywhere; mount one `<Toaster />` near the root) ·
 `InfoHint`, `Tooltip`, `TooltipProvider` ·
 `ThemeToggle` · plus `cn`, `focusRing`, `focusRingInset`, and `formatNumber` / `parseNumber`

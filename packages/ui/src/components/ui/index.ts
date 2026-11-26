@@ -17,6 +17,7 @@ export {
   type BreakdownTone,
 } from "./Breakdown";
 export { Button, ButtonLink, buttonClasses, type ButtonSize, type ButtonVariant } from "./Button";
+export { DeltaCell, deltaStrength, type DeltaCellProps, type DeltaStrength } from "./DeltaCell";
 export { DensityProvider, byDensity, useDensity, type Density } from "./Density";
 export { ConfirmDialog, Dialog, DialogClose } from "./Dialog";
 export { Disclosure } from "./Disclosure";
