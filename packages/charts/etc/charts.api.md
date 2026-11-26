@@ -31,6 +31,12 @@ export interface Band {
 }
 
 // @public
+export function bandPath(points: readonly {
+    x: number;
+    y: number;
+}[], band: Pick<SeriesBand, "lower" | "upper">, xScale: Scale, yScale: Scale): string;
+
+// @public
 export function Bands(input: {
     bands: readonly Band[];
     xScale: Scale;
@@ -51,6 +57,9 @@ export interface BarRow {
 export function colormap(name: ColormapName, t: number): string;
 
 // @public
+export type ColormapClipped = "high" | "low" | "both";
+
+// @public
 export function colormapGradient(name: ColormapName, direction?: string): string;
 
 // @public
@@ -59,15 +68,23 @@ export function ColormapLegend(input: ColormapLegendProps): JSX.Element;
 // @public
 export interface ColormapLegendProps {
     className?: string | undefined;
+    clipped?: ColormapClipped | undefined;
     domain: readonly [number, number];
     format?: ((value: number) => string) | undefined;
     label: string;
     length?: number | undefined;
     map: ColormapName;
+    marker?: number | ColormapMarker | readonly (number | ColormapMarker)[] | undefined;
     orientation?: "horizontal" | "vertical" | undefined;
     symmetric?: boolean | undefined;
     ticks?: number | readonly number[] | undefined;
     unit?: string | undefined;
+}
+
+// @public
+export interface ColormapMarker {
+    label?: string | undefined;
+    value: number;
 }
 
 // @public
@@ -111,6 +128,9 @@ export const FLUID_DEFAULT_HEIGHT = 200;
 export function formatTick(value: number, step: number): string;
 
 // @public
+export function formatWithBand(value: number, bounds: readonly [number, number], format: (n: number) => string): string;
+
+// @public
 export function Frame(input: FrameProps): JSX.Element;
 
 // @public
@@ -125,6 +145,7 @@ export interface FrameProps {
         height: number;
     } | undefined;
     variant?: Variant;
+    xFormat?: ((value: number) => string) | undefined;
     xLabel?: string | undefined;
     xScale: Scale;
     xTicks?: number;
@@ -188,6 +209,7 @@ export function Legend(input: LegendProps): JSX.Element;
 
 // @public
 export interface LegendItem {
+    band?: string | undefined;
     colour: string;
     label: string;
 }
@@ -216,6 +238,7 @@ export interface LineChartProps extends InteractionProps {
     underlay?: (x: Scale, y: Scale) => ReactNode;
     variant?: Variant;
     xDomain?: [number, number];
+    xFormat?: (x: number) => string;
     xLabel?: string;
     yDomain?: [number, number];
     yLabel?: string;
@@ -303,6 +326,7 @@ export function PlotInteraction(input: {
     onHover?: ((x: number | null) => void) | undefined;
     onPick?: ((x: number) => void) | undefined;
     format?: (value: number) => string;
+    xFormat?: ((value: number) => string) | undefined;
 }): JSX.Element;
 
 // @public
@@ -317,6 +341,7 @@ export interface ProfileSeries {
 
 // @public
 export interface ReadoutSeries {
+    band?: SeriesBand | undefined;
     colour: string;
     name: string;
     points: readonly {
@@ -419,6 +444,7 @@ export interface ScoreHistogramProps {
 
 // @public
 export interface Series {
+    band?: SeriesBand;
     colour?: string;
     name: string;
     points: {
@@ -429,6 +455,13 @@ export interface Series {
 
 // @public
 export const SERIES_COLOURS: readonly ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)", "var(--series-5)", "var(--series-6)"];
+
+// @public
+export interface SeriesBand {
+    label?: string | undefined;
+    lower: readonly number[];
+    upper: readonly number[];
+}
 
 // @public
 export function seriesColour(index: number): string;

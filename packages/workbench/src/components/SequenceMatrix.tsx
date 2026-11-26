@@ -379,6 +379,8 @@ export function SequenceMatrix({
       aria-rowcount={nRows + 1}
       aria-colcount={nCols + 1}
       aria-multiselectable={multiple ? true : undefined}
+      // With no cell to focus, the scroller itself is the keyboard stop.
+      tabIndex={nRows === 0 || nCols === 0 ? 0 : undefined}
       onScroll={measure}
       onKeyDown={onKeyDown}
       onClick={onClick}
