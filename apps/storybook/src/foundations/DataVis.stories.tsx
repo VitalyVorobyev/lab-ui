@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SERIES_COLOURS } from "@vitavision/charts";
+import { SERIES_COLOURS, colormapGradient } from "@vitavision/charts";
 
 /**
  * The data-visualisation palettes: categorical (the charts package's `--series-*`), and the
@@ -20,14 +20,16 @@ const SEQUENTIAL: { name: string; use: string; stops: string[] }[] = [
     stops: ["#000004", "#1b0c41", "#4a0c6b", "#781c6d", "#a52c60", "#cf4446", "#ed6925", "#fb9b06", "#f7d13d", "#fcffa4"],
   },
   {
+    name: "magma",
+    use: "Heatmaps over an image where a pale high end should stand out against a dark photograph.",
+    stops: ["#000004", "#1d1147", "#51127c", "#832681", "#b73779", "#e75263", "#fc8961", "#fec488", "#fcfdbf"],
+  },
+  {
     name: "cividis",
     use: "When the reader's colour vision is unknown and the map carries the finding alone.",
     stops: ["#00224e", "#123570", "#3b496c", "#575d6d", "#707173", "#8a8779", "#a69d75", "#c4b56c", "#e4cf5b", "#fee838"],
   },
 ];
-
-/** ColorBrewer PuOr, 11 classes: signed quantities around a meaningful zero. */
-const DIVERGING = ["#2d004b", "#542788", "#8073ac", "#b2abd2", "#d8daeb", "#f7f7f7", "#fee0b6", "#fdb863", "#e08214", "#b35806", "#7f3b08"];
 
 /**
  * Colour-vision-deficiency simulation (Machado, Oliveira & Fernandes 2009, severity 1.0), as
@@ -153,9 +155,9 @@ export const Maps: Story = {
           <span className="text-xs text-fg-muted">{use}</span>
         </section>
       ))}
-      <section aria-label="PuOr" className="grid grid-cols-[6rem_1fr] items-center gap-x-4 gap-y-1">
-        <code className="text-xs">PuOr</code>
-        <span aria-hidden className="h-6 rounded-control" style={{ background: gradient(DIVERGING) }} />
+      <section aria-label="blueOrange" className="grid grid-cols-[6rem_1fr] items-center gap-x-4 gap-y-1">
+        <code className="text-xs">blueOrange</code>
+        <span aria-hidden className="h-6 rounded-control" style={{ background: colormapGradient("blueOrange") }} />
         <span />
         <span className="flex justify-between text-xs text-fg-muted">
           <span>− (e.g. residual left of the model)</span>

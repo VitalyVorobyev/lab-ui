@@ -32,7 +32,7 @@
   {
     "name": "@vitavision/charts",
     "path": "packages/charts/dist/index.js",
-    "limit": "5.3 kB",
+    "limit": "7.6 kB",
     "import": "*",
     "ignore": ["@vitavision/ui", "react", "react-dom", "react/jsx-runtime"]
   },

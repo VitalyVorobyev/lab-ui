@@ -62,12 +62,16 @@ export interface ColormapLegendProps {
     domain: readonly [number, number];
     format?: ((value: number) => string) | undefined;
     label: string;
+    length?: number | undefined;
     map: ColormapName;
+    orientation?: "horizontal" | "vertical" | undefined;
+    symmetric?: boolean | undefined;
+    ticks?: number | readonly number[] | undefined;
     unit?: string | undefined;
 }
 
 // @public
-export type ColormapName = "viridis" | "cividis";
+export type ColormapName = "viridis" | "cividis" | "magma" | "inferno" | "blueOrange";
 
 // @public
 export function colormapRgb(name: ColormapName, t: number): [number, number, number];
@@ -79,7 +83,16 @@ export const COLORMAPS: readonly ColormapName[];
 export function colormapValue(name: ColormapName, value: number, domain: readonly [number, number]): string;
 
 // @public
+export function colourDomain(values: Iterable<number>, symmetric: boolean, given?: readonly [number, number]): [number, number];
+
+// @public
+export function colourStep(value: number, domain: readonly [number, number], steps?: number): number;
+
+// @public
 export const DEFECT_COLOUR = "var(--defect)";
+
+// @public
+export const DIVERGING_COLORMAPS: readonly ColormapName[];
 
 // @public
 export interface EdgeMark {
@@ -168,6 +181,9 @@ export interface InteractionProps {
 }
 
 // @public
+export function isDivergingColormap(name: ColormapName): boolean;
+
+// @public
 export function Legend(input: LegendProps): JSX.Element;
 
 // @public
@@ -248,6 +264,9 @@ export function Markers(input: {
 }): JSX.Element;
 
 // @public
+export function nearestProjected(xy: ArrayLike<number>, x: number, y: number, radius: number): number;
+
+// @public
 export function niceStep(rough: number): number;
 
 // @public
@@ -315,6 +334,77 @@ export interface Scale {
 }
 
 // @public
+export const SCATTER_COLOUR_STEPS = 24;
+
+// @public
+export function ScatterChart(input: ScatterChartProps): JSX.Element;
+
+// @public
+export interface ScatterChartProps {
+    className?: string | undefined;
+    colourBy?: ScatterColourBy | undefined;
+    footer?: ReactNode;
+    height?: number | undefined;
+    highlighted?: {
+        series: string;
+        index: number;
+    } | null | undefined;
+    label: string;
+    markerSize?: number | undefined;
+    onHover?: ((point: ScatterPick | null) => void) | undefined;
+    onPick?: ((point: ScatterPick) => void) | undefined;
+    referenceLines?: readonly ScatterReferenceLine[] | undefined;
+    series: readonly ScatterSeries[];
+    showLegend?: boolean | undefined;
+    underlay?: ((x: Scale, y: Scale) => ReactNode) | undefined;
+    variant?: Variant | undefined;
+    xDomain?: [number, number] | undefined;
+    xLabel?: string | undefined;
+    yDomain?: [number, number] | undefined;
+    yLabel?: string | undefined;
+}
+
+// @public
+export interface ScatterColourBy {
+    domain?: readonly [number, number] | undefined;
+    label: string;
+    map: ColormapName;
+    symmetric?: boolean | undefined;
+    unit?: string | undefined;
+}
+
+// @public
+export interface ScatterPick {
+    index: number;
+    series: string;
+    value?: number | undefined;
+    x: number;
+    y: number;
+}
+
+// @public
+export interface ScatterPoint {
+    value?: number | undefined;
+    x: number;
+    y: number;
+}
+
+// @public
+export interface ScatterReferenceLine {
+    axis: "x" | "y";
+    label?: string | undefined;
+    tone?: MeasureTone | undefined;
+    value: number;
+}
+
+// @public
+export interface ScatterSeries {
+    colour?: string | undefined;
+    name: string;
+    points: readonly ScatterPoint[];
+}
+
+// @public
 export function ScoreHistogram(input: ScoreHistogramProps): JSX.Element;
 
 // @public
@@ -358,6 +448,9 @@ export interface StackedBarsProps {
     label: string;
     rows: BarRow[];
 }
+
+// @public
+export function symmetricDomain(domain: readonly number[]): [number, number];
 
 // @public
 export interface Tick {

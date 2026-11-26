@@ -145,11 +145,17 @@ Specimen: *Foundations / Data-vis palette*.
   - `viridis` is the default on the chrome: residual size, per-cell error, confidence.
   - `inferno` is for heatmaps drawn over an image. Low values go to black, so the image
     shows through. VAL's anomaly maps already use it.
+  - `magma` is its neighbour for a pale high end: it runs black, purple, red, pale yellow.
   - `cividis` is for when the map alone carries the finding and the reader's colour vision
     is unknown.
-- **Diverging**, for signed values around a meaningful zero: `PuOr`, purple for
-  negative and orange for positive. Examples are a signed residual component, or a
-  disparity difference.
+- **Diverging**, for signed values around a meaningful zero: `blueOrange`, blue for
+  negative and orange for positive, through a neutral light grey. Examples are a signed
+  residual component, or a disparity difference.
+  - It replaces the `PuOr` this section first named. It was built in OKLab so both arms fall in
+    lightness at the same rate and carry the same chroma: its steps vary by 13 % about their
+    mean against 61 % for ColorBrewer's 11-class `PuOr`, and its two ends sit within 0.02 of
+    each other in OKLab lightness against 0.2 for `PuOr`.
+  - Centre it on zero: `symmetricDomain`, or `symmetric` on `ColormapLegend`.
 - **Must not:** `jet`, `hot`, `turbo`, or any red→green ramp. Uniform steps in them do not
   look uniform, so bands read as edges that aren't in the data, and red/green is a verdict.
   - Today's users are vitavision's radsym heatmap (`jet` and `hot` options) and
@@ -159,10 +165,10 @@ Specimen: *Foundations / Data-vis palette*.
     legend.
 - **Must:** a chart or map shows its scale: a legend with units, and the gain for anything
   drawn exaggerated.
-- **Where the maps live:** `@vitavision/charts` ships `viridis` and `cividis` as data
-  (`COLORMAPS`, `colormapRgb`, `colormapGradient`) with `ColormapLegend`; `stage2d`'s
-  `HeatmapLayer` takes any `(t) => rgb` colour map, such as `colormapRgb("viridis", t)`.
-  `PuOr` is specified here and not yet shipped.
+- **Where the maps live:** `@vitavision/charts` ships `viridis`, `cividis`, `magma`, `inferno`
+  and `blueOrange` as data (`COLORMAPS`, `colormapRgb`, `colormapGradient`) with
+  `ColormapLegend`, which also stands vertical beside a map; `stage2d`'s `HeatmapLayer` and
+  `VectorField` take any `(t) => rgb` colour map, such as `colormapRgb("viridis", t)`.
 
 ## 5. Overlay grammar
 
