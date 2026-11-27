@@ -148,6 +148,18 @@ const CHARUCO = charuco();
 const MARKERBOARD = markerboard();
 const PUZZLEBOARD = puzzleboard();
 const RINGGRID = ringgrid();
+
+/** A chessboard where some corners are switched off (`excluded`), some disagree with the master pattern (`flagged`), and one is both. */
+const MARKED: TargetDetection = {
+  ...CHESSBOARD,
+  corners: CHESSBOARD.corners?.map((corner, n) => ({
+    ...corner,
+    excluded: n % 9 === 1 || n === 20 || undefined,
+    flagged: n % 9 === 4 || n === 20 || undefined,
+  })),
+};
+const MARKED_EXCLUDED = MARKED.corners?.filter((c) => c.excluded).length ?? 0;
+const MARKED_FLAGGED = MARKED.corners?.filter((c) => c.flagged).length ?? 0;
 const WITH_COVARIANCE = fromCalibTargets({ kind: "chessboard", detection: calibTargetsChessboard() });
 
 const meta = {
@@ -174,6 +186,10 @@ Angles are radians, clockwise on screen. An app maps its detector's result to th
 | \`edgeBits\` | dot on the edge: solid for 1, dashed for 0, opacity from confidence | \`EllipseSet\` |
 
 - **States:** hover 2 px, selected 2.5 px in the selection colour with a ring on points, dimmed at 35 % opacity.
+  A corner, circle or ring with \`excluded\` is drawn dimmed with a small cross through it: it is switched off, not
+  wrong, so it is not drawn like a rejected point. One with \`flagged\` has a thin ring around it, for a feature that
+  disagrees with what it should be (a decoded id that differs from the master pattern). Both marks are in the label
+  role on a halo, so they read on a light or a dark image, and they compose with hover, selection and each other.
   \`hoveredId\` and \`selectedIds\` are controlled by the app; a hover it does not control is tracked here.
 - **Colour:** roles only. A score is never drawn as red, amber or green, and polarity and bits are shapes (hollow or
   dotted, solid or dashed), not hues: colour is never the only channel.
@@ -432,6 +448,34 @@ export const SelectedRing: Story = {
     // The selected ring's ellipses switch to the selection colour; the hovered one thickens.
     await expect(canvasElement.querySelectorAll("[data-selected-ellipses]")).toHaveLength(2);
     await expect(canvasElement.querySelectorAll("[data-hovered-ellipse]")).toHaveLength(2);
+  },
+};
+
+/** Excluded features are dimmed with a cross through them; flagged ones carry a ring; one corner is both. */
+export const ExcludedAndFlagged: Story = {
+  render: () => (
+    <Frame detection={MARKED}>
+      <TargetOverlay detection={MARKED} />
+    </Frame>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvas.getByRole("img", { name: `Excluded features: ${MARKED_EXCLUDED} points, 0 selected` })).toBeInTheDocument();
+    await expect(canvas.getByRole("img", { name: `Flagged features: ${MARKED_FLAGGED} points, 0 selected` })).toBeInTheDocument();
+    // The excluded corners are dimmed on the corner layer.
+    await expect(canvasElement.querySelectorAll("path[opacity='0.35']").length).toBeGreaterThan(0);
+  },
+};
+
+/** Both marks together with hover and selection: the ring clears the selection ring, the cross stays over the selected mark. */
+export const ExcludedFlaggedSelected: Story = {
+  render: () => (
+    <Frame detection={MARKED}>
+      <TargetOverlay detection={MARKED} selectedIds={[MARKED.corners![20]!.id]} hoveredId={MARKED.corners![1]!.id} />
+    </Frame>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    await expect(canvas.getByRole("img", { name: /^Corners: .* 1 selected$/ })).toBeInTheDocument();
+    await expect(canvasElement.querySelectorAll("[data-selection-rings]").length).toBeGreaterThanOrEqual(1);
   },
 };
 

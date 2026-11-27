@@ -190,6 +190,12 @@ export { EllipseSetItem }
 export { EllipseSetProps }
 
 // @public
+export function excludedPoints(detection: TargetDetection): PointSetItem[];
+
+// @public
+export function flaggedPoints(detection: TargetDetection): PointSetItem[];
+
+// @public
 export function fromCalibTargets(result: CalibTargetsResult): TargetDetection;
 
 // @public
@@ -288,10 +294,14 @@ export const TARGET_MARKERS: {
     readonly directed: MarkerShape;
     readonly "circle-white": MarkerShape;
     readonly "circle-black": MarkerShape;
+    readonly excluded: MarkerShape;
+    readonly flagged: MarkerShape;
 };
 
 // @public
 export interface TargetCircle {
+    excluded?: boolean | undefined;
+    flagged?: boolean | undefined;
     i?: number | undefined;
     id: TargetId;
     j?: number | undefined;
@@ -306,6 +316,8 @@ export interface TargetCorner {
     angle?: number | undefined;
     angle2?: number | undefined;
     cov?: readonly [xx: number, xy: number, yy: number] | undefined;
+    excluded?: boolean | undefined;
+    flagged?: boolean | undefined;
     i?: number | undefined;
     id: TargetId;
     j?: number | undefined;
@@ -385,6 +397,8 @@ export type TargetPart = "corner" | "marker" | "circle" | "ring";
 
 // @public
 export interface TargetRing {
+    excluded?: boolean | undefined;
+    flagged?: boolean | undefined;
     id: TargetId;
     inner?: TargetEllipse | undefined;
     label?: string | undefined;

@@ -112,3 +112,22 @@ describe("TARGET_MARKERS circles", () => {
     expect(TARGET_MARKERS["circle-white"].path(0, 0, 2, 0).startsWith("M11 0")).toBe(true);
   });
 });
+
+describe("TARGET_MARKERS excluded and flagged", () => {
+  it("draws the excluded mark as a diagonal cross of 6 screen px arms, in the label role", () => {
+    const shape = TARGET_MARKERS.excluded;
+    expect(shape.role).toBe("label");
+    expect(shape.path(10, 10, 1, 0)).toBe("M4 4l12 12M4 16l12 -12");
+    // At 2 image px per screen px the arms are 12 image px.
+    expect(shape.path(0, 0, 2, 0)).toBe("M-12 -12l24 24M-12 12l24 -24");
+  });
+
+  it("draws the flagged mark as one ring of 12 screen px, clear of a selection ring on any glyph", () => {
+    const shape = TARGET_MARKERS.flagged;
+    expect(shape.role).toBe("label");
+    expect(shape.path(0, 0, 1, 0).startsWith("M12 0")).toBe(true);
+    expect((shape.path(0, 0, 1, 0).match(/M/g) ?? []).length).toBe(1);
+    // The selection ring is the glyph's size plus 4 px: 9 px on a corner, 9.5 px on a circle.
+    expect(shape.size).toBeGreaterThan(TARGET_MARKERS["circle-white"].size + 4);
+  });
+});

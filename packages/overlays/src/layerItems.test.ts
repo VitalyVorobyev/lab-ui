@@ -17,12 +17,14 @@ import {
   cornerNodes,
   covarianceEllipse,
   edgeBitEllipses,
+  excludedPoints,
+  flaggedPoints,
   markerAreas,
   ringCentres,
   ringEllipses,
   uncertaintyEllipses,
 } from "./layerItems";
-import { TARGET_KINDS, isLatticeKind } from "./model";
+import { TARGET_KINDS, isLatticeKind, type TargetDetection } from "./model";
 
 describe("isLatticeKind", () => {
   it("is true for the four boards only", () => {
@@ -319,5 +321,39 @@ describe("the story detections", () => {
     const { markers } = charuco();
     expect(markers).toHaveLength(35);
     expect(markers![1]!.corners[0]).not.toBe(markers![0]!.corners[0]);
+  });
+});
+
+describe("excludedPoints and flaggedPoints", () => {
+  const detection: TargetDetection = {
+    kind: "markerboard",
+    corners: [
+      { id: "a", x: 1, y: 2, excluded: true },
+      { id: "b", x: 3, y: 4, flagged: true },
+      { id: "c", x: 5, y: 6, excluded: true, flagged: true },
+      { id: "d", x: 7, y: 8, excluded: false },
+    ],
+    circles: [{ id: "k", x: 9, y: 10, polarity: "white", excluded: true }],
+    rings: [{ id: "r", x: 11, y: 12, outer: { rx: 5, ry: 4, angle: 0 }, flagged: true }],
+  };
+
+  it("lists the features with the flag, corners then circles then rings, as the glyph's kind", () => {
+    expect(excludedPoints(detection)).toEqual([
+      { id: "a", x: 1, y: 2, kind: "excluded" },
+      { id: "c", x: 5, y: 6, kind: "excluded" },
+      { id: "k", x: 9, y: 10, kind: "excluded" },
+    ]);
+    expect(flaggedPoints(detection)).toEqual([
+      { id: "b", x: 3, y: 4, kind: "flagged" },
+      { id: "c", x: 5, y: 6, kind: "flagged" },
+      { id: "r", x: 11, y: 12, kind: "flagged" },
+    ]);
+  });
+
+  it("is empty when nothing carries the flag, and the flags change no other layer's items", () => {
+    expect(excludedPoints({ kind: "corners", corners: [{ id: 1, x: 0, y: 0 }] })).toEqual([]);
+    expect(flaggedPoints({ kind: "corners" })).toEqual([]);
+    const plain: TargetDetection = { ...detection, corners: detection.corners?.map(({ id, x, y }) => ({ id, x, y })) };
+    expect(cornerNodes(detection)).toEqual(cornerNodes(plain));
   });
 });
