@@ -136,7 +136,7 @@
     },
     "packages/overlays": {
       "name": "@vitavision/overlays",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "devDependencies": {
         "@storybook/react-vite": "10.6.0",
         "@vitavision/stage2d": "workspace:^",
@@ -151,7 +151,7 @@
     },
     "packages/stage2d": {
       "name": "@vitavision/stage2d",
-      "version": "0.15.1",
+      "version": "0.16.0",
       "dependencies": {
         "@vitavision/ui": "workspace:^",
         "lucide-react": "^1.48.0",
@@ -225,7 +225,7 @@
     },
     "packages/workbench": {
       "name": "@vitavision/workbench",
-      "version": "0.3.3",
+      "version": "0.3.4",
       "dependencies": {
         "@vitavision/ui": "workspace:^",
         "lucide-react": "^1.48.0",
