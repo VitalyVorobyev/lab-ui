@@ -279,3 +279,31 @@ describe("SequenceMatrix pointer and selection", () => {
     expect(container.querySelector("[data-focused]")).toBeNull();
   });
 });
+
+describe("SequenceMatrix when the data shrinks", () => {
+  const draw = (row: { id: string }, col: { id: string }) => <span>{`${row.id}/${col.id}`}</span>;
+  const grid = (rows: typeof ROWS, columns: typeof COLS, windowed: boolean, value?: SequenceMatrixSelection | null) => (
+    <SequenceMatrix aria-label="M" rows={rows} columns={columns} windowed={windowed} value={value} renderCell={draw} />
+  );
+
+  for (const windowed of [false, true]) {
+    it(`re-renders with fewer rows and columns, with focus on a removed cell (windowed: ${windowed})`, () => {
+      const many = Array.from({ length: 40 }, (_, i) => ({ id: `v${i}`, label: `view ${i}` }));
+      const { container, rerender } = render(grid(many, COLS, windowed, { row: "v3", col: "c3" }));
+      const last = many.length - 1;
+      const target = container.querySelector<HTMLElement>(`[data-cell][data-r="${windowed ? 0 : last}"][data-c="3"]`)!;
+      act(() => target.focus());
+      expect(() => rerender(grid(many.slice(0, 2), COLS.slice(0, 2), windowed, { row: "v3", col: "c3" }))).not.toThrow();
+      expect(container.querySelectorAll("[data-cell]")).toHaveLength(4);
+      expect(container.querySelectorAll("[data-cell][tabindex='0']")).toHaveLength(1);
+      expect(() => rerender(grid([], COLS, windowed, null))).not.toThrow();
+      expect(container.querySelectorAll("[data-cell]")).toHaveLength(0);
+    });
+  }
+
+  it("keeps the selection and tab stop on a row that survives", () => {
+    const { container, rerender } = render(grid(ROWS, COLS, false, { row: "v1", col: "c1" }));
+    rerender(grid(ROWS.slice(0, 2), COLS, false, { row: "v1", col: "c1" }));
+    expect(selected(container)).toEqual(["1,1"]);
+  });
+});
