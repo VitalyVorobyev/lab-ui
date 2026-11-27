@@ -109,6 +109,8 @@ export interface FrameProps {
   xTicks?: number;
   /** Rough number of y ticks to ask the scale for. Default 4. */
   yTicks?: number;
+  /** Writes an x tick's label from its value (a date, a unit). Omitted: the scale's own label. */
+  xFormat?: ((value: number) => string) | undefined;
   /** Drawn inside the plot area, above the grid and below nothing. */
   children?: ReactNode;
   /** Accessible name — every chart must have one; it is what the tests query on. */
@@ -139,6 +141,7 @@ export function Frame({
   yLabel,
   xTicks = 5,
   yTicks = 4,
+  xFormat,
   children,
   label,
   footer,
@@ -173,7 +176,7 @@ export function Frame({
             <g key={`x-${tick.value}`}>
               <line x1={x} x2={x} y1={plotArea.y0} y2={plotArea.y1} stroke={AXIS} strokeWidth={0.5} opacity={0.15} />
               <text x={x} y={plotArea.y0 + 14} textAnchor="middle" fontSize={10} fill={AXIS}>
-                {tick.label}
+                {xFormat ? xFormat(tick.value) : tick.label}
               </text>
             </g>
           );
@@ -206,6 +209,8 @@ export interface LegendItem {
   label: string;
   /** Any CSS colour: a `var(--series-n)` from {@link seriesColour}, or a verdict token. */
   colour: string;
+  /** The series has an error band: its swatch shows one, and this text follows the name (`±1σ`). */
+  band?: string | undefined;
 }
 
 /** Props for {@link Legend}. */
@@ -229,8 +234,16 @@ export function Legend({ items, className }: LegendProps) {
     <ul className={cn("flex flex-wrap items-center gap-x-4 gap-y-1", className)}>
       {items.map((item) => (
         <li key={item.label} className="flex items-center gap-1.5">
-          <span aria-hidden className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: item.colour }} />
+          {item.band === undefined ? (
+            <span aria-hidden className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: item.colour }} />
+          ) : (
+            <span aria-hidden data-band-swatch="" className="relative inline-block h-2.5 w-4">
+              <span className="absolute inset-0 rounded-sm opacity-20" style={{ backgroundColor: item.colour }} />
+              <span className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full" style={{ backgroundColor: item.colour }} />
+            </span>
+          )}
           <span className="font-mono text-xs">{item.label}</span>
+          {item.band !== undefined && <span className="font-mono text-xs text-fg-subtle">{item.band}</span>}
         </li>
       ))}
     </ul>

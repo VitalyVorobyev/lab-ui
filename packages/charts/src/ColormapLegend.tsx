@@ -4,8 +4,19 @@
 
 import { cn } from "@vitavision/ui";
 
-import { colormapGradient, symmetricDomain, type ColormapName } from "./colormap";
+import { colormap, colormapGradient, symmetricDomain, type ColormapName } from "./colormap";
 import { linearScale } from "./scale";
+
+/** A value marked on a {@link ColormapLegend}: a threshold, a cursor value, a reference. */
+export interface ColormapMarker {
+  /** Where, in the legend's value units. A value outside the domain is left out. */
+  value: number;
+  /** The marker's text. Default: the value, formatted with the legend's `format` and `unit`. */
+  label?: string | undefined;
+}
+
+/** Which end of a {@link ColormapLegend} the data runs past: `"high"` is `≥ max`, `"low"` is `≤ min`. */
+export type ColormapClipped = "high" | "low" | "both";
 
 /** Props of `ColormapLegend`. */
 export interface ColormapLegendProps {
@@ -36,6 +47,19 @@ export interface ColormapLegendProps {
    * its largest absolute end, so the middle colour is zero and the middle tick says so.
    */
   symmetric?: boolean | undefined;
+  /**
+   * Values to mark on the bar: a number, a `{ value, label? }`, or a list of either. Each is a
+   * tick across the bar with its text beside it (above a horizontal bar, to the right of the
+   * ticks on a vertical one): the label, or else the value with the unit. The text carries the
+   * meaning; the tick is decorative. A value outside `domain` is left out.
+   */
+  marker?: number | ColormapMarker | readonly (number | ColormapMarker)[] | undefined;
+  /**
+   * The scale saturates: the data runs past the end of `domain`. The end gets a cap (a small
+   * arrow in the end colour) and its value reads `≥ max` (`high`) or `≤ min` (`low`); `both`
+   * does both ends. The end value is labelled even when `ticks` leaves it out.
+   */
+  clipped?: ColormapClipped | undefined;
   /** For `vertical`: the bar's length in CSS pixels. Defaults to 160. */
   length?: number | undefined;
   /** Merged onto the legend with `cn`. */
@@ -61,6 +85,47 @@ function tickValues(ticks: ColormapLegendProps["ticks"], domain: readonly [numbe
   return symmetric ? [low, 0, high] : [low, high];
 }
 
+/** `marker` as a list of `{ value, label }`, in domain, in the order given. */
+function markerList(marker: ColormapLegendProps["marker"], low: number, high: number): ColormapMarker[] {
+  if (marker === undefined) return [];
+  const list =
+    typeof marker === "number" || !Array.isArray(marker)
+      ? [marker as number | ColormapMarker]
+      : [...(marker as readonly (number | ColormapMarker)[])];
+  const lo = Math.min(low, high) - 1e-12;
+  const hi = Math.max(low, high) + 1e-12;
+  return list
+    .map((entry) => (typeof entry === "number" ? { value: entry } : entry))
+    .filter((entry) => Number.isFinite(entry.value) && entry.value >= lo && entry.value <= hi);
+}
+
+/** The cap on a clipped end: an arrow in the map's end colour, pointing outward. */
+function EndCap({ map, end, orientation }: { map: ColormapName; end: "low" | "high"; orientation: "horizontal" | "vertical" }) {
+  const horizontal = orientation === "horizontal";
+  const clip = horizontal
+    ? end === "high"
+      ? "polygon(0 0, 100% 50%, 0 100%)"
+      : "polygon(100% 0, 0 50%, 100% 100%)"
+    : end === "high"
+      ? "polygon(50% 0, 100% 100%, 0 100%)"
+      : "polygon(0 0, 100% 0, 50% 100%)";
+  const place = horizontal
+    ? end === "high"
+      ? "left-full top-0.5 ml-px h-2 w-1.5"
+      : "right-full top-0.5 mr-px h-2 w-1.5"
+    : end === "high"
+      ? "bottom-full left-0 mb-px h-1.5 w-2.5"
+      : "top-full left-0 mt-px h-1.5 w-2.5";
+  return (
+    <span
+      aria-hidden
+      data-cap={end}
+      className={`absolute ${place}`}
+      style={{ backgroundColor: colormap(map, end === "high" ? 1 : 0), clipPath: clip }}
+    />
+  );
+}
+
 /**
  * A gradient bar with its values and unit.
  *
@@ -69,7 +134,10 @@ function tickValues(ticks: ColormapLegendProps["ticks"], domain: readonly [numbe
  * - **Vertical**: the label above a column bar, the high end at the top, the values beside the
  *   bar at their position, and the unit after the label.
  *
- * The bar is decorative; the label and the values carry the meaning as text.
+ * `marker` ticks values on the bar (a threshold, the value under a cursor) and `clipped` says
+ * the scale saturates at an end, with a cap and `≥` / `≤` on its value.
+ *
+ * The bar is decorative; the label, the values and the markers' text carry the meaning.
  */
 export function ColormapLegend({
   map,
@@ -80,6 +148,8 @@ export function ColormapLegend({
   orientation = "horizontal",
   ticks,
   symmetric = false,
+  marker,
+  clipped,
   length = 160,
   className,
 }: ColormapLegendProps) {
@@ -87,39 +157,76 @@ export function ColormapLegend({
   const span = high - low;
   const end = (value: number) => (unit ? `${format(value)} ${unit}` : format(value));
   const fraction = (value: number) => (span === 0 ? 0 : (value - low) / span);
+  const markers = markerList(marker, low, high);
+  const capLow = clipped === "low" || clipped === "both";
+  const capHigh = clipped === "high" || clipped === "both";
+  // `≤ min` / `≥ max` on the clipped end's text. Where `low` and `high` coincide the high end wins.
+  const text = (value: number, isLow: boolean, isHigh: boolean) =>
+    `${isHigh && capHigh ? "≥ " : isLow && capLow ? "≤ " : ""}${format(value)}`;
+  const markerText = (entry: ColormapMarker) => entry.label ?? end(entry.value);
 
-  if (orientation === "horizontal" && ticks === undefined && !symmetric) {
+  if (orientation === "horizontal" && ticks === undefined && !symmetric && markers.length === 0) {
     return (
       <div className={cn("flex items-center gap-2 text-xs text-fg-muted", className)} data-colormap={map}>
         <span>{label}</span>
-        <span className="font-mono tabular-nums">{end(low)}</span>
-        <span aria-hidden className="h-2 w-24 rounded-full" style={{ backgroundImage: colormapGradient(map) }} />
-        <span className="font-mono tabular-nums">{end(high)}</span>
+        <span className="font-mono tabular-nums">{capLow ? `≤ ${end(low)}` : end(low)}</span>
+        <span aria-hidden className="relative h-2 w-24 rounded-full" style={{ backgroundImage: colormapGradient(map) }}>
+          {capLow && <EndCap map={map} end="low" orientation="horizontal" />}
+          {capHigh && <EndCap map={map} end="high" orientation="horizontal" />}
+        </span>
+        <span className="font-mono tabular-nums">{capHigh ? `≥ ${end(high)}` : end(high)}</span>
       </div>
     );
   }
 
   const values = tickValues(ticks, [low, high], symmetric);
+  // A clipped end is always labelled, even when a given `ticks` list leaves it out.
+  if (capLow && !values.includes(low)) values.unshift(low);
+  if (capHigh && !values.includes(high)) values.push(high);
+  const tickText = (value: number) => text(value, value === low, value === high);
 
   if (orientation === "horizontal") {
     return (
       <div className={cn("flex items-start gap-2 text-xs text-fg-muted", className)} data-colormap={map}>
-        <span>{label}</span>
-        {/* The values are positioned against the bar; `pb-4` leaves the row room for them. */}
-        <div className="relative w-32 pb-4">
-          <div aria-hidden className="mt-0.5 h-2 rounded-full" style={{ backgroundImage: colormapGradient(map) }} />
+        <span className={markers.length > 0 ? "pt-4" : undefined}>{label}</span>
+        {/* The values are positioned against the bar; `pb-4` leaves the row room for them, `pt-4` the markers' text. */}
+        <div className={cn("relative w-32 pb-4", markers.length > 0 && "pt-4", (capLow || capHigh) && "mx-2")}>
+          <div className="relative mt-0.5 h-2">
+            <div aria-hidden className="absolute inset-0 rounded-full" style={{ backgroundImage: colormapGradient(map) }} />
+            {capLow && <EndCap map={map} end="low" orientation="horizontal" />}
+            {capHigh && <EndCap map={map} end="high" orientation="horizontal" />}
+            {markers.map((entry) => (
+              <span
+                key={`m-${entry.value}-${entry.label ?? ""}`}
+                aria-hidden
+                data-marker-tick=""
+                className="absolute -top-0.5 h-3 w-0.5 -translate-x-1/2 rounded-full bg-fg ring-1 ring-surface"
+                style={{ left: `${(fraction(entry.value) * 100).toFixed(2)}%` }}
+              />
+            ))}
+          </div>
+          {markers.map((entry) => (
+            <span
+              key={`mt-${entry.value}-${entry.label ?? ""}`}
+              data-marker=""
+              className="absolute top-0 -translate-x-1/2 whitespace-nowrap font-mono text-[10px] leading-none tabular-nums text-fg"
+              style={{ left: `${(fraction(entry.value) * 100).toFixed(2)}%` }}
+            >
+              {markerText(entry)}
+            </span>
+          ))}
           {values.map((value) => (
             <span
               key={value}
               data-tick=""
-              className="absolute top-3 -translate-x-1/2 font-mono text-[10px] tabular-nums"
+              className={cn("absolute -translate-x-1/2 font-mono text-[10px] tabular-nums", markers.length > 0 ? "top-7" : "top-3")}
               style={{ left: `${(fraction(value) * 100).toFixed(2)}%` }}
             >
-              {format(value)}
+              {tickText(value)}
             </span>
           ))}
         </div>
-        {unit && <span className="text-fg-subtle">{unit}</span>}
+        {unit && <span className={cn("text-fg-subtle", markers.length > 0 && "pt-4")}>{unit}</span>}
       </div>
     );
   }
@@ -132,19 +239,46 @@ export function ColormapLegend({
       </span>
       {/* The values sit on the bar's right; the margin above and below keeps the end values inside the box. */}
       <div className="relative my-1.5 flex" style={{ height: length }}>
-        <div aria-hidden className="w-2.5 rounded-full" style={{ backgroundImage: colormapGradient(map, "to top") }} />
+        <div className="relative w-2.5">
+          <div aria-hidden className="absolute inset-0 rounded-full" style={{ backgroundImage: colormapGradient(map, "to top") }} />
+          {capLow && <EndCap map={map} end="low" orientation="vertical" />}
+          {capHigh && <EndCap map={map} end="high" orientation="vertical" />}
+          {markers.map((entry) => (
+            <span
+              key={`m-${entry.value}-${entry.label ?? ""}`}
+              aria-hidden
+              data-marker-tick=""
+              className="absolute -left-0.5 -right-0.5 h-0.5 translate-y-1/2 rounded-full bg-fg ring-1 ring-surface"
+              style={{ bottom: `${(fraction(entry.value) * 100).toFixed(2)}%` }}
+            />
+          ))}
+        </div>
         <div className="relative ml-1.5 min-w-8">
           {values.map((value) => (
             <span
               key={value}
               data-tick=""
-              className="absolute left-0 translate-y-1/2 font-mono text-[10px] leading-none tabular-nums"
+              className="absolute left-0 translate-y-1/2 whitespace-nowrap font-mono text-[10px] leading-none tabular-nums"
               style={{ bottom: `${(fraction(value) * 100).toFixed(2)}%` }}
             >
-              {format(value)}
+              {tickText(value)}
             </span>
           ))}
         </div>
+        {markers.length > 0 && (
+          <div className="relative ml-1.5 min-w-8">
+            {markers.map((entry) => (
+              <span
+                key={`mt-${entry.value}-${entry.label ?? ""}`}
+                data-marker=""
+                className="absolute left-0 translate-y-1/2 whitespace-nowrap font-mono text-[10px] leading-none tabular-nums text-fg"
+                style={{ bottom: `${(fraction(entry.value) * 100).toFixed(2)}%` }}
+              >
+                {markerText(entry)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

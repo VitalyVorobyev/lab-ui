@@ -90,4 +90,64 @@ describe("LineChart", () => {
 
     expect(paths(container)[0]?.getAttribute("d")).not.toContain("NaN");
   });
+
+  describe("band", () => {
+    const base = [0, 1, 2].map((x) => ({ x, y: x }));
+    const band = { lower: [-1, 0, 1], upper: [1, 2, 3] };
+
+    it("draws a translucent area in the series colour behind the line and adds a legend note", () => {
+      const { container } = render(<LineChart label="Trend" series={[{ name: "k1", points: base, colour: "var(--series-2)", band }]} />);
+      const area = container.querySelector<SVGPathElement>("[data-series-band]")!;
+      expect(area.getAttribute("fill")).toBe("var(--series-2)");
+      expect(area.getAttribute("d")).toMatch(/Z$/);
+      expect(area.getAttribute("aria-hidden")).toBe("true");
+      expect(screen.getByText("± band")).toBeTruthy();
+      expect(container.querySelector("[data-band-swatch]")).not.toBeNull();
+      // The band paints before the line.
+      const all = [...container.querySelectorAll("path")];
+      expect(all.indexOf(area)).toBeLessThan(all.length - 1);
+    });
+
+    it("names the band in the legend with its label", () => {
+      render(<LineChart label="Trend" series={[{ name: "k1", points: base, band: { ...band, label: "±1σ" } }]} />);
+      expect(screen.getByText("±1σ")).toBeTruthy();
+    });
+
+    it("grows the y domain to hold the band", () => {
+      const { container } = render(
+        <LineChart label="Trend" series={[{ name: "k1", points: base, band: { lower: [-10, 0, 1], upper: [1, 2, 30] } }]} />,
+      );
+      const labels = [...container.querySelectorAll("text")].map((t) => t.textContent);
+      expect(labels).toContain("30");
+    });
+
+    it("changes nothing for a series without one", () => {
+      const { container } = render(<LineChart label="Trend" series={[{ name: "k1", points: base }]} />);
+      expect(container.querySelector("[data-series-band]")).toBeNull();
+      expect(container.querySelector("[data-band-swatch]")).toBeNull();
+    });
+  });
+
+  describe("xFormat", () => {
+    it("writes the x tick labels", () => {
+      const { container } = render(
+        <LineChart
+          label="Dates"
+          xFormat={(x) => `d${x}`}
+          series={[
+            {
+              name: "a",
+              points: [
+                { x: 0, y: 1 },
+                { x: 10, y: 2 },
+              ],
+            },
+          ]}
+        />,
+      );
+      const labels = [...container.querySelectorAll("text")].map((t) => t.textContent);
+      expect(labels).toContain("d0");
+      expect(labels).toContain("d10");
+    });
+  });
 });

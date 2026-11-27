@@ -26,13 +26,14 @@ bun add @vitavision/workbench @vitavision/ui
 | `createPlayhead`, `usePlayhead`, `usePlaybackClock` | The playback position as an external store, and the real-time clock that drives it. |
 | `FileDrop` | Drop zone (or full-window `overlay`) plus an "Open files…" button; `accept` applied to both routes; dropped folders walked. In a desktop shell, a `pathSource` yields paths to `onPaths` instead of `File`s (see below). |
 | `SequenceNavigator` | The current item of an ordered set (a frame of a capture) as a lazy thumbnail strip with previous/next, the position, and `[` / `]` from anywhere outside a text field. A per-item `status` (`{ tone, label }`) draws a dot in the thumbnail's corner and is said in the item's name. |
+| `SequenceMatrix` | A rows-by-columns grid of captures (views by cameras) windowed in both axes, with sticky row and column headers, a caller-drawn cell, cell-level roving focus (arrows, Home/End, Ctrl + Home/End, PageUp/PageDown), single and range selection (Shift + move or click, header click, Ctrl + A), and `grid` roles with `aria-rowindex` / `aria-colindex`. Controlled or not. No listener per cell. |
 | `Stepper` | The steps of a gated sequence (Teach, then Find, then Verify): numbered, the current one `aria-current="step"`, done ones checked. A step with a `blockedBy` reason stays focusable but `aria-disabled`, described by its reason (also its tooltip), and cannot be chosen. Row or column; controlled or not. |
 | `Toaster`, `toast()` | Notifications from anywhere; one `<Toaster />` near the root. **Now lives in `@vitavision/ui`**; re-exported here (same bindings, one default store) so existing imports keep working. Prefer `import { toast } from "@vitavision/ui"`. |
 
 The pure logic behind them is exported too and tested without a DOM: `splitSize.ts`
 (`resolveSize`, `resolveLimits`, `clampSize`), `treeModel.ts` (`visibleRows`, `treeKeyAction`,
 `ancestorIds`, `parentIds`), `playhead.ts` (`advance`, `clampIndex`, `formatSeconds`),
-`dropFiles.ts` (`acceptsFile`, `collectDroppedFiles`), `stepperModel.ts` (`stepStates`).
+`dropFiles.ts` (`acceptsFile`, `collectDroppedFiles`), `stepperModel.ts` (`stepStates`), `matrixModel.ts` (cursor moves, the window of rows and columns in view, scroll to reveal a cell, the selection rectangle).
 
 ### Playback without re-rendering the app
 

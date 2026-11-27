@@ -32,7 +32,7 @@
   {
     "name": "@vitavision/charts",
     "path": "packages/charts/dist/index.js",
-    "limit": "7.6 kB",
+    "limit": "8.75 kB",
     "import": "*",
     "ignore": ["@vitavision/ui", "react", "react-dom", "react/jsx-runtime"]
   },
@@ -40,14 +40,14 @@
     "name": "@vitavision/stage2d",
     "path": "packages/stage2d/dist/index.js",
     "import": "*",
-    "limit": "33.7 kB",
+    "limit": "35.3 kB",
     "ignore": ["@vitavision/ui", "lucide-react", "react", "react-dom", "react/jsx-runtime"]
   },
   {
     "name": "@vitavision/workbench",
     "path": "packages/workbench/dist/index.js",
     "import": "*",
-    "limit": "9.5 kB",
+    "limit": "11.7 kB",
     "ignore": ["@vitavision/ui", "lucide-react", "react", "react-dom", "react/jsx-runtime"]
   },
   {

@@ -58,4 +58,62 @@ describe("ColormapLegend", () => {
     const { container } = render(<ColormapLegend map="viridis" domain={[3, 3]} label="p" orientation="vertical" />);
     expect(ticks(container)).toEqual(["3", "3"]);
   });
+
+  describe("marker", () => {
+    const markers = (container: HTMLElement) => [...container.querySelectorAll<HTMLElement>("[data-marker]")];
+
+    it("ticks a value at its position and says it as text, with the unit", () => {
+      const { container } = render(
+        <ColormapLegend map="viridis" domain={[0, 4]} unit="px" label="Residual" orientation="vertical" marker={1} />,
+      );
+      expect(markers(container).map((m) => m.textContent)).toEqual(["1 px"]);
+      expect(markers(container)[0]!.style.bottom).toBe("25.00%");
+      expect(container.querySelectorAll("[data-marker-tick]")).toHaveLength(1);
+    });
+
+    it("takes a label, a list, and leaves out a value outside the domain", () => {
+      const { container } = render(
+        <ColormapLegend map="viridis" domain={[0, 1]} label="p" marker={[{ value: 0.05, label: "alpha" }, 0.5, 2, Number.NaN]} />,
+      );
+      expect(markers(container).map((m) => m.textContent)).toEqual(["alpha", "0.5"]);
+      expect(markers(container)[1]!.style.left).toBe("50.00%");
+    });
+
+    it("moves a horizontal legend from the inline form to the positioned one, keeping its ends", () => {
+      const { container } = render(<ColormapLegend map="magma" domain={[0, 1]} label="p" marker={0.25} />);
+      expect(ticks(container)).toEqual(["0", "1"]);
+      expect(container.querySelector("[data-marker-tick]")).not.toBeNull();
+    });
+  });
+
+  describe("clipped", () => {
+    it("reads ≥ max on the high end of the inline legend and caps it", () => {
+      const { container, getByText } = render(<ColormapLegend map="viridis" domain={[0, 2]} unit="px" label="e" clipped="high" />);
+      expect(getByText("≥ 2 px")).toBeTruthy();
+      expect(getByText("0 px")).toBeTruthy();
+      expect(container.querySelectorAll("[data-cap]")).toHaveLength(1);
+      expect(container.querySelector("[data-cap='high']")).not.toBeNull();
+    });
+
+    it("reads ≤ min on the low end and handles both ends on a vertical legend", () => {
+      const { container } = render(
+        <ColormapLegend map="blueOrange" domain={[-1, 1]} label="d" orientation="vertical" symmetric clipped="both" />,
+      );
+      expect(ticks(container)).toEqual(["≤ -1", "0", "≥ 1"]);
+      expect(container.querySelectorAll("[data-cap]")).toHaveLength(2);
+    });
+
+    it("labels a clipped end that a given tick list leaves out", () => {
+      const { container } = render(
+        <ColormapLegend map="viridis" domain={[0, 10]} label="x" orientation="vertical" ticks={[0, 5]} clipped="high" />,
+      );
+      expect(ticks(container)).toEqual(["0", "5", "≥ 10"]);
+    });
+
+    it("changes nothing without it", () => {
+      const { container } = render(<ColormapLegend map="viridis" domain={[0, 2]} label="e" />);
+      expect(container.querySelector("[data-cap]")).toBeNull();
+      expect(container.textContent).not.toContain("≥");
+    });
+  });
 });

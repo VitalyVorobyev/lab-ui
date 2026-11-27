@@ -20,7 +20,7 @@ is accepted.
 
 **Charts** — hand-rolled SVG over the pure domain/tick/project math in `scale.ts`:
 `Frame` + `Legend` (the axes/grid/label shell every chart composes), `LineChart`
-(multi-series, optional log y), `StackedBars`, `Histogram` (one distribution from raw
+(multi-series, optional log y, a `band` of y-error per series, `xFormat` for the x labels), `StackedBars`, `Histogram` (one distribution from raw
 `values` or pre-binned `counts`, with markers, a cursor bin and hover/pick), `ScoreHistogram` (two-class
 distribution with a threshold rule), `ScatterChart` (below), and `LineProfile` (one or more series against arc length in pixels
 along a scan line or caliper axis, with detected edges drawn as labelled vertical rules).
@@ -32,6 +32,10 @@ along a scan line or caliper axis, with detected edges drawn as labelled vertica
 - **Pointer:** `onHover` rings the nearest point and reads its numbers, `onPick` reports a click's point, and
   `highlighted` rings one chosen elsewhere.
 - Points are a few batched paths, not one element each.
+
+**Error bands**: a series' `band` (`{ lower, upper, label? }`, one value per point) draws a translucent area in the
+series colour under the lines. The legend notes it, the hover readout reads `value ± half-width`, a missing edge leaves a gap, and the y
+domain grows to hold it unless `yDomain` is fixed.
 
 **Fitting a chart to its container**: `variant="fluid"` takes the container's width at a fixed
 `height`, for a chart in a resizable inspector.
@@ -49,7 +53,8 @@ or a confidence, or for a signed value around zero.
   lightness at the same rate. Centre a domain on zero with `symmetricDomain`; `isDivergingColormap` tells the two kinds apart.
 - **Legend:** `ColormapLegend` shows the scale with its units; a map is never shown without one. It stands vertical
   beside a map with `orientation="vertical"`, labels values along the bar with `ticks` (a list, or a rough count), and
-  with `symmetric` centres a diverging scale on zero.
+  with `symmetric` centres a diverging scale on zero. `marker` ticks a value (a threshold, the value under a cursor) with its
+  text, and `clipped` (`"high"`, `"low"`, `"both"`) caps a saturated end and reads it `≥ max` or `≤ min`.
 
 ## License
 

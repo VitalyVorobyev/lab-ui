@@ -262,6 +262,37 @@ export interface ContourEditorProps {
 }
 
 // @public
+export function ContourLayer(input: ContourLayerProps): JSX.Element | null;
+
+// @public
+export interface ContourLayerProps {
+    channel?: number | undefined;
+    color?: string | undefined;
+    dashedLevels?: readonly number[] | undefined;
+    halo?: boolean | undefined;
+    label?: string | undefined;
+    labels?: boolean | ((level: number) => string) | undefined;
+    levels: readonly number[] | {
+        step: number;
+        origin?: number | undefined;
+    };
+    plane: ValuePlane;
+    rect?: Rect | undefined;
+    role?: OverlayRole | undefined;
+    visible?: boolean | undefined;
+}
+
+// @public
+export interface ContourLine {
+    closed: boolean;
+    level: number;
+    points: number[];
+}
+
+// @public
+export function contourPaths(plane: ValuePlane, channel: number, levels: readonly number[]): ContourLine[];
+
+// @public
 export function crossSegments(x: number, y: number, size: number): [[Point, Point], [Point, Point]];
 
 // @public
@@ -1094,6 +1125,12 @@ export function resizeRect(rect: Rect, handle: RoiHandle, to: Point, bounds: Rec
 
 // @public
 export function resizeShape(shape: RotatedShape, handle: RoiHandle, to: Point, minSize: number): RotatedShape;
+
+// @public
+export function resolveLevels(spec: readonly number[] | {
+    step: number;
+    origin?: number | undefined;
+}, min: number, max: number): number[];
 
 // @public
 export const ROI_HANDLE_CURSOR: Readonly<Record<RoiHandle, string>>;

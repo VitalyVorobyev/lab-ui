@@ -76,6 +76,11 @@ and the edges between lattice neighbours as two batched paths, each axis restyle
 `@vitavision/charts` maps fit) or an `rgba` buffer as one image, rasterised in an effect, placed over the
 image (or `rect`), pixelated from 4 CSS px per cell. `rasterizePlane` and `planeRange` are pure.
 
+**Contours**: `ContourLayer` draws the iso-lines of a `ValuePlane` channel (marching squares, in image coordinates, placed like a
+`HeatmapLayer` of the same plane). `levels` is a list or `{ step, origin? }`; `dashedLevels` draws a level dashed (a threshold, zero) even when
+`levels` lacks it; `labels` writes the level along long lines. A cell touching `NaN` holds no line, so a line ends at a hole. Solid and dashed
+levels are one path each. `contourPaths` and `resolveLevels` are pure.
+
 **Vector fields**: `VectorField` draws many arrows (a displacement, a flow, the direction and size of an error) from
 flat `anchors` `[x, y, …]` and `vectors` `[dx, dy, …]` as a halo path and one path per colour step, never one element per vector.
 - **Scale:** a number is image pixels per data unit; `{ length, percentile }` makes the percentile vector span `length`

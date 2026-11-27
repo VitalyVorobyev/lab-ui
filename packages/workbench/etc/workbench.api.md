@@ -5,6 +5,7 @@
 ```ts
 
 import { createToastStore } from '@vitavision/ui';
+import { CSSProperties } from 'react';
 import { defaultToastStore } from '@vitavision/ui';
 import { JSX } from 'react';
 import { MeasureTone } from '@vitavision/ui';
@@ -232,6 +233,63 @@ export interface SequenceItem {
 export interface SequenceItemStatus {
     label: string;
     tone: Tone;
+}
+
+// @public
+export function SequenceMatrix(input: SequenceMatrixProps): JSX.Element;
+
+// @public
+export interface SequenceMatrixCellState {
+    focused: boolean;
+    selected: boolean;
+}
+
+// @public
+export interface SequenceMatrixColumn {
+    id: string;
+    label: ReactNode;
+    name?: string | undefined;
+}
+
+// @public
+export interface SequenceMatrixProps {
+    "aria-label": string;
+    cellLabel?: ((row: SequenceMatrixRow, column: SequenceMatrixColumn) => string | undefined) | undefined;
+    className?: string | undefined;
+    columns: readonly SequenceMatrixColumn[];
+    colWidth?: number | undefined;
+    corner?: ReactNode;
+    defaultValue?: SequenceMatrixSelection | null | undefined;
+    headerHeight?: number | undefined;
+    multiple?: boolean | undefined;
+    onCellAction?: ((row: string, column: string) => void) | undefined;
+    onValueChange?: ((value: SequenceMatrixSelection) => void) | undefined;
+    overscan?: number | undefined;
+    renderCell: (row: SequenceMatrixRow, column: SequenceMatrixColumn, state: SequenceMatrixCellState) => ReactNode;
+    renderColumnHeader?: ((column: SequenceMatrixColumn) => ReactNode) | undefined;
+    renderRowHeader?: ((row: SequenceMatrixRow) => ReactNode) | undefined;
+    rowHeaderWidth?: number | undefined;
+    rowHeight?: number | undefined;
+    rows: readonly SequenceMatrixRow[];
+    selectionFollowsFocus?: boolean | undefined;
+    style?: CSSProperties | undefined;
+    value?: SequenceMatrixSelection | null | undefined;
+    windowed?: boolean | undefined;
+}
+
+// @public
+export interface SequenceMatrixRow {
+    id: string;
+    label: ReactNode;
+    name?: string | undefined;
+}
+
+// @public
+export interface SequenceMatrixSelection {
+    col: string;
+    colTo?: string | undefined;
+    row: string;
+    rowTo?: string | undefined;
 }
 
 // @public

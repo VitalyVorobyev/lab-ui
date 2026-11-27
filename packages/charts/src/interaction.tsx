@@ -9,6 +9,8 @@ import { useState } from "react";
 
 import { toneColor, type MeasureTone } from "@vitavision/ui";
 
+import { seriesValueAt } from "./interpolate";
+import { bandValueAt, formatWithBand, type SeriesBand } from "./band";
 import type { Scale } from "./scale";
 
 /** An x range marked on the plot: a gap, a stretch out of tolerance, a region of interest. */
@@ -41,6 +43,8 @@ export interface ReadoutSeries {
   points: readonly { x: number; y: number }[];
   /** Its colour. */
   colour: string;
+  /** Its error band: the readout then reads `value ± half-width`, or the value with its range. */
+  band?: SeriesBand | undefined;
 }
 
 /** The props `LineChart` and `LineProfile` share for interaction and marking. */
@@ -68,6 +72,8 @@ export interface PlotArea {
   /** Top edge. */
   y1: number;
 }
+
+export { seriesValueAt };
 
 /** The ranges behind the series. */
 export function Bands({ bands, xScale, area }: { bands: readonly Band[]; xScale: Scale; area: PlotArea }) {
@@ -130,6 +136,7 @@ export function PlotInteraction({
   onHover,
   onPick,
   format = (value: number) => (Math.abs(value) >= 100 ? value.toFixed(0) : value.toPrecision(3)),
+  xFormat,
 }: {
   xScale: Scale;
   yScale: Scale;
@@ -139,6 +146,8 @@ export function PlotInteraction({
   onHover?: ((x: number | null) => void) | undefined;
   onPick?: ((x: number) => void) | undefined;
   format?: (value: number) => string;
+  /** Formats the x in the readout. Default: `format`. */
+  xFormat?: ((value: number) => string) | undefined;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const interactive = onHover !== undefined || onPick !== undefined;
@@ -164,7 +173,9 @@ export function PlotInteraction({
       ? []
       : series.flatMap((entry) => {
           const y = seriesValueAt(entry.points, hover);
-          return y === null ? [] : [{ name: entry.name, colour: entry.colour, y }];
+          if (y === null) return [];
+          const bounds = entry.band ? bandValueAt(entry.points, entry.band, hover) : null;
+          return [{ name: entry.name, colour: entry.colour, y, bounds }];
         });
 
   return (
@@ -201,7 +212,10 @@ export function PlotInteraction({
           fontSize={10}
           fill="currentColor"
         >
-          {[format(hover), ...readout.map((entry) => `${entry.name} ${format(entry.y)}`)].join(" · ")}
+          {[
+            (xFormat ?? format)(hover),
+            ...readout.map((entry) => `${entry.name} ${entry.bounds ? formatWithBand(entry.y, entry.bounds, format) : format(entry.y)}`),
+          ].join(" · ")}
         </text>
       )}
       {interactive && (
@@ -227,32 +241,6 @@ export function PlotInteraction({
       )}
     </g>
   );
-}
-
-/**
- * A series' value at `x`, linearly interpolated between the points either side, or `null`
- * outside its range or across a gap.
- *
- * @param points - The series, in ascending `x`.
- * @param x - Where.
- * @returns The interpolated value, or `null`.
- */
-export function seriesValueAt(points: readonly { x: number; y: number }[], x: number): number | null {
-  if (points.length === 0) return null;
-  if (points.length === 1) return points[0]!.x === x ? points[0]!.y : null;
-  let lo = 0;
-  let hi = points.length - 1;
-  if (x < points[lo]!.x || x > points[hi]!.x) return null;
-  while (hi - lo > 1) {
-    const mid = (lo + hi) >> 1;
-    if (points[mid]!.x <= x) lo = mid;
-    else hi = mid;
-  }
-  const a = points[lo]!;
-  const b = points[hi]!;
-  if (!Number.isFinite(a.y) || !Number.isFinite(b.y)) return null;
-  if (b.x === a.x) return a.y;
-  return a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y);
 }
 
 function clamp(value: number, low: number, high: number): number {
