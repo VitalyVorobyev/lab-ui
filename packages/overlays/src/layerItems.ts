@@ -17,6 +17,7 @@ import {
   type TargetDetection,
   type TargetEdgeBit,
   type TargetEllipse,
+  type TargetId,
   type TargetRing,
 } from "./model";
 
@@ -202,4 +203,40 @@ export function uncertaintyEllipses(corners: readonly TargetCorner[], scale: num
     if (ellipse) out.push({ id: corner.id, x: corner.x, y: corner.y, ...ellipse, role: "model" });
   }
   return out;
+}
+
+/** The feature points of a detection (corners, circles, ring centres) that carry `flag`, as one point each of `kind`. */
+function markedPoints(detection: TargetDetection, flag: "excluded" | "flagged", kind: string): PointSetItem[] {
+  const out: PointSetItem[] = [];
+  const add = (
+    items: readonly { id: TargetId; x: number; y: number; excluded?: boolean | undefined; flagged?: boolean | undefined }[] | undefined,
+  ) => {
+    for (const item of items ?? []) if (item[flag] === true) out.push({ id: item.id, x: item.x, y: item.y, kind });
+  };
+  add(detection.corners);
+  add(detection.circles);
+  add(detection.rings);
+  return out;
+}
+
+/**
+ * The strike-through points of the excluded features: a corner, circle or ring with
+ * `excluded` set gets one `excluded` glyph at its position. Markers carry no flags.
+ *
+ * @param detection - The detection.
+ * @returns One point per excluded feature, corners first, then circles, then rings.
+ */
+export function excludedPoints(detection: TargetDetection): PointSetItem[] {
+  return markedPoints(detection, "excluded", "excluded");
+}
+
+/**
+ * The ring points of the flagged features: a corner, circle or ring with `flagged` set gets one
+ * `flagged` glyph at its position.
+ *
+ * @param detection - The detection.
+ * @returns One point per flagged feature, corners first, then circles, then rings.
+ */
+export function flaggedPoints(detection: TargetDetection): PointSetItem[] {
+  return markedPoints(detection, "flagged", "flagged");
 }

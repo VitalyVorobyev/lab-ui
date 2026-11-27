@@ -70,6 +70,34 @@ const circleBlack: MarkerShape = {
   path: (x, y, unit) => circlePath(x, y, CIRCLE_RADIUS * unit) + circlePath(x, y, CENTRE_RADIUS * unit),
 };
 
+/** Half-length of an excluded feature's strike-through cross, screen pixels. */
+const EXCLUDED_REACH = 6;
+/** Radius of a flagged feature's ring, screen pixels: outside the selection ring (about 9 px). */
+const FLAG_RADIUS = 12;
+
+/**
+ * The strike-through of an excluded feature: a small diagonal cross, 6 px arms, over the dimmed
+ * feature. Painted in the `label` role so it holds on the dimmed mark on a light or dark image,
+ * and in no verdict colour: an excluded feature is switched off, not wrong.
+ */
+const excluded: MarkerShape = {
+  paint: "line",
+  size: EXCLUDED_REACH,
+  role: "label",
+  path: (x, y, unit) => {
+    const a = EXCLUDED_REACH * unit;
+    return `M${round(x - a)} ${round(y - a)}l${round(2 * a)} ${round(2 * a)}M${round(x - a)} ${round(y + a)}l${round(2 * a)} ${round(-2 * a)}`;
+  },
+};
+
+/** The ring of a flagged feature: a thin circle of radius 12 px, in the `label` role. */
+const flagged: MarkerShape = {
+  paint: "line",
+  size: FLAG_RADIUS,
+  role: "label",
+  path: (x, y, unit) => circlePath(x, y, FLAG_RADIUS * unit),
+};
+
 /** The marker names `TargetOverlay` uses, to pass to `PointSet`'s `markers`. */
 export const TARGET_MARKERS = {
   /** Edge directions of a corner, from `angle` and `angle2`. */
@@ -78,4 +106,8 @@ export const TARGET_MARKERS = {
   "circle-white": circleWhite,
   /** A black matched circle. */
   "circle-black": circleBlack,
+  /** The cross through an excluded feature. */
+  excluded,
+  /** The ring around a flagged feature. */
+  flagged,
 } as const satisfies Readonly<Record<string, MarkerShape>>;

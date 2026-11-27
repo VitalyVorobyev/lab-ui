@@ -363,8 +363,14 @@ export function SequenceMatrix({
     if (!placed) out.push(at);
     return out;
   };
-  const rowsShown = withFocus(win.rows, tabStop.row, nRows);
-  const colsShown = withFocus(win.cols, tabStop.col, nCols);
+  // `win` is measured after a render, so on the render where the data shrinks it still names rows
+  // and columns that are gone: clamp it to the data in hand.
+  const clampWin = (w: [number, number], count: number): [number, number] => {
+    const end = Math.min(w[1], count);
+    return [Math.min(w[0], end), end];
+  };
+  const rowsShown = withFocus(clampWin(win.rows, nRows), tabStop.row, nRows);
+  const colsShown = withFocus(clampWin(win.cols, nCols), tabStop.col, nCols);
 
   const totalWidth = rowHeaderWidth + nCols * colWidth;
   const totalHeight = headerHeight + nRows * rowHeight;

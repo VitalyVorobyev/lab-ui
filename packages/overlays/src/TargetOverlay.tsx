@@ -16,13 +16,25 @@
  * | `rings` | `PointSet` + `EllipseSet` | fitted outer and inner ellipse, plus at the centre |
  * | `edgeBits` | `EllipseSet` | dot on the edge: solid for 1, dashed for 0, opacity from confidence |
  * | corners' `cov` | `EllipseSet` | with `uncertainty`: the 1σ ellipse × the scale, in `model` |
+ * | `excluded` features | `PointSet` | the feature dimmed, a small cross through it |
+ * | `flagged` features | `PointSet` | a thin ring around the feature |
  */
 
 import { EllipseSet, GridLayer, AreaSet, PointSet, type StagePointerEvent } from "@vitavision/stage2d";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { TARGET_MARKERS } from "./glyphs";
-import { circlePoints, cornerNodes, edgeBitEllipses, markerAreas, ringCentres, ringEllipses, uncertaintyEllipses } from "./layerItems";
+import {
+  circlePoints,
+  cornerNodes,
+  edgeBitEllipses,
+  excludedPoints,
+  flaggedPoints,
+  markerAreas,
+  ringCentres,
+  ringEllipses,
+  uncertaintyEllipses,
+} from "./layerItems";
 import type { TargetDetection, TargetHit, TargetId, TargetPart } from "./model";
 
 /** Props of `TargetOverlay`. */
@@ -103,6 +115,10 @@ function dimPredicate(dimmed: TargetOverlayProps["dimmed"]): ((id: TargetId) => 
  * - **Callbacks** report `{ id, part }` with the id from the detection. A press and a hover move
  *   between layers (a corner, then the marker under it) without a flicker: the change is reported
  *   once.
+ * - **Excluded and flagged features**: a corner, circle or ring with `excluded` is drawn dimmed
+ *   with a small cross through it (a state, not a rejection); one with `flagged` has a thin ring
+ *   around it (a mismatch with the master pattern, say). Both are drawn in the `label` role on a
+ *   halo, compose with hover, selection and each other, and are not picked themselves.
  * - **Uncertainty** (opt-in, `uncertainty`): each corner's covariance as a 1σ ellipse × the
  *   given scale, under the corners.
  *
@@ -140,7 +156,15 @@ export function TargetOverlay({
     const pick = (part: TargetPart) => new Set([...selectedSet].filter((id) => ids[part].has(id)));
     return { corner: pick("corner"), marker: pick("marker"), circle: pick("circle"), ring: pick("ring") };
   }, [selectedSet, ids]);
-  const isDimmed = useMemo(() => dimPredicate(dimmed), [dimmed]);
+  const userDimmed = useMemo(() => dimPredicate(dimmed), [dimmed]);
+  const excluded = useMemo(() => excludedPoints(detection), [detection]);
+  const flagged = useMemo(() => flaggedPoints(detection), [detection]);
+  // An excluded feature is dimmed on every layer that draws it; the strike-through is not.
+  const isDimmed = useMemo(() => {
+    if (excluded.length === 0) return userDimmed;
+    const ids = new Set(excluded.map((item) => item.id));
+    return (id: TargetId) => ids.has(id) || (userDimmed?.(id) ?? false);
+  }, [excluded, userDimmed]);
 
   // Hover. The layers report separately, so moving from a corner to the marker under it is
   // `corner → null` then `marker → id` in one event. The net result is read when the event is
@@ -269,6 +293,28 @@ export function TargetOverlay({
           onItemPress={pressFrom("circle")}
           layerId={layerId("circles")}
           label="Circles"
+        />
+      )}
+      {excluded.length > 0 && (
+        <PointSet
+          items={excluded}
+          markers={TARGET_MARKERS}
+          labels={false}
+          dimmed={userDimmed}
+          pickable={false}
+          layerId={layerId("excluded")}
+          label="Excluded features"
+        />
+      )}
+      {flagged.length > 0 && (
+        <PointSet
+          items={flagged}
+          markers={TARGET_MARKERS}
+          labels={false}
+          dimmed={userDimmed}
+          pickable={false}
+          layerId={layerId("flagged")}
+          label="Flagged features"
         />
       )}
     </>

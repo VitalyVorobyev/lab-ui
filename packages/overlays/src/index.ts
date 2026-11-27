@@ -51,6 +51,8 @@ export {
   cornerNodes,
   covarianceEllipse,
   edgeBitEllipses,
+  excludedPoints,
+  flaggedPoints,
   markerAreas,
   ringCentres,
   ringEllipses,

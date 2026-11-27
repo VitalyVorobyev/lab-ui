@@ -75,6 +75,18 @@ export interface TargetCorner {
   cov?: readonly [xx: number, xy: number, yy: number] | undefined;
   /** Text beside it. Defaults to the lattice index `i,j` on a board, else the id. */
   label?: string | undefined;
+  /**
+   * The feature is excluded from use (left out of a fit, switched off by the person): it is
+   * drawn dimmed with a small cross through it. It is a state of the feature, not a verdict on
+   * it, so it is not drawn like a rejected point. It still takes hover and presses.
+   */
+  excluded?: boolean | undefined;
+  /**
+   * The feature is flagged: a thin ring is drawn around it, for "this feature disagrees with
+   * what it should be" (a decoded id that differs from the master pattern, say). It composes
+   * with `excluded`, hover and selection.
+   */
+  flagged?: boolean | undefined;
 }
 
 /** One decoded fiducial marker (ArUco, AprilTag): a quad. */
@@ -109,6 +121,18 @@ export interface TargetCircle {
   j?: number | undefined;
   /** Text beside it. Defaults to `(i, j)` when both are set. */
   label?: string | undefined;
+  /**
+   * The feature is excluded from use (left out of a fit, switched off by the person): it is
+   * drawn dimmed with a small cross through it. It is a state of the feature, not a verdict on
+   * it, so it is not drawn like a rejected point. It still takes hover and presses.
+   */
+  excluded?: boolean | undefined;
+  /**
+   * The feature is flagged: a thin ring is drawn around it, for "this feature disagrees with
+   * what it should be" (a decoded id that differs from the master pattern, say). It composes
+   * with `excluded`, hover and selection.
+   */
+  flagged?: boolean | undefined;
 }
 
 /** A fitted ellipse. */
@@ -135,6 +159,18 @@ export interface TargetRing {
   inner?: TargetEllipse | undefined;
   /** Text beside the centre. Defaults to the id. */
   label?: string | undefined;
+  /**
+   * The ring is excluded from use (left out of a fit, switched off by the person): it is
+   * drawn dimmed with a small cross through it. It is a state of the feature, not a verdict on
+   * it, so it is not drawn like a rejected point. It still takes hover and presses.
+   */
+  excluded?: boolean | undefined;
+  /**
+   * The ring is flagged: a thin ring is drawn around its centre, for "this feature disagrees with
+   * what it should be" (a decoded id that differs from the master pattern, say). It composes
+   * with `excluded`, hover and selection.
+   */
+  flagged?: boolean | undefined;
 }
 
 /**

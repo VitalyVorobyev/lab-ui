@@ -131,6 +131,13 @@ export {
 } from "./components/polylineIndex";
 export { PointSet, type PointSetItem, type PointSetProps } from "./components/PointSet";
 export {
+  PointMarquee,
+  type PointMarqueeHandle,
+  type PointMarqueeMode,
+  type PointMarqueeModifier,
+  type PointMarqueeProps,
+} from "./components/PointMarquee";
+export {
   buildPointIndex,
   buildPointIndexFrom,
   nearestPoint,
