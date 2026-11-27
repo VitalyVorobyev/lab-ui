@@ -920,6 +920,33 @@ export interface PointItem {
 }
 
 // @public
+export function PointMarquee(input: PointMarqueeProps): JSX.Element;
+
+// @public
+export interface PointMarqueeHandle {
+    sweepDrag(press: StagePress): StageDrag | undefined;
+}
+
+// @public
+export type PointMarqueeMode = "replace" | "add";
+
+// @public
+export type PointMarqueeModifier = "shift" | "alt" | "meta";
+
+// @public
+export interface PointMarqueeProps {
+    enabled?: boolean | undefined;
+    items: readonly PointItem[];
+    modifier?: PointMarqueeModifier | undefined;
+    onBandChange?: ((band: Rect | null) => void) | undefined;
+    onCancel?: (() => void) | undefined;
+    onSelect: (ids: PointId[], mode: PointMarqueeMode) => void;
+    ref?: Ref<PointMarqueeHandle> | undefined;
+    stroke?: string | undefined;
+    surface?: boolean | undefined;
+}
+
+// @public
 export interface PointPrimitive extends PrimitiveCommon {
     cross?: boolean;
     kind: "point";
