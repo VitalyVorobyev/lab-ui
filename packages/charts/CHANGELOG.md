@@ -1,5 +1,25 @@
 # @vitavision/charts
 
+## 0.8.4
+
+### Patch Changes
+
+- bf76ad0: `LineChart` draws an error band around a series, and writes its x labels with a formatter. `ColormapLegend` marks values and shows a saturated end.
+  
+  - **`Series.band`** takes `lower` and `upper` (one value per point, by index) and an optional `label`. The band is a translucent area in the series colour under all the lines; a missing or non-finite edge leaves a gap rather than a bridge; the y domain grows to hold it unless `yDomain` is fixed. The legend swatch shows a band with the label after the name (`± band` by default), and the hover readout reads `value ± half-width`, or the value with its `[lower, upper]` range when the band is not symmetric. `bandPath` and `formatWithBand` are exported for charts you draw yourself.
+  - **`LineChart` `xFormat`** writes the x tick labels and the x in the hover readout (a date from a timestamp). Ticks stay at round numbers of the x unit, not at calendar boundaries.
+  - **`ColormapLegend` `marker`** ticks one value or a list (`number`, or `{ value, label? }`) on the bar, with its text beside it: the label, or the value with the unit. A horizontal legend with a marker puts the values under the bar and the markers' text above it.
+  - **`ColormapLegend` `clipped`** (`"high"`, `"low"` or `"both"`) says the scale saturates: the end gets a cap in its colour and its value reads `≥ max` or `≤ min`, even when a `ticks` list leaves the end out.
+  
+  Nothing changes for a chart or legend that does not use them.
+- ca50f9f: Add the `magma`, `inferno` and `blueOrange` colour maps, a vertical `ColormapLegend`, and `ScatterChart`.
+  
+  - **Maps:** `magma` and `inferno` run from black to a pale end, for a heatmap over a dark image. `blueOrange` is a diverging map for a signed value: a deep blue through a neutral light grey to a deep orange, built so both arms fall in lightness at the same rate. `colormapRgb`, `colormapValue` and `colormapGradient` take every name in `COLORMAPS`; `isDivergingColormap` and `DIVERGING_COLORMAPS` say which are diverging, and `symmetricDomain([low, high])` gives the `[-m, m]` that puts a diverging map's middle on zero.
+  - **`ColormapLegend`:** `orientation="vertical"` stands the bar up beside a map, high end at the top, unit after the label, with `length` for its height. `ticks` labels values along the bar (a list, or a rough count of round values plus the two ends), and `symmetric` centres the scale on zero. Without them the legend is the one line it was.
+  - **`ScatterChart`:** points over two axes on the shared frame, palette and variants. `colourBy` colours each point by its `value` through a map and shows the scale in the footer; `referenceLines` draw dashed rules at a value of either axis; `onHover`, `onPick` and `highlighted` ring and report the nearest point. Points are drawn as a few batched paths.
+- Updated dependencies [ca50f9f]
+  - @vitavision/ui@0.14.2
+
 ## 0.8.3
 
 ### Patch Changes

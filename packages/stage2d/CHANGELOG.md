@@ -1,5 +1,22 @@
 # @vitavision/stage2d
 
+## 0.15.1
+
+### Patch Changes
+
+- bf76ad0: Add `ContourLayer`, iso-lines of a scalar field over an `ImageStage`.
+  
+  It takes the same `plane`, `channel` and `rect` as `HeatmapLayer`, so a contour layer and a heatmap of one plane line up. `levels` is a list of values or `{ step, origin? }` (every multiple of `step` in the channel's finite range, widened by whole multiples if that would be more than 64 levels); `dashedLevels` draws given levels dashed (a significance threshold, zero), also when `levels` does not list them. The lines come from marching squares over the plane's nodes, linear along cell edges, with a saddle resolved by the mean of its four corners; a cell touching a `NaN` node holds no line, so a line ends at a hole instead of crossing it. They are drawn as one halo path and one path per style, at constant screen width, and recomputed only when the plane, channel or levels change. `labels` (`true` or a formatter) writes the level along lines at least 90 screen pixels long, inside the viewport. The layer takes no pointer events.
+  
+  `contourPaths` (the lines as polylines in plane nodes), `resolveLevels` and the `ContourLine` type are exported for use outside a stage.
+- ca50f9f: Add `VectorField`, an arrow overlay for `ImageStage`, and `VectorFieldKey`, its reference length.
+  
+  `VectorField` takes flat `anchors` (`[x, y, …]`, image coordinates) and `vectors` (`[dx, dy, …]`, data units) and draws them as a halo path and one path per colour step, so ten thousand arrows are a dozen elements. `scale` is image pixels per data unit, or `{ length, percentile }` to make the percentile vector span `length` screen pixels at every zoom (the default is the 95th percentile at 28 px). Colour is one tone (`color` or `role`) or by magnitude through `colormap` and `range`; a non-finite number or an arrow under a screen pixel is skipped. `onHoverChange` and `onItemPress` pick the vector whose anchor is nearest, through the stage's hit-test.
+  
+  `VectorFieldKey` takes the same `vectors` and `scale` and shows an arrow of a round length with its value ("0.1 px"); put it in the stage's `readout`, or in a `StageReadout`'s `extra` with `bare`. The arithmetic (`arrowPath`, `vectorMagnitudes`, `magnitudePercentile`, `imagePerUnit`, `niceLength`, `colorBin`) is exported.
+- Updated dependencies [ca50f9f]
+  - @vitavision/ui@0.14.2
+
 ## 0.15.0
 
 ### Minor Changes
